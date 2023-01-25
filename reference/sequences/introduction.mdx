@@ -1,0 +1,42 @@
+---
+title: "Introduction"
+description: "The Invopop Sequence service makes it easy to reliably generate sequential numbers."
+---
+
+Most countries around the world require a sequential ID or code for business
+documents like invoices to make them easier to follow. This service, solves that
+problem.
+
+Generating sequential numbers is more complex that it might seem at first
+glance. For simple use-cases, a counter field inside a standard relational
+database is probably sufficient, the problem however is once your project scales
+and you need guarantees that requests from distributed systems will continue to
+generate numbers without skips or duplication.
+
+Our Sequence service is designed and built to be highly resilient. Behind the
+scenes we use a global transaction database
+([CockroachDB](https://www.cockroachlabs.com)) to ensure data is stored
+reliably, along with our own layers of queues and processes that ensure a single
+process is responsible for handling any given sequence. This means our systems
+can receive a high volume of requests at the same time, and still reliably
+return numbers in series.
+
+## Key Concepts
+
+The sequence service contains two key objects:
+
+- Series - the definition of a code template.
+
+- Entry - a single "entry" in the series.
+
+These are described in the following sections.
+
+## OpenAPI
+
+The Sequence OpenAPI 3.0 definition is available for download in YAML here:
+
+<Card
+  title="Sequence V1 OpenAPI Definition"
+  icon="link"
+  href="https://api.invopop.com/openapi/sequence/v1.yaml"
+/>
