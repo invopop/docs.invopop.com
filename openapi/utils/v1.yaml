@@ -1,0 +1,75 @@
+openapi: "3.0.0"
+info:
+  title: "Utils Service API"
+  version: "1.0.0"
+  description: |-
+    Set of end-points that help you test access to the Invopop API and generate data.
+
+  contact:
+    name: "Invopop Developers"
+    email: "dev@invopop.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - url: "https://api.invopop.com/utils/v1"
+    description: "production"
+  - url: "https://api.invopop.dev/utils/v1"
+    description: "local development"
+
+components:
+  securitySchemes:
+    authToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  "/uuid":
+    get:
+      tags: ["uuid"]
+      summary: UUID Generator.
+      parameters:
+        - name: v
+          in: query
+          description: UUID Version Number
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid:
+                    type: string
+                    format: uuid
+                  version:
+                    type: string
+              examples:
+                simple:
+                  value:
+                    uuid: "60ae249d-c9cc-4bbf-bb2c-92f18ea92ebb"
+                    version: "4"
+
+  "/ping":
+    get:
+      tags: ["ping"]
+      summary: Simple ping request. Must be authenticated.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ping:
+                    type: string
+              examples:
+                simple:
+                  value:
+                    ping: "pong"
