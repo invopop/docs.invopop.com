@@ -1,75 +1,68 @@
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
-  title: "Utils Service API"
-  version: "1.0.0"
-  description: |-
-    Set of end-points that help you test access to the Invopop API and generate data.
-
   contact:
-    name: "Invopop Developers"
-    email: "dev@invopop.com"
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you test access to the Invopop API and
+    generate data.
   license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Utils Service API
+  version: 1.0.0
 servers:
-  - url: "https://api.invopop.com/utils/v1"
-    description: "production"
-  - url: "https://api.invopop.dev/utils/v1"
-    description: "local development"
-
-components:
-  securitySchemes:
-    authToken:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
+  - description: production
+    url: https://api.invopop.com
+  - description: local development
+    url: https://api.invopop.dev
 paths:
-  "/uuid":
+  /utils/v1/ping:
     get:
-      tags: ["uuid"]
-      summary: UUID Generator.
+      description: Simple ping request
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UtilsPingResponse"
+          description: OK
+  /utils/v1/uuid:
+    get:
+      description: UUID Generator
       parameters:
-        - name: v
+        - description: UUID Version Number
           in: query
-          description: UUID Version Number
-          required: false
+          name: v
           schema:
+            description: UUID Version Number
             type: string
       responses:
         "200":
-          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  uuid:
-                    type: string
-                    format: uuid
-                  version:
-                    type: string
-              examples:
-                simple:
-                  value:
-                    uuid: "60ae249d-c9cc-4bbf-bb2c-92f18ea92ebb"
-                    version: "4"
-
-  "/ping":
-    get:
-      tags: ["ping"]
-      summary: Simple ping request. Must be authenticated.
-      responses:
-        "200":
+                $ref: "#/components/schemas/UtilsUuidResponse"
           description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ping:
-                    type: string
-              examples:
-                simple:
-                  value:
-                    ping: "pong"
+components:
+  schemas:
+    UtilsPingResponse:
+      properties:
+        ping:
+          example: pong
+          type: string
+      type: object
+    UtilsUuidResponse:
+      properties:
+        uuid:
+          example: 60ae249d-c9cc-4bbf-bb2c-92f18ea92ebb
+          type: string
+        version:
+          example: "4"
+          type: string
+      type: object
+  securitySchemes:
+    authToken:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

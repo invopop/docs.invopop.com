@@ -1,438 +1,230 @@
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
-  title: "Sequence Service API"
-  version: "1.0.2"
-  description: |-
-    The Invopop Sequence Service API allows you to define a "series" whose entries are guaranteed to be sequential.
   contact:
-    name: "Invopop Developers"
-    email: "dev@invopop.com"
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    The Invopop Sequence Service API allows you to define a "series" whose
+    entries are guaranteed to be sequential.
   license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Sequence Service API
+  version: 1.0.0
 servers:
-  - url: "https://api.invopop.com/sequence/v1"
-    description: "production"
-  - url: "https://api.invopop.dev/sequence/v1"
-    description: "local development"
-
-components:
-  securitySchemes:
-    authToken:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-  schemas:
-    "Series":
-      type: object
-      description: >
-        A Series keeps together an ordered sequence of entries.
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: "UUID that uniquely identifies the series."
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        name:
-          type: string
-          description: Human reference for the series.
-        description:
-          type: string
-          description: Optional details about this series.
-        code:
-          type: string
-          description: Optional fixed code that will be set alongside the generated number.
-        prefix:
-          type: string
-          description: Text to insert at start of generated codes.
-        padding:
-          type: integer
-          format: int32
-          description: Minimum length of a code's number part, padded with 0s.
-        suffix:
-          type: string
-          description: Text to insert after the number in generated codes.
-        last_index:
-          type: integer
-          description: The last number used in the series.
-        last_entry_id:
-          type: string
-          description: Last inserted Entry UUID
-        sigs:
-          type: array
-          description: >
-            JSON Web Signatures generated when the series was created.
-          items:
+  - description: production
+    url: https://api.invopop.com
+  - description: local development
+    url: https://api.invopop.dev
+paths:
+  /sequence/v1/series:
+    get:
+      description: Fetch a collection of Series
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceSeriesCollection"
+          description: OK
+  /sequence/v1/series/{id}:
+    get:
+      description: Fetch a Serie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
             type: string
-    "SeriesCollection":
-      type: object
-      description: >
-        A collection of series that belong to the currently authorized company.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceSeries"
+          description: OK
+    put:
+      description: Create a Series
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                code:
+                  type: string
+                description:
+                  type: string
+                id:
+                  type: string
+                name:
+                  type: string
+                padding:
+                  type: integer
+                prefix:
+                  type: string
+                sig:
+                  type: string
+                start:
+                  type: integer
+                suffix:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceEntry"
+          description: OK
+  /sequence/v1/series/{series_id}/entries:
+    get:
+      description: Fetch a collection of entries
+      parameters:
+        - in: path
+          name: series_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceEntryCollection"
+          description: OK
+  /sequence/v1/series/{series_id}/entries/{id}:
+    get:
+      description: Fetch an entry
+      parameters:
+        - in: path
+          name: series_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceEntry"
+          description: OK
+    put:
+      description: Create an entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: series_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: string
+                meta:
+                  additionalProperties:
+                    type: string
+                  type: object
+                sig:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceEntry"
+          description: OK
+components:
+  schemas:
+    SequenceEntry:
       properties:
-        list:
-          type: array
-          items:
-            $ref: "#/components/schemas/Series"
-        #limit:
-        #  type: integer
-        #  format: int32
-        #from:
-        #  type: string
-        #upto:
-        #  type: string
-    "CreateSeries":
-      type: object
-      description: >
-        The fields required to create a new series for the current company.
-      required:
-        - id
-        - name
-      properties:
-        id:
+        code:
           type: string
-          format: uuid
-          description: >
-            An ID must be provided by the client so that all requests are idempotent.
-        name:
-          type: string
-        prefix:
-          type: string
-          description: Set of characters provided before each code in the series.
-        padding:
-          type: integer
-          format: int32
-          description: The number of 0s with which to pad the sequence code.
-        suffix:
-          type: string
-          description: Fixed characters to include after the padded index.
-        start:
-          type: integer
-          format: int32
-          description: Which number to start counting from.
-        sig:
-          type: string
-          description: JSON Web Signature used to sign the request.
-    "Entry":
-      type: object
-      description: >
-        An Entry represents a single number inside the sequence series and provides the complete code to be presented.
-
-        Meta information may be included and signed when creating an entry.
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: "UUIDv1 that uniquely identifies this entry."
         created_at:
           type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        series_id:
-          type: string
-          format: uuid
-        code:
+        id:
           type: string
         meta:
-          type: object
           additionalProperties:
             type: string
+          type: object
         previous_id:
           type: string
-          format: uuid
-        sigs:
-          type: array
-          items:
-            type: string
-    "EntryCollection":
-      type: object
-      properties:
         series_id:
           type: string
-          format: uuid
-        list:
-          type: array
+        sigs:
           items:
-            $ref: "#/components/schemas/Entry"
-        limit:
-          type: integer
-          format: int32
+            type: string
+          type: array
+        updated_at:
+          type: string
+      type: object
+    SequenceEntryCollection:
+      properties:
         cursor:
           type: string
-    "CreateEntry":
+        limit:
+          type: integer
+        list:
+          items:
+            $ref: "#/components/schemas/SequenceEntry"
+          nullable: true
+          type: array
       type: object
-      required:
-        - id
+    SequenceSeries:
       properties:
+        code:
+          type: string
+        created_at:
+          type: string
+        description:
+          type: string
         id:
           type: string
-          format: uuid
-        meta:
-          type: object
-          additionalProperties:
-            type: string
-        sig:
+        last_entry_id:
           type: string
-          description: JSON Web Signature used to sign the entry data.
-
-  examples:
-    series-list:
-      summary: Example output from a list of series
-      value:
-        {
-          "list":
-            [
-              {
-                "id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
-                "last_entry_id": "564157c4-9b46-11ec-9637-665181255c0a",
-                "updated_at": "2022-03-03T22:18:50Z",
-                "suffix": "-2022",
-                "created_at": "2022-03-03T22:18:50Z",
-                "padding": 5,
-                "name": "Testing",
-                "prefix": "TEST1",
-                "last_index": 1002,
-              },
-            ],
-        }
-
-    series-create:
-      summary: Result from creating a new Series
-      value:
-        "last_index": 1000
-        "padding": 5
-        "prefix": "TEST1"
-        "name": "Testing"
-        "created_at": "2022-03-03T22:18:50Z"
-        "suffix": "-2022"
-        "updated_at": "2022-03-03T22:18:50Z"
-        "id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e"
-    series-fetch:
-      summary: Result of fetching a Series
-      value:
-        "created_at": "2022-03-03T22:18:50Z"
-        "last_entry_id": "564157c4-9b46-11ec-9637-665181255c0a"
-        "id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e"
-        "padding": 5
-        "last_index": 1002
-        "prefix": "TEST1"
-        "name": "Testing"
-        "updated_at": "2022-03-03T22:18:50Z"
-        "suffix": "-2022"
-
-    entries-list:
-      summary: Output from list query with a limit set to 1 for the sake of the example
-      value:
-        {
-          "list":
-            [
-              {
-                "code": "TEST101002-2022",
-                "series_id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
-                "updated_at": "2022-03-03T23:04:53Z",
-                "previous_id": "78b53c40-9b40-11ec-9298-665181255c0a",
-                "created_at": "2022-03-03T23:04:53Z",
-                "sigs":
-                  [
-                    "eyJhbGciOiJFUzI1NiIsImtpZCI6ImFlNTU0NWVmLWVmYTctNDM0Yy1iYWFhLTZjMGI3YjdmYjA5MSJ9.eyJpZCI6IjU2NDE1N2M0LTliNDYtMTFlYy05NjM3LTY2NTE4MTI1NWMwYSIsImNpZCI6IjgzNWJiMWNhLWU3YzQtNDFlNi05ZTg4LTQ2NGRlNTRjYzA4ZSIsInBpZCI6Ijc4YjUzYzQwLTliNDAtMTFlYy05Mjk4LTY2NTE4MTI1NWMwYSIsIm51bSI6IlRFU1QxMDEwMDItMjAyMiIsInRzIjoxNjQ2MzQ4NjkzfQ.pWlFuTAHaLRUYYlFW27_fMkFn9jqNtORzO-HBU6WxSnAAcRs_Tib04l0gaqddQH82VJid2wxoESPLDhh4RJicA",
-                  ],
-                "id": "564157c4-9b46-11ec-9637-665181255c0a",
-              },
-            ],
-          "limit": 1,
-          "cursor": "MjAyMi0wMy0wM1QyMjoyMjo1NC43NDUxNTda",
-        }
-
-    entries-fetch:
-      summary: Output after fetching a single entry by ID
-      value:
-        {
-          "code": "TEST101001-2022",
-          "series_id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
-          "updated_at": "2022-03-03T22:22:54Z",
-          "id": "78b53c40-9b40-11ec-9298-665181255c0a",
-          "sigs":
-            [
-              "eyJhbGciOiJFUzI1NiIsImtpZCI6ImFlNTU0NWVmLWVmYTctNDM0Yy1iYWFhLTZjMGI3YjdmYjA5MSJ9.eyJpZCI6Ijc4YjUzYzQwLTliNDAtMTFlYy05Mjk4LTY2NTE4MTI1NWMwYSIsImNpZCI6IjgzNWJiMWNhLWU3YzQtNDFlNi05ZTg4LTQ2NGRlNTRjYzA4ZSIsIm51bSI6IlRFU1QxMDEwMDEtMjAyMiIsInRzIjoxNjQ2MzQ2MTc0fQ.SntdHRLSei4fYiJ1DwsnCTS3qdqVJI62qDaOBOW8dWDrRJZgOlb3LkVtCaH-9wWZj8wIU_ce565pX_GB8eYAMA",
-            ],
-          "created_at": "2022-03-03T22:22:54Z",
-        }
-
-paths:
-  "/series":
-    get:
-      tags: ["series"]
-      summary: Fetch a list of series
-      description: >
-        Generate a list of all the series that belong to the currently authenticated token.
-
-        This request does not currently support pagination.
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeriesCollection"
-              examples:
-                series-fetch:
-                  $ref: "#/components/examples/series-list"
-  "/series/{id}":
-    put:
-      tags: ["series"]
-      summary: Create a new series
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: New Series UUID
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateSeries"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Series"
-              examples:
-                series-create:
-                  $ref: "#/components/examples/series-create"
-    get:
-      tags: ["series"]
-      summary: Fetch a Series
-      parameters:
-        - name: id
-          in: path
-          description: Series id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Series"
-              examples:
-                series-fetch:
-                  $ref: "#/components/examples/series-fetch"
-
-  "/series/{series_id}/entries":
-    get:
-      tags: ["series", "entries"]
-      summary: Fetch a collection of Entries in the Series
-      description: >
-        Build a list of all the entries that belong to the requested series.
-
-        Basic pagination is supported using a `cursor` that when provided in the next query
-        will provide the next set of entries.
-      parameters:
-        - name: series_id
-          in: path
-          required: true
-          description: Series ID
-          schema:
-            type: string
-            format: uuid
-        - name: limit
-          in: query
-          required: false
-          description: Max number of results in set.
-          schema:
-            type: integer
-        - name: cursor
-          in: query
-          required: false
-          description: Cursor position provided by the last result set.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EntryCollection"
-              examples:
-                entries-list:
-                  $ref: "#/components/examples/entries-list"
-
-  "/series/{series_id}/entries/{id}":
-    put:
-      tags: ["series", "entries"]
-      summary: Create a new Entry in the Series
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateEntry"
-      parameters:
-        - name: series_id
-          in: path
-          description: Series ID
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: id
-          in: path
-          description: New Entry ID
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Entry"
-              examples:
-                entries-fetch:
-                  $ref: "#/components/examples/entries-fetch"
-    get:
-      tags: ["series", "entries"]
-      summary: Fetch an Entry in the Series
-      parameters:
-        - name: series_id
-          in: path
-          description: Series ID
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: id
-          in: path
-          description: Entry ID
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Entry"
-              examples:
-                entries-fetch:
-                  $ref: "#/components/examples/entries-fetch"
+        last_index:
+          type: integer
+        name:
+          type: string
+        padding:
+          type: integer
+        prefix:
+          type: string
+        suffix:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    SequenceSeriesCollection:
+      properties:
+        list:
+          items:
+            $ref: "#/components/schemas/SequenceSeries"
+          nullable: true
+          type: array
+      type: object
+  securitySchemes:
+    authToken:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

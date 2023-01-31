@@ -1,0 +1,211 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    The Invopop Silo Service API allows you to define allows you to store
+    entries.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Silo Service API
+  version: 1.0.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+  - description: local development
+    url: https://api.invopop.dev
+paths:
+  /silo/v1/entries:
+    get:
+      description: Fetch a collection of entries
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloEntryCollection"
+          description: OK
+  /silo/v1/entries/{id}:
+    get:
+      description: Fetch an entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloEntry"
+          description: OK
+    patch:
+      description: update an entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data: {}
+                folder:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloEntry"
+          description: OK
+    post:
+      description: Create an entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data: {}
+                folder:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloEntry"
+          description: OK
+    put:
+      description: Create an entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data: {}
+                folder:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloEntry"
+          description: OK
+components:
+  schemas:
+    CbcMeta:
+      additionalProperties:
+        type: string
+      type: object
+    DsigDigest:
+      properties:
+        alg:
+          $ref: "#/components/schemas/DsigDigestAlgorithm"
+        val:
+          type: string
+      type: object
+    DsigDigestAlgorithm:
+      type: string
+    SiloAttachment:
+      properties:
+        created_at:
+          type: string
+        desc:
+          type: string
+        hash:
+          type: string
+        id:
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          type: object
+        mime:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+        stored:
+          type: boolean
+        url:
+          type: string
+      type: object
+    SiloEntry:
+      properties:
+        attachments:
+          items:
+            $ref: "#/components/schemas/SiloAttachment"
+          type: array
+        created_at:
+          type: string
+        data: {}
+        digest:
+          $ref: "#/components/schemas/DsigDigest"
+        doc_schema:
+          type: string
+        draft:
+          type: boolean
+        env_schema:
+          type: string
+        folder:
+          type: string
+        id:
+          type: string
+        meta:
+          $ref: "#/components/schemas/CbcMeta"
+        snippet: {}
+        tags:
+          items:
+            type: string
+          type: array
+        updated_at:
+          type: string
+      type: object
+    SiloEntryCollection:
+      properties:
+        created_at:
+          type: string
+        cursor:
+          type: string
+        folder:
+          type: string
+        limit:
+          type: integer
+        list:
+          items:
+            $ref: "#/components/schemas/SiloEntry"
+          nullable: true
+          type: array
+        next_cursor:
+          type: string
+      type: object
+  securitySchemes:
+    authToken:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

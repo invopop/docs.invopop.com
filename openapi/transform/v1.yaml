@@ -13,11 +13,11 @@ info:
   version: 1.0.0
 servers:
   - description: production
-    url: https://api.invopop.com/transform/v1
+    url: https://api.invopop.com
   - description: local development
-    url: https://api.invopop.dev/transform/v1
+    url: https://api.invopop.dev
 paths:
-  /integrations:
+  /transform/v1/integrations:
     post:
       description: Used to create an Integration
       parameters:
@@ -51,7 +51,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransformIntegration"
           description: OK
-  /integrations/{id}:
+  /transform/v1/integrations/{id}:
     get:
       description: Used to get an Integration
       parameters:
@@ -90,10 +90,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransformUpdateIntegration"
+              properties:
+                config: {}
+                name:
+                  type: string
+                notes:
+                  type: string
+              type: object
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/FormDataTransformUpdateIntegration"
+              properties:
+                config: {}
+                name:
+                  type: string
+                notes:
+                  type: string
+              type: object
       responses:
         "200":
           content:
@@ -101,7 +113,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransformIntegration"
           description: OK
-  /jobs:
+  /transform/v1/jobs:
     post:
       description: Used to create a new Job
       parameters:
@@ -139,7 +151,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransformJob"
           description: OK
-  /jobs/{id}:
+  /transform/v1/jobs/{id}:
     get:
       description: Used to fetch a Job
       parameters:
@@ -186,10 +198,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransformUpdateJob"
+              properties:
+                data: {}
+                silo_entry_id:
+                  type: string
+                tags:
+                  items:
+                    type: string
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  type: string
+              type: object
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/FormDataTransformUpdateJob"
+              properties:
+                data: {}
+                silo_entry_id:
+                  type: string
+                tags:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  type: string
+              type: object
       responses:
         "200":
           content:
@@ -197,7 +232,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransformJob"
           description: OK
-  /workflows:
+  /transform/v1/workflows:
     put:
       description: Used to create a new Workflow
       parameters:
@@ -230,7 +265,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransformWorkflow"
           description: OK
-  /workflows/{id}:
+  /transform/v1/workflows/{id}:
     get:
       description: Used to fetch a Workflow
       parameters:
@@ -272,10 +307,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransformUpdateWorkflow"
+              properties:
+                description:
+                  type: string
+                integration_ids:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                name:
+                  type: string
+              type: object
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/FormDataTransformUpdateWorkflow"
+              properties:
+                description:
+                  type: string
+                integration_ids:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                name:
+                  type: string
+              type: object
       responses:
         "200":
           content:
@@ -310,40 +365,6 @@ components:
           type: string
       type: object
     FormDataTransformCreateWorkflow:
-      properties:
-        description:
-          type: string
-        integration_ids:
-          items:
-            type: string
-          nullable: true
-          type: array
-        name:
-          type: string
-      type: object
-    FormDataTransformUpdateIntegration:
-      properties:
-        config: {}
-        name:
-          type: string
-        notes:
-          type: string
-      type: object
-    FormDataTransformUpdateJob:
-      properties:
-        data: {}
-        silo_entry_id:
-          type: string
-        tags:
-          items:
-            type: string
-          nullable: true
-          type: array
-        workflow_id:
-          description: WorkflowID description
-          type: string
-      type: object
-    FormDataTransformUpdateWorkflow:
       properties:
         description:
           type: string
@@ -487,39 +508,6 @@ components:
         updated_at:
           type: string
         workflow_id:
-          type: string
-      type: object
-    TransformUpdateIntegration:
-      properties:
-        config: {}
-        name:
-          type: string
-        notes:
-          type: string
-      type: object
-    TransformUpdateJob:
-      properties:
-        data: {}
-        silo_entry_id:
-          type: string
-        tags:
-          items:
-            type: string
-          type: array
-        workflow_id:
-          description: WorkflowID description
-          type: string
-      type: object
-    TransformUpdateWorkflow:
-      properties:
-        description:
-          type: string
-        integration_ids:
-          items:
-            type: string
-          nullable: true
-          type: array
-        name:
           type: string
       type: object
     TransformWorkflow:
