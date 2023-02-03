@@ -483,7 +483,10 @@ Let's go over some of the important points in that response:
 - everything is wrapped inside a response containing the data and copies of key
   fields like the schemas, digest, and draft status,
 
-- there is an `id` property that uniquely identifies this entry,
+- we've created an entry in the silo. "Silo" is the fancy name we gave to the
+  place where you store your GOBL Envelopes,
+
+- there is an `id` property that uniquely identifies this entry in the silo,
 
 - the `data` property includes a complete GOBL Envelope with the invoice,
 
@@ -509,14 +512,14 @@ Now for the exciting part. But first, let's recap what we have:
 
 - A workflow that defines which integrations to use, with an ID.
 
-- An envelope ID generated in the last request when we uploaded the Invoice.
+- A silo entry ID generated in the last request when we uploaded the Invoice.
 
 Let's put all these together and execute a job. Here's the command to perform
 from the terminal and don't forget to update the IDs with your values that were
-generated for the workflow and envelope:
+generated for the workflow and silo entry:
 
 ```bash
-curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a2e2-413c-adf0-7abf4dd25c12 -F envelope_id=181ecd5a-f242-11ec-82f1-0242ac150010 "https://api.invopop.com/transform/v1/jobs?wait=30" | jq .
+curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a2e2-413c-adf0-7abf4dd25c12 -F silo_entry_id=181ecd5a-f242-11ec-82f1-0242ac150010 "https://api.invopop.com/transform/v1/jobs?wait=30" | jq .
 ```
 
 ```json
@@ -524,7 +527,7 @@ curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a
   "id": "a42886a8-f23e-11ec-9be8-0242ac150010",
   "created_at": "2022-06-22T15:18:59.770Z",
   "updated_at": "2022-06-22T15:23:16.256Z",
-  "envelope_id": "181ecd5a-f242-11ec-82f1-0242ac150010",
+  "silo_entry_id": "181ecd5a-f242-11ec-82f1-0242ac150010",
   "workflow_id": "0d9602ab-a2e2-413c-adf0-7abf4dd25c12",
   "status": "OK",
   "completed_at": "2022-06-22T15:23:16.256Z",
@@ -738,7 +741,7 @@ There is a lot of JSON data there, but let's break it down into the key bits of
 data:
 
 - Everything is wrapped inside a "Job" object with the key fields like
-  `workflow_id` and `envelope_id`.
+  `workflow_id` and `silo_entry_id`.
 
 - Job `status` shows `OK` indicating that this job has been completed
   successfully.
