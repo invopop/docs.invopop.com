@@ -26,6 +26,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
+    post:
+      description: Create an entry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCreateEntry'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntry'
+          description: OK
   /silo/v1/entries/{id}:
     get:
       description: Fetch an entry
@@ -44,30 +58,6 @@ paths:
           description: OK
     patch:
       description: update an entry
-      parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                data: {}
-                folder:
-                  type: string
-              type: object
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SiloEntry'
-          description: OK
-    post:
-      description: Create an entry
       parameters:
       - in: path
         name: id
@@ -152,6 +142,12 @@ components:
         stored:
           type: boolean
         url:
+          type: string
+      type: object
+    SiloCreateEntry:
+      properties:
+        data: {}
+        folder:
           type: string
       type: object
     SiloEntry:
