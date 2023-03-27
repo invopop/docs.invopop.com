@@ -14,14 +14,14 @@ example we assuming the following conditions:
   items, and the tax type to apply to each.
 
 - Our invoices do _not_ already have a sequential code, but we want one that
-  looks like `TEST2201001`.
+  looks like `TEST-2201001`.
 
 - Customers require an Electronic invoice alongside a PDF.
 
 - We want an email copy of our invoice.
 
 You don't need to be a developer to use this guide, but you will need to have a
-bit of experience using a command terminal and know how to create a text file.
+bit of experience using the command line and know how to create a text file.
 For sending requests to the server we use the "curl" command, included with most
 operating systems. You might however find it easier to use a visual tool for
 sending HTTP requests like [Postman](https://www.postman.com/).
@@ -65,16 +65,18 @@ Inside the [Invopop Console](https://console.invopop.com):
 
 3. In **Name** enter "Test Series".
 
-4. In **Prefix** enter "TEST22".
+4. In **Code** enter "TEST".
 
-5. In **Padding**, leave as `5`.
+5. In **Prefix** enter "22".
 
-6. In **Start Number**, enter `1000`.
+6. In **Padding**, leave as `5`.
 
-7. Notice that the **Preview** box shows `TEST2201000`, and tap the "**Save**"
+7. In **Start Number**, enter `1000`.
+
+8. Notice that the **Preview** box shows `TEST-2201000`, and tap the "**Save**"
    button.
 
-8. The new series should now appear in the list.
+9. The new series should now appear in the list.
 
 In the next section, we'll figure out how to use this new sequence inside an
 integration.
@@ -125,7 +127,7 @@ The integration will now appear in the list.
 
 ### FacturaE
 
-From inside the **Integrations** section:
+If not in Spain, you can skip this step. From inside the **Integrations** section:
 
 1. Tap "**New Integration**".
 
@@ -232,12 +234,12 @@ contain everything needed to be globally compatible.
 If you haven't had chance to read the [GOBL Docs](https://docs.gobl.org), there
 are two basic concepts that are important to understand:
 
-1.A **GOBL Document** represents a data structure containing a payload; an
-invoice, message, contact details, or some other unit of business data, defined
-using a JSON Schema that GOBL understands.
+1. A **GOBL Document** represents a data structure containing a payload; an
+   invoice, message, contact details, or some other unit of business data, defined
+   using a JSON Schema that GOBL understands.
 
-2.A **GOBL Envelope** is a wrapper around a GOBL Document that adds meta-data
-like a digest and digital signatures.
+2. A **GOBL Envelope** is a wrapper around a GOBL Document that adds meta-data
+   like a digest and digital signatures.
 
 At Invopop, we only ever store documents which are contained inside a GOBL
 Envelope. This is important as it means we can verify the contents and ensure no
@@ -339,12 +341,12 @@ For more details on creating Invoices, see the
 on all the different options and configurations available for invoices,
 including ways you can build complete GOBL Envelopes with signatures.
 
-Let's upload this document to Invopop:
+Let's upload this document to the Invopop Silo service:
 
-1.Copy and paste the JSON above into you favorite text editor.
+1. Copy and paste the JSON above into you favorite text editor.
 
-2.Save the JSON into a file named `invoice.json` in a temporary folder you can
-easily find from the command line (`Downloads` is usually a safe bet).
+2. Save the JSON into a file named `invoice.json` in a temporary folder you can
+   easily find from the command line (`Downloads` is usually a safe bet).
 
 3. Open the Terminal or command line, and enter the temporary directory, e.g.
    `cd ~/Downloads`.
@@ -496,7 +498,7 @@ Let's go over some of the important points in that response:
 - the invoice's `code` field is still empty.
 
 <Warning>
-  we don't recommend making HTTP `POST` calls like in this example as they do
+  We don't recommend making HTTP `POST` calls like in this example as they do
   not include an ID that would make the request
   [idempotent](https://en.wikipedia.org/wiki/Idempotence). This is fine for
   testing, but in production environments, you should pre-assign a UUID (v1) to
@@ -741,6 +743,7 @@ There is a lot of JSON data there, but let's break it down into the key bits of
 data:
 
 - Everything is wrapped inside a "Job" object with the key fields like
+  `workflow_id` and `silo_entry_id`.
   `workflow_id` and `silo_entry_id`.
 
 - Job `status` shows `OK` indicating that this job has been completed
