@@ -1,0 +1,535 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description: The Invopop Transform Service API offers end points to be able to manage
+    tasks and workflows with the primary objective being to send requests for jobs.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Transform Service API
+  version: 1.0.1
+servers:
+- description: production
+  url: https://api.invopop.com
+- description: local development
+  url: https://api.invopop.dev
+paths:
+  /transform/v1/integrations:
+    post:
+      description: Used to create an Integration
+      parameters:
+      - in: query
+        name: name
+        schema:
+          type: string
+      - in: query
+        name: notes
+        schema:
+          type: string
+      - in: query
+        name: provider
+        schema:
+          type: string
+      - in: query
+        name: config
+        schema: {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformCreateIntegration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FormDataTransformCreateIntegration'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformIntegration'
+          description: OK
+  /transform/v1/integrations/{id}:
+    get:
+      description: Used to get an Integration
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformIntegration'
+          description: OK
+    patch:
+      description: Used to update an Integration
+      parameters:
+      - in: query
+        name: name
+        schema:
+          type: string
+      - in: query
+        name: notes
+        schema:
+          type: string
+      - in: query
+        name: config
+        schema: {}
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                config: {}
+                name:
+                  type: string
+                notes:
+                  type: string
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                config: {}
+                name:
+                  type: string
+                notes:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformIntegration'
+          description: OK
+  /transform/v1/jobs:
+    post:
+      description: Used to create a new Job
+      parameters:
+      - description: WorkflowID description
+        in: query
+        name: workflow_id
+        schema:
+          description: WorkflowID description
+          type: string
+      - in: query
+        name: silo_entry_id
+        schema:
+          type: string
+      - in: query
+        name: data
+        schema: {}
+      - in: query
+        name: tags
+        schema:
+          items:
+            type: string
+          type: array
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformCreateJob'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FormDataTransformCreateJob'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK
+  /transform/v1/jobs/{id}:
+    get:
+      description: Used to fetch a Job
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK
+    put:
+      description: Used to update a Job
+      parameters:
+      - description: WorkflowID description
+        in: query
+        name: workflow_id
+        schema:
+          description: WorkflowID description
+          type: string
+      - in: query
+        name: silo_entry_id
+        schema:
+          type: string
+      - in: query
+        name: data
+        schema: {}
+      - in: query
+        name: tags
+        schema:
+          items:
+            type: string
+          type: array
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data: {}
+                silo_entry_id:
+                  type: string
+                tags:
+                  items:
+                    type: string
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  type: string
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                data: {}
+                silo_entry_id:
+                  type: string
+                tags:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK
+  /transform/v1/workflows:
+    put:
+      description: Used to create a new Workflow
+      parameters:
+      - in: query
+        name: name
+        schema:
+          type: string
+      - in: query
+        name: description
+        schema:
+          type: string
+      - in: query
+        name: integration_ids
+        schema:
+          items:
+            type: string
+          type: array
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformCreateWorkflow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FormDataTransformCreateWorkflow'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformWorkflow'
+          description: OK
+  /transform/v1/workflows/{id}:
+    get:
+      description: Used to fetch a Workflow
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformWorkflow'
+          description: OK
+    patch:
+      description: Used to update a Workflow
+      parameters:
+      - in: query
+        name: name
+        schema:
+          type: string
+      - in: query
+        name: description
+        schema:
+          type: string
+      - in: query
+        name: integration_ids
+        schema:
+          items:
+            type: string
+          type: array
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  type: string
+                integration_ids:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                name:
+                  type: string
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                description:
+                  type: string
+                integration_ids:
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                name:
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformWorkflow'
+          description: OK
+components:
+  schemas:
+    FormDataTransformCreateIntegration:
+      properties:
+        config: {}
+        name:
+          type: string
+        notes:
+          type: string
+        provider:
+          type: string
+      type: object
+    FormDataTransformCreateJob:
+      properties:
+        data: {}
+        silo_entry_id:
+          type: string
+        tags:
+          items:
+            type: string
+          nullable: true
+          type: array
+        workflow_id:
+          description: WorkflowID description
+          type: string
+      type: object
+    FormDataTransformCreateWorkflow:
+      properties:
+        description:
+          type: string
+        integration_ids:
+          items:
+            type: string
+          nullable: true
+          type: array
+        name:
+          type: string
+      type: object
+    TransformAttachment:
+      properties:
+        desc:
+          type: string
+        hash:
+          type: string
+        id:
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          type: object
+        mime:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+        url:
+          type: string
+      type: object
+    TransformCreateIntegration:
+      properties:
+        config: {}
+        name:
+          type: string
+        notes:
+          type: string
+        provider:
+          type: string
+      type: object
+    TransformCreateJob:
+      properties:
+        data: {}
+        silo_entry_id:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+        workflow_id:
+          description: WorkflowID description
+          type: string
+      type: object
+    TransformCreateWorkflow:
+      properties:
+        description:
+          type: string
+        integration_ids:
+          items:
+            type: string
+          nullable: true
+          type: array
+        name:
+          type: string
+      type: object
+    TransformEvent:
+      properties:
+        at:
+          type: string
+        code:
+          type: string
+        index:
+          type: integer
+        message:
+          type: string
+        status:
+          type: string
+      type: object
+    TransformIntegration:
+      properties:
+        config: {}
+        created_at:
+          type: string
+        disabled:
+          type: boolean
+        id:
+          type: string
+        name:
+          type: string
+        notes:
+          type: string
+        provider:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    TransformIntent:
+      properties:
+        completed:
+          type: boolean
+        created_at:
+          type: string
+        events:
+          items:
+            $ref: '#/components/schemas/TransformEvent'
+          type: array
+        id:
+          type: string
+        integration_id:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    TransformJob:
+      properties:
+        attachments:
+          items:
+            $ref: '#/components/schemas/TransformAttachment'
+          type: array
+        completed_at:
+          type: string
+        created_at:
+          type: string
+        envelope: {}
+        id:
+          type: string
+        intents:
+          items:
+            $ref: '#/components/schemas/TransformIntent'
+          type: array
+        silo_entry_id:
+          type: string
+        status:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+        updated_at:
+          type: string
+        workflow_id:
+          type: string
+      type: object
+    TransformWorkflow:
+      properties:
+        created_at:
+          type: string
+        description:
+          type: string
+        disabled:
+          type: boolean
+        id:
+          type: string
+        integration_ids:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+        updated_at:
+          type: string
+      type: object
+  securitySchemes:
+    authToken:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
