@@ -69,8 +69,14 @@ paths:
           application/json:
             schema:
               properties:
-                data: {}
+                data:
+                  description: Updated envelope data. New document contents will only
+                    be accepted if the existing envelope data is still a draft.
+                  title: Data
                 folder:
+                  description: New location for the silo entry.
+                  example: drafts
+                  title: Folder
                   type: string
               type: object
       responses:
@@ -93,8 +99,15 @@ paths:
           application/json:
             schema:
               properties:
-                data: {}
+                data:
+                  description: Data contents to upload which may either be a GOBL
+                    Envelope or Document. Any partial data will be calculated and
+                    validated automatically.
+                  title: Data
                 folder:
+                  description: In which folder the entry should be associated, leave
+                    empty to use the automatic rules.
+                  title: Folder
                   type: string
               type: object
       responses:
@@ -122,81 +135,157 @@ components:
     SiloAttachment:
       properties:
         created_at:
+          description: The date and time this attachment was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
           type: string
         desc:
+          description: Description of the file.
+          example: Invoice for January 2021.
+          title: Description
           type: string
         hash:
+          description: SHA256 hash of the file.
+          example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+          title: Hash
           type: string
         id:
+          description: UUIDv4 that identifies the attachment.
+          title: ID
           type: string
         meta:
           additionalProperties:
             type: string
+          description: Any additional meta data about the attachment.
+          title: Meta
           type: object
         mime:
+          description: MIME type of the file.
+          example: application/pdf
+          title: MIME
           type: string
         name:
+          description: Name of the file.
+          example: invoice.pdf
+          title: Name
           type: string
         size:
+          description: Size of the file in bytes.
+          example: 12345
+          title: Size
           type: integer
         stored:
+          description: When true, indicates that the file's contents have been uploaded
+            successfully.
+          example: true
+          title: Stored
           type: boolean
         url:
+          description: URL where the file's contents can be downloaded.
+          title: Public URL
           type: string
       type: object
     SiloCreateEntry:
       properties:
-        data: {}
+        data:
+          description: Data contents to upload which may either be a GOBL Envelope
+            or Document. Any partial data will be calculated and validated automatically.
+          title: Data
         folder:
+          description: In which folder the entry should be associated, leave empty
+            to use the automatic rules.
+          title: Folder
           type: string
       type: object
     SiloEntry:
       properties:
         attachments:
+          description: List of attachments for this entry.
           items:
             $ref: '#/components/schemas/SiloAttachment'
+          title: Attachments
           type: array
         created_at:
+          description: The date and time this silo entry was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
           type: string
-        data: {}
+        data:
+          description: JSON envelope contents when specifically requested.
+          title: Data
         digest:
           $ref: '#/components/schemas/DsigDigest'
         doc_schema:
+          description: Schema URL for the document.
+          example: https://gobl.org/draft-0/bill/invoice
+          title: Document Schema
           type: string
         draft:
+          description: When true, indicates that the envelope is a draft.
+          example: true
+          title: Draft
           type: boolean
         env_schema:
+          description: Schema URL for the envelope.
+          example: https://gobl.org/draft-0/envelope
+          title: Envelope Schema
           type: string
         folder:
+          description: Key for the folder where the entry is located.
+          example: sales
+          title: Folder
           type: string
         id:
+          description: UUIDv1 for this silo entry.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
           type: string
         meta:
           $ref: '#/components/schemas/CbcMeta'
-        snippet: {}
+        snippet:
+          description: JSON object containing a snippet of the document.
+          title: Snippet
         tags:
           items:
             type: string
+          title: Tags
           type: array
         updated_at:
+          description: The date and time this silo entry was last updated.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Updated At
           type: string
       type: object
     SiloEntryCollection:
       properties:
         created_at:
+          description: Date from which results are provided.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
           type: string
         cursor:
+          description: Cursor used to identify the current page of results.
+          title: Cursor
           type: string
         folder:
+          description: Key for the folder
+          example: sales
+          title: Folder
           type: string
         limit:
+          example: 20
+          title: Limit
           type: integer
         list:
+          description: Array of entries.
           items:
             $ref: '#/components/schemas/SiloEntry'
           nullable: true
+          title: List
           type: array
         next_cursor:
+          description: Cursor used to identify the next page of results.
+          title: Next Cursor
           type: string
       type: object
   securitySchemes:
