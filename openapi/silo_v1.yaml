@@ -18,7 +18,7 @@ servers:
 paths:
   /silo/v1/entries:
     get:
-      description: Fetch a collection of entries
+      description: Perform a query for a collection of silo entries.
       responses:
         "200":
           content:
@@ -27,7 +27,8 @@ paths:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
     post:
-      description: Create an entry
+      description: Create a new silo entry without an explicit UUID. Only recommended
+        for testing purposes, production environments should use the PUT method.
       requestBody:
         content:
           application/json:
@@ -42,7 +43,8 @@ paths:
           description: OK
   /silo/v1/entries/{id}:
     get:
-      description: Fetch an entry
+      description: Fetch a single silo entry's meta data and contents for the provided
+        ID.
       parameters:
       - in: path
         name: id
@@ -57,7 +59,7 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
     patch:
-      description: update an entry
+      description: Update an entry.
       parameters:
       - in: path
         name: id
@@ -87,7 +89,8 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
     put:
-      description: Create an entry
+      description: Create a new silo entry with the UUIDv1 defined in the id parameter
+        so the request is idempotent.
       parameters:
       - in: path
         name: id
