@@ -28,12 +28,14 @@ paths:
           description: OK
   /sequence/v1/series/{id}:
     get:
-      description: Fetch a Serie
+      description: Fetch a Series
       parameters:
-      - in: path
+      - description: UUID of the series.
+        in: path
         name: id
         required: true
         schema:
+          description: UUID of the series.
           type: string
       responses:
         "200":
@@ -45,10 +47,12 @@ paths:
     put:
       description: Create a Series
       parameters:
-      - in: path
+      - description: UUID of the series to create.
+        in: path
         name: id
         required: true
         schema:
+          description: UUID of the series to create.
           type: string
       requestBody:
         content:
@@ -56,22 +60,49 @@ paths:
             schema:
               properties:
                 code:
+                  description: A code that can be used to identify the series.
+                  example: SALES-2020
+                  title: Code
                   type: string
                 description:
+                  description: A description of the series.
+                  example: This series is used for sales.
+                  title: Description
                   type: string
                 id:
+                  description: The UUIDv4 of the series.
+                  example: a8904315-3d16-4a95-91c1-30d6cdde553e
+                  title: ID
                   type: string
                 name:
+                  description: The name of the series.
+                  example: My Series
+                  title: Name
                   type: string
                 padding:
+                  description: The number of 0s to pad the generated codes with.
+                  example: 5
+                  title: Padding
                   type: integer
                 prefix:
+                  description: A prefix that will be prepended to all entries.
+                  example: INV-
+                  title: Prefix
                   type: string
                 sig:
+                  description: JSON Web Signature of the key properties used to create
+                    the series.
+                  title: Signature
                   type: string
                 start:
+                  description: The starting index for the series.
+                  example: 1
+                  title: Start
                   type: integer
                 suffix:
+                  description: A suffix that will be appended to all entries.
+                  example: -F1
+                  title: Suffix
                   type: string
               type: object
       responses:
@@ -85,10 +116,13 @@ paths:
     get:
       description: Fetch a collection of entries
       parameters:
-      - in: path
+      - description: The ID of the series to fetch entries for.
+        in: path
         name: series_id
         required: true
         schema:
+          description: The ID of the series to fetch entries for.
+          title: Series ID
           type: string
       responses:
         "200":
@@ -101,15 +135,19 @@ paths:
     get:
       description: Fetch an entry
       parameters:
-      - in: path
+      - description: UUID of the series.
+        in: path
         name: series_id
         required: true
         schema:
+          description: UUID of the series.
           type: string
-      - in: path
+      - description: UUID of the entry to fetch.
+        in: path
         name: id
         required: true
         schema:
+          description: UUID of the entry to fetch.
           type: string
       responses:
         "200":
@@ -121,15 +159,21 @@ paths:
     put:
       description: Create an entry
       parameters:
-      - in: path
+      - description: The UUIDv4 of the entry.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUIDv4 of the entry.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: ID
           type: string
-      - in: path
+      - description: UUID of the series to create the entry in.
+        in: path
         name: series_id
         required: true
         schema:
+          description: UUID of the series to create the entry in.
           type: string
       requestBody:
         content:
@@ -137,12 +181,21 @@ paths:
             schema:
               properties:
                 id:
+                  description: The UUIDv4 of the entry.
+                  example: a8904315-3d16-4a95-91c1-30d6cdde553e
+                  title: ID
                   type: string
                 meta:
                   additionalProperties:
                     type: string
+                  description: A set of key/value pairs that can be used to store
+                    additional information about the entry.
+                  title: Meta
                   type: object
                 sig:
+                  description: JSON Web Signature of the key properties used to create
+                    the entry.
+                  title: Signature
                   type: string
               type: object
       responses:
@@ -157,69 +210,136 @@ components:
     SequenceEntry:
       properties:
         code:
+          description: The complete code for the entry, including prefix and suffix.
+          example: INV-00001-F1
+          title: Code
           type: string
         created_at:
+          description: The date and time the entry was created.
+          example: "2020-10-01T00:00:00Z"
+          title: Created At
           type: string
         id:
+          description: The UUID of the entry.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: ID
           type: string
         meta:
           additionalProperties:
             type: string
+          description: A set of key/value pairs that can be used to store additional
+            information about the entry.
+          title: Meta
           type: object
         previous_id:
+          description: The UUID of the previous entry in the series.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: Previous ID
           type: string
         series_id:
+          description: The UUID of the series the entry belongs to.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: Series ID
           type: string
         sigs:
+          description: Set of JSON Web Signatures validating the information contained
+            in the entry.
           items:
             type: string
+          title: Signatures
           type: array
         updated_at:
+          description: The date and time the entry was last updated.
+          example: "2020-10-01T00:00:00Z"
+          title: Updated At
           type: string
       type: object
     SequenceEntryCollection:
       properties:
         cursor:
+          description: The cursor used to retrieve the next page of entries.
+          example: eyJpZCI6ImE4OTA0MzE1LTNkMTYtNGE5NS05MWMxLTMwZDZjZGRlNTUzZSIsImxpbWl0IjoyMH0=
+          title: Cursor
           type: string
         limit:
+          description: The maximum number of entries returned in the list.
+          example: 20
+          title: Limit
           type: integer
         list:
+          description: A list of entries.
           items:
             $ref: '#/components/schemas/SequenceEntry'
           nullable: true
+          title: List
           type: array
       type: object
     SequenceSeries:
       properties:
         code:
+          description: A code that can be used to identify the series.
+          example: SALES-2020
+          title: Code
           type: string
         created_at:
+          description: The date and time the series was created.
+          example: "2020-10-01T00:00:00Z"
+          title: Created At
           type: string
         description:
+          description: A description of the series.
+          example: This series is used for sales.
+          title: Description
           type: string
         id:
+          description: The UUIDv4 of the series.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: ID
           type: string
         last_entry_id:
+          description: The ID of the last entry in the series.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: Last Entry ID
           type: string
         last_index:
+          description: The last index used in the series.
+          example: 100
+          title: Last Index
           type: integer
         name:
+          description: The name of the series.
+          example: My Series
+          title: Name
           type: string
         padding:
+          description: The number of 0s to pad the generated codes with.
+          example: 5
+          title: Padding
           type: integer
         prefix:
+          description: A prefix that will be prepended to all entries.
+          example: INV-
+          title: Prefix
           type: string
         suffix:
+          description: A suffix that will be appended to all entries.
+          example: -F1
+          title: Suffix
           type: string
         updated_at:
+          description: The date and time the series was last updated.
+          example: "2020-10-01T00:00:00Z"
+          title: Updated At
           type: string
       type: object
     SequenceSeriesCollection:
       properties:
         list:
+          description: A list of series.
           items:
             $ref: '#/components/schemas/SequenceSeries'
           nullable: true
+          title: List
           type: array
       type: object
   securitySchemes:
