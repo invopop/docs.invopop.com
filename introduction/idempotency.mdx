@@ -22,15 +22,16 @@ to be repeated.
 Create actions, like `POST` or `PUT` however require additional gurantees to
 ensure data will not be duplicated. The Invopop APIs handle these scenarios by
 requiring that every model and thus every incoming operation includes an `id`
-field in either UUIDv1 or UUIDv4 string format. If the same create request is
-made twice with the same ID, _and assuming none of the fields have changed_, the
-second request will simply return the same response as the first.
-
-If a create request is made with an existing ID and a different payload, the api
-will respond with a `409 Conflict` response, allowing you to double check what
-might have gone wrong. If the data changes, the request is not idempotent!
+field in UUID[^1] string format. If you send a create request with a previously
+used ID, the API will either return an error or, for certain operations, if
+there are no changes in the payload, the same response as the first request.
 
 Many APIs we've seen offer the ability to provide something like an
 `Idempotency-Key` in the header. This works, but adds additional complication to
 the client, and we felt for our use could more easily be handled by the ID
 fields typically included in models.
+
+[^1]: All UUID versions are supported by most operations. However, there are a
+    few instances where only UUIDv1 is supported. Please check the reference
+    documentation for each create operation to see which UUID versions it
+    supports.
