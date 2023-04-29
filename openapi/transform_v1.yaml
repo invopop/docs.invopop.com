@@ -17,51 +17,14 @@ servers:
   url: https://api.invopop.dev
 paths:
   /transform/v1/integrations:
-    post:
-      description: Used to create an Integration
-      parameters:
-      - description: Name of the integration.
-        in: query
-        name: name
-        schema:
-          description: Name of the integration.
-          title: Name
-          type: string
-      - description: Notes about the integration.
-        in: query
-        name: notes
-        schema:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-      - description: Provider to use for the integration.
-        in: query
-        name: provider
-        schema:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
-          type: string
-      - description: JSON configuration for this provider.
-        in: query
-        name: config
-        schema:
-          description: JSON configuration for this provider.
-          title: Config
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransformCreateIntegration'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FormDataTransformCreateIntegration'
+    get:
+      description: Used to fetch all Integrations
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformIntegration'
+                $ref: '#/components/schemas/TransformCollection'
           description: OK
   /transform/v1/integrations/{id}:
     get:
@@ -141,6 +104,91 @@ paths:
                 notes:
                   description: Updated notes.
                   title: Notes
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformIntegration'
+          description: OK
+    put:
+      description: Used to create an Integration
+      parameters:
+      - description: Name of the integration.
+        in: query
+        name: name
+        schema:
+          description: Name of the integration.
+          title: Name
+          type: string
+      - description: Notes about the integration.
+        in: query
+        name: notes
+        schema:
+          description: Notes about the integration.
+          title: Notes
+          type: string
+      - description: Provider to use for the integration.
+        in: query
+        name: provider
+        schema:
+          description: Provider to use for the integration.
+          example: email
+          title: Provider
+          type: string
+      - description: JSON configuration for this provider.
+        in: query
+        name: config
+        schema:
+          description: JSON configuration for this provider.
+          title: Config
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                config:
+                  description: JSON configuration for this provider.
+                  title: Config
+                name:
+                  description: Name of the integration.
+                  title: Name
+                  type: string
+                notes:
+                  description: Notes about the integration.
+                  title: Notes
+                  type: string
+                provider:
+                  description: Provider to use for the integration.
+                  example: email
+                  title: Provider
+                  type: string
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                config:
+                  description: JSON configuration for this provider.
+                  title: Config
+                name:
+                  description: Name of the integration.
+                  title: Name
+                  type: string
+                notes:
+                  description: Notes about the integration.
+                  title: Notes
+                  type: string
+                provider:
+                  description: Provider to use for the integration.
+                  example: email
+                  title: Provider
                   type: string
               type: object
       responses:
@@ -470,25 +518,6 @@ paths:
           description: OK
 components:
   schemas:
-    FormDataTransformCreateIntegration:
-      properties:
-        config:
-          description: JSON configuration for this provider.
-          title: Config
-        name:
-          description: Name of the integration.
-          title: Name
-          type: string
-        notes:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-        provider:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
-          type: string
-      type: object
     FormDataTransformCreateJob:
       properties:
         data:
@@ -594,25 +623,6 @@ components:
           description: Timestamp that indicates the start of the next page of results,
             if any.
           title: Next Created At
-          type: string
-      type: object
-    TransformCreateIntegration:
-      properties:
-        config:
-          description: JSON configuration for this provider.
-          title: Config
-        name:
-          description: Name of the integration.
-          title: Name
-          type: string
-        notes:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-        provider:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
           type: string
       type: object
     TransformCreateJob:
