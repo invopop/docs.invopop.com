@@ -18,7 +18,7 @@ servers:
 paths:
   /transform/v1/integrations:
     get:
-      description: Used to fetch all Integrations
+      description: Fetch all the integrations in the current company.
       responses:
         "200":
           content:
@@ -28,15 +28,14 @@ paths:
           description: OK
   /transform/v1/integrations/{id}:
     get:
-      description: Used to get an Integration
+      description: Fetch an existing integration given its UUID.
       parameters:
-      - description: UUIDv4 for this integration.
+      - description: The UUID of the integration to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUIDv4 for this integration.
-          example: 8d49556b-ff63-477b-9cd3-32c986c1c77b
+          description: The UUID of the integration to fetch.
           title: ID
           type: string
       responses:
@@ -47,7 +46,7 @@ paths:
                 $ref: '#/components/schemas/TransformIntegration'
           description: OK
     patch:
-      description: Used to update an Integration
+      description: Update an existing integration given its UUID.
       parameters:
       - description: New name for the integration.
         in: query
@@ -69,10 +68,13 @@ paths:
         schema:
           description: Updated configuration.
           title: Config
-      - in: path
+      - description: The UUID of the integration to update.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUID of the integration to update.
+          title: ID
           type: string
       requestBody:
         content:
@@ -114,7 +116,8 @@ paths:
                 $ref: '#/components/schemas/TransformIntegration'
           description: OK
     put:
-      description: Used to create an Integration
+      description: Create a new integration idempotently with the given UUID (any
+        version).
       parameters:
       - description: Name of the integration.
         in: query
@@ -144,10 +147,13 @@ paths:
         schema:
           description: JSON configuration for this provider.
           title: Config
-      - in: path
+      - description: The UUID (any version) of the integration to create.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUID (any version) of the integration to create.
+          title: ID
           type: string
       requestBody:
         content:
@@ -200,7 +206,9 @@ paths:
           description: OK
   /transform/v1/jobs:
     post:
-      description: Used to create a new Job
+      description: Create a new job non-idempotently without an explicit UUID. Only
+        recommended for testing purposes, production environments should use the PUT
+        method.
       parameters:
       - description: WorkflowID description
         in: query
@@ -252,15 +260,14 @@ paths:
           description: OK
   /transform/v1/jobs/{id}:
     get:
-      description: Used to fetch a Job
+      description: Fetch an existing job given its UUID.
       parameters:
-      - description: UUIDv1 for the Job
+      - description: The UUID of the job to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUIDv1 for the Job
-          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          description: The UUID of the job to fetch.
           title: ID
           type: string
       responses:
@@ -271,7 +278,8 @@ paths:
                 $ref: '#/components/schemas/TransformJob'
           description: OK
     put:
-      description: Used to update a Job
+      description: Create a new job idempotently with the given UUIDv1 (other versions
+        not supported).
       parameters:
       - description: WorkflowID description
         in: query
@@ -306,10 +314,13 @@ paths:
             type: string
           title: Tags
           type: array
-      - in: path
+      - description: The UUIDv1 (other versions not supported) of the job to create.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUIDv1 (other versions not supported) of the job to create.
+          title: ID
           type: string
       requestBody:
         content:
@@ -369,7 +380,7 @@ paths:
           description: OK
   /transform/v1/workflows:
     get:
-      description: Used to fetch all Workflows
+      description: Fetch all the workflows in the current company.
       responses:
         "200":
           content:
@@ -377,58 +388,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransformCollection'
           description: OK
-    put:
-      description: Used to create a new Workflow
-      parameters:
-      - description: Name of the workflow.
-        in: query
-        name: name
-        schema:
-          description: Name of the workflow.
-          title: Name
-          type: string
-      - description: Description of the workflow.
-        in: query
-        name: description
-        schema:
-          description: Description of the workflow.
-          title: Description
-          type: string
-      - description: Array of integration IDs to use for this workflow.
-        in: query
-        name: integration_ids
-        schema:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          title: Integration IDs
-          type: array
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransformCreateWorkflow'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FormDataTransformCreateWorkflow'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransformWorkflow'
-          description: OK
   /transform/v1/workflows/{id}:
     get:
-      description: Used to fetch a Workflow
+      description: Fetch an existing workflow given its UUID.
       parameters:
-      - description: Workflow UUIDv4.
+      - description: The UUID of the workflow to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: Workflow UUIDv4.
-          example: 186522a6-e697-4e34-8498-eee961bcb845
+          description: The UUID of the workflow to fetch.
           title: ID
           type: string
       responses:
@@ -439,7 +408,7 @@ paths:
                 $ref: '#/components/schemas/TransformWorkflow'
           description: OK
     patch:
-      description: Used to update a Workflow
+      description: Update an existing workflow given its UUID.
       parameters:
       - description: New name for the workflow.
         in: query
@@ -464,10 +433,13 @@ paths:
             type: string
           title: Integration IDs
           type: array
-      - in: path
+      - description: The UUID of the workflow to update.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUID of the workflow to update.
+          title: ID
           type: string
       requestBody:
         content:
@@ -506,6 +478,87 @@ paths:
                   type: array
                 name:
                   description: New name for the workflow.
+                  title: Name
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformWorkflow'
+          description: OK
+    put:
+      description: Create a new workflow idempotently with the given UUID (any version).
+      parameters:
+      - description: Name of the workflow.
+        in: query
+        name: name
+        schema:
+          description: Name of the workflow.
+          title: Name
+          type: string
+      - description: Description of the workflow.
+        in: query
+        name: description
+        schema:
+          description: Description of the workflow.
+          title: Description
+          type: string
+      - description: Array of integration IDs to use for this workflow.
+        in: query
+        name: integration_ids
+        schema:
+          description: Array of integration IDs to use for this workflow.
+          items:
+            type: string
+          title: Integration IDs
+          type: array
+      - description: The UUID (any version) of the workflow to create.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The UUID (any version) of the workflow to create.
+          title: ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  description: Description of the workflow.
+                  title: Description
+                  type: string
+                integration_ids:
+                  description: Array of integration IDs to use for this workflow.
+                  items:
+                    type: string
+                  nullable: true
+                  title: Integration IDs
+                  type: array
+                name:
+                  description: Name of the workflow.
+                  title: Name
+                  type: string
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                description:
+                  description: Description of the workflow.
+                  title: Description
+                  type: string
+                integration_ids:
+                  description: Array of integration IDs to use for this workflow.
+                  items:
+                    type: string
+                  nullable: true
+                  title: Integration IDs
+                  type: array
+                name:
+                  description: Name of the workflow.
                   title: Name
                   type: string
               type: object
@@ -539,24 +592,6 @@ components:
         workflow_id:
           description: WorkflowID description
           title: Workflow ID
-          type: string
-      type: object
-    FormDataTransformCreateWorkflow:
-      properties:
-        description:
-          description: Description of the workflow.
-          title: Description
-          type: string
-        integration_ids:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          nullable: true
-          title: Integration IDs
-          type: array
-        name:
-          description: Name of the workflow.
-          title: Name
           type: string
       type: object
     TransformAttachment:
@@ -647,24 +682,6 @@ components:
           title: Workflow ID
           type: string
       type: object
-    TransformCreateWorkflow:
-      properties:
-        description:
-          description: Description of the workflow.
-          title: Description
-          type: string
-        integration_ids:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          nullable: true
-          title: Integration IDs
-          type: array
-        name:
-          description: Name of the workflow.
-          title: Name
-          type: string
-      type: object
     TransformEvent:
       properties:
         at:
@@ -707,7 +724,7 @@ components:
           title: Disabled
           type: boolean
         id:
-          description: UUIDv4 for this integration.
+          description: The UUID (any version) of the integration.
           example: 8d49556b-ff63-477b-9cd3-32c986c1c77b
           title: ID
           type: string
@@ -781,7 +798,7 @@ components:
           description: Raw JSON data of the complete GOBL Envelope.
           title: GOBL Envelope
         id:
-          description: UUIDv1 for the Job
+          description: The UUIDv1 (other versions not supported) of the job
           example: 5b45453c-cdd0-11ed-afa1-0242ac120002
           title: ID
           type: string
@@ -830,7 +847,7 @@ components:
           title: Disabled
           type: boolean
         id:
-          description: Workflow UUIDv4.
+          description: The UUID (any version) of the workflow.
           example: 186522a6-e697-4e34-8498-eee961bcb845
           title: ID
           type: string
