@@ -16,143 +16,11 @@ servers:
 - description: local development
   url: https://api.invopop.dev
 paths:
-  /transform/v1/integrations:
-    post:
-      description: Used to create an Integration
-      parameters:
-      - description: Name of the integration.
-        in: query
-        name: name
-        schema:
-          description: Name of the integration.
-          title: Name
-          type: string
-      - description: Notes about the integration.
-        in: query
-        name: notes
-        schema:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-      - description: Provider to use for the integration.
-        in: query
-        name: provider
-        schema:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
-          type: string
-      - description: JSON configuration for this provider.
-        in: query
-        name: config
-        schema:
-          description: JSON configuration for this provider.
-          title: Config
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransformCreateIntegration'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FormDataTransformCreateIntegration'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransformIntegration'
-          description: OK
-  /transform/v1/integrations/{id}:
-    get:
-      description: Used to get an Integration
-      parameters:
-      - description: UUIDv4 for this integration.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUIDv4 for this integration.
-          example: 8d49556b-ff63-477b-9cd3-32c986c1c77b
-          title: ID
-          type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransformIntegration'
-          description: OK
-    patch:
-      description: Used to update an Integration
-      parameters:
-      - description: New name for the integration.
-        in: query
-        name: name
-        schema:
-          description: New name for the integration.
-          title: Name
-          type: string
-      - description: Updated notes.
-        in: query
-        name: notes
-        schema:
-          description: Updated notes.
-          title: Notes
-          type: string
-      - description: Updated configuration.
-        in: query
-        name: config
-        schema:
-          description: Updated configuration.
-          title: Config
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                config:
-                  description: Updated configuration.
-                  title: Config
-                name:
-                  description: New name for the integration.
-                  title: Name
-                  type: string
-                notes:
-                  description: Updated notes.
-                  title: Notes
-                  type: string
-              type: object
-          application/x-www-form-urlencoded:
-            schema:
-              properties:
-                config:
-                  description: Updated configuration.
-                  title: Config
-                name:
-                  description: New name for the integration.
-                  title: Name
-                  type: string
-                notes:
-                  description: Updated notes.
-                  title: Notes
-                  type: string
-              type: object
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransformIntegration'
-          description: OK
   /transform/v1/jobs:
     post:
-      description: Used to create a new Job
+      description: Create a new job non-idempotently without an explicit UUID. Only
+        recommended for testing purposes, production environments should use the PUT
+        method.
       parameters:
       - description: WorkflowID description
         in: query
@@ -204,15 +72,14 @@ paths:
           description: OK
   /transform/v1/jobs/{id}:
     get:
-      description: Used to fetch a Job
+      description: Fetch an existing job given its UUID.
       parameters:
-      - description: UUIDv1 for the Job
+      - description: The UUID of the job to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUIDv1 for the Job
-          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          description: The UUID of the job to fetch.
           title: ID
           type: string
       responses:
@@ -223,7 +90,8 @@ paths:
                 $ref: '#/components/schemas/TransformJob'
           description: OK
     put:
-      description: Used to update a Job
+      description: Create a new job idempotently with the given UUIDv1 (other versions
+        not supported).
       parameters:
       - description: WorkflowID description
         in: query
@@ -258,10 +126,13 @@ paths:
             type: string
           title: Tags
           type: array
-      - in: path
+      - description: The UUIDv1 (other versions not supported) of the job to create.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUIDv1 (other versions not supported) of the job to create.
+          title: ID
           type: string
       requestBody:
         content:
@@ -320,58 +191,25 @@ paths:
                 $ref: '#/components/schemas/TransformJob'
           description: OK
   /transform/v1/workflows:
-    put:
-      description: Used to create a new Workflow
-      parameters:
-      - description: Name of the workflow.
-        in: query
-        name: name
-        schema:
-          description: Name of the workflow.
-          title: Name
-          type: string
-      - description: Description of the workflow.
-        in: query
-        name: description
-        schema:
-          description: Description of the workflow.
-          title: Description
-          type: string
-      - description: Array of integration IDs to use for this workflow.
-        in: query
-        name: integration_ids
-        schema:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          title: Integration IDs
-          type: array
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransformCreateWorkflow'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FormDataTransformCreateWorkflow'
+    get:
+      description: Fetch all the workflows in the current company.
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformWorkflow'
+                $ref: '#/components/schemas/TransformCollection'
           description: OK
   /transform/v1/workflows/{id}:
     get:
-      description: Used to fetch a Workflow
+      description: Fetch an existing workflow given its UUID.
       parameters:
-      - description: Workflow UUIDv4.
+      - description: The UUID of the workflow to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: Workflow UUIDv4.
-          example: 186522a6-e697-4e34-8498-eee961bcb845
+          description: The UUID of the workflow to fetch.
           title: ID
           type: string
       responses:
@@ -382,7 +220,7 @@ paths:
                 $ref: '#/components/schemas/TransformWorkflow'
           description: OK
     patch:
-      description: Used to update a Workflow
+      description: Update an existing workflow given its UUID.
       parameters:
       - description: New name for the workflow.
         in: query
@@ -398,19 +236,22 @@ paths:
           description: Updated description.
           title: Description
           type: string
-      - description: New array of integration IDs to use for this workflow.
+      - description: Array of Steps to use for this workflow.
         in: query
-        name: integration_ids
+        name: steps
         schema:
-          description: New array of integration IDs to use for this workflow.
+          description: Array of Steps to use for this workflow.
           items:
-            type: string
-          title: Integration IDs
+            $ref: '#/components/schemas/TransformStep'
+          title: Steps
           type: array
-      - in: path
+      - description: The UUID of the workflow to update.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUID of the workflow to update.
+          title: ID
           type: string
       requestBody:
         content:
@@ -421,17 +262,17 @@ paths:
                   description: Updated description.
                   title: Description
                   type: string
-                integration_ids:
-                  description: New array of integration IDs to use for this workflow.
-                  items:
-                    type: string
-                  nullable: true
-                  title: Integration IDs
-                  type: array
                 name:
                   description: New name for the workflow.
                   title: Name
                   type: string
+                steps:
+                  description: Array of Steps to use for this workflow.
+                  items:
+                    $ref: '#/components/schemas/TransformStep'
+                  nullable: true
+                  title: Steps
+                  type: array
               type: object
           application/x-www-form-urlencoded:
             schema:
@@ -440,17 +281,98 @@ paths:
                   description: Updated description.
                   title: Description
                   type: string
-                integration_ids:
-                  description: New array of integration IDs to use for this workflow.
-                  items:
-                    type: string
-                  nullable: true
-                  title: Integration IDs
-                  type: array
                 name:
                   description: New name for the workflow.
                   title: Name
                   type: string
+                steps:
+                  description: Array of Steps to use for this workflow.
+                  items:
+                    $ref: '#/components/schemas/FormDataTransformStep'
+                  nullable: true
+                  title: Steps
+                  type: array
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformWorkflow'
+          description: OK
+    put:
+      description: Create a new workflow idempotently with the given UUID (any version).
+      parameters:
+      - description: Name of the workflow.
+        in: query
+        name: name
+        schema:
+          description: Name of the workflow.
+          title: Name
+          type: string
+      - description: Description of the workflow.
+        in: query
+        name: description
+        schema:
+          description: Description of the workflow.
+          title: Description
+          type: string
+      - description: Array of Steps to use for this workflow.
+        in: query
+        name: steps
+        schema:
+          description: Array of Steps to use for this workflow.
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          title: Steps
+          type: array
+      - description: The UUID (any version) of the workflow to create.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The UUID (any version) of the workflow to create.
+          title: ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  description: Description of the workflow.
+                  title: Description
+                  type: string
+                name:
+                  description: Name of the workflow.
+                  title: Name
+                  type: string
+                steps:
+                  description: Array of Steps to use for this workflow.
+                  items:
+                    $ref: '#/components/schemas/TransformStep'
+                  nullable: true
+                  title: Steps
+                  type: array
+              type: object
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                description:
+                  description: Description of the workflow.
+                  title: Description
+                  type: string
+                name:
+                  description: Name of the workflow.
+                  title: Name
+                  type: string
+                steps:
+                  description: Array of Steps to use for this workflow.
+                  items:
+                    $ref: '#/components/schemas/FormDataTransformStep'
+                  nullable: true
+                  title: Steps
+                  type: array
               type: object
       responses:
         "200":
@@ -461,25 +383,6 @@ paths:
           description: OK
 components:
   schemas:
-    FormDataTransformCreateIntegration:
-      properties:
-        config:
-          description: JSON configuration for this provider.
-          title: Config
-        name:
-          description: Name of the integration.
-          title: Name
-          type: string
-        notes:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-        provider:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
-          type: string
-      type: object
     FormDataTransformCreateJob:
       properties:
         data:
@@ -503,23 +406,7 @@ components:
           title: Workflow ID
           type: string
       type: object
-    FormDataTransformCreateWorkflow:
-      properties:
-        description:
-          description: Description of the workflow.
-          title: Description
-          type: string
-        integration_ids:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          nullable: true
-          title: Integration IDs
-          type: array
-        name:
-          description: Name of the workflow.
-          title: Name
-          type: string
+    FormDataTransformStep:
       type: object
     TransformAttachment:
       properties:
@@ -564,23 +451,27 @@ components:
           title: URL
           type: string
       type: object
-    TransformCreateIntegration:
+    TransformCollection:
       properties:
-        config:
-          description: JSON configuration for this provider.
-          title: Config
-        name:
-          description: Name of the integration.
-          title: Name
+        created_at:
+          description: First or queried timestamp when the first entry in the page
+            was created.
+          title: Created At
           type: string
-        notes:
-          description: Notes about the integration.
-          title: Notes
-          type: string
-        provider:
-          description: Provider to use for the integration.
-          example: email
-          title: Provider
+        limit:
+          description: Maximum number of objects returned in a page.
+          title: Limit
+          type: integer
+        list:
+          description: List of objects.
+          items: {}
+          nullable: true
+          title: List
+          type: array
+        next_created_at:
+          description: Timestamp that indicates the start of the next page of results,
+            if any.
+          title: Next Created At
           type: string
       type: object
     TransformCreateJob:
@@ -603,24 +494,6 @@ components:
         workflow_id:
           description: WorkflowID description
           title: Workflow ID
-          type: string
-      type: object
-    TransformCreateWorkflow:
-      properties:
-        description:
-          description: Description of the workflow.
-          title: Description
-          type: string
-        integration_ids:
-          description: Array of integration IDs to use for this workflow.
-          items:
-            type: string
-          nullable: true
-          title: Integration IDs
-          type: array
-        name:
-          description: Name of the workflow.
-          title: Name
           type: string
       type: object
     TransformEvent:
@@ -651,42 +524,6 @@ components:
           title: Status
           type: string
       type: object
-    TransformIntegration:
-      properties:
-        config:
-          description: JSON configuration sent to the provider
-          title: Configuration
-        created_at:
-          description: When the integration was created.
-          title: Created At
-          type: string
-        disabled:
-          description: When true, this integration can no longer be used.
-          title: Disabled
-          type: boolean
-        id:
-          description: UUIDv4 for this integration.
-          example: 8d49556b-ff63-477b-9cd3-32c986c1c77b
-          title: ID
-          type: string
-        name:
-          description: Name of the integration
-          title: Name
-          type: string
-        notes:
-          description: Additional internal details
-          title: Notes
-          type: string
-        provider:
-          description: ID of the provider to use
-          example: provider
-          title: Provider
-          type: string
-        updated_at:
-          description: When the integration was last updated.
-          title: Updated At
-          type: string
-      type: object
     TransformIntent:
       properties:
         completed:
@@ -708,10 +545,20 @@ components:
           example: b564ff94-7823-4f54-975e-280feb38df3f
           title: ID
           type: string
-        integration_id:
-          description: ID of the integration to use
+        name:
+          description: Name of the executed workflow step
+          example: PDF Generation
+          title: Name
+          type: string
+        provider:
+          description: ID of the provider to use
+          example: pdf
+          title: Provider
+          type: string
+        step_id:
+          description: ID of the step to use
           example: 8d49556b-ff63-477b-9cd3-32c986c1c77b
-          title: Integration ID
+          title: Step ID
           type: string
         updated_at:
           description: When the intent was last updated.
@@ -739,7 +586,7 @@ components:
           description: Raw JSON data of the complete GOBL Envelope.
           title: GOBL Envelope
         id:
-          description: UUIDv1 for the Job
+          description: The UUIDv1 (other versions not supported) of the job
           example: 5b45453c-cdd0-11ed-afa1-0242ac120002
           title: ID
           type: string
@@ -773,6 +620,30 @@ components:
           title: Workflow ID
           type: string
       type: object
+    TransformStep:
+      properties:
+        config:
+          description: JSON configuration sent to the provider
+          title: Configuration
+        id:
+          description: The UUID (any version) of the step.
+          example: 186522a6-e697-4e34-8498-eee961bcb845
+          title: ID
+          type: string
+        name:
+          description: Name of the step
+          title: Name
+          type: string
+        notes:
+          description: Additional internal details
+          title: Notes
+          type: string
+        provider:
+          description: ID of the provider to use
+          example: provider
+          title: Provider
+          type: string
+      type: object
     TransformWorkflow:
       properties:
         created_at:
@@ -788,20 +659,21 @@ components:
           title: Disabled
           type: boolean
         id:
-          description: Workflow UUIDv4.
+          description: The UUID (any version) of the workflow.
           example: 186522a6-e697-4e34-8498-eee961bcb845
           title: ID
           type: string
-        integration_ids:
-          description: List of integration IDs to use.
-          items:
-            type: string
-          title: Integrations
-          type: array
         name:
           description: Name of the workflow
           title: Name
           type: string
+        steps:
+          description: List of steps to execute
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          nullable: true
+          title: Steps
+          type: array
         updated_at:
           description: When the workflow was last updated.
           title: Updated At
