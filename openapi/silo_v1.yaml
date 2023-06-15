@@ -18,7 +18,7 @@ servers:
 paths:
   /silo/v1/entries:
     get:
-      description: Perform a query for a collection of silo entries.
+      description: Fetch all the silo entries in the current company.
       responses:
         "200":
           content:
@@ -27,8 +27,9 @@ paths:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
     post:
-      description: Create a new silo entry without an explicit UUID. Only recommended
-        for testing purposes, production environments should use the PUT method.
+      description: Create a new silo entry non-idempotently without an explicit UUID.
+        Only recommended for testing purposes, production environments should use
+        the PUT method.
       requestBody:
         content:
           application/json:
@@ -43,15 +44,14 @@ paths:
           description: OK
   /silo/v1/entries/{id}:
     get:
-      description: Fetch a single silo entry's meta data and contents for the provided
-        ID.
+      description: Fetch an existing silo entry given its UUID.
       parameters:
-      - description: UUIDv1 of the silo entry to fetch.
+      - description: The UUID of the silo entry to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUIDv1 of the silo entry to fetch.
+          description: The UUID of the silo entry to fetch.
           title: ID
           type: string
       responses:
@@ -62,14 +62,14 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
     patch:
-      description: Update an entry.
+      description: Update an existing silo entry given its UUID.
       parameters:
-      - description: UUIDv1 of the silo entry to update.
+      - description: The UUID of the silo entry to update.
         in: path
         name: id
         required: true
         schema:
-          description: UUIDv1 of the silo entry to update.
+          description: The UUID of the silo entry to update.
           title: ID
           type: string
       requestBody:
@@ -95,13 +95,18 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
     put:
-      description: Create a new silo entry with the UUIDv1 defined in the id parameter
-        so the request is idempotent.
+      description: Create a new silo entry idempotently with the given UUIDv1 (other
+        versions not supported).
       parameters:
-      - in: path
+      - description: The UUIDv1 (other versions not supported) of the silo entry to
+          create.
+        in: path
         name: id
         required: true
         schema:
+          description: The UUIDv1 (other versions not supported) of the silo entry
+            to create.
+          title: ID
           type: string
       requestBody:
         content:
@@ -159,7 +164,7 @@ components:
           title: Hash
           type: string
         id:
-          description: UUIDv4 that identifies the attachment.
+          description: The UUID that identifies the attachment.
           title: ID
           type: string
         meta:
@@ -215,7 +220,7 @@ components:
           title: Attachments
           type: array
         created_at:
-          description: The date and time this silo entry was created.
+          description: The date and time the silo entry was created.
           example: "2018-01-01T00:00:00.000Z"
           title: Created At
           type: string
@@ -245,7 +250,7 @@ components:
           title: Folder
           type: string
         id:
-          description: UUIDv1 for this silo entry.
+          description: The UUIDv1 (other versions not supported) of the silo entry.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: ID
           type: string
@@ -260,7 +265,7 @@ components:
           title: Tags
           type: array
         updated_at:
-          description: The date and time this silo entry was last updated.
+          description: The date and time the silo entry was last updated.
           example: "2018-01-01T00:00:00.000Z"
           title: Updated At
           type: string

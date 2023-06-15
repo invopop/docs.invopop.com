@@ -18,7 +18,7 @@ servers:
 paths:
   /sequence/v1/series:
     get:
-      description: Fetch a collection of Series
+      description: Fetch all the series in the current company.
       responses:
         "200":
           content:
@@ -28,14 +28,15 @@ paths:
           description: OK
   /sequence/v1/series/{id}:
     get:
-      description: Fetch a Series
+      description: Fetch an existing series given its UUID.
       parameters:
-      - description: UUID of the series.
+      - description: The UUID of the series to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUID of the series.
+          description: The UUID of the series to fetch.
+          title: ID
           type: string
       responses:
         "200":
@@ -45,14 +46,15 @@ paths:
                 $ref: '#/components/schemas/SequenceSeries'
           description: OK
     put:
-      description: Create a Series
+      description: Create a new series idempotently with the given UUID (any version).
       parameters:
-      - description: UUID of the series to create.
+      - description: The UUID (any version) of the series to create.
         in: path
         name: id
         required: true
         schema:
-          description: UUID of the series to create.
+          description: The UUID (any version) of the series to create.
+          title: ID
           type: string
       requestBody:
         content:
@@ -70,7 +72,7 @@ paths:
                   title: Description
                   type: string
                 id:
-                  description: The UUIDv4 of the series.
+                  description: The UUID (any version) of the series to create.
                   example: a8904315-3d16-4a95-91c1-30d6cdde553e
                   title: ID
                   type: string
@@ -114,14 +116,14 @@ paths:
           description: OK
   /sequence/v1/series/{series_id}/entries:
     get:
-      description: Fetch a collection of entries
+      description: Fetch all the entries in a given series.
       parameters:
-      - description: The ID of the series to fetch entries for.
+      - description: The UUID of the series to fetch entries for.
         in: path
         name: series_id
         required: true
         schema:
-          description: The ID of the series to fetch entries for.
+          description: The UUID of the series to fetch entries for.
           title: Series ID
           type: string
       responses:
@@ -133,21 +135,23 @@ paths:
           description: OK
   /sequence/v1/series/{series_id}/entries/{id}:
     get:
-      description: Fetch an entry
+      description: Fetch an existing entry in a series given its UUID.
       parameters:
-      - description: UUID of the series.
+      - description: The UUID of the series to fetch the entry from.
         in: path
         name: series_id
         required: true
         schema:
-          description: UUID of the series.
+          description: The UUID of the series to fetch the entry from.
+          title: Series ID
           type: string
-      - description: UUID of the entry to fetch.
+      - description: The UUID of the entry to fetch.
         in: path
         name: id
         required: true
         schema:
-          description: UUID of the entry to fetch.
+          description: The UUID of the entry to fetch.
+          title: ID
           type: string
       responses:
         "200":
@@ -157,23 +161,25 @@ paths:
                 $ref: '#/components/schemas/SequenceEntry'
           description: OK
     put:
-      description: Create an entry
+      description: Create a new entry in a given series idempotently with the given
+        UUID (any version).
       parameters:
-      - description: The UUIDv4 of the entry.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: The UUIDv4 of the entry.
-          example: a8904315-3d16-4a95-91c1-30d6cdde553e
-          title: ID
-          type: string
-      - description: UUID of the series to create the entry in.
+      - description: The UUID of the series to create the entry in.
         in: path
         name: series_id
         required: true
         schema:
-          description: UUID of the series to create the entry in.
+          description: The UUID of the series to create the entry in.
+          title: Series ID
+          type: string
+      - description: The UUID (any version) of the entry to create.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The UUID (any version) of the entry to create.
+          example: a8904315-3d16-4a95-91c1-30d6cdde553e
+          title: ID
           type: string
       requestBody:
         content:
@@ -181,7 +187,7 @@ paths:
             schema:
               properties:
                 id:
-                  description: The UUIDv4 of the entry.
+                  description: The UUID (any version) of the entry to create.
                   example: a8904315-3d16-4a95-91c1-30d6cdde553e
                   title: ID
                   type: string
@@ -220,7 +226,7 @@ components:
           title: Created At
           type: string
         id:
-          description: The UUID of the entry.
+          description: The UUID (any version) of the entry.
           example: a8904315-3d16-4a95-91c1-30d6cdde553e
           title: ID
           type: string
@@ -292,7 +298,7 @@ components:
           title: Description
           type: string
         id:
-          description: The UUIDv4 of the series.
+          description: The UUID (any version) of the series.
           example: a8904315-3d16-4a95-91c1-30d6cdde553e
           title: ID
           type: string
