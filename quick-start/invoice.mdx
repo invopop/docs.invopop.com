@@ -34,9 +34,7 @@ To give you a heads up, these are the stages we'll be going through:
 
 - Create a new series
 
-- Define a set of integrations
-
-- Build a new workflow that uses the integrations
+- Build a new workflow with a set of steps to execute
 
 - Upload a document
 
@@ -81,145 +79,113 @@ Inside the [Invopop Console](https://console.invopop.com):
 In the next section, we'll figure out how to use this new sequence inside an
 integration.
 
-## Create Integrations
+## Define a Workflow
 
-An integration defines a single operation that should happen to a document sent
-to Invopop. On its own, an integration can't do anything until it is added to a
-workflow and executed via a job, which we'll go through in the following
-sections. First however we need to create integrations for the following three
-key objectives:
+A Workflow in Invopop is essentially a list of steps that will be executed one-by-one
+for an incoming job. Each step is linked with a provider of a given service, like
+generating a PDF, forwarding invoices to an external tax agency, sending emails, or
+posting webhooks.
 
-1. Assign a sequential code (series) to an invoice.
+1. Head to the **Workflows** section.
 
-2. Generate an Electronic Invoice, for Spain we'll use FacturaE XML format.
+2. Tap "**New Workflow**"
 
-3. Generate a PDF.
+3. Use the Name field to give this new workflow an easy way to be identified, like
+   "Process Invoice".
 
-4. Send the complete PDF and electronic invoice via email.
+4. In the steps section, tap the "**+**" button. You'll need to repeat this step for the
+   sections described below:
 
-Each step is pretty simple, but we've split them into the following subsections
-for clarity.
+   - Series, to assign a sequential code to an invoice,
+   - FacturaE, for the Electronic invoice format used in Spain,
+   - PDF Generator, and,
+   - Send to Email.
 
-### Series
+5. Once all the steps are added, tap the "**Save**" button at the top.
 
-1. Enter the **Integrations** section.
+Congratulations! you just created a new workflow! Notice the "**ID:\***" field,
+this is the identifier we'll need to be able to use this workflow from the
+terminal or command line.
 
-2. Tap "**New Integration**".
+### Add Series Step
 
-3. From the list of providers, click **Series Enumerator**.
+Series are used to assign sequential numbers to documents, typically invoice codes,
+and guarantee their order.
 
-4. The **Name** should already be set to "Series Enumerator".
+1. From the list of providers, click **Series Enumerator**.
 
-5. Tap "**Edit configuration**".
-
-6. In the popup dialog, pick the "Test Series" option representing series we
-   created in the last section.
-
-7. Check the "Close draft envelopes automatically after adding sequence code"
-   checkbox.
-
-8. Tap "**Save**", you should see the configuration field is filled in with some
-   JSON.
-
-9. Tap "**Save**" to create the new integration.
-
-The integration will now appear in the list.
-
-### FacturaE
-
-If not in Spain, you can skip this step. From inside the **Integrations** section:
-
-1. Tap "**New Integration**".
-
-2. Select **FacturaE** from the list of providers.
-
-3. Click "**Edit configuration**".
-
-4. Read through and check the "Accept Legal Terms and Conditions" checkbox.
-
-5. Tap "**Save**".
-
-6. Tap "**Save**" again to persist and close this new integration.
-
-There should now be a FacturaE integration available in the list.
-
-### PDF
-
-Again from the **Integrations** section:
-
-1. Tap "**New Integration**".
-
-2. Select **PDF Generator** from the list.
+2. The **Name** should already be set to "Series Enumerator".
 
 3. Tap "**Edit configuration**".
 
-4. Choose a language for the invoices and upload a company logo if you have one
-   to hand.
+4. In the popup dialog, pick the "Test Series" option representing series we
+   created in the last section.
 
-5. Tap "**Save**".
+5. Check the "Close draft envelopes automatically after adding sequence code"
+   checkbox.
 
-6. Click "**Save**" again to store the PDF generator integration.
+6. Tap "**Save**", you should see the configuration field is filled in with some
+   JSON.
 
-After that, there will be a PDF Generator integration alongside the others.
+7. Tap "**Ok**" to add the step to the workflow.
 
-### Email
+### Add FacturaE Step
 
-Finally, we need to configure sending an email from the **Integrations**
-section:
+FacturaE is the Spanish Electronic Invoicing format in XML. **NOTE**, if you're not in Spain,
+you can skip creating this step and move onto the next.
 
-1.Tap "**New Integration**".
+1. Select **FacturaE** from the list of providers.
 
-2.Select **Send to Email**.
+2. Click "**Edit configuration**".
 
-3. Click "**Edit configuration**".
+3. Read through and check the "Accept Legal Terms and Conditions" checkbox.
 
-4. Introduce a destination in the "To:" or "BCC:" fields by typing the address
+4. Tap "**Save**".
+
+5. Tap "**OK**" to include the step in the workflow.
+
+There should now be a FacturaE step in the list.
+
+### Add PDF Generation Step
+
+The Invopop PDF Generator is used to convert GOBL documents into human readable PDF
+files that can be shared with customers.
+
+1. Select **PDF Generator** from the list.
+
+2. Tap "**Edit configuration**".
+
+3. Choose a language for the invoices and upload a company logo if you have one
+   to hand. Also select or change any of the settings you think might be relevant
+   for you.
+
+4. Tap "**Save**".
+
+5. Tap "**OK**" to add the PDF generator step to the workflow.
+
+### Add Email Step
+
+It can be useful to send emails to customers or billing departments with details about the
+invoices that have been generated.
+
+1. Select the **Send to Email** provider.
+
+2. Click "**Edit configuration**".
+
+3. Introduce a destination in the "To:" or "BCC:" fields by typing the address
    either in regular or "mailbox" format. (mailbox format includes name, e.g.
    `John Smith <john.smith@example.com>`).
 
-5. Hit the enter key to add the address to the lists.
+4. Alter any of the other fields that are appropriate for the email.
 
-6. Optionally tap the "Automatically add invoice customers" checkbox if you'd
+5. Tap the "Automatically add invoice customers" checkbox if you'd
    like to send copies of emails to customers defined in invoices.
 
-7. Tap "**Save**".
+6. Tap "**Save**".
 
-8. Tap "**Save**" again to save this new email integration.
+7. Tap "**OK**" to add the email sending step to the workflow.
 
-Having completed all these steps, you should now have 4 different integrations
-available to combine together into a single workflow.
-
-## Define the Workflow
-
-A workflow in Invopop is essentially a list of integrations that will be
-executed one-by-one for an incoming job. You can define as many workflows as you
-need with different combinations of integrations. For this example we're going
-to continue what we started for the invoicing scenario.
-
-1.Head to the **Workflows** section.
-
-2.Tap "**New Workflow**.
-
-3. Use the Name field to give this new workflow and easy way to be identified,
-   like "Process Invoice".
-
-4. In the steps section, tap the "**+**" button.
-
-5. Tap the **Series Enumerator** integration.
-
-6. It'll be added to the list of steps.
-
-7. Repeat steps 4\. to 6\. for the remaining integrations:
-
-   - FacturaE
-   - PDF Generator
-   - Send to Email
-
-8. Tap the "**Save**" button.
-
-Congratulations! You just created a new workflow. Notice the "**ID:**" field,
-this is the identifier we'll need later to be able to use this workflow from the
-terminal or command line.
+Having completed all these steps, you should now have 4 complete steps in the workflow.
 
 ## Upload a Document
 
@@ -510,9 +476,7 @@ Let's go over some of the important points in that response:
 
 Now for the exciting part. But first, let's recap what we have:
 
-- A set of integrations to execute.
-
-- A workflow that defines which integrations to use, with an ID.
+- A workflow with a set of steps to execute, with an ID.
 
 - A silo entry ID generated in the last request when we uploaded the Invoice.
 
@@ -538,7 +502,9 @@ curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a
       "id": "a979ec1a-cd78-4ad0-bae6-d22df4b246ac",
       "created_at": "2022-06-22T15:18:59.821Z",
       "updated_at": "2022-06-22T15:19:00.064Z",
-      "integration_id": "4497eab3-5a47-4e34-9196-3d1cce237aff",
+      "step_id": "4497eab3-5a47-4e34-9196-3d1cce237aff",
+      "name": "Series Enumerator",
+      "provider": "enumerator",
       "events": [
         {
           "index": 1,
@@ -557,7 +523,9 @@ curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a
       "id": "483e20b0-4e9a-4fb3-bd76-9a1dabbc6c8f",
       "created_at": "2022-06-22T15:19:00.076Z",
       "updated_at": "2022-06-22T15:19:00.450Z",
-      "integration_id": "65018ad7-2cd9-4284-a5d5-974dd541f1f9",
+      "step_id": "65018ad7-2cd9-4284-a5d5-974dd541f1f9",
+      "name": "FacturaE",
+      "provider": "facturae",
       "events": [
         {
           "index": 1,
@@ -576,7 +544,9 @@ curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a
       "id": "655021e4-c941-4179-910b-5ba5e2ac439a",
       "created_at": "2022-06-22T15:19:00.456Z",
       "updated_at": "2022-06-22T15:19:01.054Z",
-      "integration_id": "2b16201f-6f38-4a0e-bd24-5e1e737b9305",
+      "step_id": "2b16201f-6f38-4a0e-bd24-5e1e737b9305",
+      "name": "PDF Generator",
+      "provider": "pdf",
       "events": [
         {
           "index": 1,
@@ -595,7 +565,9 @@ curl -H "Authorization: Bearer $INVOPOP_TOKEN" -X POST -F workflow_id=0d9602ab-a
       "id": "f5c90cb2-03f1-494e-8a4c-98e6c535824a",
       "created_at": "2022-06-22T15:19:01.059Z",
       "updated_at": "2022-06-22T15:23:16.250Z",
-      "integration_id": "b3440891-067f-47c4-b6b8-6afc97d0be86",
+      "step_id": "b3440891-067f-47c4-b6b8-6afc97d0be86",
+      "name": "Send to Email",
+      "provider": "email",
       "events": [
         {
           "index": 1,
@@ -743,7 +715,6 @@ There is a lot of JSON data there, but let's break it down into the key bits of
 data:
 
 - Everything is wrapped inside a "Job" object with the key fields like
-  `workflow_id` and `silo_entry_id`.
   `workflow_id` and `silo_entry_id`.
 
 - Job `status` shows `OK` indicating that this job has been completed
