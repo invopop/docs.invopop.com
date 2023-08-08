@@ -192,7 +192,6 @@ paths:
   /silo/v1/search:
     get:
       description: Perform a free-text search on all documents in the current company.
-        Only a subset of fields are available.
       parameters:
       - description: Search query string.
         in: query
@@ -232,7 +231,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntryCollection'
+                $ref: '#/components/schemas/SiloEntrySearchCollection'
           description: OK
 components:
   schemas:
@@ -403,7 +402,8 @@ components:
           title: Folder
           type: string
         limit:
-          description: Maximum number of entries to show in a page of results.
+          description: Maximum number of entries to show in a page of results, up
+            to 100.
           example: 20
           title: Limit
           type: integer
@@ -418,13 +418,34 @@ components:
           description: Cursor used to identify the next page of results.
           title: Next Cursor
           type: string
+      type: object
+    SiloEntrySearchCollection:
+      properties:
+        folder:
+          description: Key for the folder
+          example: sales
+          title: Folder
+          type: string
+        limit:
+          description: Maximum number of entries to show in a page of results, up
+            to 100.
+          example: 20
+          title: Limit
+          type: integer
+        list:
+          description: Array of entries.
+          items:
+            $ref: '#/components/schemas/SiloEntry'
+          nullable: true
+          title: List
+          type: array
         offset:
-          description: Search only, the number of entries to skip in the result set.
+          description: Number of entries to skip in the result set.
           example: 20
           title: Offset
           type: integer
         query:
-          description: Search only, the string query used for the search.
+          description: String query used for the search.
           example: FT-101
           title: Query
           type: string
