@@ -19,6 +19,38 @@ paths:
   /silo/v1/entries:
     get:
       description: Fetch all the silo entries in the current company.
+      parameters:
+      - description: Folder to search within.
+        in: query
+        name: folder
+        schema:
+          description: Folder to search within.
+          example: invoices
+          title: Folder
+          type: string
+      - description: Date from which results are provided.
+        in: query
+        name: created_at
+        schema:
+          description: Date from which results are provided.
+          example: "2023-08-02T00:00:00.000Z"
+          title: Created At
+          type: string
+      - description: Position provided by the previous result's next_cursor property.
+        in: query
+        name: cursor
+        schema:
+          description: Position provided by the previous result's next_cursor property.
+          title: Cursor
+          type: string
+      - description: Maximum number of entries to show in a page of results.
+        in: query
+        name: limit
+        schema:
+          description: Maximum number of entries to show in a page of results.
+          example: 20
+          title: Limit
+          type: integer
       responses:
         "200":
           content:
@@ -156,6 +188,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
+          description: OK
+  /silo/v1/search:
+    get:
+      description: Perform a free-text search on all documents in the current company.
+        Only a subset of fields are available.
+      parameters:
+      - description: Search query string.
+        in: query
+        name: q
+        required: true
+        schema:
+          description: Search query string.
+          example: TEST
+          title: Query
+          type: string
+      - description: Folder to search within.
+        in: query
+        name: folder
+        schema:
+          description: Folder to search within.
+          example: invoices
+          title: Folder
+          type: string
+      - description: Maximum number of entries to show in a page of results.
+        in: query
+        name: limit
+        schema:
+          description: Maximum number of entries to show in a page of results.
+          example: 20
+          title: Limit
+          type: integer
+      - description: The number of entries to skip in the result set.
+        in: query
+        name: offset
+        schema:
+          description: The number of entries to skip in the result set.
+          example: 10
+          title: Offset
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
 components:
   schemas:
@@ -340,6 +417,16 @@ components:
         next_cursor:
           description: Cursor used to identify the next page of results.
           title: Next Cursor
+          type: string
+        offset:
+          description: Search only, the number of entries to skip in the result set.
+          example: 20
+          title: Offset
+          type: integer
+        query:
+          description: Search only, the string query used for the search.
+          example: FT-101
+          title: Query
           type: string
       type: object
   securitySchemes:
