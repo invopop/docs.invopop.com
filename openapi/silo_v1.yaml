@@ -93,39 +93,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
-    patch:
-      description: Update an existing silo entry given its UUID.
-      parameters:
-      - description: The UUID of the silo entry to update.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: The UUID of the silo entry to update.
-          title: ID
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                data:
-                  description: Updated envelope data. New document contents will only
-                    be accepted if the existing envelope data is still a draft.
-                  title: Data
-                folder:
-                  description: New location for the silo entry.
-                  example: drafts
-                  title: Folder
-                  type: string
-              type: object
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SiloEntry'
-          description: OK
     put:
       description: Create a new silo entry idempotently with the given UUIDv1 (other
         versions not supported).
@@ -175,6 +142,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
+          description: OK
+  /silo/v1/gobl/build:
+    post:
+      description: Build GOBL Envelopes or Objects for validation purposes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloBuildGOBL'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloGOBL'
+          description: OK
+  /silo/v1/gobl/sign:
+    post:
+      description: Sign GOBL Envelopes or Objects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloSignGOBL'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloGOBL'
           description: OK
   /silo/v1/search:
     get:
@@ -288,6 +285,17 @@ components:
           title: Public URL
           type: string
       type: object
+    SiloBuildGOBL:
+      properties:
+        data:
+          description: GOBL Envelope or Document to calculate and validate.
+          title: Data
+        envelop:
+          description: When true, a complete envelope will be provided as opposed
+            to the stand-lone document.
+          title: Envelop
+          type: boolean
+      type: object
     SiloCreateEntry:
       properties:
         content_type:
@@ -312,6 +320,26 @@ components:
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: Previous ID
           type: string
+      type: object
+    SiloCreateState:
+      properties:
+        key:
+          description: Key for the state.
+          example: paid
+          title: Key
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional structured fields about the state.
+          title: Meta
+          type: object
+        notes:
+          description: Additional details.
+          title: Notes
+          type: string
+      required:
+      - key
       type: object
     SiloEntry:
       properties:
@@ -352,7 +380,7 @@ components:
           title: Folder
           type: string
         id:
-          description: The UUIDv1 (other versions not supported) of the silo entry.
+          description: UUID of the silo entry.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: ID
           type: string
@@ -435,6 +463,77 @@ components:
           description: String query used for the search.
           example: FT-101
           title: Query
+          type: string
+      type: object
+    SiloGOBL:
+      properties:
+        data:
+          description: GOBL Envelope or Document response to a build request.
+          title: Data
+      type: object
+    SiloSignGOBL:
+      properties:
+        data:
+          description: GOBL Envelope or Document to calculate, validate, and sign.
+          title: Data
+      type: object
+    SiloState:
+      properties:
+        created_at:
+          description: The date and time this state was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        id:
+          description: UUID and timestamp composite ID.
+          title: ID
+          type: string
+        key:
+          description: Key for the state
+          example: paid
+          title: Key
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional structured fields about the state.
+          title: Meta
+          type: object
+        notes:
+          description: Additional details.
+          title: Notes
+          type: string
+        src:
+          description: Identifier key for the source of the state
+          example: api-key
+          title: Source
+          type: string
+        src_id:
+          description: UUID for the entity that created the state
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Source ID
+          type: string
+      type: object
+    SiloStateCollection:
+      properties:
+        list:
+          description: Array of states.
+          items:
+            $ref: '#/components/schemas/SiloState'
+          nullable: true
+          title: List
+          type: array
+      type: object
+    SiloUpdateEntry:
+      properties:
+        data:
+          description: Updated envelope data. New document contents will only be accepted
+            if the existing envelope data is still a draft.
+          title: Data
+        folder:
+          description: New location for the silo entry.
+          example: drafts
+          title: Folder
           type: string
       type: object
   securitySchemes:

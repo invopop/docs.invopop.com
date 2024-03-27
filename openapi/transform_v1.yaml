@@ -38,13 +38,13 @@ paths:
             data object.
           title: Silo Entry ID
           type: string
-      - description: Raw JSON data of the complete GOBL Envelope or Document when
-          the Silo Entry ID.
+      - description: Raw JSON data of the GOBL Envelope or Document when the Silo
+          Entry ID is empty.
         in: query
         name: data
         schema:
-          description: Raw JSON data of the complete GOBL Envelope or Document when
-            the Silo Entry ID.
+          description: Raw JSON data of the GOBL Envelope or Document when the Silo
+            Entry ID is empty.
           title: Data
       - description: Tags to associate with the job.
         in: query
@@ -119,13 +119,13 @@ paths:
             data object.
           title: Silo Entry ID
           type: string
-      - description: Raw JSON data of the complete GOBL Envelope or Document when
-          the Silo Entry ID.
+      - description: Raw JSON data of the GOBL Envelope or Document when the Silo
+          Entry ID is empty.
         in: query
         name: data
         schema:
-          description: Raw JSON data of the complete GOBL Envelope or Document when
-            the Silo Entry ID.
+          description: Raw JSON data of the GOBL Envelope or Document when the Silo
+            Entry ID is empty.
           title: Data
       - description: Tags to associate with the job.
         in: query
@@ -160,8 +160,8 @@ paths:
             schema:
               properties:
                 data:
-                  description: Raw JSON data of the complete GOBL Envelope or Document
-                    when the Silo Entry ID.
+                  description: Raw JSON data of the GOBL Envelope or Document when
+                    the Silo Entry ID is empty.
                   title: Data
                 silo_entry_id:
                   description: ID for the entry in the silo as an alternative for
@@ -183,8 +183,8 @@ paths:
             schema:
               properties:
                 data:
-                  description: Raw JSON data of the complete GOBL Envelope or Document
-                    when the Silo Entry ID.
+                  description: Raw JSON data of the GOBL Envelope or Document when
+                    the Silo Entry ID is empty.
                   title: Data
                 silo_entry_id:
                   description: ID for the entry in the silo as an alternative for
@@ -337,6 +337,22 @@ paths:
           description: Description of the workflow.
           title: Description
           type: string
+      - description: Short schema name that the workflow will be allowed to process.
+        in: query
+        name: schema
+        schema:
+          description: Short schema name that the workflow will be allowed to process.
+          example: bill/invoice
+          title: Schema
+          type: string
+      - description: ISO country code the workflow will be used in.
+        in: query
+        name: country
+        schema:
+          description: ISO country code the workflow will be used in.
+          example: ES
+          title: Country Code
+          type: string
       - description: Array of Steps to use for this workflow.
         in: query
         name: steps
@@ -359,6 +375,11 @@ paths:
           application/json:
             schema:
               properties:
+                country:
+                  description: ISO country code the workflow will be used in.
+                  example: ES
+                  title: Country Code
+                  type: string
                 description:
                   description: Description of the workflow.
                   title: Description
@@ -366,6 +387,12 @@ paths:
                 name:
                   description: Name of the workflow.
                   title: Name
+                  type: string
+                schema:
+                  description: Short schema name that the workflow will be allowed
+                    to process.
+                  example: bill/invoice
+                  title: Schema
                   type: string
                 steps:
                   description: Array of Steps to use for this workflow.
@@ -378,6 +405,11 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               properties:
+                country:
+                  description: ISO country code the workflow will be used in.
+                  example: ES
+                  title: Country Code
+                  type: string
                 description:
                   description: Description of the workflow.
                   title: Description
@@ -385,6 +417,12 @@ paths:
                 name:
                   description: Name of the workflow.
                   title: Name
+                  type: string
+                schema:
+                  description: Short schema name that the workflow will be allowed
+                    to process.
+                  example: bill/invoice
+                  title: Schema
                   type: string
                 steps:
                   description: Array of Steps to use for this workflow.
@@ -406,8 +444,8 @@ components:
     FormDataTransformCreateJob:
       properties:
         data:
-          description: Raw JSON data of the complete GOBL Envelope or Document when
-            the Silo Entry ID.
+          description: Raw JSON data of the GOBL Envelope or Document when the Silo
+            Entry ID is empty.
           title: Data
         silo_entry_id:
           description: ID for the entry in the silo as an alternative for the raw
@@ -497,8 +535,8 @@ components:
     TransformCreateJob:
       properties:
         data:
-          description: Raw JSON data of the complete GOBL Envelope or Document when
-            the Silo Entry ID.
+          description: Raw JSON data of the GOBL Envelope or Document when the Silo
+            Entry ID is empty.
           title: Data
         silo_entry_id:
           description: ID for the entry in the silo as an alternative for the raw
@@ -640,6 +678,27 @@ components:
           title: Workflow ID
           type: string
       type: object
+    TransformNext:
+      properties:
+        status:
+          description: Step status to match against.
+          enum:
+          - '[OK'
+          - SKIP
+          - KO
+          - TIMEOUT]
+          title: Status
+          type: string
+        step_id:
+          description: ID of the step to execute next.
+          example: 186522a6-e697-4e34-8498-eee961bcb845
+          title: Step ID
+          type: string
+        stop:
+          description: When true, the workflow will stop after completing this step.
+          title: Stop
+          type: boolean
+      type: object
     TransformStep:
       properties:
         config:
@@ -654,6 +713,12 @@ components:
           description: Name of the step
           title: Name
           type: string
+        next:
+          description: Optional array of next steps to execute after this one.
+          items:
+            $ref: '#/components/schemas/TransformNext'
+          title: Next
+          type: array
         notes:
           description: Additional internal details
           title: Notes
@@ -666,6 +731,10 @@ components:
       type: object
     TransformWorkflow:
       properties:
+        country:
+          description: ISO country code the workflow will be used for.
+          title: Country
+          type: string
         created_at:
           description: When the workflow was created.
           title: Created At
@@ -687,6 +756,10 @@ components:
           description: Name of the workflow
           title: Name
           type: string
+        schema:
+          description: Short schema name that the workflow will be allowed to process.
+          title: Schema
+          type: string
         steps:
           description: List of steps to execute
           items:
@@ -697,6 +770,10 @@ components:
         updated_at:
           description: When the workflow was last updated.
           title: Updated At
+          type: string
+        version:
+          description: Version of the workflow's contents currently defined.
+          title: Version
           type: string
       type: object
   securitySchemes:
