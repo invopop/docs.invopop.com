@@ -16,6 +16,67 @@ servers:
 - description: local development
   url: https://api.invopop.dev
 paths:
+  /transform/v1/jobs:
+    post:
+      description: Create a new job non-idempotently without an explicit UUID. Only
+        recommended for testing purposes, production environments should use the PUT
+        method.
+      parameters:
+      - description: WorkflowID description
+        in: query
+        name: workflow_id
+        schema:
+          description: WorkflowID description
+          title: Workflow ID
+          type: string
+      - description: ID for the entry in the silo as an alternative for the raw data
+          object.
+        in: query
+        name: silo_entry_id
+        schema:
+          description: ID for the entry in the silo as an alternative for the raw
+            data object.
+          title: Silo Entry ID
+          type: string
+      - description: Raw JSON data of the GOBL Envelope or Object when the Silo Entry
+          ID is empty.
+        in: query
+        name: data
+        schema:
+          description: Raw JSON data of the GOBL Envelope or Object when the Silo
+            Entry ID is empty.
+          title: Data
+      - description: Tags to associate with the job.
+        in: query
+        name: tags
+        schema:
+          description: Tags to associate with the job.
+          items:
+            type: string
+          title: Tags
+          type: array
+      - description: Number of seconds to wait for the job to complete and provide
+          a response.
+        in: query
+        name: wait
+        schema:
+          description: Number of seconds to wait for the job to complete and provide
+            a response.
+          example: 60
+          title: Wait
+          type: integer
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FormDataTransformCreateJob'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK
   /transform/v1/jobs/{id}:
     get:
       description: Fetch an existing job given its UUID.
@@ -96,7 +157,28 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/FormDataTransformCreateJob'
+              properties:
+                data:
+                  description: Raw JSON data of the GOBL Envelope or Object when the
+                    Silo Entry ID is empty.
+                  title: Data
+                silo_entry_id:
+                  description: ID for the entry in the silo as an alternative for
+                    the raw data object.
+                  title: Silo Entry ID
+                  type: string
+                tags:
+                  description: Tags to associate with the job.
+                  items:
+                    type: string
+                  nullable: true
+                  title: Tags
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  title: Workflow ID
+                  type: string
+              type: object
       responses:
         "200":
           content:

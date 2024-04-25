@@ -58,6 +58,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
+    post:
+      description: Create a new silo entry non-idempotently without an explicit UUID.
+        Only recommended for testing purposes, production environments should use
+        the PUT method.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCreateEntry'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntry'
+          description: OK
   /silo/v1/entries/{entry_id}/states:
     get:
       description: Fetch the current and previous state objects for a silo entry.
@@ -78,9 +94,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloStateCollection'
           description: OK
-  /silo/v1/entries/{entry_id}/states/{at}:
     post:
-      description: Create a new state for a silo entry
+      description: Create a new state for a silo entry without time
       parameters:
       - description: UUID of the entry to create state for
         in: path
@@ -91,6 +106,22 @@ paths:
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: Entry ID
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCreateState'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloState'
+          description: OK
+  /silo/v1/entries/{entry_id}/states/{at}:
+    put:
+      description: Create a new state for a silo entry
+      parameters:
       - description: ISO timestamp with millisecond accuracy.
         in: path
         name: at
@@ -100,11 +131,38 @@ paths:
           example: "2023-08-02T00:00:00.000Z"
           title: Timestamp
           type: string
+      - description: UUID of the entry to create state for
+        in: path
+        name: entry_id
+        required: true
+        schema:
+          description: UUID of the entry to create state for
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCreateState'
+              properties:
+                key:
+                  description: Key for the state.
+                  example: paid
+                  title: Key
+                  type: string
+                meta:
+                  additionalProperties:
+                    type: string
+                  description: Any additional structured fields about the state.
+                  title: Meta
+                  type: object
+                notes:
+                  description: Additional details.
+                  title: Notes
+                  type: string
+              required:
+              - key
+              type: object
       responses:
         "200":
           content:
@@ -173,7 +231,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCreateEntry'
+              properties:
+                content_type:
+                  description: The content type of the data being uploaded.
+                  example: application/json
+                  title: Content Type
+                  type: string
+                correct:
+                  description: JSON object containing the GOBL correction option data.
+                  example:
+                    credit: true
+                  title: Correct
+                data:
+                  description: Data contents to upload which may either be a GOBL
+                    Envelope or Object. Any partial data will be calculated and validated
+                    automatically.
+                  title: Data
+                folder:
+                  description: In which folder the entry should be associated, leave
+                    empty to use the automatic rules.
+                  title: Folder
+                  type: string
+                previous_id:
+                  description: The UUIDv1 of the previous silo entry to copy.
+                  example: 347c5b04-cde2-11ed-afa1-0242ac120002
+                  title: Previous ID
+                  type: string
+              type: object
       responses:
         "200":
           content:
