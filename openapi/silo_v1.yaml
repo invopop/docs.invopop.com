@@ -269,6 +269,14 @@ paths:
     get:
       description: Find silo entries whose document mentions the given entry's UUID.
       parameters:
+      - description: Document UUID to find relations for.
+        in: query
+        name: uuid
+        schema:
+          description: Document UUID to find relations for.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: UUID
+          type: string
       - description: Context within a document for which the silo entry's UUID has
           been mentioned.
         in: query
@@ -311,6 +319,58 @@ paths:
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: ID
           type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntryCollection'
+          description: OK
+  /silo/v1/entries/related:
+    get:
+      description: Find silo entries whose document mentions the UUID parameter.
+      parameters:
+      - description: Document UUID to find relations for.
+        in: query
+        name: uuid
+        schema:
+          description: Document UUID to find relations for.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: UUID
+          type: string
+      - description: Context within a document for which the silo entry's UUID has
+          been mentioned.
+        in: query
+        name: context
+        schema:
+          description: Context within a document for which the silo entry's UUID has
+            been mentioned.
+          example: line.item
+          title: Context
+          type: string
+      - description: Date from which results are provided.
+        in: query
+        name: created_at
+        schema:
+          description: Date from which results are provided.
+          example: "2023-08-02T00:00:00.000Z"
+          title: Created At
+          type: string
+      - description: Position provided by the previous result's next_cursor property.
+        in: query
+        name: cursor
+        schema:
+          description: Position provided by the previous result's next_cursor property.
+          title: Cursor
+          type: string
+      - description: Maximum number of entries to show in a page of results.
+        in: query
+        name: limit
+        schema:
+          description: Maximum number of entries to show in a page of results.
+          example: 20
+          title: Limit
+          type: integer
       responses:
         "200":
           content:
@@ -394,10 +454,6 @@ paths:
           description: OK
 components:
   schemas:
-    CbcMeta:
-      additionalProperties:
-        type: string
-      type: object
     DsigDigest:
       properties:
         alg:
@@ -572,7 +628,11 @@ components:
           title: Invalid
           type: boolean
         meta:
-          $ref: '#/components/schemas/CbcMeta'
+          description: Additional meta fields associated with the entry.
+          items:
+            $ref: '#/components/schemas/SiloMeta'
+          title: Meta
+          type: array
         snippet:
           description: JSON object containing a snippet of the document.
           example:
@@ -664,6 +724,55 @@ components:
         data:
           description: GOBL Envelope or Object response to a build request.
           title: Data
+      type: object
+    SiloMeta:
+      properties:
+        created_at:
+          description: The date and time the silo entry was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        id:
+          description: UUID of the silo entry.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+        key:
+          description: Key used to identify the meta entry by the source.
+          example: service-id
+          title: Key
+          type: string
+        link_scope:
+          description: Describes the context in which the link should be made available.
+          example: public
+          title: Link Scope
+          type: string
+        link_url:
+          description: URL associated with the meta row that may be used to perform
+            additional actions or view more details.
+          example: https://example.com/info
+          title: Link URL
+          type: string
+        ref:
+          description: Indexable value used to locate the meta entry if a silo entry
+            ID is not available.
+          title: Reference
+          type: string
+        src:
+          description: The service or source that create this meta entry.
+          example: provider
+          title: Source
+          type: string
+        updated_at:
+          description: The date and time the silo entry was last updated.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Updated At
+          type: string
+        value:
+          description: The JSON data stored with the meta row.
+          example:
+            key: value
+          title: Value
       type: object
     SiloSignGOBL:
       properties:
