@@ -1,0 +1,209 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description: The Invopop Access service offers endpoints for accessing data related
+    to accessing the service.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Access Service API
+  version: 1.0.0
+servers:
+- description: production
+  url: https://api.invopop.com
+- description: local development
+  url: https://api.invopop.dev
+paths:
+  /access/v1/enrollment:
+    get:
+      description: Fetch the enrollment details for the current authentication token.
+        (Only Applications!)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessEnrollment'
+          description: OK
+    put:
+      description: Update the embedded configuration details of an enrollment. (Only
+        Applications!)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessEnrollment'
+          description: OK
+  /access/v1/enrollment/authorize:
+    post:
+      description: |-
+        Authenticate using application credentials and a specific owner ID, token, or enrollment.
+        (Only Applications!)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessAuthorizeEnrollment'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessEnrollment'
+          description: OK
+  /access/v1/workspace:
+    get:
+      description: Fetch the workspace details associated with the current authentication
+        token.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessWorkspace'
+          description: OK
+    patch:
+      description: Update the workspace details associated with the current authentication
+        token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessUpdateWorkspace'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessWorkspace'
+          description: OK
+components:
+  schemas:
+    AccessAuthorizeEnrollment:
+      properties:
+        client_id:
+          description: The ID of the application that is being enrolled.
+          example: XzhLPeXCi3GBVg
+          title: Client ID
+          type: string
+        client_secret:
+          description: The secret key of the application that is being enrolled.
+          example: p2NWtVpuDxDYt41crWUBmQKaE4Mh92roDxp_8UKkIJY
+          title: Client Secret
+          type: string
+        id:
+          description: The ID of the enrollment to authorize to use as an alternative
+            to the owner ID.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+        owner_id:
+          description: The ID of the entity that owns the enrollment. It is essential
+            this is provided from a trusted source or an auth token is provided in
+            the headers.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Owner ID
+          type: string
+      type: object
+    AccessEnrollment:
+      properties:
+        app_id:
+          description: ID of the application associated with the enrollment.
+          example: 01900e17-db4d-78a5-8505-c93ae63e8a0d
+          title: Application ID
+          type: string
+        created_at:
+          description: The date and time the enrollment was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        data:
+          description: Additional data associated with the enrollment.
+          example:
+            key: value
+          title: Data
+        disabled:
+          description: Whether the enrollment is disabled.
+          example: false
+          title: Disabled
+          type: boolean
+        id:
+          description: UUID of the enrollment.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+        owner_id:
+          description: The ID of the entity that owns the enrollment.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Owner ID
+          type: string
+        token:
+          description: A token that may be used to authenticate the enrollment with
+            API operations.
+          title: Token
+          type: string
+        updated_at:
+          description: The date and time the enrollment was last updated.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Updated At
+          type: string
+      type: object
+    AccessUpdateWorkspace:
+      properties:
+        logo_url:
+          description: The URL of the company logo.
+          example: https://example.com/logo.png
+          title: Logo URL
+          type: string
+        name:
+          description: The name of the company.
+          example: My Company
+          title: Name
+          type: string
+        slug:
+          description: A unique identifier for the company.
+          example: my-company
+          title: Slug
+          type: string
+      type: object
+    AccessWorkspace:
+      properties:
+        country:
+          description: The country the company is based in.
+          example: US
+          title: Country
+          type: string
+        created_at:
+          description: The date and time the company was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        id:
+          description: UUID of the company.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+        name:
+          description: The name of the company.
+          example: My Company
+          title: Name
+          type: string
+        slug:
+          description: A unique identifier for the company.
+          example: my-company
+          title: Slug
+          type: string
+        updated_at:
+          description: The date and time the company was last updated.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Updated At
+          type: string
+      type: object
+  securitySchemes:
+    authToken:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
