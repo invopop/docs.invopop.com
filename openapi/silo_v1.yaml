@@ -707,7 +707,8 @@ components:
           title: Object Schema
           type: string
         draft:
-          description: When true, indicates that the envelope is a draft.
+          description: Deprectated. When true, indicates that the envelope is not
+            signed.
           example: true
           title: Draft
           type: boolean
@@ -716,6 +717,13 @@ components:
           example: https://gobl.org/draft-0/envelope
           title: Envelope Schema
           type: string
+        faults:
+          description: List of faults that occurred during the processing of the job
+            associated with the last state.
+          items:
+            $ref: '#/components/schemas/SiloFault'
+          title: Faults
+          type: array
         folder:
           description: Key for the folder where the entry is located.
           example: sales
@@ -738,6 +746,11 @@ components:
             $ref: '#/components/schemas/SiloMeta'
           title: Meta
           type: array
+        signed:
+          description: When true, the envelope has been signed and should not be modified.
+          example: true
+          title: Signed
+          type: boolean
         snippet:
           description: JSON object containing a snippet of the document.
           example:
@@ -750,6 +763,7 @@ components:
           title: State
           type: string
         tags:
+          description: Copy of tags stored in the envelope header.
           items:
             type: string
           title: Tags
@@ -825,6 +839,24 @@ components:
           title: Query
           type: string
       type: object
+    SiloFault:
+      properties:
+        code:
+          description: Code assigned by the provider that may provide additional information
+            about the fault.
+          title: Code
+          type: string
+        message:
+          description: Message assigned by the provider that may provide additional
+            information about the fault.
+          title: Message
+          type: string
+        provider:
+          description: ID of the provider that generated the fault.
+          example: pdf
+          title: Provider
+          type: string
+      type: object
     SiloGOBL:
       properties:
         data:
@@ -871,6 +903,11 @@ components:
             ID is not available.
           title: Reference
           type: string
+        shared:
+          description: When true, the meta entry may be shared with other applications.
+          example: true
+          title: Shared
+          type: boolean
         src:
           description: The service or source that create this meta entry.
           example: source
@@ -903,6 +940,13 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Created At
           type: string
+        faults:
+          description: List of faults that occurred during the processing of the job
+            where state was assigned.
+          items:
+            $ref: '#/components/schemas/SiloFault'
+          title: Faults
+          type: array
         id:
           description: UUID and timestamp composite ID.
           title: ID
