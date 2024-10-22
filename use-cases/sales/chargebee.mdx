@@ -3,19 +3,32 @@ title: "Chargebee"
 description: Import and process invoices and credit notes from Chargebee
 ---
 
-Invopop's Chargebee app lets you import invoices and credit notes from Chargebee and process them with a workflow in Invopop. This allows you to automatically transform, process and publish your invoices and credit notes to comply with local regulations and integrate with other systems.
+## Background
+
+[Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition
+
+Invopop's Chargebee app lets you automatically import invoices and credit notes from Chargebee and process them with a workflow to comply with local regulations.
 
 ## How it works
 
-Once [set up](#how-to-set-up), the app listens to events from Chargebee. When an invoice is generated (i.e. created and not in the pending state) or when a credit note is created, the app will create a new GOBL invoice and add it to your Invopop account. It will then create a job to process the GOBL invoice using the workflow of your choice.
+The Invopop Chargebee app will subscribe for new incoming invoices and credit notes. When a new document is received, it'll be _converted_ into GOBL, and stored in your Invopop workspace.
+
+Once an invoice or credit note is stored, the app will create a job on the configured workflow.
+
+Any updates and importantly error messages will be posted to Chargebee automatically. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
 
 ## How to set up
 
-This guide assumes that you already have a Chargebee account configured. Otherwise, please refer to the Chargebee documentation on how to do this.
+This guide assumes that you already have a Chargebee account configured.
 
-### 1. Enter supplier details
+### 1. Create a Supplier
 
-First, you need to set up a supplier in Invopop, containing your business details. In the console, go to "Contacts" > "Suppliers" and click on "New supplier", an add your details (name, tax code, address, etc.). The required data and [extensions](#5-enter-extension-data) depend on the [tax regime](https://github.com/invopop/gobl/tree/main/regimes). Please do not hesitate to contact Invopop support for assistance.
+Firstly, we need to store the details of the supplier, the owner of the Chargebee account, in Invopop:
+
+1.  In the [console](https://console.invopop.com), go to "Contacts" then "Suppliers", and tap "New supplier".
+2.  Add the company's contact details, including the name, tax code, address, etc. in the form.
+3.  If you're issuing invoices from a region that requires special fields, please contact Invopop support for assistence.
+4.  Save the document.
 
 Note that when generating invoices, the app will merge the supplier information in Invopop with the business profile data in Chargebee when issuing the invoice, giving precedence to the data from Chargebee.
 
@@ -31,17 +44,17 @@ Be sure to add a "Sync with Chargebee" step at the end of the workflow to report
 
 You are now ready to connect and configure the Chargebee app itself. Go to "Configure" > "apps" in the Invopop console. Then click on "Connect" and "Configure". You'll see a form with the following fields:
 
-* **Chargebee Site:** The identifier of your Chargebee site. You can find it in the URL when you log in to Chargebee.
-* **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one.
-* **Supplier:** The supplier who will be issuing the invoices. You can select the one you created earlier.
-* **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
-* **Ignore Chargebee's invoice codes:** If true, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead.
+- **Chargebee Site:** The identifier of your Chargebee site. You can find it in the URL when you log in to Chargebee.
+- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one.
+- **Supplier:** The supplier who will be issuing the invoices. You can select the one you created earlier.
+- **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
+- **Ignore Chargebee's invoice codes:** If true, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead.
 
 Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
 
-* **Exemption Code (Generic):** The local code to be used by default on tax-exempt invoices.
-* **Exemption Code (Exports):** The local code to be used by default on tax-exempt invoices for exports.
-* **Exemption Code (Reverse Charge):** The local code to be used by default on tax-exempt invoices for reverse charge.
+- **Exemption Code (Generic):** The local code to be used by default on tax-exempt invoices.
+- **Exemption Code (Exports):** The local code to be used by default on tax-exempt invoices for exports.
+- **Exemption Code (Reverse Charge):** The local code to be used by default on tax-exempt invoices for reverse charge.
 
 Please note that those are the default exemption codes that will be set depending on the Chargebe exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions or customers, you can assign them [as extensions](#5-enter-extension-data).
 
