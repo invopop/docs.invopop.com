@@ -1,7 +1,33 @@
 ---
-title: "🇨🇴 Colombia"
-description: Issue invoices and credit notes in Colombia with Plemsi.
+title: "Colombia - DIAN"
+description: Issue invoices and credit notes in Colombia to the DIAN.
 ---
+
+## Introduction
+
+The [DIAN](https://www.dian.gov.co/) in Colombia stands for Dirección de Impuestos y Aduanas Nacionales (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+
+Electronic invoicing in Colombia is mandatory and operates on a real-time clearance model whereby every invoice must receive a unique identifier called a CUFE (Código Único de Factura Electrónica) issued by the DIAN.
+
+Businesses in Colombia must be registered with the DIAN and have an active RUT (Registro Único Tributario) to issue electronic invoices.
+
+In this guide we'll discuss how Invopop can help you comply with e-invoicing regulation in Colombia.
+
+<Warning>
+  This guide is currently a work in progress as the we stive to make the setup
+  process as automated as possible.
+</Warning>
+
+## What you will need
+
+In order to complete this guide in a live Invopop environment, you will need:
+
+- Supplier details, including company name, RUT, address, and municipality code issued by the DIAN.
+- Customer details for B2B transactions, including name, RUT or international ID, address, and municipality code national transactions.
+- Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
+- Have authorized "Plemsi", the provider used by Invopop, to issue invoices on the supplier's behalf in the DIAN, and followed the specific onboarding process for each supplier (details below).
+
+### Authorization with the DIAN
 
 Invopop has partnered with [Plemsi](https://plemsi.com) to issue invoices in Colombia (DIAN). You have the option of either using Invopop's Plemsi billing account or create your own and provide your own credentials.
 
@@ -17,8 +43,8 @@ Once enabled, you'll need to setup a workflow like the one described [in the sec
 
 There are a few limitations of this environment to bear in mind:
 
-* There's only one supplier enabled. Its tax code is `9015852843`.
-* There's only one series enabled for invoices (`SETT`) and another one for credit notes (`NCTT`). Moreover, those series are shared and, to avoid collisions, we'll provide you with a specific range for you to use (e.g. `SETT-123xxxx`)
+- There's only one supplier enabled. Its tax code is `9015852843`.
+- There's only one series enabled for invoices (`SETT`) and another one for credit notes (`NCTT`). Moreover, those series are shared and, to avoid collisions, we'll provide you with a specific range for you to use (e.g. `SETT-123xxxx`)
 
 Your test invoices will need to use the supplier's tax ID code and series above.
 
@@ -69,7 +95,8 @@ At this point, you'll be ready to set up the workflow to issue invoices:
 3. Go to “Workflows” and create a new workflow.
 4. Add a first step using the “Series Enumerator” provider. The simplest setup here would be to use a "Dynamic" series. That will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range.
 
-    _Note that this configuration assumes you'll set the proper `series` value in the GOBL invoices or credit notes you send to the workflow._
+   _Note that this configuration assumes you'll set the proper `series` value in the GOBL invoices or credit notes you send to the workflow._
+
 5. Add a second step using the “Plemsi” provider. Nothing to configure here.
 6. Add a third and final step using the “PDF Generator” provider. You can configure a logo to appear at the header of your invoice PDFs, the language and some formats.
 
