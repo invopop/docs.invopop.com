@@ -1,0 +1,212 @@
+---
+title: "PDF Invoice"
+description: How to issue simple PDF invoices globally.
+---
+
+## Introduction
+
+The objective of this guide is to take you through the process of generating a simple PDF invoice you can send to your customers. This is valid for tax regimes that don't require any electronic reporting nor invoicing, and serves as a useful example from which to create your own workflows.
+
+Once completed, the workflow will work with any GOBL invoice produced for potentially any country in the world.
+
+## Prerequisites
+
+You'll need the following data to be able to issue basic PDF invoices:
+
+- Supplier details - fiscal details of who is issuing.
+- Customer details - fiscal details of who is receiving for B2B invoices.
+- List of products or services being sold, including quantities and prices.
+- Know what taxes and rates apply.
+- Have chosen a "series" for the invoice, a few alphanumerical characters to help group invoices together.
+
+## Setup
+
+Issuing PDF invoices with Invopop needs very little preparation. We're assuming that you already have access to the [Invopop Console](https://console.invopop.com), and know how to [create a workflow](/guides/workflows).
+
+Choose the **Invoices** option when creating the new workflow and add the following steps:
+
+- **Add Sequential Code** - select the **dynamic** sequence option, set the name, and check the **Sign document** checkbox.
+- **Generate PDF** - choose any settings you like.
+
+That's all there is too it.
+
+<Accordion title="Simple PDF invoice workflow example">
+
+Copy and paste the following JSON workflow using the developer mode of the workflow editor:
+
+```json
+{
+  "name": "PDF Invoice",
+  "steps": [
+    {
+      "id": "6b16c200-a75f-11ef-ba08-91f336761c6c",
+      "name": "Add Sequential Code",
+      "provider": "sequence.enumerate",
+      "summary": "Dynamic · Invoice · 000001",
+      "config": {
+        "sign": true,
+        "padding": 6,
+        "start": 1,
+        "name": "Invoice"
+      }
+    },
+    {
+      "id": "c61adaa0-7b55-11ef-bffc-d9a10ebf9f89",
+      "name": "Generate PDF",
+      "config": {
+        "logo_height": 40,
+        "locale": "es",
+        "date_format": "%Y-%m-%d"
+      },
+      "summary": "Spanish",
+      "provider": "pdf"
+    }
+  ]
+}
+```
+
+</Accordion>
+
+## Running
+
+Use the following example GOBL Invoices inside the [Invopop Console](https://console.invopop.com) or via the API to create new silo entries. Once a silo entry has been stored, you can create a new job to run the "PDF Invoice" workflow you just created.
+
+<AccordionGroup>
+<Accordion title="B2B Invoice - United Kingdom">
+The following example demonstrates a simple invoice for a VAT registered supplier in the United Kingdom.
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "currency": "GBP",
+  "series": "TEST",
+  "supplier": {
+    "tax_id": {
+      "country": "GB",
+      "code": "844281425"
+    },
+    "name": "BrightTech Solutions Ltd.",
+    "emails": [
+      {
+        "addr": "billing@brighttech.co.uk"
+      }
+    ],
+    "addresses": [
+      {
+        "num": "123",
+        "street": "Innovation Park",
+        "locality": "Cambridge",
+        "code": "CB1 2AB",
+        "country": "GB"
+      }
+    ]
+  },
+  "customer": {
+    "tax_id": {
+      "country": "GB",
+      "code": "350983637"
+    },
+    "name": "GreenWave Energy Ltd.",
+    "emails": [
+      {
+        "addr": "info@greenwave.co.uk"
+      }
+    ],
+    "addresses": [
+      {
+        "num": "45",
+        "street": "Riverside Business Park",
+        "locality": "London",
+        "code": "SW1A 1AA",
+        "country": "GB"
+      }
+    ]
+  },
+  "lines": [
+    {
+      "quantity": 50,
+      "item": {
+        "name": "Thermal efficient mugs",
+        "price": "16.00"
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "rate": "standard"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Accordion>
+
+<Accordion title="B2B Invoice - United States">
+The following example demonstrates a simple invoice for a VAT registered supplier in the United States.
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "series": "SAMPLE",
+  "currency": "USD",
+  "tax": {
+    "prices_include": "ST"
+  },
+  "supplier": {
+    "name": "Provide One Inc.",
+    "tax_id": {
+      "country": "US"
+    },
+    "addresses": [
+      {
+        "num": "16",
+        "street": "Jessie Street",
+        "locality": "San Francisco",
+        "region": "CA",
+        "code": "94105",
+        "country": "US"
+      }
+    ],
+    "emails": [
+      {
+        "addr": "billing@provideone.com"
+      }
+    ]
+  },
+  "customer": {
+    "name": "Sample Consumer",
+    "emails": [
+      {
+        "addr": "email@sample.com"
+      }
+    ]
+  },
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "20",
+      "item": {
+        "name": "Development services",
+        "price": "90.00",
+        "unit": "h"
+      },
+      "discounts": [
+        {
+          "percent": "10%",
+          "reason": "Special discount"
+        }
+      ],
+      "taxes": [
+        {
+          "cat": "ST",
+          "percent": "8.5%"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Accordion>
+</AccordionGroup>
