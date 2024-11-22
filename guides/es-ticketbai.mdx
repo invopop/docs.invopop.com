@@ -19,12 +19,12 @@ Invopop will automatically convert GOBL Invoices into the TicketBAI format, incl
 
 ## Prerequisites
 
-You'll need:
+In order to register a supplier and issue invoices, you will need:
 
 - Supplier details, including:
   - company name,
   - a tax ID (NIF) from a company in one of the three Tax Agencies, and,
-  - address which includes the Region name, e.g. ("Alaba", "Bizkaia", or "Gipuzkoa").
+  - an address which includes the Region name; "Alaba", "Bizkaia", or "Gipuzkoa".
 - Customer details for B2B sales, including the tax ID if selling to a Spanish or EU entity.
 - Quantity, name, price, and VAT rates of items being sold, including differenciating between physical goods and services.
 - An invoicing series.
@@ -33,60 +33,64 @@ You'll need:
   If you do not already have a tax ID from a company in the Basque Country, you
   will need to use test data. In the examples, we use the name
   `HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr` and tax ID code `A99805194`, which were
-  issued by the TicketBAI tax authorities.
+  issued by the TicketBAI tax authorities for testing.
 </Tip>
 
 ## Setup
 
-### Supplier Registration
-
-Currently suppliers do not need to be registered with Invopop and we assume that a service contract exists either directly with the supplier, or via a third party that will allow Invopop to issue invoices on their behalf.
-
-Legal contracts are not stored with suppliers inside Invopop at this time.
-
-### Invoice Workflow
-
-See the [workflows guide](/guides/workflows) for details on how to create a workflow.
-
-To correctly issue TicketBAI invoices, your workflow will need to perform the following steps:
+To correctly issue TicketBAI invoices, you will need to prepare your Invopop Workspace by following these steps:
 
 <Steps>
-<Step title="Add Sequential Code">
-TicketBAI requires all invoices to be assigned a series and code. Codes must be assigned sequentially without gaps in the numbering.
 
-In the step configuration, ensure:
+<Step title="Create supplier registration workflow">
+Currently the Invopop TicketBAI integration does not require a registration workflow, but this may change in the future.
 
-- The _dynamic_ sequence option is selected.
-- A name has been assigned.
-- The _Sign document_ checkbox is checked.
+<Info>
+  TicketBAI requires all suppliers to sign an agreement with their invoicing
+  provider explicitly granting permission to represent them. This is currently a
+  manual process performed outside of Invopop. For more details, contact
+  [support](email:support@invopop.com).
+</Info>
+
+</Step>
+
+<Step title="Connect the TicketBAI app">
+
+Head over to **Configuration**, **Apps**, and find **TicketBAI** from the list of apps to discover. Tap the **Connect** button to enable.
+
+No further configuration is required.
+
+</Step>
+
+<Step title="Create invoice workflow">
+
+If you haven't already, checkout the [workflows guide](/guides/workflows) and ensure you're familiar with the process.
+
+Create a new **Invoices** workflow with the following steps:
+
+- **Add Sequential Code** - chose the **dynamic** sequence option, set a name, and check the **Sign document** checkbox.
+- **Generate TicketBAI (Spain)** - this step generates the TicketBAI XML document.
+- **Generate PDF** - configure as required, the PDF will use the QR code generated in the previous step. After this step, you may want to add a webhook or similar.
+- **Send TicketBAI (Spain)** - will take the previously generate XML document, and send to the appropriate gateway.
 
 <Tip>
-  Invoices must be signed before processing with TicketBAI. If you choose not to use the _Add Sequential Code_ step, be sure to add the _Sign Envelope_ step instead.
+  Invoices must be signed before processing with TicketBAI. If you choose not to
+  use the _Add Sequential Code_ step, be sure to add the _Sign Envelope_ step
+  instead.
 </Tip>
-</Step>
-
-<Step title="Generate TicketBAI (Spain)">
-This will convert the GOBL document into a TicketBAI XML and perform the chaining steps in the background to ensure that every document is linked to a preivous one.
-
-No further configuration is required. During the XML document generation, the GOBL document will be updated with the QR code required for the PDF generation in the next step.
-
-</Step>
-
-<Step title="Generate PDF">
-  Invopop's PDF generator will automatically include the TicketBAI QR code
-  generated in the previous step. If required, you could send a webhook
-  notification to your own services after this step.
-</Step>
-
-<Step title="Send TicketBAI (Spain)">
-In this step the workflow will send the document to one of the three TicketBAI endpoints for processing.
 
 <Warning>
-If in the unlikely scenario a document is rejected in this step, you will need to try and correct the error inside a new document and resend. As documents are all chained together in the _Generate TicketBAI_ step, modifications are not permitted.
+  If in the unlikely scenario a document is rejected, you will need to try and
+  correct the error inside a new document and resend. As documents are all
+  chained together in the _Generate TicketBAI_ step, modifications are not
+  permitted.
 </Warning>
+
 </Step>
 
 </Steps>
+
+<Accordion title="Example TicketBAI Invoice Workflow">
 
 You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries which we strongly recomend.
 
@@ -189,7 +193,9 @@ You can copy and paste the following JSON while editing a Workflow in "developer
 }
 ```
 
-## Examples
+</Accordion>
+
+## Running
 
 Invopop uses the [GOBL](https://docs.gobl.org) framework for sending and storing invoices to be sent to TicketBAI. In this section we provide example GOBL documents that you can copy and customize.
 
@@ -201,6 +207,13 @@ All of the following examples assume you will be performing two key steps:
 2. Create a job to process the Silo Entry with your TicketBAI workflow either manually via the console, or using the Invopop Transform [Create a Job](/api-ref/transform/jobs/create-a-job-put) endpoint.
 
 The Invopop API will automatically prepare the uploaded documents from the minimal data provided, this allows us to keep the examples short and concise.
+
+GOBL Invoices sent to TicketBAI require the following properties in order to perform the correct normalization and validation steps:
+
+- `$region` to be set to [`ES`](https://docs.gobl.org/regimes/es)
+- `$addons` to include [`es-tbai-v1`](https://docs.gobl.org/addons/es-tbai-v1)
+
+Invopop will try to assign these automatically if not explicitly provided.
 
 <AccordionGroup>
 <Accordion title="B2B Invoice">

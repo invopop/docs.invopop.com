@@ -9,7 +9,7 @@ The CFDI (Comprobante Fiscal Digital por Internet) is the standardized electroni
 
 In this guide we'll walk you through the steps required to first register a supplier and then issue invoices in their name.
 
-## What you will need
+## Prerequisites
 
 To issue invoices in Mexico via the SAT, you will need:
 
@@ -275,13 +275,28 @@ From this point on you can now send invoices on behalf of the supplier.
 
 The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
 
+GOBL Invoices sent to the SAT require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+
+- `$region` to be set to [`MX`](https://docs.gobl.org/regimes/mx)
+- `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
+
 <AccordionGroup>
 <Accordion title="B2B Invoice">
+
+In this example we're issuing a simple B2B invoice from a Mexican supplier to another Mexican customer.
+
+Notice:
+
+- we've added the `mx-cfdi-v4` addon, this ensures the document will be validated using the CFDI v4 rules built into the GOBL library,
+- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
+- VAT will be applied at the standard rate, the percentage will be set automatically, and,
+- there are no totals nor calculations, all of these will be made automatically when uploading.
 
 ```json
 {
   "$schema": "https://gobl.org/draft-0/bill/invoice",
   "$regime": "MX",
+  "$addons": ["mx-cfdi-v4"],
   "series": "XXMX",
   "tax": {
     "ext": {
