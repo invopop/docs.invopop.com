@@ -1,0 +1,120 @@
+---
+title: "Germany & France - X-Invoice"
+description: Issue invoices in Germany (X-Rechnung & ZUGFeRD) and France (Factur-X)
+---
+
+## Introduction
+
+X-Invoice covers the German and French electronic invoice standards. Germany has two formats: X-Rechnung and ZUGFeRD, while France uses Factur-X. The integration is the same for both countries.
+
+## Prerequisites
+
+To convert invoices to X-Invoice format, ensure you have:
+
+- A valid API key and a basic understanding of the [workflow engine](guides/workflows) and [API](api-ref/introduction).
+- An invoice with:
+  - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) and [French](https://docs.gobl.org/regimes/fr) regimes for specifics.
+  - Line items with name, price, and applicable taxes.
+  - It's recommended to manually set the `regime` field to `DE` or `FR`.
+
+## Setup
+
+To issue invoices, configure a workflow in the [Invopop Console](https://console.invopop.com) with the following steps:
+
+- **Sign Envelope**: The envelope must be signed before processing. This can also be done in the **Add Sequential Code** step, which handles the invoice number.
+- **Convert to X-Invoice**: Generates the X-Invoice XML document. Configure the step to one of the following formats:
+  - `XRechnung CII`: German X-Rechnung (v3.0.2) in CII syntax (XML only).
+  - `XRechnung UBL`: German X-Rechnung (v3.0.2) in UBL syntax (XML only).
+  - `ZUGFeRD`: German ZUGFeRD (v2.3.2) in hybrid format (PDF with embedded XML).
+  - `Factur-X`: French Factur-X (v1.07.2) in hybrid format (PDF with embedded XML).
+- **Generate PDF**: For ZUGFeRD and Factur-X formats, this step creates the PDF with the embedded XML.
+
+<Info>
+Both X-Rechnung CII and UBL formats are fully compliant with the German standard; they contain the same data, just structured differently.
+</Info>
+
+## Example Workflow
+
+<AccordionGroup>
+<Accordion title="Example X-Rechnung Workflow">
+
+Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
+
+```json Example X-Rechnung Workflow with States
+{
+    "name": "X-Rechnung",
+    "description": "Convert to X-Rechnung",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Convert to XRechnung/Factur-X",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ],
+            "provider": "xinvoice.convert"
+        },
+        {
+            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Generate PDF",
+            "config": {
+                "locale": "en",
+                "date_format": "%Y-%m-%d",
+                "logo_height": 40
+            },
+            "summary": "English",
+            "provider": "pdf"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "next": [
+                {
+                    "stop": true,
+                    "status": "NA"
+                }
+            ],
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "d0a36090-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Send a Slack Message",
+            "provider": "slack.message"
+        }
+    ]
+}
+```
+
+</Accordion>
+</AccordionGroup>
+
+You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [XInvoice repo](https://github.com/invopop/xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
