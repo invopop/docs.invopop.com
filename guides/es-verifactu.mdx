@@ -1,0 +1,86 @@
+---
+title: "Spain - VeriFactu"
+description: Issue invoices in Spain with VeriFactu.
+---
+
+## Introduction
+
+VeriFactu is a fiscal initiative developed by the Spanish Tax Agency (AEAT) to ensure that invoices issued by individuals and entities conducting economic activities in Spain are reported to the tax authorities. The system aims to combat tax fraud by providing a mechanism for invoice verification and traceability.
+
+Under this system, businesses are required to use certified invoicing software that generates a unique VeriFactu identifier for each invoice. These identifiers facilitate the traceability of transactions and prevent the manipulation or deletion of invoices. The invoicing software must also create an XML file for each transaction, which is electronically signed and sent to the Spanish Tax Agency.
+
+VeriFactu is currently optional for businesses in Spain, but provides advantages in terms of invoice verification and compliance.
+
+Invopop will automatically convert GOBL Invoices into the VeriFactu format and will send them to the Spanish Tax Agency's systems.
+
+## Prerequisites
+
+In order to register a supplier and issue invoices, you will need:
+
+- Supplier details, including:
+  - company name,
+  - a Spanish tax ID (NIF), and,
+  - a complete Spanish address
+- Customer details for B2B sales, including the tax ID if selling to a Spanish or EU entity.
+- Quantity, name, price, and VAT rates of items being sold.
+
+<Tip>
+  If you do not have a Spanish tax ID, you will need to use test data. Contact
+  [support](email:support@invopop.com) for access to test credentials.
+</Tip>
+
+## Setup
+
+To correctly issue VeriFactu invoices, you will need to prepare your Invopop Workspace by following these steps:
+
+<Steps>
+
+<Step title="Create supplier registration workflow">
+Currently the Invopop VeriFactu integration does not require a registration workflow, but this may change in the future.
+
+<Info>
+  VeriFactu requires all suppliers to have valid digital certificates for signing
+  and submitting invoices. For more details on obtaining and using certificates,
+  contact [support](email:support@invopop.com).
+</Info>
+
+</Step>
+
+<Step title="Connect the VeriFactu app">
+
+Head over to **Configuration**, **Apps**, and find **VeriFactu** from the list of apps to discover. Tap the **Connect** button to enable.
+
+No further configuration is required.
+
+</Step>
+
+<Step title="Create invoice workflow">
+
+If you haven't already, checkout the [workflows guide](/guides/workflows) and ensure you're familiar with the process.
+
+Create a new **Invoices** workflow with the following steps:
+
+- **Add Sequential Code** - chose the **dynamic** sequence option, set a name, and check the **Sign document** checkbox.
+- **Generate VeriFactu (Spain)** - this step generates the VeriFactu XML document.
+- **Generate PDF** - configure as required. After this step, you may want to add a webhook or similar.
+- **Send VeriFactu (Spain)** - will take the previously generated XML document, and send to the AEAT gateway.
+
+<Tip>
+  Invoices must be signed before processing with VeriFactu. If you choose not to
+  use the _Add Sequential Code_ step, be sure to add the _Sign Envelope_ step
+  instead.
+</Tip>
+
+<Warning>
+  If a document is rejected, you will need to try and correct the error inside a
+  new document and resend. Document modifications are not permitted once submitted.
+</Warning>
+
+</Step>
+
+</Steps>
+
+<Accordion title="Example VeriFactu Invoice Workflow">
+
+You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries which we strongly recomend.
+</Accordion>
