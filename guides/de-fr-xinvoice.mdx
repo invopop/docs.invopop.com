@@ -8,10 +8,16 @@ description: Issue invoices in Germany (X-Rechnung & ZUGFeRD) and France (Factur
 X-Invoice covers the German and French electronic invoice standards. The integration is the same for both countries. The supported standards are:
 
 - X-Rechnung: one of the two standards used in Germany. It consists on an XML file. It can be implemented using two different "syntaxes", CII and UBL. They both contain the same information, but include different field names.
-- ZUGFeRD: the other standard used in Germany. It a hybrid format that consists on a PDF document with an embedded XML file.
+- ZUGFeRD: the other standard used in Germany. It a hybrid format that consists on a PDF document with an embedded X-Rechnung file. The only supported syntax for this case is CII.
 - Factur-X: the standard used in France. It consists on a PDF document with an embedded XML file. It is worth noting that ZUGFeRD and Factur-X are a joint project between Germany and France, and their content is identical.
 
 In Germany, the law regarding e-invoicing indicates that the obligation falls on receiving invoices, not issuing them. Therefore, a compliant German merchant should be able to receive invoices X-Rechnung (both syntaxes) and ZUGFeRD.
+
+<Tip>
+    When referring to syntaxes, it is important to note that X-Rechnung, ZUGFeRD and Factur-X are all `semantic data models`. What this means is that they define the data that must be present in the invoice, but not the actual format of the data or the explicit name of the fields.
+    In the context of E-Invoicing in the EU, the core semantic data model is established by the [EN16931 standard](https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/EN+16931+compliance), which is the basis for the aforementioned standards. It defines a list of two approved syntaxes: UN/CEFACT Cross Industry Invoice
+    ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) version 16B and OpenOasis Universal Business Language ([UBL](https://docs.oasis-open.org/ubl/UBL-2.1.html)) version 2.1. These are the syntaxes used by this integration.
+</Tip>
 
 ## Prerequisites
 
@@ -36,101 +42,15 @@ To issue invoices, configure a workflow in the [Invopop Console](https://console
 
 ## Running
 
-Invopop uses the [GOBL](https://gobl.org) library to process invoice conversions. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+Invopop uses the [GOBL](https://gobl.org) library to process conversions. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
 
-Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will add some extra validations to ensure the sent document is compliant. If you plan to issue X-Rechnung invoices, we also recommend using the X-Rechnung addon in GOBL, which adds further validation based on [local rules]().
-
-## Example Workflow
-
-<AccordionGroup>
-<Accordion title="Example X-Rechnung Workflow">
-
-Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
-
-```json Example X-Rechnung Workflow with States
-{
-    "name": "X-Rechnung",
-    "description": "Convert to X-Rechnung",
-    "steps": [
-        {
-            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Convert to XRechnung/Factur-X",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
-                }
-            ],
-            "provider": "xinvoice.convert"
-        },
-        {
-            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Generate PDF",
-            "config": {
-                "locale": "en",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
-            "summary": "English",
-            "provider": "pdf"
-        },
-        {
-            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "d0a36090-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Send a Slack Message",
-            "provider": "slack.message"
-        }
-    ]
-}
-```
-
-</Accordion>
-</AccordionGroup>
-
-You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [XInvoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
+Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will add some extra validations to ensure the document is compliant. If you plan to issue X-Rechnung invoices, we also recommend using the X-Rechnung addon in GOBL, which adds further validation.
 
 ## Sample Invoices
 
 <AccordionGroup>
-<Accordion title="Invoice Examples">
-```json Regular B2B Invoice
+<Accordion title="Regular B2B Invoice">
+```json
 {
     "$schema": "https://gobl.org/draft-0/bill/invoice",
     "$regime": "DE",
@@ -263,9 +183,9 @@ You can now generate invoices in the X-Invoice format via the API or console. Fo
     }
 }
 ```
-{/* </Accordion>
-<Accordion title="Regular B2C Invoice"> */}
-```json Regular B2C Invoice
+</Accordion>
+<Accordion title="Regular B2C Invoice">
+```json
 {
     "$schema": "https://gobl.org/draft-0/bill/invoice",
     "$regime": "DE",
@@ -352,9 +272,9 @@ You can now generate invoices in the X-Invoice format via the API or console. Fo
     }
 }
 ```
-{/* </Accordion>
-<Accordion title="B2B Invoice with Additional Fields"> */}
-```json B2B Invoice with Additional Fields
+</Accordion>
+<Accordion title="B2B Invoice with Additional Fields">
+```json
 {
     "$schema": "https://gobl.org/draft-0/bill/invoice",
     "$regime": "DE",
@@ -599,4 +519,90 @@ You can now generate invoices in the X-Invoice format via the API or console. Fo
 ```
 </Accordion>
 </AccordionGroup>
+
+## Example Workflow
+
+<AccordionGroup>
+<Accordion title="Example X-Rechnung Workflow">
+
+Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
+
+```json Example X-Rechnung Workflow with States
+{
+    "name": "X-Rechnung",
+    "description": "Convert to X-Rechnung",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Convert to XRechnung/Factur-X",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ],
+            "provider": "xinvoice.convert"
+        },
+        {
+            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Generate PDF",
+            "config": {
+                "locale": "en",
+                "date_format": "%Y-%m-%d",
+                "logo_height": 40
+            },
+            "summary": "English",
+            "provider": "pdf"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "next": [
+                {
+                    "stop": true,
+                    "status": "NA"
+                }
+            ],
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "d0a36090-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Send a Slack Message",
+            "provider": "slack.message"
+        }
+    ]
+}
+```
+</Accordion>
+</AccordionGroup>
+
+You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [XInvoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
+
 
