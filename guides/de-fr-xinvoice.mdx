@@ -32,17 +32,96 @@ To issue invoices, configure a workflow in the [Invopop Console](https://console
 
 - **Sign Envelope**: The envelope must be signed before processing. This can also be done in the **Add Sequential Code** step, which handles the invoice number.
 - **Convert to X-Invoice**: Generates the X-Invoice XML document. Configure the step to one of the following formats:
-  - **XRechnung CII**: German X-Rechnung (v3.0.2) in CII syntax (XML only).
-  - **XRechnung UBL**: German X-Rechnung (v3.0.2) in UBL syntax (XML only).
-  - **ZUGFeRD**: German ZUGFeRD (v2.3.2) in hybrid format (PDF with embedded XML).
-  - **Factur-X**: French Factur-X (v1.07.2) in hybrid format (PDF with embedded XML).
+  - **XRechnung CII**: German X-Rechnung (v3) in CII syntax (XML only).
+  - **XRechnung UBL**: German X-Rechnung (v3) in UBL syntax (XML only).
+  - **ZUGFeRD**: German ZUGFeRD (v2.3) in hybrid format (PDF with embedded XML).
+  - **Factur-X**: French Factur-X (v1.07) in hybrid format (PDF with embedded XML).
 - **Generate PDF**: For ZUGFeRD and Factur-X formats, this step creates the PDF with the embedded XML.
+
+<AccordionGroup>
+<Accordion title="Example X-Rechnung Workflow">
+
+Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
+
+```json Example X-Rechnung Workflow with States
+{
+    "name": "X-Rechnung",
+    "description": "Convert to X-Rechnung",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Convert to XRechnung/Factur-X",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ],
+            "config": {
+                "format": "xrechnung-cii",
+            },
+            "provider": "xinvoice.convert"
+        },
+        {
+            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Generate PDF",
+            "config": {
+                "locale": "en",
+                "date_format": "%Y-%m-%d",
+                "logo_height": 40
+            },
+            "summary": "English",
+            "provider": "pdf"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "next": [
+                {
+                    "stop": true,
+                    "status": "NA"
+                }
+            ],
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
+</Accordion>
+</AccordionGroup>
 
 ## Running
 
 Invopop uses the [GOBL](https://gobl.org) library to process conversions. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
 
-Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will add some extra validations to ensure the document is compliant. If you plan to issue X-Rechnung invoices, we also recommend using the X-Rechnung addon in GOBL, which adds further validation.
+Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will add some extra validations to ensure the document is compliant. If you plan to issue X-Rechnung invoices, we also recommend using the X-Rechnung addon in the invoice file (see example below), to add further validation.
 
 ## Sample Invoices
 
@@ -520,92 +599,19 @@ Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will ad
 </Accordion>
 </AccordionGroup>
 
-## Example Workflow
-
-<AccordionGroup>
-<Accordion title="Example X-Rechnung Workflow">
-
-Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
-
-```json Example X-Rechnung Workflow with States
-{
-    "name": "X-Rechnung",
-    "description": "Convert to X-Rechnung",
-    "steps": [
-        {
-            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Convert to XRechnung/Factur-X",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
-                }
-            ],
-            "config": {
-                "format": "xrechnung-cii",
-            },
-            "provider": "xinvoice.convert"
-        },
-        {
-            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Generate PDF",
-            "config": {
-                "locale": "en",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
-            "summary": "English",
-            "provider": "pdf"
-        },
-        {
-            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "d0a36090-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Send a Slack Message",
-            "provider": "slack.message"
-        }
-    ]
-}
-```
-</Accordion>
-</AccordionGroup>
 
 You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [XInvoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
 
+## FAQ
+<AccordionGroup>
+<Accordion title="Which X-Rechnungsyntax should I choose, UBL or CII?">
+Both syntaxes are equally valid and contain the same information, so in the majority of cases you can choose either one.
 
+If you plan on sending Invoices through the PEPPOL network, we recommend using UBL as it is the syntax supported by it. In any other case, it might be more convenient to use CII, as it is the syntax also supported by ZUGFeRD and Factur-X.
+</Accordion>
+<Accordion title="How can I view an XML attached to a PDF?">
+For ZUGFeRD and Factur-X PDFs, the XML file is embedded within the PDF itself. To extract and view it, you can use the `Attachments` section in Adobe Acrobat Reader.
+
+Alternatively, you can use specialized tools like the [SysTools PDF Extractor](https://www.systoolsgroup.com/pdf/extractor/) to extract the XML file.
+</Accordion>
+</AccordionGroup>
