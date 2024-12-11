@@ -22,39 +22,6 @@ paths:
         recommended for testing purposes, production environments should use the PUT
         method.
       parameters:
-      - description: WorkflowID description
-        in: query
-        name: workflow_id
-        schema:
-          description: WorkflowID description
-          title: Workflow ID
-          type: string
-      - description: ID for the entry in the silo as an alternative for the raw data
-          object.
-        in: query
-        name: silo_entry_id
-        schema:
-          description: ID for the entry in the silo as an alternative for the raw
-            data object.
-          title: Silo Entry ID
-          type: string
-      - description: Raw JSON data of the GOBL Envelope or Object when the Silo Entry
-          ID is empty.
-        in: query
-        name: data
-        schema:
-          description: Raw JSON data of the GOBL Envelope or Object when the Silo
-            Entry ID is empty.
-          title: Data
-      - description: Tags to associate with the job.
-        in: query
-        name: tags
-        schema:
-          description: Tags to associate with the job.
-          items:
-            type: string
-          title: Tags
-          type: array
       - description: Number of seconds to wait for the job to complete and provide
           a response.
         in: query
@@ -67,9 +34,33 @@ paths:
           type: integer
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/FormDataTransformCreateJob'
+              properties:
+                data:
+                  description: Raw JSON data of the GOBL Envelope or Object when the
+                    Silo Entry ID is empty.
+                  nullable: true
+                  title: Data
+                  type: object
+                silo_entry_id:
+                  description: ID for the entry in the silo as an alternative for
+                    the raw data object.
+                  title: Silo Entry ID
+                  type: string
+                tags:
+                  description: Tags to associate with the job.
+                  items:
+                    type: string
+                  title: Tags
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  title: Workflow ID
+                  type: string
+              required:
+              - workflow_id
+              type: object
       responses:
         "200":
           content:
@@ -101,39 +92,6 @@ paths:
       description: Create a new job idempotently with the given UUIDv1 (other versions
         not supported).
       parameters:
-      - description: WorkflowID description
-        in: query
-        name: workflow_id
-        schema:
-          description: WorkflowID description
-          title: Workflow ID
-          type: string
-      - description: ID for the entry in the silo as an alternative for the raw data
-          object.
-        in: query
-        name: silo_entry_id
-        schema:
-          description: ID for the entry in the silo as an alternative for the raw
-            data object.
-          title: Silo Entry ID
-          type: string
-      - description: Raw JSON data of the GOBL Envelope or Object when the Silo Entry
-          ID is empty.
-        in: query
-        name: data
-        schema:
-          description: Raw JSON data of the GOBL Envelope or Object when the Silo
-            Entry ID is empty.
-          title: Data
-      - description: Tags to associate with the job.
-        in: query
-        name: tags
-        schema:
-          description: Tags to associate with the job.
-          items:
-            type: string
-          title: Tags
-          type: array
       - description: Number of seconds to wait for the job to complete and provide
           a response.
         in: query
@@ -155,13 +113,15 @@ paths:
           type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               properties:
                 data:
                   description: Raw JSON data of the GOBL Envelope or Object when the
                     Silo Entry ID is empty.
+                  nullable: true
                   title: Data
+                  type: object
                 silo_entry_id:
                   description: ID for the entry in the silo as an alternative for
                     the raw data object.
@@ -171,13 +131,14 @@ paths:
                   description: Tags to associate with the job.
                   items:
                     type: string
-                  nullable: true
                   title: Tags
                   type: array
                 workflow_id:
                   description: WorkflowID description
                   title: Workflow ID
                   type: string
+              required:
+              - workflow_id
               type: object
       responses:
         "200":
@@ -188,13 +149,38 @@ paths:
           description: OK
   /transform/v1/workflows:
     get:
-      description: Fetch all the workflows in the current company.
+      description: Fetch workflows in the current workspace.
+      parameters:
+      - description: Maximum number of workflows to return.
+        in: query
+        name: limit
+        schema:
+          description: Maximum number of workflows to return.
+          example: 100
+          title: Limit
+          type: integer
+      - description: Date from which results are provided.
+        in: query
+        name: created_at
+        schema:
+          description: Date from which results are provided.
+          example: "2023-08-02T00:00:00.000Z"
+          title: Created At
+          type: string
+      - description: Short schema name that the workflow will be allowed to process.
+        in: query
+        name: schema
+        schema:
+          description: Short schema name that the workflow will be allowed to process.
+          example: bill/invoice
+          title: Schema
+          type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformCollection'
+                $ref: '#/components/schemas/TransformWorkflowCollection'
           description: OK
   /transform/v1/workflows/{id}:
     get:
@@ -219,29 +205,6 @@ paths:
     patch:
       description: Update an existing workflow given its UUID.
       parameters:
-      - description: New name for the workflow.
-        in: query
-        name: name
-        schema:
-          description: New name for the workflow.
-          title: Name
-          type: string
-      - description: Updated description.
-        in: query
-        name: description
-        schema:
-          description: Updated description.
-          title: Description
-          type: string
-      - description: Array of Steps to use for this workflow.
-        in: query
-        name: steps
-        schema:
-          description: Array of Steps to use for this workflow.
-          items:
-            $ref: '#/components/schemas/TransformStep'
-          title: Steps
-          type: array
       - description: UUID of the workflow to update.
         in: path
         name: id
@@ -253,9 +216,9 @@ paths:
           type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/FormDataTransformUpdateWorkflow'
+              $ref: '#/components/schemas/TransformUpdateWorkflow'
       responses:
         "200":
           content:
@@ -266,45 +229,6 @@ paths:
     put:
       description: Create a new workflow idempotently with the given UUID (any version).
       parameters:
-      - description: Name of the workflow.
-        in: query
-        name: name
-        schema:
-          description: Name of the workflow.
-          title: Name
-          type: string
-      - description: Description of the workflow.
-        in: query
-        name: description
-        schema:
-          description: Description of the workflow.
-          title: Description
-          type: string
-      - description: Short schema name that the workflow will be allowed to process.
-        in: query
-        name: schema
-        schema:
-          description: Short schema name that the workflow will be allowed to process.
-          example: bill/invoice
-          title: Schema
-          type: string
-      - description: ISO country code the workflow will be used in.
-        in: query
-        name: country
-        schema:
-          description: ISO country code the workflow will be used in.
-          example: ES
-          title: Country Code
-          type: string
-      - description: Array of Steps to use for this workflow.
-        in: query
-        name: steps
-        schema:
-          description: Array of Steps to use for this workflow.
-          items:
-            $ref: '#/components/schemas/TransformStep'
-          title: Steps
-          type: array
       - description: UUID (any version) of the workflow to create.
         in: path
         name: id
@@ -316,9 +240,9 @@ paths:
           type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/FormDataTransformCreateWorkflow'
+              $ref: '#/components/schemas/TransformCreateWorkflow'
       responses:
         "200":
           content:
@@ -328,75 +252,6 @@ paths:
           description: OK
 components:
   schemas:
-    FormDataTransformCreateJob:
-      properties:
-        data:
-          description: Raw JSON data of the GOBL Envelope or Object when the Silo
-            Entry ID is empty.
-          title: Data
-        silo_entry_id:
-          description: ID for the entry in the silo as an alternative for the raw
-            data object.
-          title: Silo Entry ID
-          type: string
-        tags:
-          description: Tags to associate with the job.
-          items:
-            type: string
-          nullable: true
-          title: Tags
-          type: array
-        workflow_id:
-          description: WorkflowID description
-          title: Workflow ID
-          type: string
-      type: object
-    FormDataTransformCreateWorkflow:
-      properties:
-        country:
-          description: ISO country code the workflow will be used in.
-          example: ES
-          title: Country Code
-          type: string
-        description:
-          description: Description of the workflow.
-          title: Description
-          type: string
-        name:
-          description: Name of the workflow.
-          title: Name
-          type: string
-        schema:
-          description: Short schema name that the workflow will be allowed to process.
-          example: bill/invoice
-          title: Schema
-          type: string
-        steps:
-          description: Array of Steps to use for this workflow.
-          items:
-            $ref: '#/components/schemas/TransformStep'
-          nullable: true
-          title: Steps
-          type: array
-      type: object
-    FormDataTransformUpdateWorkflow:
-      properties:
-        description:
-          description: Updated description.
-          title: Description
-          type: string
-        name:
-          description: New name for the workflow.
-          title: Name
-          type: string
-        steps:
-          description: Array of Steps to use for this workflow.
-          items:
-            $ref: '#/components/schemas/TransformStep'
-          nullable: true
-          title: Steps
-          type: array
-      type: object
     TransformAttachment:
       properties:
         desc:
@@ -440,28 +295,33 @@ components:
           title: URL
           type: string
       type: object
-    TransformCollection:
+    TransformCreateWorkflow:
       properties:
-        created_at:
-          description: First or queried timestamp when the first entry in the page
-            was created.
-          title: Created At
+        country:
+          description: ISO country code the workflow will be used in.
+          example: ES
+          title: Country Code
           type: string
-        limit:
-          description: Maximum number of objects returned in a page.
-          title: Limit
-          type: integer
-        list:
-          description: List of objects.
-          items: {}
+        description:
+          description: Description of the workflow.
+          title: Description
+          type: string
+        name:
+          description: Name of the workflow.
+          title: Name
+          type: string
+        schema:
+          description: Short schema name that the workflow will be allowed to process.
+          example: bill/invoice
+          title: Schema
+          type: string
+        steps:
+          description: Array of Steps to use for this workflow.
+          items:
+            $ref: '#/components/schemas/TransformStep'
           nullable: true
-          title: List
+          title: Steps
           type: array
-        next_created_at:
-          description: Timestamp that indicates the start of the next page of results,
-            if any.
-          title: Next Created At
-          type: string
       type: object
     TransformEvent:
       properties:
@@ -489,6 +349,24 @@ components:
           description: Status of the event.
           example: ERR
           title: Status
+          type: string
+      type: object
+    TransformFault:
+      properties:
+        code:
+          description: Code assigned by the provider that may provide additional information
+            about the fault.
+          title: Code
+          type: string
+        message:
+          description: Message assigned by the provider that may provide additional
+            information about the fault.
+          title: Message
+          type: string
+        provider:
+          description: ID of the provider that generated the fault.
+          example: pdf
+          title: Provider
           type: string
       type: object
     TransformIntent:
@@ -552,6 +430,14 @@ components:
         envelope:
           description: Raw JSON data of the complete GOBL Envelope.
           title: GOBL Envelope
+          type: object
+        faults:
+          description: Array of fault objects that represent errors that occurred
+            during the processing of the job.
+          items:
+            $ref: '#/components/schemas/TransformFault'
+          title: Faults
+          type: array
         id:
           description: The UUIDv1 (other versions not supported) of the job
           example: 5b45453c-cdd0-11ed-afa1-0242ac120002
@@ -610,6 +496,53 @@ components:
           type: boolean
       type: object
     TransformStep:
+      properties:
+        config:
+          description: JSON configuration sent to the provider
+          title: Configuration
+          type: object
+        id:
+          description: The UUID (any version) of the step.
+          example: 186522a6-e697-4e34-8498-eee961bcb845
+          title: ID
+          type: string
+        name:
+          description: Name of the step
+          title: Name
+          type: string
+        next:
+          description: Optional array of next steps to execute after this one.
+          items:
+            $ref: '#/components/schemas/TransformNext'
+          title: Next
+          type: array
+        notes:
+          description: Additional internal details
+          title: Notes
+          type: string
+        provider:
+          description: ID of the provider to use
+          example: provider
+          title: Provider
+          type: string
+      type: object
+    TransformUpdateWorkflow:
+      properties:
+        description:
+          description: Updated description.
+          title: Description
+          type: string
+        name:
+          description: New name for the workflow.
+          title: Name
+          type: string
+        steps:
+          description: Array of Steps to use for this workflow.
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          nullable: true
+          title: Steps
+          type: array
       type: object
     TransformWorkflow:
       properties:
@@ -656,6 +589,35 @@ components:
         version:
           description: Version of the workflow's contents currently defined.
           title: Version
+          type: string
+      type: object
+    TransformWorkflowCollection:
+      properties:
+        created_at:
+          description: First or queried timestamp when the first entry in the page
+            was created.
+          title: Created At
+          type: string
+        limit:
+          description: Maximum number of objects returned in a page.
+          title: Limit
+          type: integer
+        list:
+          description: List of workflows.
+          items:
+            $ref: '#/components/schemas/TransformWorkflow'
+          nullable: true
+          title: List
+          type: array
+        next_created_at:
+          description: Timestamp that indicates the start of the next page of results,
+            if any.
+          title: Next Created At
+          type: string
+        schema:
+          description: Short schema name that the workflows have been filtered by.
+          example: bill/invoice
+          title: Schema
           type: string
       type: object
   securitySchemes:

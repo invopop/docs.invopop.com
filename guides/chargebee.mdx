@@ -1,0 +1,93 @@
+---
+title: "Chargebee"
+description: Import and process invoices and credit notes from Chargebee
+---
+
+## Introduction
+
+[Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition
+
+Invopop's Chargebee app lets you automatically import invoices and credit notes from Chargebee and process them with a workflow to comply with local regulations.
+
+## How it works
+
+The Invopop Chargebee app will subscribe for new incoming invoices and credit notes. When a new document is received, it'll be _converted_ into GOBL, and stored in your Invopop workspace.
+
+Once an invoice or credit note is stored, the app will create a job on the configured workflow.
+
+Any updates and importantly error messages will be posted to Chargebee automatically. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
+
+## Setup
+
+This guide assumes that you already have a Chargebee account configured.
+
+<Steps>
+
+<Step title="Create a Supplier">
+Firstly, we need to store the details of the supplier, the owner of the Chargebee account, in Invopop:
+
+1.  In the [console](https://console.invopop.com), go to "Contacts" then "Suppliers", and tap "New supplier".
+2.  Add the company's contact details, including the name, tax code, address, etc. in the form.
+3.  If you're issuing invoices from a region that requires special fields, please contact Invopop support for assistence.
+4.  Save the document.
+
+Note that when generating invoices, the app will merge the supplier information in Invopop with the business profile data in Chargebee when issuing the invoice, giving precedence to the data from Chargebee.
+
+</Step>
+
+<Step title="Prepare a Workflow">
+Now, you need to set up the workflow in Invopop to process the invoices imported from Chargebee. Go to **Workflows** in the Invopop console and create a new **Invoices** workflow.
+
+The workflow will need to be prepared to convert and publish invoices as local regulations require. You can also add steps for any other automation you want to perform, such as emailing the invoices or storing them in a cloud service.
+
+Be sure to add a **Sync with Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
+
+</Step>
+
+<Step title="Connect the Chargebee app">
+
+You are now ready to connect and configure the Chargebee app itself. Go to **Configuration** > **Apps** in the Invopop console. Find the **Chargebee** app then click on **Connect**. The app will be added to the list of active apps. Click on the app's **Configure** button. You'll see a form with the following fields:
+
+- **Chargebee Site:** The identifier of your Chargebee site. You can find it in the URL when you log in to Chargebee.
+- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one.
+- **Supplier:** The supplier who will be issuing the invoices. You can select the one you created earlier.
+- **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
+- **Ignore Chargebee's invoice codes:** If true, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead.
+
+Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
+
+- **Exemption Code (Generic):** The local code to be used by default on tax-exempt invoices.
+- **Exemption Code (Exports):** The local code to be used by default on tax-exempt invoices for exports.
+- **Exemption Code (Reverse Charge):** The local code to be used by default on tax-exempt invoices for reverse charge.
+
+Please note that those are the default exemption codes that will be set depending on the Chargebe exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions or customers, you can assign them [as extensions](#5-enter-extension-data).
+
+</Step>
+
+<Step title="Set up a webhook">
+
+After saving the configuration, the page will provide a URL to set up a webhook in Chargebee and trigger the import process. To do this, go to "Settings" > "Configure Chargebee" > "Webhooks" and create a new webhook with the provided URL.
+
+</Step>
+
+<Step title="Enter extension data">
+
+To generate valid invoices, most tax regimes require the issuer to provide custom data specific to that regime. GOBL supports this through extensions. Please refer to the [specific regime documentation](https://github.com/invopop/gobl/tree/main/regimes) to determine which extensions are used in your regime.
+
+You can enter the extension values in Chargebee by setting custom fields or metadata in the following entities: Customer, Plan Item, Plan Item Price, Action Item, Action Item Price, Charge Item, Charge Item Price, and Subscription.
+
+If you want to use metadata, make sure that each metadata key matches the extension name. For example, to set the customer's `mx-cfdi-fiscal-regime` extension, you could go to the customer's JSON metadata to something like:
+
+```json
+{
+  "mx-cfdi-fiscal-regime": "601"
+}
+```
+
+In the case of custom fields, you must first create them in "Settings" > "Configure Chargebee" > "Custom Fields" and make sure that each field's API name maps to an extension name. For example, to set the `mx-cfdi-fiscal-regime` the custom field API name must be `cf_mx_cfdi_fiscal_regime`.
+
+</Step>
+
+</Steps>
+
+You are now ready to start importing invoices and credit notes from Chargebee. The app will automatically create GOBL invoices and add them to your Invopop account. The invoices will then be processed using the workflow you set up.

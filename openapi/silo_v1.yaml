@@ -74,6 +74,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
+  /silo/v1/entries/{entry_id}/attachments/{id}:
+    post:
+      description: Add a new attachment to a silo entry. This is only available to
+        applications with 'enrolled' scope at this time.
+      parameters:
+      - description: UUID of attachment to create
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of attachment to create
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: UUID of the silo entry.
+        in: path
+        name: entry_id
+        required: true
+        schema:
+          description: UUID of the silo entry.
+          title: Entry ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCreateAttachment'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloAttachment'
+          description: OK
   /silo/v1/entries/{entry_id}/states:
     get:
       description: Fetch the current and previous state objects for a silo entry.
@@ -232,6 +266,12 @@ paths:
           application/json:
             schema:
               properties:
+                allow_invalid:
+                  description: When true, the envelope's contents are allowed to be
+                    invalid. Only applied for enrolled applications.
+                  example: true
+                  title: Allow Invalid
+                  type: boolean
                 content_type:
                   description: The content type of the data being uploaded.
                   example: application/json
@@ -242,11 +282,13 @@ paths:
                   example:
                     credit: true
                   title: Correct
+                  type: object
                 data:
                   description: Data contents to upload which may either be a GOBL
                     Envelope or Object. Any partial data will be calculated and validated
                     automatically.
                   title: Data
+                  type: object
                 folder:
                   description: In which folder the entry should be associated, leave
                     empty to use the automatic rules.
@@ -473,6 +515,11 @@ components:
           example: Invoice for January 2021.
           title: Description
           type: string
+        entry_id:
+          description: The UUID of the entry this attachment belongs to.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
         hash:
           description: SHA256 hash of the file.
           example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
@@ -518,15 +565,70 @@ components:
       properties:
         data:
           description: GOBL Envelope or Object to calculate and validate.
+          nullable: true
           title: Data
+          type: object
         envelop:
           description: When true, a complete GOBL Envelope will be provided as opposed
             to the standalone object.
           title: Envelop
           type: boolean
       type: object
+    SiloCreateAttachment:
+      properties:
+        data:
+          description: Binary data of the file. Optional if intending to upload data
+            directly to the generated URL in the response.
+          items:
+            minimum: 0
+            type: integer
+          title: Data
+          type: array
+        desc:
+          description: Description of the file.
+          example: Invoice for January 2021.
+          title: Description
+          type: string
+        embeddable:
+          description: When true, this attachment may be embedded inside other attachments,
+            like PDFs. Default is false.
+          example: true
+          title: Embeddable
+          type: boolean
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional meta data about the attachment.
+          title: Meta
+          type: object
+        mime:
+          description: MIME type of the file to upload. Required when only creating
+            placeholder.
+          example: application/pdf
+          title: MIME
+          type: string
+        name:
+          description: Name of the file.
+          example: invoice.pdf
+          title: Name
+          type: string
+        sha256:
+          description: SHA256 hex hash of the file that will be upload in a separate
+            request. Required when only creating placeholder.
+          example: 27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28
+          title: SHA256
+          type: string
+      required:
+      - name
+      type: object
     SiloCreateEntry:
       properties:
+        allow_invalid:
+          description: When true, the envelope's contents are allowed to be invalid.
+            Only applied for enrolled applications.
+          example: true
+          title: Allow Invalid
+          type: boolean
         content_type:
           description: The content type of the data being uploaded.
           example: application/json
@@ -537,10 +639,12 @@ components:
           example:
             credit: true
           title: Correct
+          type: object
         data:
           description: Data contents to upload which may either be a GOBL Envelope
             or Object. Any partial data will be calculated and validated automatically.
           title: Data
+          type: object
         folder:
           description: In which folder the entry should be associated, leave empty
             to use the automatic rules.
@@ -594,6 +698,7 @@ components:
         data:
           description: JSON envelope contents when specifically requested.
           title: Data
+          type: object
         digest:
           $ref: '#/components/schemas/DsigDigest'
         doc_schema:
@@ -602,7 +707,8 @@ components:
           title: Object Schema
           type: string
         draft:
-          description: When true, indicates that the envelope is a draft.
+          description: Deprectated. When true, indicates that the envelope is not
+            signed.
           example: true
           title: Draft
           type: boolean
@@ -611,6 +717,13 @@ components:
           example: https://gobl.org/draft-0/envelope
           title: Envelope Schema
           type: string
+        faults:
+          description: List of faults that occurred during the processing of the job
+            associated with the last state.
+          items:
+            $ref: '#/components/schemas/SiloFault'
+          title: Faults
+          type: array
         folder:
           description: Key for the folder where the entry is located.
           example: sales
@@ -633,17 +746,24 @@ components:
             $ref: '#/components/schemas/SiloMeta'
           title: Meta
           type: array
+        signed:
+          description: When true, the envelope has been signed and should not be modified.
+          example: true
+          title: Signed
+          type: boolean
         snippet:
           description: JSON object containing a snippet of the document.
           example:
             title: Sample Title
           title: Snippet
+          type: object
         state:
           description: Current state of the silo entry if not a draft.
           example: sent
           title: State
           type: string
         tags:
+          description: Copy of tags stored in the envelope header.
           items:
             type: string
           title: Tags
@@ -719,11 +839,31 @@ components:
           title: Query
           type: string
       type: object
+    SiloFault:
+      properties:
+        code:
+          description: Code assigned by the provider that may provide additional information
+            about the fault.
+          title: Code
+          type: string
+        message:
+          description: Message assigned by the provider that may provide additional
+            information about the fault.
+          title: Message
+          type: string
+        provider:
+          description: ID of the provider that generated the fault.
+          example: pdf
+          title: Provider
+          type: string
+      type: object
     SiloGOBL:
       properties:
         data:
           description: GOBL Envelope or Object response to a build request.
+          nullable: true
           title: Data
+          type: object
       type: object
     SiloMeta:
       properties:
@@ -732,9 +872,14 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Created At
           type: string
-        id:
-          description: UUID of the meta row.
+        entry_id:
+          description: ID of the entry this meta row belongs to
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
+        id:
+          description: Compound ID of the meta row.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002:source:key
           title: ID
           type: string
         key:
@@ -758,9 +903,14 @@ components:
             ID is not available.
           title: Reference
           type: string
+        shared:
+          description: When true, the meta entry may be shared with other applications.
+          example: true
+          title: Shared
+          type: boolean
         src:
           description: The service or source that create this meta entry.
-          example: provider
+          example: source
           title: Source
           type: string
         updated_at:
@@ -773,12 +923,15 @@ components:
           example:
             key: value
           title: Value
+          type: object
       type: object
     SiloSignGOBL:
       properties:
         data:
           description: GOBL Envelope or Object to calculate, validate, and sign.
+          nullable: true
           title: Data
+          type: object
       type: object
     SiloState:
       properties:
@@ -787,6 +940,13 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Created At
           type: string
+        faults:
+          description: List of faults that occurred during the processing of the job
+            where state was assigned.
+          items:
+            $ref: '#/components/schemas/SiloFault'
+          title: Faults
+          type: array
         id:
           description: UUID and timestamp composite ID.
           title: ID
@@ -829,10 +989,19 @@ components:
       type: object
     SiloUpdateEntry:
       properties:
+        content_type:
+          description: The content type of the data being uploaded which by default
+            expects application/json for a complete document, simple merge patch application/merge-patch+json
+            (RFC7396), or a line-by-line patch application/json-patch+json (RFC6902)
+          example: application/json
+          title: Content Type
+          type: string
         data:
-          description: Updated envelope data. New document contents will only be accepted
-            if the existing envelope data is still a draft.
+          description: Updated envelope data either a complete envelope or document,
+            or patched data according to the content type.
+          nullable: true
           title: Data
+          type: object
         folder:
           description: New location for the silo entry.
           example: drafts
