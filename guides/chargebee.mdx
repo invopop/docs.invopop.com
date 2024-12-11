@@ -5,9 +5,9 @@ description: Import and process invoices and credit notes from Chargebee
 
 ## Introduction
 
-[Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition
+[Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition.
 
-Invopop's Chargebee app lets you automatically import invoices and credit notes from Chargebee and process them with a workflow to comply with local regulations.
+Invopop's Chargebee app lets you issue locally compliant electronic invoices and credit notes from Chargebee.
 
 ## How it works
 
@@ -15,7 +15,11 @@ The Invopop Chargebee app will subscribe for new incoming invoices and credit no
 
 Once an invoice or credit note is stored, the app will create a job on the configured workflow.
 
-Any updates and importantly error messages will be posted to Chargebee automatically. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
+Any updates and importantly error messages will be posted to Chargebee automatically, in the comment section of the invoice or credit note. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
+
+<Frame caption="Invopop's output in Chargebee">
+  ![chargebee invoice](/guides/images/chargebee-invoice.png)
+</Frame>
 
 ## Setup
 
@@ -28,7 +32,7 @@ Firstly, we need to store the details of the supplier, the owner of the Chargebe
 
 1.  In the [console](https://console.invopop.com), go to "Contacts" then "Suppliers", and tap "New supplier".
 2.  Add the company's contact details, including the name, tax code, address, etc. in the form.
-3.  If you're issuing invoices from a region that requires special fields, please contact Invopop support for assistence.
+3.  If you're issuing invoices from a region that requires special fields, please contact Invopop support for assistance.
 4.  Save the document.
 
 Note that when generating invoices, the app will merge the supplier information in Invopop with the business profile data in Chargebee when issuing the invoice, giving precedence to the data from Chargebee.
@@ -48,11 +52,11 @@ Be sure to add a **Sync with Chargebee** step at the end of the workflow to repo
 
 You are now ready to connect and configure the Chargebee app itself. Go to **Configuration** > **Apps** in the Invopop console. Find the **Chargebee** app then click on **Connect**. The app will be added to the list of active apps. Click on the app's **Configure** button. You'll see a form with the following fields:
 
-- **Chargebee Site:** The identifier of your Chargebee site. You can find it in the URL when you log in to Chargebee.
-- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one.
+- **Chargebee Site:** The identifier of your Chargebee site. It is the part of the URL when you log in to Chargebee before the `.chargebee.com` domain. For example, if your URL is `https://my-site.chargebee.com`, your site is `my-site`.
+- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one. Keep in mind the used API must be a Full-Access Key.
 - **Supplier:** The supplier who will be issuing the invoices. You can select the one you created earlier.
 - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
-- **Ignore Chargebee's invoice codes:** If true, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead.
+- **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
 
 Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
 
@@ -60,34 +64,81 @@ Some countries require specific codes set on tax-exempt invoices. If you're in o
 - **Exemption Code (Exports):** The local code to be used by default on tax-exempt invoices for exports.
 - **Exemption Code (Reverse Charge):** The local code to be used by default on tax-exempt invoices for reverse charge.
 
-Please note that those are the default exemption codes that will be set depending on the Chargebe exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions or customers, you can assign them [as extensions](#5-enter-extension-data).
+Please note that those are the default exemption codes that will be set depending on the Chargebe exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions or customers, you can assign them as extensions (see next step).
+
+After saving the configuration, the page will provide a URL to set up a webhook in Chargebe. Save the URL, we'll complete the setup in a later step.
+</Step>
+
+<Step title="Enter extension data">
+
+To generate valid invoices, most tax regimes require the issuer to provide custom data specific to that regime. GOBL provides mechanisms such as extensions, identities or inboxes to carry that custom data. Please refer to the [specific regime documentation](https://github.com/invopop/gobl/tree/main/regimes) to determine what is required and available in each regime.
+
+To enter this data in Chargebee you can either configure custom fields or attach metadata to any of these entities: Customer, Plan Item, Plan Item Price, Action Item, Action Item Price, Charge Item, Charge Item Price, and Subscription.
+
+The keys of these metadata or custom fields need to have a specific prefix and include the extension, identity or inbox key to be properly mapped to GOBL. See the [Custom Data](#custom-data) section below for the full list of prefixes.
+
+For example, to set the customer's `mx-cfdi-fiscal-regime` extension, you must add a custom field to the Customer entity with the API name: `cf_gobl_mx_cfdi_fiscal_regime` (note that, being a custom field, dashes in the original extension key are replaced by underscores). You can create it in "Settings" > "Configure Chargebee" > "Custom Fields":
+
+<Frame>
+  <img
+    alt="New Chargebee custom field"
+    width="350px"
+    src="/guides/images/chargebee-custom-field.png"
+  />
+</Frame>
+
+
+Alternatively, you could set it as Customer metadata using the `gobl-customer-mx-cfdi-fiscal-regime` key (note that dashes, instead of underscores, are used in the metadata key):
+
+```json
+{
+  "gobl-customer-mx-cfdi-fiscal-regime": "601"
+}
+```
 
 </Step>
 
 <Step title="Set up a webhook">
 
-After saving the configuration, the page will provide a URL to set up a webhook in Chargebee and trigger the import process. To do this, go to "Settings" > "Configure Chargebee" > "Webhooks" and create a new webhook with the provided URL.
-
-</Step>
-
-<Step title="Enter extension data">
-
-To generate valid invoices, most tax regimes require the issuer to provide custom data specific to that regime. GOBL supports this through extensions. Please refer to the [specific regime documentation](https://github.com/invopop/gobl/tree/main/regimes) to determine which extensions are used in your regime.
-
-You can enter the extension values in Chargebee by setting custom fields or metadata in the following entities: Customer, Plan Item, Plan Item Price, Action Item, Action Item Price, Charge Item, Charge Item Price, and Subscription.
-
-If you want to use metadata, make sure that each metadata key matches the extension name. For example, to set the customer's `mx-cfdi-fiscal-regime` extension, you could go to the customer's JSON metadata to something like:
-
-```json
-{
-  "mx-cfdi-fiscal-regime": "601"
-}
-```
-
-In the case of custom fields, you must first create them in "Settings" > "Configure Chargebee" > "Custom Fields" and make sure that each field's API name maps to an extension name. For example, to set the `mx-cfdi-fiscal-regime` the custom field API name must be `cf_mx_cfdi_fiscal_regime`.
+After saving the configuration in Step, the page provided a URL to set up a webhook in Chargebee and trigger the import process. To do this, go to "Settings" > "Configure Chargebee" > "Webhooks" and create a new webhook with the provided URL.
 
 </Step>
 
 </Steps>
 
 You are now ready to start importing invoices and credit notes from Chargebee. The app will automatically create GOBL invoices and add them to your Invopop account. The invoices will then be processed using the workflow you set up.
+
+### Custom Data
+
+The following prefixes are used to map custom data from Chargebee to GOBL:
+
+| Prefix | Description | Custom field example |
+|--------|-------------|--------|
+| `gobl-tax-` | Invoice tax extension | `cf_gobl_tax_gr_mydata_invoice_type` |
+| `gobl-customer-` | Customer extension | `cf_gobl_customer_mx_cfdi_fiscal_regime` |
+| `gobl-customer-identity-` | Customer identity | `cf_gobl_customer_identity_de_tax_number` |
+| `gobl-customer-inbox-` | Customer inbox | `cf_gobl_customer_inbox_it_sdi_pec` |
+| `gobl-item-` | Item extension | `cf_gobl_item_br_nfse_service` |
+| `gobl-line-vat-` | VAT extension | `cf_gobl_line_vat_pt_saft_exemption` |
+| `gobl-purchase-identity-` | Ordering purchase identity | `cf_gobl_purchase_identity_CIG` |
+
+In addition to the prefixes above, the following keys can be used to set specific GOBL fields:
+
+| Key | Description | Custom field example |
+|-----|-------------|--------|
+| `gobl-tags` | Invoice tags (comma-separated list) | `cf_gobl_tags` |
+| `gobl-addons` | Invoice addons (comma-separated list) | `cf_gobl_addons` |
+| `gobl-ordering` | Invoice ordering (full JSON) | `cf_gobl_ordering` |
+
+Finally, the following keys can be used to control the importer's default behaviour:
+
+| Key | Description | Custom field example |
+|-----|-------------|--------|
+| `invopop-include` | Customer to include when importing (if "True") | `cf_invopop_include` |
+| `invopop-exclude` | Customer to exclude when importing (if "True") | `cf_invopop_exclude` |
+| `invopop-workflow` | Workflow to use for this Customer (overrides the default one) | `cf_invopop_workflow` |
+
+<Tip>
+You would typically use either `invopop-include` to allowlist the customers to be imported, or `invopop-exclude` to denylist them, but not both. Both are optional, though, and if not set, all customers' invoices will be imported.
+</Tip>
+
