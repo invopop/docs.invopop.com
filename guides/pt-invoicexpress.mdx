@@ -1,6 +1,4 @@
-#
-
-## Introduction
+### Introduction
 
 Invopop partners with the local technology provider [InvoiceXpress](https://invoicexpress.com/) to issue invoices, invoice-receipts, and credit notes in Portugal and allow users to submit their tax reports to the Portuguese tax authority (AT).
 
@@ -13,15 +11,10 @@ Please refer to the docs of the [GOBL's Portugal Tax Regime](https://github.com/
 To issue invoices in Portugal via InvoiceXpress, you will need:
 
 * Supplier details, including:
-
   * name,
-
-  * Tax ID (*Número de Identificação Fiscal)*
-
+  * Tax ID (*Número de Identificação Fiscal)*,
   * address, and,
-
   * email
-
 * Line item details including quantities, prices, applicable tax rates.
 
 ## Setup
@@ -29,99 +22,94 @@ To issue invoices in Portugal via InvoiceXpress, you will need:
 There are three key processes to prepare:
 
 * connect the InvoiceXpress Portugal app,
-
 * create a supplier registration workflow,
-
 * prepare an invoicing workflow.
 
 <Steps>
   <Step title="Connect the InvoiceXpress app">
     Enter the **Configuration** section, then click on **Apps**. Click on the **Connect** button of the **InvoiceXpress Portugal** app.
   </Step>
+
   <Step title="Create a supplier registration workflow">
-    We'll now create a workflow that you'll use to register companies within InvoiceXpress, before we can issue invoices with them. Back in the **Workflows** section, create a new "Contacts" workflow called "Register supplier in InvoiceXpress".
+    We'll now create a workflow that you'll use to register companies within InvoiceXpress before issuing invoices with them. Back in the **Workflows** section, create a new "Contacts" workflow called "Register supplier in InvoiceXpress".
 
     The new workflow will need to perform three steps:
 
     * **Sign the Envelope**
-
     * **Register InvoiceXpress issuer**
-
     * **Set State** - with configuration set to `processing`.
 
-    Add any additional steps you may need, and save the new workflow. You can also just copy the example workflow below.
-    
+    Add any additional steps you may need, and save the new workflow. You can also copy the example workflow below.
+
     <Accordion title="Supplier post-registration workflow example">
       Copy and paste the following example in the workflow editor:
 
       ```json
       {
-    "name": "Register in InvoiceXpress",
-    "description": " ",
-    "steps": [
-        {
+        "name": "Register in InvoiceXpress",
+        "description": " ",
+        "steps": [
+          {
             "id": "e78ab920-b8be-11ef-9825-f56714a03659",
             "name": "Sign Envelope",
             "provider": "silo.close"
-        },
-        {
+          },
+          {
             "id": "01d3e8a0-499e-11ef-b4fe-47a6daefa429",
             "name": "Set State",
             "config": {
-                "state": "processing"
+              "state": "processing"
             },
             "summary": "Set state to `processing`{.state .processing}",
             "provider": "silo.state"
-        },
-        {
+          },
+          {
             "id": "dbac1680-b8be-11ef-9825-f56714a03659",
             "name": "Register InvoiceXpress issuer",
             "provider": "invoicexpress.register",
             "next": [
-                {
-                    "status": "KO",
-                    "step_id": "12ad6a70-499e-11ef-b4fe-47a6daefa429"
-                }
+              {
+                "status": "KO",
+                "step_id": "12ad6a70-499e-11ef-b4fe-47a6daefa429"
+              }
             ]
-        },
-        {
+          },
+          {
             "id": "0eb04c30-499e-11ef-b4fe-47a6daefa429",
             "name": "Set State",
             "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
+              {
+                "stop": true,
+                "status": "NA"
+              }
             ],
             "config": {
-                "state": "registered"
+              "state": "registered"
             },
             "summary": "Set state to `registered`{.state .registered}",
             "provider": "silo.state"
-        },
-        {
+          },
+          {
             "id": "12ad6a70-499e-11ef-b4fe-47a6daefa429",
             "name": "Set State",
             "config": {
-                "state": "error"
+              "state": "error"
             },
             "summary": "Set state to `error`{.state .error}",
             "provider": "silo.state"
-        }
-    ]
-}
+          }
+        ]
+      }
       ```
     </Accordion>
   </Step>
 
   <Step title="Prepare Invoice Workflow">
-    Finally, we need to prepare the actual workflow that will be used to process invoices. For this example, the workflow should be named something like “Send invoice to InvoiceXpress”, and it will consist of the following Steps:
+    Finally, we need to prepare the actual workflow that will be used to process invoices. For this example, the workflow should be named something like “Send invoice to InvoiceXpress,” and it will consist of the following steps:
 
-    * **Send to InvoiceXpress**.
-
-    * **Generate PDF** - configured for your environment.
-
-    * **Set State** - to “sent”.
+    * **Send to InvoiceXpress**
+    * **Generate PDF** - configured for your environment.
+    * **Set State** - to “sent.”
   </Step>
 </Steps>
 
