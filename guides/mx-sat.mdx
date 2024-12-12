@@ -13,37 +13,25 @@ In this guide we'll walk you through the steps required to first register a supp
 
 To issue invoices in Mexico via the SAT, you will need:
 
-* Supplier details, including:
-
-  * name,
-
-  * taxpayer ID or RFC (Registro Federal de Contribuyentes),
-
-  * address, and,
-
-  * fiscal regime code issued by SAT.
-
-* Customer details, the same as the supplier, plus *CFDI use code* (código de uso CFDI).
-
-* Line item details including quantities, prices, applicable tax rates, and the SAT *product-service code*.
-
-* To have chosen an invoice series.
-
-* Issue place code (lugar de expedición).
-
-* A *signing certificate* known as a CSD (Certificado de Sello Digital) issued by the SAT for every supplier.
+- Supplier details, including:
+  - name,
+  - taxpayer ID or RFC (Registro Federal de Contribuyentes),
+  - address, and,
+  - fiscal regime code issued by SAT.
+- Customer details, the same as the supplier, plus _CFDI use code_ (código de uso CFDI).
+- Line item details including quantities, prices, applicable tax rates, and the SAT _product-service code_.
+- To have chosen an invoice series.
+- Issue place code (lugar de expedición).
+- A _signing certificate_ known as a CSD (Certificado de Sello Digital) issued by the SAT for every supplier.
 
 ## Setup
 
-There are four key processes to prepare:
+There are three key processes to prepare:
 
-* create supplier post-registration workflow,
-
-* connect the SAT Mexico app,
-
-* configure a supplier registration workflow, and,
-
-* prepare an invoicing workflow.
+- create supplier post-registration workflow,
+- connect the SAT Mexico app,
+- configure a supplier registration workflow, and,
+- prepare an invoicing workflow.
 
 <Info>
   These instructions apply to both the sandbox and live environments, with a few
@@ -54,163 +42,163 @@ There are four key processes to prepare:
 All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
-  <Step title="Create Supplier post-registration workflow (optional)">
-    Head over to the **Workflows** section and create a new "Contacts" workflow.
 
-    <Frame>
-      <img alt="New Contacts Workflow" width="350px" src="/guides/images/mx-sat-new-workflow.png" />
-    </Frame>
+<Step title="Create Supplier post-registration workflow (optional)">
+Head over to the **Workflows** section and create a new "Contacts" workflow.
 
-    Rename the workflow to "Post-registration flow", and add a single step to change the state to `registered`.
+<Frame>
+  <img
+    alt="New Contacts Workflow"
+    width="350px"
+    src="/guides/images/mx-sat-new-workflow.png"
+  />
+</Frame>
 
-    At this point you can add any webhooks or notification steps that might be useful for your systems to receive after a supplier has successfully registered.
+Rename the workflow to "Post-registration flow", and add a single step to change the state to `registered`.
 
-    Tap the **Save** button.
+At this point you can add any webhooks or notification steps that might be useful for your systems to receive after a supplier has successfully registered.
 
-    <Accordion title="Supplier post-registration workflow example">
-      Copy and paste the following example in the workflow editor:
+Tap the **Save** button.
 
-      ```json
-      {
-          "name": "Post-registration flow",
-          "steps": [
-              {
-                  "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
-                  "name": "Set State",
-                  "config": {
-                      "state": "registered"
-                  },
-                  "summary": "Set state to `registered`{.state .registered}",
-                  "provider": "silo.state"
-              }
-          ]
-      }
-      ```
-    </Accordion>
-  </Step>
+<Accordion title="Supplier post-registration workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Post-registration flow",
+    "steps": [
+        {
+            "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
+            "name": "Set State",
+            "config": {
+                "state": "registered"
+            },
+            "summary": "Set state to `registered`{.state .registered}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
+</Accordion>
 
-  <Step title="Connect the SAT Mexico App">
-    Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **SAT Mexico** app.
+</Step>
 
-    <Frame>
-      <img src="/guides/images/mx-sat-app.png" width="360px" alt="SAT MX App" />
-    </Frame>
+<Step title="Connect the SAT Mexico App">
+Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **SAT Mexico** app.
+<Frame>
+<img src="/guides/images/mx-sat-app.png" width="360px" alt="SAT MX App" />
+</Frame>
 
-    Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
+Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
 
-    Tap the **Save** button.
-  </Step>
+Tap the **Save** button.
 
-  <Step title="Configure the supplier registration workflow">
-    Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
+</Step>
 
-    The new workflow will need to perform three steps:
+<Step title="Configure the supplier registration workflow">
+Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
 
-    * **Sign the Envelope**
+The new workflow will need to perform three steps:
 
-    * **Register SAT Issuer**
+- **Sign the Envelope**
+- **Register SAT Issuer**
+- **Set State** - with configuration set to `processing`.
 
-    * **Set State** - with configuration set to `processing`.
+Add any additional steps you may need, and save the new workflow.
 
-    Add any additional steps you may need, and save the new workflow.
+<Accordion title="Supplier registration workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Register Supplier",
+    "steps": [
+        {
+            "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
+            "name": "Register SAT Issuer (Mexico)",
+            "provider": "sat-mx.register"
+        },
+        {
+            "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
+</Accordion>
 
-    <Accordion title="Supplier registration workflow example">
-      Copy and paste the following example in the workflow editor:
+</Step>
 
-      ```json
-      {
-          "name": "Register Supplier",
-          "steps": [
-              {
-                  "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
-                  "name": "Sign Envelope",
-                  "provider": "silo.close"
-              },
-              {
-                  "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
-                  "name": "Register SAT Issuer (Mexico)",
-                  "provider": "sat-mx.register"
-              },
-              {
-                  "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
-                  "name": "Set State",
-                  "config": {
-                      "state": "processing"
-                  },
-                  "summary": "Set state to `processing`{.state .processing}",
-                  "provider": "silo.state"
-              }
-          ]
-      }
-      ```
-    </Accordion>
-  </Step>
+<Step title="Prepare Invoice Workflow">
+Finally, we need to prepare the actual workflow that will be used to process invoices. For this example the workflow should be named something like "Issue SAT Invoices", and it will consist of the following Steps:
 
-  <Step title="Prepare Invoice Workflow">
-    Finally, we need to prepare the actual workflow that will be used to process invoices. For this example the workflow should be named something like "Issue SAT Invoices", and it will consist of the following Steps:
+- **Add Sequential Code** - with dynamic sequences, and name like "SAT Invoices".
+- **Send to SAT (Mexico)**.
+- **Generate PDF** - configured for your environment.
+- **Set State** - to "sent".
 
-    * **Add Sequential Code** - with dynamic sequences, and name like "SAT Invoices".
+Tap the **Save** button to ensure the workflow has been persisted.
 
-    * **Send to SAT (Mexico)**.
+<Accordion title="Issue Mexican invoice workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Issue SAT Invoices",
+    "steps": [
+        {
+            "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · SAT Invoices · 000001",
+            "config": {
+                "sign": true,
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
+            "name": "Send to SAT (Mexico)",
+            "config": {
+                "generate_pdf": false,
+                "prepaid": false
+            },
+            "provider": "sat-mx",
+        },
+        {
+            "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": {
+                "logo_height": 40,
+                "locale": "en",
+                "date_format": "%Y-%m-%d"
+            }
+        },
+        {
+            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "sent"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}"
+        }
+    ]
+}
+```
+</Accordion>
 
-    * **Generate PDF** - configured for your environment.
-
-    * **Set State** - to "sent".
-
-    Tap the **Save** button to ensure the workflow has been persisted.
-
-    <Accordion title="Issue Mexican invoice workflow example">
-      Copy and paste the following example in the workflow editor:
-
-      ```json
-      {
-          "name": "Issue SAT Invoices",
-          "steps": [
-              {
-                  "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
-                  "name": "Add Sequential Code",
-                  "provider": "sequence.enumerate",
-                  "summary": "Dynamic · SAT Invoices · 000001",
-                  "config": {
-                      "sign": true,
-                      "padding": 6,
-                      "start": 1
-                  }
-              },
-              {
-                  "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
-                  "name": "Send to SAT (Mexico)",
-                  "config": {
-                      "generate_pdf": false,
-                      "prepaid": false
-                  },
-                  "provider": "sat-mx",
-              },
-              {
-                  "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
-                  "name": "Generate PDF",
-                  "provider": "pdf",
-                  "summary": "English",
-                  "config": {
-                      "logo_height": 40,
-                      "locale": "en",
-                      "date_format": "%Y-%m-%d"
-                  }
-              },
-              {
-                  "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
-                  "name": "Set State",
-                  "config": {
-                      "state": "sent"
-                  },
-                  "provider": "silo.state",
-                  "summary": "Set state to `sent`{.state .sent}"
-              }
-          ]
-      }
-      ```
-    </Accordion>
-  </Step>
+</Step>
 </Steps>
 
 ## Running
@@ -256,7 +244,11 @@ We should now see the document. Find and click the **Select Workflow** button. S
 The execution should be successful, and the silo entry will now be in the "Processing" state. Tap the **Meta** tab to see the registration link:
 
 <Frame>
-  <img src="/guides/images/mx-sat-reg-link.png" width="450px" alt="Supplier Registration Link" />
+  <img
+    src="/guides/images/mx-sat-reg-link.png"
+    width="450px"
+    alt="Supplier Registration Link"
+  />
 </Frame>
 
 <Info>
@@ -285,103 +277,101 @@ The following examples are of partial GOBL documents you can copy and paste dire
 
 GOBL Invoices sent to the SAT require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
 
-* `$region` to be set to [`MX`](https://docs.gobl.org/regimes/mx)
-
-* `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
+- `$region` to be set to [`MX`](https://docs.gobl.org/regimes/mx)
+- `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
 
 <AccordionGroup>
-  <Accordion title="B2B Invoice">
-    In this example we're issuing a simple B2B invoice from a Mexican supplier to another Mexican customer.
+<Accordion title="B2B Invoice">
 
-    Notice:
+In this example we're issuing a simple B2B invoice from a Mexican supplier to another Mexican customer.
 
-    * we've added the `mx-cfdi-v4` addon, this ensures the document will be validated using the CFDI v4 rules built into the GOBL library,
+Notice:
 
-    * extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
+- we've added the `mx-cfdi-v4` addon, this ensures the document will be validated using the CFDI v4 rules built into the GOBL library,
+- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
+- VAT will be applied at the standard rate, the percentage will be set automatically, and,
+- there are no totals nor calculations, all of these will be made automatically when uploading.
 
-    * VAT will be applied at the standard rate, the percentage will be set automatically, and,
-
-    * there are no totals nor calculations, all of these will be made automatically when uploading.
-
-    ```json
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "MX",
+  "$addons": ["mx-cfdi-v4"],
+  "series": "XXMX",
+  "tax": {
+    "ext": {
+      "mx-cfdi-issue-place": "21000"
+    }
+  },
+  "supplier": {
+    "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
+    "name": "ESCUELA KEMPER URGATE",
+    "tax_id": {
+      "country": "MX",
+      "code": "EKU9003173C9"
+    },
+    "addresses": [
+      {
+        "street": "Julia Navarrete No. 1430",
+        "locality": "Mexicali",
+        "region": "Baja California",
+        "code": "21000",
+        "country": "MX"
+      }
+    ],
+    "emails": [
+      {
+        "addr": "esckemperugarte@example.com"
+      }
+    ],
+    "ext": {
+      "mx-cfdi-fiscal-regime": "601",
+      "mx-cfdi-post-code": "21000"
+    }
+  },
+  "customer": {
+    "name": "UNIVERSIDAD ROBOTICA ESPAÑOLA",
+    "tax_id": {
+      "country": "MX",
+      "code": "URE180429TM6"
+    },
+    "addresses": [
+      {
+        "locality": "Ciudad de Mexico",
+        "region": "Ciudad de Mexico",
+        "code": "86991",
+        "country": "MX"
+      }
+    ],
+    "ext": {
+      "mx-cfdi-fiscal-regime": "601",
+      "mx-cfdi-post-code": "86991",
+      "mx-cfdi-use": "G01"
+    }
+  },
+  "lines": [
     {
-      "$schema": "https://gobl.org/draft-0/bill/invoice",
-      "$regime": "MX",
-      "$addons": ["mx-cfdi-v4"],
-      "series": "XXMX",
-      "tax": {
+      "i": 1,
+      "quantity": "1",
+      "item": {
+        "name": "Standard Plan",
+        "price": "1000.00",
         "ext": {
-          "mx-cfdi-issue-place": "21000"
+          "mx-cfdi-prod-serv": "81112002"
         }
       },
-      "supplier": {
-        "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
-        "name": "ESCUELA KEMPER URGATE",
-        "tax_id": {
-          "country": "MX",
-          "code": "EKU9003173C9"
-        },
-        "addresses": [
-          {
-            "street": "Julia Navarrete No. 1430",
-            "locality": "Mexicali",
-            "region": "Baja California",
-            "code": "21000",
-            "country": "MX"
-          }
-        ],
-        "emails": [
-          {
-            "addr": "esckemperugarte@example.com"
-          }
-        ],
-        "ext": {
-          "mx-cfdi-fiscal-regime": "601",
-          "mx-cfdi-post-code": "21000"
-        }
-      },
-      "customer": {
-        "name": "UNIVERSIDAD ROBOTICA ESPAÑOLA",
-        "tax_id": {
-          "country": "MX",
-          "code": "URE180429TM6"
-        },
-        "addresses": [
-          {
-            "locality": "Ciudad de Mexico",
-            "region": "Ciudad de Mexico",
-            "code": "86991",
-            "country": "MX"
-          }
-        ],
-        "ext": {
-          "mx-cfdi-fiscal-regime": "601",
-          "mx-cfdi-post-code": "86991",
-          "mx-cfdi-use": "G01"
-        }
-      },
-      "lines": [
+      "taxes": [
         {
-          "i": 1,
-          "quantity": "1",
-          "item": {
-            "name": "Standard Plan",
-            "price": "1000.00",
-            "ext": {
-              "mx-cfdi-prod-serv": "81112002"
-            }
-          },
-          "taxes": [
-            {
-              "cat": "VAT",
-              "rate": "standard"
-            }
-          ]
+          "cat": "VAT",
+          "rate": "standard"
         }
       ]
     }
-    ```
-  </Accordion>
+  ]
+}
+```
+
+</Accordion>
 </AccordionGroup>
 
 ## FAQ
@@ -389,15 +379,18 @@ GOBL Invoices sent to the SAT require the following properties in order to perfo
 Please contact the [Invopop support team](email:support@invopop.com) if you have any questions that are not listed here.
 
 <AccordionGroup>
-  <Accordion title="Which PAC (Proveedor Autorizado de Certificación) does Invopop use?">
-    Invopop uses [SW Sapien](https://sw.com.mx), an Authorised Certification
-    Provider (PAC), to sign and stamp CFDI documents for the Mexican tax
-    authority.
-  </Accordion>
 
-  <Accordion title="Where can I find the mapping of GOBL fields to CFDI?">
-    The library that transforms GOBL into CFDI documents is publicly available as an open-source project and can be found at [github.com/invopop/gobl.cfdi](https://github.com/invopop/gobl.cfdi).
+<Accordion title="Which PAC (Proveedor Autorizado de Certificación) does Invopop use?">
+  Invopop uses [SW Sapien](https://sw.com.mx), an Authorised Certification
+  Provider (PAC), to sign and stamp CFDI documents for the Mexican tax
+  authority.
+</Accordion>
 
-    For further details on how GOBL prepares data for conversion, see the [Mexico Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/mx/README.md).
-  </Accordion>
+<Accordion title="Where can I find the mapping of GOBL fields to CFDI?">
+The library that transforms GOBL into CFDI documents is publicly available as an open-source project and can be found at [github.com/invopop/gobl.cfdi](https://github.com/invopop/gobl.cfdi).
+
+For further details on how GOBL prepares data for conversion, see the [Mexico Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/mx/README.md).
+
+</Accordion>
+
 </AccordionGroup>
