@@ -3,12 +3,9 @@ title: "Italy - SDI"
 description: Issue invoices in Italy
 ---
 
-
 ## Introduction
 
 Invopop's SDI Italy provider allows you to generate and issue FatturaPA documents in Italy.
-
-Please refer to the docs of the [GOBL's Italy Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/it/README.md) to learn about the specifics of Italian GOBL documents and to get examples. The library that transforms GOBL into FatturaPA documents is also publicly available as an open-source project and can be found at [github.com/invopop/gobl.fatturapa](https://github.com/invopop/gobl.fatturapa).
 
 ## Prerequisites
 
@@ -46,7 +43,6 @@ Create an **Invoices** workflow with these essential steps:
 
 1. **Sign Envelope** - Signs the GOBL document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
 2. **Send to SDI (Italy)** - Generates the required FatturaPA document and submits it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI has to be set.
-3. **Generate PDF** - Generates the PDF invoice with the required QR code.
 
 <Info>
 SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
@@ -138,7 +134,7 @@ You can copy and paste the following JSON while editing a Workflow in "developer
 
 Invopop uses the [GOBL](https://gobl.org) library to process conversions, in particular the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
 
-Be sure to set the `regime` field to `IT` in your invoices and add the `it-sdi-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, details of which can be found [here](https://github.com/invopop/gobl.fatturapa/tree/initial?tab=readme-ov-file#tags-and-extensions).
+Be sure to set the `regime` field to `IT` in your invoices and add the `it-sdi-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, which can be found [here](https://github.com/invopop/gobl/tree/main/regimes/it#italy-specific-requirements).
 
 ## Example Invoices
 
@@ -751,19 +747,4 @@ There are two main ways to correct an invoice in the Italian SDI system:
 The corrective document must reference the original invoice number and date.
 
 </Accordion>
-<Accordion title="What are the different notification types from SDI?">
-
-The SDI system uses several notification types to communicate the status of an invoice:
-
-- NS (Notifica di Scarto): Invoice rejected due to validation errors
-- RC (Ricevuta di Consegna): Invoice successfully delivered to recipient
-- MC (Mancata Consegna): Delivery failed but invoice is valid and stored in recipient's portal
-- NE (Notifica Esito): Recipient acceptance/rejection notification
-- DT (Decorrenza Termini): Deadline expired without recipient response
-- AT (Attestazione di Avvenuta Trasmissione): Confirmation of transmission for invoices to private individuals
-
-These notifications help track the invoice's journey through the SDI system and confirm its final status. In Invopop, these are translated to workflow states.
-
-</Accordion>
-
 </AccordionGroup>
