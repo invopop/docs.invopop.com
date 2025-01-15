@@ -1,0 +1,127 @@
+---
+title: "Update Exchange Rates"
+description: Update the exchange rates of your invoice to the latest value published by the ECB before the `value date`.
+---
+
+<Info>
+  The **Value Date** is the date when taxes on the invoice become accountable; if not specified, the issue date is used.
+</Info>
+
+## Introduction
+The **Update Exchange Rates** step ensures that the exchange rates used in your invoices are updated to the European Central Bank (ECB) rates for the `value date`. This step guarantees that your financial calculations remain accurate and aligned with the most relevant currency exchange values.
+
+## What is this step used for?
+- Synchronize your invoice data with the ECB exchange rates for the invoice `value date`.
+- Ensure compliance with tax regulations by using accurate and timely currency exchange data.
+- Avoid discrepancies caused by outdated or incorrect exchange rates.
+
+## How it works
+When triggered, the **Update Exchange Rates** step performs the following actions:
+
+1. Fetches the corresponding exchange rates published by the European Central Bank.
+2. Updates the `Amount` and `Date` fields in all elements in the `Exchange Rates` section.
+3. Saves the updated exchange rates in the invoice data.
+
+## How to Use
+1. Create a workflow and add the **Update Exchange Rates** step. No further configuration is needed.
+2. Trigger the workflow as usual.
+3. The step will automatically update the exchange rates during execution.
+
+## Example
+Consider an invoice created in `USD`, with `Issue Date` of 2022-04-29 and no `Value Date`. You may want to generate the invoice in `EUR` for reporting purposes. Initially, the invoice may have no exchange rates `amount` or a placeholder value:
+
+```json 
+{
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "$regime": "ES",
+    "uuid": "019006f8-67cc-7000-99ce-40969ed20a9e",
+    "type": "standard",
+    "code": "",
+    "issue_date": "2022-04-29",
+    "currency": "USD",
+    "exchange_rates": [
+        {
+            "from": "USD",
+            "to": "EUR"
+        }
+    ],
+    ...
+}
+```
+
+Once the **Update Exchange Rates** step is run, the first lines of your invoice would look like this:
+
+```json 
+{
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "$regime": "ES",
+    "uuid": "019006f8-67cc-7000-99ce-40969ed20a9e",
+    "type": "standard",
+    "code": "",
+    "issue_date": "2022-04-29",
+    "currency": "USD",
+    "exchange_rates": [
+        {
+            "from": "USD",
+            "to": "EUR",
+            "at": "2022-04-29T00:00:00",
+            "amount": "0.94877"
+        }
+    ],
+    ...
+}
+```
+
+## FAQ
+<AccordionGroup>
+<Accordion title="Will an invoice without the exchange rates field throw an error when using this step?">
+  No, if the invoice does not contain any data in the `exchange_rates` field, the step will be skipped, and no error will be thrown. The process will continue as usual.
+</Accordion>
+
+<Accordion title="What happens if one of the currencies in the exchange rates is not supported by the ECB?">
+  If any currency listed in the exchange rates is not supported by the ECB, the step will be skipped for that particular currency, and no error will be thrown.
+
+List of supported currencies by ECB:
+<ul>
+  <li>AUD</li>
+  <li>BGN</li>
+  <li>BRL</li>
+  <li>CAD</li>
+  <li>CHF</li>
+  <li>CNY</li>
+  <li>CZK</li>
+  <li>DKK</li>
+  <li>EUR</li>
+  <li>GBP</li>
+  <li>HKD</li>
+  <li>HUF</li>
+  <li>IDR</li>
+  <li>ILS</li>
+  <li>INR</li>
+  <li>ISK</li>
+  <li>JPY</li>
+  <li>KRW</li>
+  <li>MXN</li>
+  <li>MYR</li>
+  <li>NOK</li>
+  <li>NZD</li>
+  <li>PHP</li>
+  <li>PLN</li>
+  <li>RON</li>
+  <li>SEK</li>
+  <li>SGD</li>
+  <li>THB</li>
+  <li>TRY</li>
+  <li>USD</li>
+  <li>ZAR</li>
+</ul>
+
+</Accordion>
+</AccordionGroup>
+
+### Support
+We are continually enhancing our steps. If you'd like us to integrate additional banks for specific currencies or if you need further assistance, please reach out to us ([support](email:support@invopop.com)).
+
+## Additional Resources
+- [European Central Bank Exchange Rate Reference](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)
+- [Invopop Workflow Configuration Guide](https://docs.invopop.com/guides/workflows)
