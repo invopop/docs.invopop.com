@@ -46,6 +46,165 @@ The workflow will need to be prepared to convert and publish invoices as local r
 
 Be sure to add a **Sync with Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
 
+<AccordionGroup>
+<Accordion title="Example Workflow - Basic PDF">
+
+Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
+
+```json Example Chargebee Workflow with States
+{
+    "name": "Chargebee",
+    "description": "",
+    "steps": [
+        {
+            "id": "c9d569f0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c7a347b0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Sign Envelope",
+            "provider": "silo.close",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "5504a610-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ]
+        },
+        {
+            "id": "d1f2e5e0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Generate PDF",
+            "config": {
+                "logo_height": 40,
+                "locale": "de",
+                "date_format": "%Y-%m-%d"
+            },
+            "summary": "German",
+            "provider": "pdf",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "5504a610-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ]
+        },
+        {
+            "id": "6277f270-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "next": [
+                {
+                    "status": "NA",
+                    "step_id": "d8166690-ab1e-11ef-a0aa-f554af0a2b6c"
+                }
+            ],
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "5504a610-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "d8166690-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+```
+</Accordion>
+<Accordion title="Example Workflow - X-Rechnung">
+
+This is an example that combines the Chargebee app with a country-specific functionality (in this case, the X-Rechnung conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
+
+```json Example Chargebee X-Rechnung Workflow
+{
+    "name": "X-Rechnung",
+    "description": "",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Convert to XRechnung/Factur-X",
+            "next": [
+                {
+                    "status": "KO",
+                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
+                }
+            ],
+            "provider": "xinvoice.convert"
+        },
+        {
+            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Generate PDF",
+            "config": {
+                "locale": "en",
+                "date_format": "%Y-%m-%d",
+                "logo_height": 40
+            },
+            "summary": "English",
+            "provider": "pdf"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "next": [
+                {
+                    "status": "NA",
+                    "step_id": "c35d34c0-b7af-11ef-86a5-99a247862412"
+                }
+            ],
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c35d34c0-b7af-11ef-86a5-99a247862412",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+```
+</Accordion>
+</AccordionGroup>
 </Step>
 
 <Step title="Connect the Chargebee app">
