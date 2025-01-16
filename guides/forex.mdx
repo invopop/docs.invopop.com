@@ -1,34 +1,21 @@
 ---
 title: "Update Exchange Rates"
-description: Update the exchange rates of your invoice to the latest value published by the ECB before the `value date`.
+description: Update the exchange rates of your invoice to the latest values published by the ECB.
 ---
 
-<Info>
-  The **Value Date** is the date when taxes on the invoice become accountable; if not specified, the issue date is used.
-</Info>
+## Overview
+Many countries require that invoices issued in foreign currencies include an exchange rate to the national currency, and they even specify which source to use for the exchange rate. For example, when a Spanish company issues an invoice in USD, it must convert it to EUR, using the latest ECB rates, before reporting it to the Spanish tax authority.
 
-## Introduction
-The **Update Exchange Rates** step ensures that the exchange rates used in your invoices are updated to the European Central Bank (ECB) rates for the `value date`. This step guarantees that your financial calculations remain accurate and aligned with the most relevant currency exchange values.
-
-## What is this step used for?
-- Synchronize your invoice data with the ECB exchange rates for the invoice `value date`.
-- Ensure compliance with tax regulations by using accurate and timely currency exchange data.
-- Avoid discrepancies caused by outdated or incorrect exchange rates.
-
-## How it works
-When triggered, the **Update Exchange Rates** step performs the following actions:
-
-1. Fetches the corresponding exchange rates published by the European Central Bank.
-2. Updates the `Amount` and `Date` fields in all elements in the `Exchange Rates` section.
-3. Saves the updated exchange rates in the invoice data.
+By including this step in your workflows, you can ensure you will always use the correct exchange rate. 
 
 ## How to Use
-1. Create a workflow and add the **Update Exchange Rates** step. No further configuration is needed.
-2. Trigger the workflow as usual.
-3. The step will automatically update the exchange rates during execution.
+1. Start by creating an invoice and include the `exchange_rates` field, specifying the currencies you want to convert from and to.
+2. Add the **Update Exchange Rates** step to your workflow-no extra setup required.
+3. Trigger the workflow as you normally would.
+4. The step will automatically update the exchange rates when the workflow runs.
 
 ## Example
-Consider an invoice created in `USD`, with `Issue Date` of 2022-04-29 and no `Value Date`. You may want to generate the invoice in `EUR` for reporting purposes. Initially, the invoice may have no exchange rates `amount` or a placeholder value:
+Imagine you created an invoice in USD and you need to convert it to EUR for reporting purposes. At first, the invoice might not have any exchange rates `amount` field or just a placeholder, like this:
 
 ```json 
 {
@@ -49,7 +36,7 @@ Consider an invoice created in `USD`, with `Issue Date` of 2022-04-29 and no `Va
 }
 ```
 
-Once the **Update Exchange Rates** step is run, the first lines of your invoice would look like this:
+Once the **Update Exchange Rates** step is run, the invoice will be updated with the actual exchange rate:
 
 ```json 
 {
@@ -74,14 +61,14 @@ Once the **Update Exchange Rates** step is run, the first lines of your invoice 
 
 ## FAQ
 <AccordionGroup>
-<Accordion title="Will an invoice without the exchange rates field throw an error when using this step?">
-  No, if the invoice does not contain any data in the `exchange_rates` field, the step will be skipped, and no error will be thrown. The process will continue as usual.
+<Accordion title="Will an invoice without the exchange rates field cause an error during this step?">
+  No, if the `exchange_rates` field is empty or missing from the invoice, this step will simply be skipped without throwing an error. The process will continue as usual.
 </Accordion>
 
-<Accordion title="What happens if one of the currencies in the exchange rates is not supported by the ECB?">
-  If any currency listed in the exchange rates is not supported by the ECB, the step will be skipped for that particular currency, and no error will be thrown.
+<Accordion title="What happens if a currency in the exchange rates is not supported by the ECB?">
+  If any of the currencies in the `exchange rates` field isn't supported by the ECB, the system will skip updating the exchange rate for that currency. No error will be thrown, and the process will continue.
 
-List of supported currencies by ECB:
+**List of supported currencies by ECB:**
 <ul>
   <li>AUD</li>
   <li>BGN</li>
@@ -120,7 +107,7 @@ List of supported currencies by ECB:
 </AccordionGroup>
 
 ### Support
-We are continually enhancing our steps. If you'd like us to integrate additional banks for specific currencies or if you need further assistance, please reach out to us ([support](email:support@invopop.com)).
+We're always working to improve our features! If you’d like us to add support for more banks for specific currencies or need any help, feel free to contact us at ([support](email:support@invopop.com)).
 
 ## Additional Resources
 - [European Central Bank Exchange Rate Reference](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)
