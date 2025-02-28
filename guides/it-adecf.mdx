@@ -1,0 +1,320 @@
+---
+title: "Italy - AdE CF"
+description: Issue e-receipts in Italy
+---
+{/* TODO: change fotos to it-adecf */}
+## Introduction
+
+Invopop's AdE CF Italy provider allows you to generate and issue CF documents (scontrino elettronico) in Italy.
+
+## Prerequisites
+
+To issue CF documents, you need:
+
+- Supplier details:
+  - Italian tax ID (Partita IVA)
+- Invoice line items with:
+  - Quantity
+  - Name 
+  - Price (Vat included)
+  - VAT rate
+  - Type of item (defined in extension)
+
+## Setup
+
+There are five key processes to prepare:
+
+- create supplier post-registration workflow,
+- connect the AdE CF Italy app,
+- configure a supplier registration workflow, and,
+- prepare an invoicing workflow.
+- prepare a voiding workflow
+
+<Info>
+  These instructions apply to both the sandbox and live environments, with a few
+  exceptions for supplier data and registration details when real details are
+  not available.
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Create Supplier post-registration workflow (optional)">
+Head over to the **Workflows** section and create a new "Contacts" workflow.
+
+<Frame>
+  <img
+    alt="New Contacts Workflow"
+    width="350px"
+    src="/guides/images/it-adecf-new-workflow.png"
+  />
+</Frame>
+
+Rename the workflow to something you can identify later, in this case we decided to call it "Post-registration flow", and add a single step to change the state to `registered`.
+
+At this point you can add any webhooks or notification steps that might be useful for your systems to receive after a supplier has successfully registered.
+
+Tap the **Save** button.
+
+<Accordion title="Supplier post-registration workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Post-registration flow",
+    "steps": [
+        {
+            "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
+            "name": "Set State",
+            "config": {
+                "state": "registered"
+            },
+            "summary": "Set state to `registered`{.state .registered}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
+</Accordion>
+</Step>
+
+<Step title="Connect the AdE CF Italy app">
+
+1. Navigate to **Configuration** > **Apps**.
+2. Locate **AdE CF Italy** in the app discovery list.
+3. Click **Connect** to activate.
+
+<Frame>
+<img src="/guides/images/mx-sat-app.png" width="360px" alt="SAT MX App" />
+</Frame>
+
+Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
+
+Tap the **Save** button.
+
+</Step>
+
+<Step title="Configure the supplier registration workflow">
+Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
+
+The new workflow will need to perform three steps:
+
+- **Sign the Envelope**
+- **Register the Issuer**
+- **Set State** - with configuration set to `processing`.
+
+Add any additional steps you may need, and save the new workflow.
+
+<Accordion title="Supplier registration workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Register Supplier",
+    "steps": [
+        {
+            "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            // Update this to correct id
+            "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
+            "name": "Register AdE CF Issuer (Italy)",
+            "provider": "it-adecf.register"
+        },
+        {
+            "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
+</Accordion>
+
+</Step>
+
+<Step title="Prepare Invoice Workflow">
+
+For this example the workflow will be named something like "Issue AdE CF Invoices", and it will consist of the following Steps:
+
+- **Add Sequential Code** - with dynamic sequences, and name like "AdE Invoices".
+- **Send to AdE CF (Italy)**.
+- **Generate PDF** - configured for your environment.
+- **Set State** - to "sent".
+
+Tap the **Save** button to ensure the workflow has been persisted.
+
+<Accordion title="Issue Italian AdE CF invoice workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Issue AdE CF Invoices",
+    "steps": [
+        {
+            "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · Ade Invoices · 000001",
+            "config": {
+                "sign": true,
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            // change this step's id
+            "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
+            "name": "Send a CF to AdE (Italy)",
+            "config": {
+                "generate_pdf": false,
+                "prepaid": false
+            },
+            "provider": "adecf.send"
+        },
+        {
+            "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": {
+                "logo_height": 40,
+                "locale": "en",
+                "date_format": "%Y-%m-%d"
+            }
+        },
+        {
+            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "sent"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}"
+        }
+    ]
+}
+```
+</Accordion>
+
+</Step>
+
+<Step title="Prepare Void Workflow">
+
+For this example, the workflow will be named "Void AdE CF Invoices", and it will consist of the following Steps:
+
+- **Void the invoice**.
+- **Set State** - to "sent".
+
+Tap the **Save** button to ensure the workflow has been persisted.
+
+<Accordion title="Issue Italian AdE CF invoice workflow example">
+Copy and paste the following example in the workflow editor:
+```json
+{
+    "name": "Void AdE CF Invoices",
+    "steps": [
+        {
+            // change this step's id
+            "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
+            "name": "Void a CF in AdE (Italy)",
+            "config": {
+                "generate_pdf": false,
+                "prepaid": false
+            },
+            "provider": "adecf.void"
+        },
+        {
+            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "void"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}"
+        }
+    ]
+}
+```
+</Accordion>
+
+</Step>
+
+</Steps>
+
+## Running
+
+In this section we'll provide details on how to first persist and register a supplier, followed by issuing invoices on their behalf.
+
+As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
+
+### Register a Supplier
+
+
+Suppliers can be registered either manually via the Invopop Console or programatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
+
+<Warning>
+  Suppliers in Italy using this system must generate and provide their [AdE](https://ivaservizi.agenziaentrate.gov.it/portale/) 
+  credentials so that invoices can be processed on their behalf. This is not an automated service and can only be
+  performed manually by a representative of the supplier.
+</Warning>
+
+Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the following example that uses example data. This will only work in sandbox environments, in production you'll need the details of a real company:
+
+```json
+{
+    "$schema": "https://gobl.org/draft-0/org/party",
+    "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
+    "name": "Milano Pizza",
+    "tax_id": {
+        "country": "IT",
+        "code": "48220010093"
+    },
+    "identities": [
+        {
+            "key": "it-fiscal-code",
+            "code": "MRTMTT91D08F205J"
+        }
+    ]
+}
+```
+<Info>
+  You may notice that we included the Italian fiscal code in the supplier, this is not necessary at the moment but will be asked for, if not provided, during the registration process.
+</Info>
+
+Tap **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
+
+The execution should be successful, and the silo entry will now be in the "Processing" state. Tap the **Meta** tab to see the registration link:
+
+<Frame>
+  <img
+    src="/guides/images/mx-sat-reg-link.png"
+    width="450px"
+    alt="Supplier Registration Link"
+  />
+</Frame>
+
+<Info>
+  You can access the registration link via the API by [fetching the silo
+  entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
+  the `key` is set to `registration-link`.
+</Info>
+
+Tap the registration link and a new browser window will be presented with a form to upload the credentials for the supplier. Note that this form can be shared directly with the supplier if required.
+
+<Frame>
+  <img src="/guides/images/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
+</Frame>
+
+The details from this form are sent securely to local partner who will be responsible for sending them to the AdE. 
+We will update the supplier with the provided codice fiscale for future use but will not store any type of credentials.
+
+<Warning>
+{/* TODO: Decide on the best way to do this renewal*/}
+  AdE Credentials need to be renwed every 90 days. This can be done using this same portal. 
+</Warning>
