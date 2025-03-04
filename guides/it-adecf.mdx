@@ -2,14 +2,25 @@
 title: "Italy - AdE CF"
 description: Issue e-receipts in Italy
 ---
-{/* TODO: change fotos to it-adecf */}
+
 ## Introduction
 
-Invopop's AdE CF Italy provider allows you to generate and issue CF documents (scontrino elettronico) in Italy.
+Invopop's AdE CF Italy provider allows you to generate and issue electronic receipts (documento commerciale/scontrino elettronico) in Italy.
+
+The documento commerciale is a digital fiscal document used to record and transmit sales transactions to the Agenzia delle Entrate (AdE), ensuring tax compliance and transparency. It serves as proof of purchase for customers and replaces the traditional paper receipt while maintaining its function as a fiscal document.
+
+With the introduction of the scontrino elettronico, businesses must transmit sales data digitally using a certified Registratore Telematico (RT) or the AdE's online portal, eliminating manual record-keeping and paper summaries. AdE CF acts as a streamlined interface, securely relaying sales data to the AdE via a local provider.
+
+The Documento Commerciale is **NOT**:
+- An invoice (fattura); invoices contain detailed buyer information and follow different tax rules.
+- A replacemnet for commercial documents that accompany goods (documento di trasporto).
+- A simple receipt for internal business use; it has a mandatory fiscal function and must be transmitted to the AdE.
+- allowed to include deferred VAT payment; VAT is included at the moment of sale.
+
 
 ## Prerequisites
 
-To issue CF documents, you need:
+To issue e-receipts, you need:
 
 - Supplier details:
   - Italian tax ID (Partita IVA)
@@ -84,7 +95,7 @@ Copy and paste the following example in the workflow editor:
 3. Click **Connect** to activate.
 
 <Frame>
-<img src="/guides/images/mx-sat-app.png" width="360px" alt="SAT MX App" />
+<img src="/guides/images/it-adecf-app.png" width="360px" alt="SAT MX App" />
 </Frame>
 
 Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
@@ -116,7 +127,7 @@ Copy and paste the following example in the workflow editor:
             "provider": "silo.close"
         },
         {
-            // Update this to correct id
+            // TODO: Update this to correct id
             "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
             "name": "Register AdE CF Issuer (Italy)",
             "provider": "it-adecf.register"
@@ -166,7 +177,7 @@ Copy and paste the following example in the workflow editor:
             }
         },
         {
-            // change this step's id
+            // TODO: change this step's id
             "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
             "name": "Send a CF to AdE (Italy)",
             "config": {
@@ -204,7 +215,7 @@ Copy and paste the following example in the workflow editor:
 
 <Step title="Prepare Void Workflow">
 
-For this example, the workflow will be named "Void AdE CF Invoices", and it will consist of the following Steps:
+And finaly, we need a workflow to void invoices. In this case the workflow will be named "Void AdE CF Invoices", and it will consist of the following Steps:
 
 - **Void the invoice**.
 - **Set State** - to "sent".
@@ -218,7 +229,7 @@ Copy and paste the following example in the workflow editor:
     "name": "Void AdE CF Invoices",
     "steps": [
         {
-            // change this step's id
+            // TODO: change this step's id
             "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
             "name": "Void a CF in AdE (Italy)",
             "config": {
@@ -247,12 +258,11 @@ Copy and paste the following example in the workflow editor:
 
 ## Running
 
-In this section we'll provide details on how to first persist and register a supplier, followed by issuing invoices on their behalf.
+In this section we'll provide details on how to first persist and register a supplier, followed by issuing and voiding invoices on their behalf.
 
 As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
 
 ### Register a Supplier
-
 
 Suppliers can be registered either manually via the Invopop Console or programatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
 
@@ -262,7 +272,8 @@ Suppliers can be registered either manually via the Invopop Console or programat
   performed manually by a representative of the supplier.
 </Warning>
 
-Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the following example that uses example data. This will only work in sandbox environments, in production you'll need the details of a real company:
+Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. 
+Copy and paste the following example that uses example data. This will only work in sandbox environments, in production you'll need the details of a real company:
 
 ```json
 {
@@ -293,7 +304,7 @@ The execution should be successful, and the silo entry will now be in the "Proce
 
 <Frame>
   <img
-    src="/guides/images/mx-sat-reg-link.png"
+    src="/guides/images/it-adecf-reg-link.png"
     width="450px"
     alt="Supplier Registration Link"
   />
@@ -308,7 +319,7 @@ The execution should be successful, and the silo entry will now be in the "Proce
 Tap the registration link and a new browser window will be presented with a form to upload the credentials for the supplier. Note that this form can be shared directly with the supplier if required.
 
 <Frame>
-  <img src="/guides/images/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
+  <img src="/guides/images/it-adecf-reg-sp.png" alt="Issuer Registration Form" />
 </Frame>
 
 The details from this form are sent securely to local partner who will be responsible for sending them to the AdE. 
@@ -316,5 +327,110 @@ We will update the supplier with the provided codice fiscale for future use but 
 
 <Warning>
 {/* TODO: Decide on the best way to do this renewal*/}
-  AdE Credentials need to be renwed every 90 days. This can be done using this same portal. 
+  AdE Credentials need to be renwed every 90 days. This can be done using this same portal that is created when registering a supplier. 
 </Warning>
+
+### Send an Invoice
+
+The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+GOBL Invoices sent to the AdE CF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+
+- `$region` to be set to [`IT`](https://docs.gobl.org/regimes/it)
+- `$addons` to include [`it-adecf-v1`](https://docs.gobl.org/addons/it-adecf-v1)
+
+<AccordionGroup>
+<Accordion title="B2C Invoice">
+
+In this example we're issuing a simple B2C invoice from an Italian supplier.
+
+Notice:
+
+- we've added the `it-adecf-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
+- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way, for example:
+    - Items have an extension that identifies if its a good or a service.
+    - When the VAT is exempt, an italian exemption code is required.
+- The `prices_include` field in GOBL indicates that the item prices already include VAT,
+- VAT for the "Cleaning Products" will automatically set the percentage at the standard rate, and,
+- there are no totals nor calculations, all of these will be made automatically when uploading.
+
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$addons": ["it-adecf-v1"],
+  "series": "XXIT",
+  "currency": "EUR",
+  "tax": {
+    "prices_include": "VAT"
+  },
+  "type": "standard",
+  "supplier": {
+    "name": "Cleaning SRL",
+    "tax_id": {
+      "country": "IT",
+      "code": "12345678903"
+    }
+  },
+  "lines": [
+    {
+      "quantity": "1",
+      "item": {
+        "name": "Cleaning services",
+        "price": "125.00",
+        "ext": {
+            "it-adecf-product": "services"
+        }
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "ext":{
+            "it-adecf-exempt": "N3"
+          }
+        }
+      ]
+    },
+    {
+      "quantity": "3",
+      "item": {
+        "name": "Cleaning products",
+        "price": "137.50",
+        "ext": {
+            "it-adecf-product": "goods"
+        }
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "rate": "standard"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Accordion>
+</AccordionGroup>
+
+### Void an Invoice
+
+In this case, only Invoices that have been sent with this app can then be voided. To void an Invoice just run the "Void AdE CF Invoices" we defined earlier with the appropiate [silo entry uuid](/api-ref/silo/entries/fetch-an-entry). This will start a job that will void said invoice.
+
+## FAQ
+
+Please contact the [Invopop support team](email:support@invopop.com) if you have any questions that are not listed here.
+
+<AccordionGroup>
+
+<Accordion title="Is this a substitute for SDI?">
+  AdE CF is **not** a substitute for [SDI](/guides/it-sdi). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
+</Accordion>
+
+<Accordion title="What happens if I make a mistake on an issued AdE CF invoice?">
+  If an error occurs on an issued AdE CF invoice, you cannot modify it directly. Instead, you must void the invoice using the "Void AdE CF Invoices" workflow and issue a new corrected invoice.
+</Accordion>
+
+</AccordionGroup>
+
