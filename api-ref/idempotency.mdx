@@ -20,18 +20,12 @@ Update actions, such as `PATCH` are also usually idempotent. Duplicating calls
 may be inefficient, but we've made sure that in our API update actions are safe
 to be repeated.
 
-Create actions, like `POST` or `PUT` however require additional gurantees to
+Create actions, like `POST` or `PUT` however require additional guarantees to
 ensure data will not be duplicated. The Invopop APIs handle these scenarios by
-requiring that every model and thus every incoming operation includes an `id`
-field in UUID string format. If the same create request is
-made twice with the same ID, _and assuming none of the fields have changed_, the
-second request will simply return the same response as the first.
+requiring that every model and thus every incoming operation includes either an `id`
+field in UUID string format, or often a `key` property that will be checked to ensure
+it is unique before processing.
 
-If a create request is made with an existing ID and a different payload, the api
-will respond with a `409 Conflict` response, allowing you to double check what
-might have gone wrong. If the data changes, the request is not idempotent!
-
-Many APIs we've seen offer the ability to provide something like an
-`Idempotency-Key` in the header. This works, but adds additional complication to
-the client, and we felt for our use could more easily be handled by the ID
-fields typically included in models.
+Many API endpoints will detect duplicated requests and simply return the same response
+as expected initially. If however this cannot be guaranteed, the API will return a
+`409 Conflict` response which the client should be able to handle.
