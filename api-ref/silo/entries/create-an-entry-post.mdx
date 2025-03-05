@@ -4,6 +4,90 @@ sidebarTitle: "Create an entry (POST)"
 openapi: "POST /silo/v1/entries"
 ---
 
-<Warning>This is a non-idempotent endpoint. It must be used for developing and testing only. In production, please use [the idempotent version](./create-an-entry-put). More info [here](/introduction/idempotency).</Warning>
+<Warning>
+  This is a non-idempotent endpoint. It should only be used during development
+  and testing. In production, please use the [idempotent
+  version](./create-an-entry-put). More information can be found
+  [here](/api-ref/idempotency).
+</Warning>
 
-<Snippet file="reference/silo/entries/create-an-entry-desc.mdx" />
+## New Documents
+
+The fastest way to upload data to Invopop is by creating an entry with the <code>data</code> property containing the GOBL JSON of either a pre-built [Envelope](https://docs.gobl.org/draft-0/envelope) or a partial document like an [Invoice](https://docs.gobl.org/draft-0/bill/invoice) or [Party](https://docs.gobl.org/draft-0/org/party).
+
+```json Invoice Payload Example
+{
+  "data": {
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "series": "DEMO",
+    "code": "001",
+    "currency": "USD",
+    "supplier": {
+      "name": "Provide One Inc.",
+      "tax_id": {
+        "country": "US"
+      },
+      "addresses": [
+        {
+          "num": "16",
+          "street": "Jessie Street",
+          "locality": "San Francisco",
+          "region": "CA",
+          "code": "94105",
+          "country": "US"
+        }
+      ],
+      "emails": [
+        {
+          "addr": "billing@provideone.com"
+        }
+      ]
+    },
+    "customer": {
+      "name": "Sample Consumer",
+      "emails": [
+        {
+          "addr": "email@sample.com"
+        }
+      ]
+    },
+    "lines": [
+      {
+        "quantity": "20",
+        "item": {
+          "name": "Development services",
+          "price": "90.00",
+          "unit": "h"
+        },
+        "discounts": [
+          {
+            "percent": "10%",
+            "reason": "Special discount"
+          }
+        ],
+        "taxes": [
+          {
+            "cat": "ST",
+            "percent": "8.5%"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Any data uploaded to the Invopop Silo will first be normalized, calculated, and then validated to check for any errors.
+
+Invopop will attempt to automatically determine the folder in which to store the document based on the schema, but you can override this by including the <code>folder</code> field in the request.
+
+If there are any validation issues with the uploaded data, the service will respond with an error message including a `key` and `message`. Additionally, the `fields` property may include a nested structure to help identify the specific property with a validation fault.
+
+## Creating Entries from Previous Documents
+
+You can create new entries based on a previous entry by using the <code>previous_id</code> field. This allows you to provide patch data instead of a full new document by setting the patch type in the <code>content_type</code> field to one of the following:
+
+- <code>application/json-patch+json</code> - for JSON Patch (RFC 6902)
+- <code>application/merge-patch+json</code> - for JSON Merge Patch (RFC 7396)
+
+Additionally, the <code>previous_id</code> field can be used to create corrective documents by including corrective option data in the <code>correct</code> field. For more details, refer to the <a href="https://docs.gobl.org/draft-0/bill/correction_options">GOBL documentation on correction options</a>.

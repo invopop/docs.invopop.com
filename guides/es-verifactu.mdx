@@ -30,7 +30,7 @@ Follow these steps to configure your Invopop Workspace for VeriFactu invoicing:
 1. Navigate to **Configuration** > **Apps**.
 2. Locate **VeriFactu** in the app discovery list.
 3. Click **Connect** to activate.
-   
+
 No additional configuration is needed.
 
 </Step>
@@ -58,95 +58,96 @@ You can copy and paste the following JSON while editing a Workflow in "developer
 
 ```json
 {
-    "name": "VeriFactu Invoice",
-    "description": "Convert to VeriFactu, send to AEAT and generate PDF",
-    "steps": [
+  "name": "VeriFactu Invoice",
+  "description": "Convert to VeriFactu, send to AEAT and generate PDF",
+  "steps": [
+    {
+      "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "4efb9330-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Sign Envelope",
+      "next": [
         {
-            "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "4efb9330-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Sign Envelope",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
-                }
-            ],
-            "provider": "silo.close"
-        },
-        {
-            "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
-            "name": "Generate Verifactu (Spain)",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
-                }
-            ],
-            "provider": "verifactu.generate"
-        },
-        {
-            "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Send Verifactu (Spain)",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
-                }
-            ],
-            "provider": "verifactu.send"
-        },
-        {
-            "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Generate PDF",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
-                }
-            ],
-            "config": {
-                "locale": "es",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
-            "summary": "Spanish",
-            "provider": "pdf"
-        },
-        {
-            "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
         }
-    ]
+      ],
+      "provider": "silo.close"
+    },
+    {
+      "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate Verifactu (Spain)",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "provider": "verifactu.generate"
+    },
+    {
+      "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Send Verifactu (Spain)",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "provider": "verifactu.send"
+    },
+    {
+      "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate PDF",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "config": {
+        "locale": "es",
+        "date_format": "%Y-%m-%d",
+        "logo_height": 40
+      },
+      "summary": "Spanish",
+      "provider": "pdf"
+    },
+    {
+      "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "next": [
+        {
+          "stop": true,
+          "status": "NA"
+        }
+      ],
+      "config": {
+        "state": "sent"
+      },
+      "summary": "Set state to `sent`{.state .sent}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
 }
 ```
+
 </Accordion>
 </AccordionGroup>
 
@@ -387,8 +388,8 @@ VeriFactu is currently scheduled to be mandatory for businesses in Spain from Ju
 
 There are three ways to correct an invoice:
 
-1. The recommended approach is to issue a credit note, which in VeriFactu translates to a `Factura Rectificativa por Diferencias`.
-2. If the above approach does not apply, you can issue a debit note, which in VeriFactu translates to a `Factura Rectificativa por Sustitución`.
+1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VeriFactu translates to a "Factura Rectificativa por Diferencias".
+2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VeriFactu translates to a "Factura Rectificativa por Sustitución".
 3. Lastly, you can use the `Cancel Verifactu (Spain)` step, which will void the invoice in the tax authority, and then issue a new invoice with the correct information.
 
 </Accordion>
