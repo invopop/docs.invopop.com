@@ -1,21 +1,21 @@
 ---
-title: "Italy - AdE CF"
+title: "Italy - Ticket (DC)"
 description: Issue e-receipts in Italy
 ---
 
 ## Introduction
 
-Invopop's AdE CF Italy provider allows you to generate and issue electronic receipts (documento commerciale/scontrino elettronico) in Italy.
+Invopop's Ticket (DC) Italy provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
 
 The documento commerciale is a digital fiscal document used to record and transmit sales transactions to the Agenzia delle Entrate (AdE), ensuring tax compliance and transparency. It serves as proof of purchase for customers and replaces the traditional paper receipt while maintaining its function as a fiscal document.
 
-With the introduction of the scontrino elettronico, businesses must transmit sales data digitally using a certified [Registratore Telematico (RT) or the AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica), eliminating manual record-keeping and paper summaries. AdE CF acts as a streamlined interface, securely relaying sales data to the AdE via a local provider.
+With the introduction of the scontrino elettronico, businesses must transmit sales data digitally using a certified [Registratore Telematico (RT) or the AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica), eliminating manual record-keeping and paper summaries. Ticket (DC) acts as a streamlined interface, securely relaying sales data to the AdE via a local provider.
 
 The Documento Commerciale is **NOT**:
 - An invoice (fattura); invoices contain detailed buyer information and follow different tax rules.
 - A replacemnet for commercial documents that accompany goods (documento di trasporto).
 - A simple receipt for internal business use; it has a mandatory fiscal function and must be transmitted to the AdE.
-- allowed to include deferred VAT payment; VAT is included at the moment of sale.
+- Allowed to include deferred VAT payment; VAT is included at the moment of sale.
 
 
 ## Prerequisites
@@ -35,11 +35,11 @@ To issue e-receipts, you need:
 
 There are five key processes to prepare:
 
-- create supplier post-registration workflow,
-- connect the AdE CF Italy app,
-- configure a supplier registration workflow, and,
-- prepare an invoicing workflow.
-- prepare a voiding workflow
+1. create supplier post-registration workflow,
+2. connect the Ticket (DC) Italy app,
+3. configure a supplier registration workflow,
+4. prepare an invoicing workflow,
+5. prepare a voiding workflow
 
 <Info>
   These instructions apply to both the sandbox and live environments, with a few
@@ -57,7 +57,7 @@ Head over to the **Workflows** section and create a new "Contacts" workflow.
   <img
     alt="New Contacts Workflow"
     width="350px"
-    src="/guides/images/it-adecf-new-workflow.png"
+    src="/guides/images/it-ticket-new-workflow.png"
   />
 </Frame>
 
@@ -91,16 +91,16 @@ Copy and paste the following example in the workflow editor:
 <Step title="Connect the AdE CF Italy app">
 
 1. Navigate to **Configuration** > **Apps**.
-2. Locate **AdE CF Italy** in the app discovery list.
+2. Find **Ticket (DC) Italy** in the app discovery list.
 3. Click **Connect** to activate.
 
 <Frame>
-<img src="/guides/images/it-adecf-app.png" width="360px" alt="SAT MX App" />
+<img src="/guides/images/it-ticket-app.png" width="360px" alt="SAT MX App" />
 </Frame>
 
-Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
+Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
 
-Tap the **Save** button.
+Click the **Save** button.
 
 </Step>
 
@@ -129,7 +129,7 @@ Copy and paste the following example in the workflow editor:
         {
             "id": "82ea9050-f84f-11ef-b227-e571c5dda17b",
             "name": "Register AdE CF Issuer (Italy)",
-            "provider": "it-adecf.register"
+            "provider": "it-ticket.register"
         },
         {
             "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
@@ -182,7 +182,7 @@ Copy and paste the following example in the workflow editor:
                 "generate_pdf": false,
                 "prepaid": false
             },
-            "provider": "adecf.send"
+            "provider": "ticket.send"
         },
         {
             "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
@@ -233,7 +233,7 @@ Copy and paste the following example in the workflow editor:
                 "generate_pdf": false,
                 "prepaid": false
             },
-            "provider": "adecf.void"
+            "provider": "ticket.void"
         },
         {
             "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
@@ -255,13 +255,13 @@ Copy and paste the following example in the workflow editor:
 
 ## Running
 
-In this section we'll provide details on how to first persist and register a supplier, followed by issuing and voiding invoices on their behalf.
+Each company who will issue e-receipts must first register as a supplier in Invopop. In this section we'll first explain how to register a supplier using the registration workflow we setup, and then how to issue and void invoices on behalf of that supplier, with the corresponding workflows.
 
 As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
 
 ### Register a Supplier
 
-Suppliers can be registered either manually via the Invopop Console or programatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
+You can register suppliers either manually via the Invopop Console or programmatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
 
 <Warning>
   Suppliers in Italy using this system must generate and provide their [AdE](https://ivaservizi.agenziaentrate.gov.it/portale/) 
@@ -301,7 +301,7 @@ The execution should be successful, and the silo entry will now be in the "Proce
 
 <Frame>
   <img
-    src="/guides/images/it-adecf-reg-link.png"
+    src="/guides/images/it-ticket-reg-link.png"
     width="450px"
     alt="Supplier Registration Link"
   />
@@ -316,7 +316,7 @@ The execution should be successful, and the silo entry will now be in the "Proce
 Tap the registration link and a new browser window will be presented with a form to upload the credentials for the supplier. Note that this form can be shared directly with the supplier if required.
 
 <Frame>
-  <img src="/guides/images/it-adecf-reg-sp.png" alt="Issuer Registration Form" />
+  <img src="/guides/images/it-ticket-reg-sp.png" alt="Issuer Registration Form" />
 </Frame>
 
 The details from this form are sent securely to local partner who will be responsible for sending them to the AdE. 
@@ -334,7 +334,7 @@ The following examples are of partial GOBL documents you can copy and paste dire
 GOBL Invoices sent to the AdE CF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
 
 - `$region` to be set to [`IT`](https://docs.gobl.org/regimes/it)
-- `$addons` to include [`it-adecf-v1`](https://docs.gobl.org/addons/it-adecf-v1)
+- `$addons` to include [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1)
 
 <AccordionGroup>
 <Accordion title="B2C Invoice">
@@ -343,7 +343,7 @@ In this example we're issuing a simple B2C invoice from an Italian supplier.
 
 Notice:
 
-- we've added the `it-adecf-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
+- we've added the `it-ticket-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
 - extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way, for example:
     - Items have an extension that identifies if its a good or a service.
     - When the VAT is exempt, an italian exemption code is required.
@@ -355,7 +355,7 @@ Notice:
 ```json
 {
   "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$addons": ["it-adecf-v1"],
+  "$addons": ["it-ticket-v1"],
   "series": "XXIT",
   "currency": "EUR",
   "tax": {
@@ -376,14 +376,14 @@ Notice:
         "name": "Cleaning services",
         "price": "125.00",
         "ext": {
-            "it-adecf-product": "services"
+            "it-ticket-product": "services"
         }
       },
       "taxes": [
         {
           "cat": "VAT",
           "ext":{
-            "it-adecf-exempt": "N3"
+            "it-ticket-exempt": "N3"
           }
         }
       ]
@@ -394,7 +394,7 @@ Notice:
         "name": "Cleaning products",
         "price": "137.50",
         "ext": {
-            "it-adecf-product": "goods"
+            "it-ticket-product": "goods"
         }
       },
       "taxes": [
