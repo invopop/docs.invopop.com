@@ -463,6 +463,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloGOBL'
           description: OK
+  /silo/v1/gobl/correct:
+    post:
+      description: Correct or determine the correction options for a GOBL Envelope
+        (not Object!)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCorrectGOBL'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloGOBL'
+          description: OK
   /silo/v1/gobl/sign:
     post:
       description: Sign GOBL Envelopes or Objects
@@ -600,6 +616,23 @@ components:
           description: When true, a complete GOBL Envelope will be provided as opposed
             to the standalone object.
           title: Envelop
+          type: boolean
+      type: object
+    SiloCorrectGOBL:
+      properties:
+        data:
+          description: GOBL Envelope or Object to calculate and validate.
+          nullable: true
+          title: Data
+          type: object
+        options:
+          description: JSON object containing the GOBL correction option data.
+          title: Options
+          type: object
+        show_options:
+          description: When true, the options schema for correction are provided in
+            the response.
+          title: Show Options
           type: boolean
       type: object
     SiloCreateAttachment:
@@ -744,8 +777,7 @@ components:
           title: Object Schema
           type: string
         draft:
-          description: Deprectated. When true, indicates that the envelope is not
-            signed.
+          description: Deprecated. When true, indicates that the envelope is not signed.
           example: true
           title: Draft
           type: boolean
