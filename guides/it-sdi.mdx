@@ -44,8 +44,6 @@ Create an **Invoices** workflow with these essential steps:
 1. **Sign Envelope** - Signs the GOBL document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
 2. **Send to SDI (Italy)** - Generates the required FatturaPA document and submits it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI has to be set.
 
- The **Send to SDI** step can return can return a `KO` status when an error that cannot be recovered from occurs. The step can also return `OK` when everything went well. In some cases, the step can return a `SKIP` if the invoice has already been processed and sent in a previous workflow. 
-
 <Info>
 SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
 </Info>
@@ -128,9 +126,14 @@ Invopop uses the [GOBL](https://gobl.org) library to process conversions, in par
 
 Be sure to set the `regime` field to `IT` in your invoices and add the `it-sdi-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, which can be found [here](https://github.com/invopop/gobl/tree/main/regimes/it#italy-specific-requirements).
 
-<Info>
-  The SDI service typically responds within seconds but, in some cases, the tax authority may take minutes or up to 24 hours to reply. During this waiting period, the "Send to SDI" action status will remain as "Queued" until we receive a response from the SDI platform.
-</Info>
+The SDI service usually responds within seconds but may take up to 24 hours. While waiting, the **Send to SDI** step remains `Queued`.
+
+When finished, this step returns:
+
+- `OK` if successful
+- `KO` for unrecoverable errors
+- `SKIP` if the invoice was already sent
+
 
 ## Example Invoices
 
