@@ -44,6 +44,8 @@ Create an **Invoices** workflow with these essential steps:
 1. **Sign Envelope** - Signs the GOBL document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
 2. **Send to SDI (Italy)** - Generates the required FatturaPA document and submits it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI has to be set.
 
+ The **Send to SDI** step can return can return a `KO` status when an error that cannot be recovered from occurs. The step can also return `OK` when everything went well. In some cases, the step can return a `SKIP` if the invoice has already been processed and sent in a previous workflow. 
+
 <Info>
 SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
 </Info>
@@ -52,7 +54,7 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 
 <AccordionGroup>
 <Accordion title="Example SDI Invoice Workflow">
-You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recomend.
+You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries and handling errors, both of which we strongly recomend.
 
 ```json
 {
@@ -62,11 +64,11 @@ You can copy and paste the following JSON while editing a Workflow in "developer
         {
             "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
             "config": {
                 "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
+            }
         },
         {
             "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
@@ -76,53 +78,43 @@ You can copy and paste the following JSON while editing a Workflow in "developer
         {
             "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
             "name": "Send to SDI (Italy)",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "2d5d7660-cd12-11ef-998c-e97f18c9212e"
-                }
-            ],
-            "config": {
-                "response": "NE",
-                "environment": "sandbox"
-            },
+            "provider": "sdi-it",
             "summary": "Sandbox · Accepted by PA (Notifica esito)",
-            "provider": "sdi-it"
+            "config": {
+                "environment": "sandbox",
+                "response": "NE"
+            }
         },
         {
             "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
             "name": "Generate PDF",
-            "config": {
-                "locale": "it",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
+            "provider": "pdf",
             "summary": "Italian",
-            "provider": "pdf"
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "locale": "it",
+                "logo_height": 40
+            }
         },
         {
             "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
             "config": {
                 "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
+            }
+        }
+    ],
+    "rescue": [
         {
             "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
             "config": {
                 "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
+            }
         }
     ]
 }
