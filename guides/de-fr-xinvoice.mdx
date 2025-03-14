@@ -13,7 +13,7 @@ X-Invoice covers the German and French electronic invoice standards. The integra
 
 <Tip>
     When referring to syntaxes, it is important to note that X-Rechnung, ZUGFeRD and Factur-X are all *semantic data models*. What this means is that they define the data that must be present in the invoice, but not the actual format of the data or the explicit name of the fields.
-    
+
     To implement the semantic models, there are two syntaxes approved by the EU: UN/CEFACT Cross Industry Invoice ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) and OpenOasis Universal Business Language ([UBL](https://docs.oasis-open.org/ubl/UBL-2.1.html)).
 </Tip>
 
@@ -36,7 +36,7 @@ To issue invoices, follow these instructions in the [Invopop Console](https://co
 1. Navigate to **Configuration** > **Apps**.
 2. Locate **XInvoice France/Germany** in the app discovery list.
 3. Click **Connect** to activate.
-   
+
 No additional configuration is needed.
 </Step>
 <Step title="Configure invoice workflow">
@@ -78,12 +78,6 @@ Copy and paste the following JSON while editing a Workflow in "developer" mode. 
         {
             "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
             "name": "Convert to XRechnung/Factur-X",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "c94982c0-abd0-11ef-a013-91c68ca9f44b"
-                }
-            ],
             "provider": "xinvoice.convert"
         },
         {
@@ -100,18 +94,14 @@ Copy and paste the following JSON while editing a Workflow in "developer" mode. 
         {
             "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
             "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
             "config": {
                 "state": "sent"
             },
             "summary": "Set state to `sent`{.state .sent}",
             "provider": "silo.state"
-        },
+        }
+    ],
+    "rescue": [
         {
             "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
             "name": "Set State",
