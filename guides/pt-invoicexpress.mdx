@@ -78,29 +78,19 @@ All of the following steps must be carried out from the [Invopop Console](https:
           {
             "id": "dbac1680-b8be-11ef-9825-f56714a03659",
             "name": "Register InvoiceXpress issuer",
-            "provider": "invoicexpress.register",
-            "next": [
-              {
-                "status": "KO",
-                "step_id": "12ad6a70-499e-11ef-b4fe-47a6daefa429"
-              }
-            ]
+            "provider": "invoicexpress.register"
           },
           {
             "id": "0eb04c30-499e-11ef-b4fe-47a6daefa429",
             "name": "Set State",
-            "next": [
-              {
-                "stop": true,
-                "status": "NA"
-              }
-            ],
             "config": {
               "state": "registered"
             },
             "summary": "Set state to `registered`{.state .registered}",
             "provider": "silo.state"
-          },
+          }
+        ],
+        "rescue": [
           {
             "id": "12ad6a70-499e-11ef-b4fe-47a6daefa429",
             "name": "Set State",
@@ -118,13 +108,13 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
   <Step title="Set Up Invoice Processing Workflow">
     Create a workflow for processing invoices with these essential steps:
-    
+
     1. Name the workflow "Send invoice to InvoiceXpress"
     2. Add these required steps:
        * **Send to InvoiceXpress** - Transmits invoice data
        * **Generate PDF** - Creates document (configure for your environment)
        * **Set State** - Updates status to "sent"
-    
+
     For quick setup, use our pre-configured workflow below:
 
     <Accordion title="Invoice Processing Workflow example">
@@ -144,12 +134,6 @@ All of the following steps must be carried out from the [Invopop Console](https:
         {
             "id": "2b65e8e0-2f21-11ef-803c-8d182b3d70cd",
             "name": "Generate PDF",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "6e7ea2d0-49a1-11ef-8c8c-7bca04ed2465"
-                }
-            ],
             "config": {
                 "logo_height": 40,
                 "locale": "pt",
@@ -161,18 +145,14 @@ All of the following steps must be carried out from the [Invopop Console](https:
         {
             "id": "6a8f6740-49a1-11ef-8c8c-7bca04ed2465",
             "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
             "config": {
                 "state": "sent"
             },
             "summary": "Set state to `sent`{.state .sent}",
             "provider": "silo.state"
-        },
+        }
+    ],
+    "rescue": [
         {
             "id": "6e7ea2d0-49a1-11ef-8c8c-7bca04ed2465",
             "name": "Set State",
@@ -185,7 +165,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
     ]
 }
       ```
-    </Accordion>  
+    </Accordion>
   </Step>
 </Steps>
 ## Running
@@ -236,7 +216,7 @@ Follow these steps to onboard a supplier:
 
   <Step title="Configure InvoiceXpress account">
     The user invited to the new account will now have to log in to InvoiceXpress and complete the account's configuration.
-  
+
     An account will be ready to issue invoices once a default sequence is registered in the AT. This guide from InvoiceXpress' documentation explains how to do it:
     - [Sequence Registration Guide (English)](https://invoicexpress.helpscoutdocs.com/article/219-step-by-step-guide-to-creating-and-registering-series)
     - [Guia de Registro de Séries (Portuguese)](https://invoicexpress.helpscoutdocs.com/article/212-atcud-guia-passo-a-passo-para-criar-e-registar-series)
