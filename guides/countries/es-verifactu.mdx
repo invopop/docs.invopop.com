@@ -1,0 +1,401 @@
+---
+title: "🇪🇸 VeriFactu (Spain)"
+description: Issue invoices in Spain with VeriFactu.
+---
+
+## Introduction
+
+VeriFactu is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities.
+
+## Prerequisites
+
+To register a supplier and issue invoices, you need:
+
+- Supplier details:
+  - Company name
+  - Spanish tax ID (NIF)
+- For B2B sales, customer details including:
+  - Tax ID (for Spanish/EU entities)
+- Invoice line items with
+  - Price
+  - VAT rates
+
+## Setup
+
+Follow these steps to configure your Invopop Workspace for VeriFactu invoicing:
+
+<Steps>
+<Step title="Connect the VeriFactu app">
+
+1. Navigate to **Configuration** > **Apps**.
+2. Locate **VeriFactu** in the app discovery list.
+3. Click **Connect** to activate.
+
+No additional configuration is needed.
+
+</Step>
+
+<Step title="Configure invoice workflow">
+
+First, review our [workflows guide](/guides/workflows) to understand the basics.
+
+Create an **Invoices** workflow with these essential steps:
+
+1. **Sign Envelope** - Signs the VeriFactu document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+2. **Generate VeriFactu (Spain)** - Creates the required XML document, adding it to the chain and fingerprinting it. It can be seen in the `Files` section of the console.
+3. **Send VeriFactu (Spain)** - Submits the generated XML to AEAT gateway and returns a response.
+4. **Generate PDF** - Generates the PDF invoice with the required QR code.
+
+<Warning>
+  VeriFactu does not allow document modifications after submission. If a document is rejected, you must create a new document with corrections and submit again.
+</Warning>
+</Step>
+</Steps>
+
+<AccordionGroup>
+<Accordion title="Example VeriFactu Invoice Workflow">
+You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recomend.
+
+```json
+{
+  "name": "VeriFactu Invoice",
+  "description": "Convert to VeriFactu, send to AEAT and generate PDF",
+  "steps": [
+    {
+      "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "4efb9330-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Sign Envelope",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "provider": "silo.close"
+    },
+    {
+      "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate Verifactu (Spain)",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "provider": "verifactu.generate"
+    },
+    {
+      "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Send Verifactu (Spain)",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "provider": "verifactu.send"
+    },
+    {
+      "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate PDF",
+      "next": [
+        {
+          "status": "KO",
+          "step_id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd"
+        }
+      ],
+      "config": {
+        "locale": "es",
+        "date_format": "%Y-%m-%d",
+        "logo_height": 40
+      },
+      "summary": "Spanish",
+      "provider": "pdf"
+    },
+    {
+      "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "next": [
+        {
+          "stop": true,
+          "status": "NA"
+        }
+      ],
+      "config": {
+        "state": "sent"
+      },
+      "summary": "Set state to `sent`{.state .sent}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
+}
+```
+
+</Accordion>
+</AccordionGroup>
+
+## Running
+
+Invopop uses the [GOBL](https://gobl.org) library to process conversions. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+
+Be sure to set the `regime` field to `ES` in your invoices and add the `es-verifactu-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, details of which can be found [here](https://github.com/invopop/gobl.verifactu/tree/initial?tab=readme-ov-file#tags-and-extensions).
+
+## Example Invoices
+
+<AccordionGroup>
+<Accordion title="B2C Standard Invoice">
+```json
+{
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "ES",
+		"$addons": [
+			"es-verifactu-v1"
+		],
+    "$tags": [
+      "simplified"
+    ],
+		"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
+		"type": "standard",
+		"series": "SAMPLE",
+		"code": "004",
+		"issue_date": "2024-11-13",
+		"currency": "EUR",
+		"tax": {
+			"ext": {
+				"es-verifactu-doc-type": "F2"
+			}
+		},
+		"supplier": {
+			"name": "Invopop S.L.",
+			"tax_id": {
+				"country": "ES",
+				"code": "B85905495"
+			},
+			"addresses": [
+				{
+					"num": "42",
+					"street": "Calle Pradillo",
+					"locality": "Madrid",
+					"region": "Madrid",
+					"code": "28002",
+					"country": "ES"
+				}
+			],
+			"emails": [
+				{
+					"addr": "billing@example.com"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "20",
+				"item": {
+					"name": "Development services",
+					"price": "90.00",
+					"unit": "h"
+				},
+				"sum": "1800.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"rate": "standard",
+						"percent": "21.0%",
+						"ext": {
+							"es-verifactu-op-class": "S1",
+							"es-verifactu-regime": "01"
+						}
+					}
+				],
+				"total": "1800.00"
+			}
+		],
+		"totals": {
+			"sum": "1800.00",
+			"total": "1800.00",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"ext": {
+									"es-verifactu-op-class": "S1",
+									"es-verifactu-regime": "01"
+								},
+								"base": "1800.00",
+								"percent": "21.0%",
+								"amount": "378.00"
+							}
+						],
+						"amount": "378.00"
+					}
+				],
+				"sum": "378.00"
+			},
+			"tax": "378.00",
+			"total_with_tax": "2178.00",
+			"payable": "2178.00"
+		},
+		"notes": [
+			{
+				"key": "general",
+				"text": "This is a sample invoice with a standard tax"
+			}
+		]
+	}
+```
+</Accordion>
+<Accordion title="B2B Standard Invoice">
+```json
+{
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "ES",
+		"$addons": [
+			"es-verifactu-v1"
+		],
+		"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
+		"type": "standard",
+		"series": "SAMPLE",
+		"code": "004",
+		"issue_date": "2024-11-13",
+		"currency": "EUR",
+		"tax": {
+			"ext": {
+				"es-verifactu-doc-type": "F1"
+			}
+		},
+		"supplier": {
+			"name": "Invopop S.L.",
+			"tax_id": {
+				"country": "ES",
+				"code": "B85905495"
+			},
+			"addresses": [
+				{
+					"num": "42",
+					"street": "Calle Pradillo",
+					"locality": "Madrid",
+					"region": "Madrid",
+					"code": "28002",
+					"country": "ES"
+				}
+			],
+			"emails": [
+				{
+					"addr": "billing@example.com"
+				}
+			]
+		},
+		"customer": {
+			"name": "Sample Consumer",
+			"tax_id": {
+				"country": "ES",
+				"code": "B63272603"
+			}
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "20",
+				"item": {
+					"name": "Development services",
+					"price": "90.00",
+					"unit": "h"
+				},
+				"sum": "1800.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"rate": "standard",
+						"percent": "21.0%",
+						"ext": {
+							"es-verifactu-op-class": "S1",
+							"es-verifactu-regime": "01"
+						}
+					}
+				],
+				"total": "1800.00"
+			}
+		],
+		"totals": {
+			"sum": "1800.00",
+			"total": "1800.00",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"ext": {
+									"es-verifactu-op-class": "S1",
+									"es-verifactu-regime": "01"
+								},
+								"base": "1800.00",
+								"percent": "21.0%",
+								"amount": "378.00"
+							}
+						],
+						"amount": "378.00"
+					}
+				],
+				"sum": "378.00"
+			},
+			"tax": "378.00",
+			"total_with_tax": "2178.00",
+			"payable": "2178.00"
+		},
+		"notes": [
+			{
+				"key": "general",
+				"text": "This is a sample invoice with a standard tax"
+			}
+		]
+	}
+```
+</Accordion>
+</AccordionGroup>
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Is VeriFactu compliance mandatory in Spain?">
+
+VeriFactu is currently scheduled to be mandatory for businesses in Spain from July 1st, 2025. However, it is likely that the deadline will be extended to January 1st, 2026 for companies and to July 1st, 2026 for self-employed individuals. Refer to [the proposal](https://www.hacienda.gob.es/SGT/NormativaDoctrina/Proyectos/04112024-Verifactu-Consulta-Publica-Previa.pdf) for more details.
+
+</Accordion>
+<Accordion title="How can I correct an invoice?">
+
+There are three ways to correct an invoice:
+
+1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VeriFactu translates to a "Factura Rectificativa por Diferencias".
+2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VeriFactu translates to a "Factura Rectificativa por Sustitución".
+3. Lastly, you can use the `Cancel Verifactu (Spain)` step, which will void the invoice in the tax authority, and then issue a new invoice with the correct information.
+
+</Accordion>
+<Accordion title="I can only issue invoices in Sandbox mode, where is the live environment?">
+
+The AEAT has not yet launched the production endpoints for VeriFactu. Once they are published, the `Send VeriFactu (Spain)` step will support the live environment.
+
+</Accordion>
+</AccordionGroup>
