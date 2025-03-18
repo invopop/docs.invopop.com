@@ -59,7 +59,7 @@ paths:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
     post:
-      description: Create a new silo entry non-idempotently without an explicit UUID.
+      description: Create a new silo entry without an explicit UUID.
       requestBody:
         content:
           application/json:
@@ -247,7 +247,7 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
     put:
-      description: Create a new silo entry idempotently with the given UUID.
+      description: Create a new silo entry with the given UUID.
       parameters:
       - description: UUID of the silo entry to create.
         in: path
@@ -291,11 +291,22 @@ paths:
                     empty to use the automatic rules.
                   title: Folder
                   type: string
+                key:
+                  description: Key used to identify the entry idempotently within
+                    a workspace.
+                  example: invoice-101
+                  title: Key
+                  type: string
                 previous_id:
                   description: The UUID of the previous silo entry to copy.
-                  example: 347c5b04-cde2-11ed-afa1-0242ac120002
+                  format: uuid
                   title: Previous ID
                   type: string
+                sign:
+                  description: When true, the GOBL envelope will be signed automatically.
+                  example: false
+                  title: Sign
+                  type: boolean
               type: object
       responses:
         "200":
@@ -365,6 +376,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
+  /silo/v1/entries/key/{key}:
+    get:
+      description: Fetch an existing silo entry by its key.
+      parameters:
+      - description: Key used to identify the entry idempotently within a workspace.
+        in: path
+        name: key
+        required: true
+        schema:
+          description: Key used to identify the entry idempotently within a workspace.
+          example: invoice-101
+          title: Key
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntry'
+          description: OK
   /silo/v1/entries/related:
     get:
       description: Find silo entries whose document mentions the UUID parameter.
@@ -425,6 +456,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SiloBuildGOBL'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloGOBL'
+          description: OK
+  /silo/v1/gobl/correct:
+    post:
+      description: Correct or determine the correction options for a GOBL Envelope
+        (not Object!)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloCorrectGOBL'
       responses:
         "200":
           content:
@@ -571,6 +618,23 @@ components:
           title: Envelop
           type: boolean
       type: object
+    SiloCorrectGOBL:
+      properties:
+        data:
+          description: GOBL Envelope or Object to calculate and validate.
+          nullable: true
+          title: Data
+          type: object
+        options:
+          description: JSON object containing the GOBL correction option data.
+          title: Options
+          type: object
+        show_options:
+          description: When true, the options schema for correction are provided in
+            the response.
+          title: Show Options
+          type: boolean
+      type: object
     SiloCreateAttachment:
       properties:
         data:
@@ -646,11 +710,21 @@ components:
             to use the automatic rules.
           title: Folder
           type: string
+        key:
+          description: Key used to identify the entry idempotently within a workspace.
+          example: invoice-101
+          title: Key
+          type: string
         previous_id:
           description: The UUID of the previous silo entry to copy.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          format: uuid
           title: Previous ID
           type: string
+        sign:
+          description: When true, the GOBL envelope will be signed automatically.
+          example: false
+          title: Sign
+          type: boolean
       type: object
     SiloCreateState:
       properties:
@@ -703,8 +777,7 @@ components:
           title: Object Schema
           type: string
         draft:
-          description: Deprectated. When true, indicates that the envelope is not
-            signed.
+          description: Deprecated. When true, indicates that the envelope is not signed.
           example: true
           title: Draft
           type: boolean
@@ -736,6 +809,11 @@ components:
           example: true
           title: Invalid
           type: boolean
+        key:
+          description: Key used to identify the entry idempotently within a workspace.
+          example: invoice-101
+          title: Key
+          type: string
         meta:
           description: Additional meta fields associated with the entry.
           items:
@@ -1003,6 +1081,11 @@ components:
           example: drafts
           title: Folder
           type: string
+        sign:
+          description: When true, the GOBL envelope will be signed automatically.
+          example: false
+          title: Sign
+          type: boolean
       type: object
   securitySchemes:
     authToken:

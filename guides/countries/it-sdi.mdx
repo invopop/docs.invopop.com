@@ -52,7 +52,7 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 
 <AccordionGroup>
 <Accordion title="Example SDI Invoice Workflow">
-You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recomend.
+You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries and handling errors, both of which we strongly recomend.
 
 ```json
 {
@@ -62,11 +62,11 @@ You can copy and paste the following JSON while editing a Workflow in "developer
         {
             "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
             "config": {
                 "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
+            }
         },
         {
             "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
@@ -76,53 +76,43 @@ You can copy and paste the following JSON while editing a Workflow in "developer
         {
             "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
             "name": "Send to SDI (Italy)",
-            "next": [
-                {
-                    "status": "KO",
-                    "step_id": "2d5d7660-cd12-11ef-998c-e97f18c9212e"
-                }
-            ],
-            "config": {
-                "response": "NE",
-                "environment": "sandbox"
-            },
+            "provider": "sdi-it",
             "summary": "Sandbox · Accepted by PA (Notifica esito)",
-            "provider": "sdi-it"
+            "config": {
+                "environment": "sandbox",
+                "response": "NE"
+            }
         },
         {
             "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
             "name": "Generate PDF",
-            "config": {
-                "locale": "it",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
+            "provider": "pdf",
             "summary": "Italian",
-            "provider": "pdf"
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "locale": "it",
+                "logo_height": 40
+            }
         },
         {
             "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
-            "next": [
-                {
-                    "stop": true,
-                    "status": "NA"
-                }
-            ],
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
             "config": {
                 "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
+            }
+        }
+    ],
+    "rescue": [
         {
             "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
             "config": {
                 "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
+            }
         }
     ]
 }
@@ -135,6 +125,15 @@ You can copy and paste the following JSON while editing a Workflow in "developer
 Invopop uses the [GOBL](https://gobl.org) library to process conversions, in particular the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
 
 Be sure to set the `regime` field to `IT` in your invoices and add the `it-sdi-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, which can be found [here](https://github.com/invopop/gobl/tree/main/regimes/it#italy-specific-requirements).
+
+The SDI service usually responds within seconds but may take up to 24 hours. While waiting, the **Send to SDI** step remains `Queued`.
+
+When finished, this step returns:
+
+- `OK` if successful
+- `KO` for unrecoverable errors
+- `SKIP` if the invoice was already sent
+
 
 ## Example Invoices
 

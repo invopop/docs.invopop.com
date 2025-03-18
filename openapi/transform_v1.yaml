@@ -18,15 +18,15 @@ servers:
 paths:
   /transform/v1/jobs:
     post:
-      description: Create a new job non-idempotently without an explicit UUID.
+      description: Create a new job without an explicit ID.
       parameters:
-      - description: Number of seconds to wait for the job to complete and provide
-          a response.
+      - description: Maximum number of seconds to block the http request waiting for
+          the job to complete and provide a response.
         in: query
         name: wait
         schema:
-          description: Number of seconds to wait for the job to complete and provide
-            a response.
+          description: Maximum number of seconds to block the http request waiting
+            for the job to complete and provide a response.
           example: 60
           title: Wait
           type: integer
@@ -40,6 +40,17 @@ paths:
                     Silo Entry ID is empty.
                   nullable: true
                   title: Data
+                  type: object
+                key:
+                  description: Key to associate with the job for idempotency.
+                  title: Key
+                  type: string
+                meta:
+                  additionalProperties:
+                    type: string
+                  description: Metadata to associate with the job and to be used by
+                    actions during execution.
+                  title: Meta
                   type: object
                 silo_entry_id:
                   description: ID for the entry in the silo as an alternative for
@@ -68,7 +79,7 @@ paths:
           description: OK
   /transform/v1/jobs/{id}:
     get:
-      description: Fetch an existing job given its UUID.
+      description: Fetch an existing job by ID.
       parameters:
       - description: ID of the job to fetch.
         in: path
@@ -87,15 +98,15 @@ paths:
                 $ref: '#/components/schemas/TransformJob'
           description: OK
     put:
-      description: Create a new job idempotently with the given UUID.
+      description: Create a new job with the given ID.
       parameters:
-      - description: Number of seconds to wait for the job to complete and provide
-          a response.
+      - description: Maximum number of seconds to block the http request waiting for
+          the job to complete and provide a response.
         in: query
         name: wait
         schema:
-          description: Number of seconds to wait for the job to complete and provide
-            a response.
+          description: Maximum number of seconds to block the http request waiting
+            for the job to complete and provide a response.
           example: 60
           title: Wait
           type: integer
@@ -106,6 +117,7 @@ paths:
         schema:
           description: ID of the job to create.
           example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          format: uuid
           title: ID
           type: string
       requestBody:
@@ -118,6 +130,17 @@ paths:
                     Silo Entry ID is empty.
                   nullable: true
                   title: Data
+                  type: object
+                key:
+                  description: Key to associate with the job for idempotency.
+                  title: Key
+                  type: string
+                meta:
+                  additionalProperties:
+                    type: string
+                  description: Metadata to associate with the job and to be used by
+                    actions during execution.
+                  title: Meta
                   type: object
                 silo_entry_id:
                   description: ID for the entry in the silo as an alternative for
@@ -137,6 +160,26 @@ paths:
               required:
               - workflow_id
               type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK
+  /transform/v1/jobs/key/{key}:
+    get:
+      description: Fetch an existing job by a recent key.
+      parameters:
+      - description: Key of the job to fetch.
+        in: path
+        name: key
+        required: true
+        schema:
+          description: Key of the job to fetch.
+          example: sample-key-00001
+          title: Key
+          type: string
       responses:
         "200":
           content:
@@ -224,7 +267,7 @@ paths:
                 $ref: '#/components/schemas/TransformWorkflow'
           description: OK
     put:
-      description: Create a new workflow idempotently with the given UUID.
+      description: Create a new workflow with the given UUID.
       parameters:
       - description: UUID (any version) of the workflow to create.
         in: path
@@ -342,6 +385,10 @@ components:
             information about the event, especially errors.
           title: Message
           type: string
+        silo_entry_id:
+          description: ID of the entry in the silo that was created by this event.
+          title: Silo Entry ID
+          type: string
         status:
           description: Status of the event.
           example: ERR
@@ -447,6 +494,16 @@ components:
             $ref: '#/components/schemas/TransformIntent'
           title: Intents
           type: array
+        key:
+          description: Key assigned to the job, used to identify it in the system.
+          title: Key
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional data that might be relevant for processing.
+          title: Meta
+          type: object
         silo_entry_id:
           example: 75fa764a-cdd0-11ed-afa1-0242ac120002
           title: Silo Entry ID
@@ -472,6 +529,10 @@ components:
       type: object
     TransformNext:
       properties:
+        code:
+          description: Code to match against
+          title: Code
+          type: string
         status:
           description: Step status to match against, when empty this next step will
             always be executed.
@@ -487,13 +548,24 @@ components:
           example: 186522a6-e697-4e34-8498-eee961bcb845
           title: Step ID
           type: string
+        steps:
+          description: Array of steps to execute
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          title: Steps
+          type: array
         stop:
-          description: When true, the workflow will stop after completing this step.
+          description: When true, the workflow will stop.
           title: Stop
           type: boolean
       type: object
     TransformStep:
       properties:
+        action:
+          description: ID of the action to execute
+          example: email.send
+          title: Action
+          type: string
         config:
           description: JSON configuration sent to the provider
           title: Configuration
@@ -517,10 +589,9 @@ components:
           description: Additional internal details
           title: Notes
           type: string
-        provider:
-          description: ID of the provider to use
-          example: provider
-          title: Provider
+        summary:
+          description: Summary of the step's configuration.
+          title: Summary
           type: string
       type: object
     TransformUpdateWorkflow:
@@ -559,6 +630,15 @@ components:
           description: When true, this workflow can no longer be used.
           title: Disabled
           type: boolean
+        draft:
+          description: When true, this workflow is still in draft mode and will not
+            be used in jobs.
+          title: Draft
+          type: boolean
+        hash:
+          description: Partial SHA256 hash of the workflow's contents.
+          title: Hash
+          type: string
         id:
           description: The UUID (any version) of the workflow.
           example: 186522a6-e697-4e34-8498-eee961bcb845
@@ -568,12 +648,20 @@ components:
           description: Name of the workflow
           title: Name
           type: string
+        rescue:
+          description: List of steps to execute when a KO status is returned by a
+            previous step and not explicitly managed.
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          nullable: true
+          title: Rescue
+          type: array
         schema:
           description: Short schema name that the workflow will be allowed to process.
           title: Schema
           type: string
         steps:
-          description: List of steps to execute
+          description: List of steps to execute.
           items:
             $ref: '#/components/schemas/TransformStep'
           nullable: true
