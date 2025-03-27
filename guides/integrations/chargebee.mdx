@@ -4,6 +4,9 @@ icon: "plug"
 description: Import and process invoices and credit notes from Chargebee
 ---
 
+import WorkflowExample from '/snippets/workflows/templates/chargebee/cb-invoice.mdx'
+import XRechnungExample from '/snippets/workflows/templates/chargebee/cb-xrechnung.mdx'
+
 ## Introduction
 
 [Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition.
@@ -51,148 +54,12 @@ It's essential to add the **Import Chargebee document** step at the very beginni
 <Accordion title="Example Workflow - Basic PDF">
 
 Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
-
-```json Example Chargebee Workflow with States
-{
-    "name": "Chargebee",
-    "description": "",
-    "steps": [
-        {
-            "id": "1b23a850-ff46-11ef-bc8b-49a3f98ea471",
-            "name": "Import Chargebee document",
-            "provider": "chargebee.import"
-        },
-        {
-            "id": "c9d569f0-ab1e-11ef-a0aa-f554af0a2b6c",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c7a347b0-ab1e-11ef-a0aa-f554af0a2b6c",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "d1f2e5e0-ab1e-11ef-a0aa-f554af0a2b6c",
-            "name": "Generate PDF",
-            "config": {
-                "logo_height": 40,
-                "locale": "de",
-                "date_format": "%Y-%m-%d"
-            },
-            "summary": "German",
-            "provider": "pdf"
-        },
-        {
-            "id": "6277f270-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "02487016-0959-475c-9bc4-aa237313fefa",
-            "name": "Sync with Chargebee",
-            "provider": "chargebee"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "5504a610-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "d8166690-ab1e-11ef-a0aa-f554af0a2b6c",
-            "name": "Sync with Chargebee",
-            "provider": "chargebee"
-        }
-    ]
-}
-```
+<WorkflowExample />
 </Accordion>
 <Accordion title="Example Workflow - X-Rechnung">
 
 This is an example that combines the Chargebee app with a country-specific functionality (in this case, the X-Rechnung conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
-
-```json Example Chargebee X-Rechnung Workflow
-{
-    "name": "X-Rechnung",
-    "description": "",
-    "steps": [
-        {
-            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Convert to XRechnung/Factur-X",
-            "provider": "xinvoice.convert"
-        },
-        {
-            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Generate PDF",
-            "config": {
-                "locale": "en",
-                "date_format": "%Y-%m-%d",
-                "logo_height": 40
-            },
-            "summary": "English",
-            "provider": "pdf"
-        },
-        {
-            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "553f8c03-c0ff-4de5-9a66-33685b8f9c65",
-            "name": "Sync with Chargebee",
-            "provider": "chargebee"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "c35d34c0-b7af-11ef-86a5-99a247862412",
-            "name": "Sync with Chargebee",
-            "provider": "chargebee"
-        }
-    ]
-}
-```
+<XRechnungExample />
 </Accordion>
 </AccordionGroup>
 </Step>

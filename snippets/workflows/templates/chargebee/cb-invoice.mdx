@@ -1,0 +1,68 @@
+```json Example Chargebee Workflow with States
+{
+    "name": "Chargebee",
+    "description": "",
+    "steps": [
+        {
+            "id": "1b23a850-ff46-11ef-bc8b-49a3f98ea471",
+            "name": "Import Chargebee document",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "c9d569f0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c7a347b0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "d1f2e5e0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Generate PDF",
+            "config": {
+                "logo_height": 40,
+                "locale": "de",
+                "date_format": "%Y-%m-%d"
+            },
+            "summary": "German",
+            "provider": "pdf"
+        },
+        {
+            "id": "6277f270-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "02487016-0959-475c-9bc4-aa237313fefa",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "5504a610-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "d8166690-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+```
