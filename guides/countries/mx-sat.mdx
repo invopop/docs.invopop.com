@@ -3,6 +3,12 @@ title: "🇲🇽 Mexico · CFDI & SAT"
 description: Issue CFDI documents in Mexico using the SAT Mexico provider.
 ---
 
+import PostRegistration from '/snippets/workflows/templates/mx/sat-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supplier.mdx';
+import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
+import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
+import B2BInvoice from '/snippets/invoices/mx/sat-issue-invoice.mdx';
+
 ## Introduction
 
 The CFDI (Comprobante Fiscal Digital por Internet) is the standardized electronic invoicing format in Mexico, managed by the country’s tax authority, the SAT (Servicio de Administración Tributaria). This system ensures that all fiscal documents are digitally generated, validated, and reported to SAT in compliance with national tax laws.
@@ -62,22 +68,7 @@ Tap the **Save** button.
 
 <Accordion title="Supplier post-registration workflow example">
 Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Post-registration flow",
-    "steps": [
-        {
-            "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
-            "name": "Set State",
-            "config": {
-                "state": "registered"
-            },
-            "summary": "Set state to `registered`{.state .registered}",
-            "provider": "silo.state"
-        }
-    ]
-}
-```
+<PostRegistration />
 </Accordion>
 
 </Step>
@@ -107,32 +98,7 @@ Add any additional steps you may need, and save the new workflow.
 
 <Accordion title="Supplier registration workflow example">
 Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Register Supplier",
-    "steps": [
-        {
-            "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
-            "name": "Register SAT Issuer (Mexico)",
-            "provider": "sat-mx.register"
-        },
-        {
-            "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
-            "name": "Set State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        }
-    ]
-}
-```
+<RegisterSupplier />
 </Accordion>
 
 </Step>
@@ -149,64 +115,7 @@ Tap the **Save** button to ensure the workflow has been persisted.
 
 <Accordion title="Issue Mexican invoice workflow example">
 Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Issue SAT Invoices",
-    "steps": [
-        {
-            "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
-            "name": "Add Sequential Code",
-            "provider": "sequence.enumerate",
-            "summary": "Dynamic · SAT Invoices · 000001",
-            "config": {
-                "sign": true,
-                "padding": 6,
-                "start": 1
-            }
-        },
-        {
-            "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
-            "name": "Send to SAT (Mexico)",
-            "config": {
-                "generate_pdf": false,
-                "prepaid": false
-            },
-            "provider": "sat-mx"
-        },
-        {
-            "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "English",
-            "config": {
-                "logo_height": 40,
-                "locale": "en",
-                "date_format": "%Y-%m-%d"
-            }
-        },
-        {
-            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
-            "name": "Set State",
-            "config": {
-                "state": "sent"
-            },
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}"
-        }
-    ]
-}
-```
+<IssueInvoice />
 </Accordion>
 
 </Step>
@@ -234,20 +143,7 @@ Suppliers can be registered either manually via the Invopop Console or programat
 
 Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the following example that uses example data provided by the SAT. This will only work in sandbox environments, in production you'll need the details of a real company:
 
-```json
-{
-  "$schema": "https://gobl.org/draft-0/org/party",
-  "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
-  "name": "ESCUELA KEMPER URGATE",
-  "tax_id": {
-    "country": "MX",
-    "code": "EKU9003173C9"
-  },
-  "ext": {
-    "mx-cfdi-fiscal-regime": "601"
-  }
-}
-```
+<Supplier />
 
 Tap **Build**, ensure there are no errors, and click **Save**.
 
@@ -304,84 +200,7 @@ Notice:
 - VAT will be applied at the standard rate, the percentage will be set automatically, and,
 - there are no totals nor calculations, all of these will be made automatically when uploading.
 
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$regime": "MX",
-  "$addons": ["mx-cfdi-v4"],
-  "series": "XXMX",
-  "tax": {
-    "ext": {
-      "mx-cfdi-issue-place": "21000"
-    }
-  },
-  "supplier": {
-    "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
-    "name": "ESCUELA KEMPER URGATE",
-    "tax_id": {
-      "country": "MX",
-      "code": "EKU9003173C9"
-    },
-    "addresses": [
-      {
-        "street": "Julia Navarrete No. 1430",
-        "locality": "Mexicali",
-        "region": "Baja California",
-        "code": "21000",
-        "country": "MX"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "esckemperugarte@example.com"
-      }
-    ],
-    "ext": {
-      "mx-cfdi-fiscal-regime": "601",
-      "mx-cfdi-post-code": "21000"
-    }
-  },
-  "customer": {
-    "name": "UNIVERSIDAD ROBOTICA ESPAÑOLA",
-    "tax_id": {
-      "country": "MX",
-      "code": "URE180429TM6"
-    },
-    "addresses": [
-      {
-        "locality": "Ciudad de Mexico",
-        "region": "Ciudad de Mexico",
-        "code": "86991",
-        "country": "MX"
-      }
-    ],
-    "ext": {
-      "mx-cfdi-fiscal-regime": "601",
-      "mx-cfdi-post-code": "86991",
-      "mx-cfdi-use": "G01"
-    }
-  },
-  "lines": [
-    {
-      "i": 1,
-      "quantity": "1",
-      "item": {
-        "name": "Standard Plan",
-        "price": "1000.00",
-        "ext": {
-          "mx-cfdi-prod-serv": "81112002"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    }
-  ]
-}
-```
+<B2BInvoice />
 
 </Accordion>
 </AccordionGroup>

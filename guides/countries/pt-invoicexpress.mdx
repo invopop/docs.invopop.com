@@ -3,6 +3,10 @@ title: "🇵🇹 Portugal · InvoiceXpress"
 description: Issue invoices in Portugal using the InvoiceXpress provider.
 ---
 
+import IssueInvoice from '/snippets/workflows/templates/pt/ix-issue-invoice.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/pt/ix-register-supplier.mdx';
+import ExampleSupplier from '/snippets/suppliers/pt/ix-supplier.mdx';
+
 ## Introduction
 
 Invopop partners with the local invoicing provider [InvoiceXpress](https://invoicexpress.com/) to issue invoices, invoice-receipts, and credit notes in Portugal and allow users to submit their tax reports (SAF-T) to the Portuguese tax authority (AT).
@@ -59,53 +63,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
     For quick setup, use our pre-configured workflow below:
 
     <Accordion title="Supplier Registration Workflow example">
-      ```json
-      {
-        "name": "Register in InvoiceXpress",
-        "description": " ",
-        "steps": [
-          {
-            "id": "e78ab920-b8be-11ef-9825-f56714a03659",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-          },
-          {
-            "id": "01d3e8a0-499e-11ef-b4fe-47a6daefa429",
-            "name": "Set State",
-            "config": {
-              "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-          },
-          {
-            "id": "dbac1680-b8be-11ef-9825-f56714a03659",
-            "name": "Register InvoiceXpress issuer",
-            "provider": "invoicexpress.register"
-          },
-          {
-            "id": "0eb04c30-499e-11ef-b4fe-47a6daefa429",
-            "name": "Set State",
-            "config": {
-              "state": "registered"
-            },
-            "summary": "Set state to `registered`{.state .registered}",
-            "provider": "silo.state"
-          }
-        ],
-        "rescue": [
-          {
-            "id": "12ad6a70-499e-11ef-b4fe-47a6daefa429",
-            "name": "Set State",
-            "config": {
-              "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-          }
-        ]
-      }
-      ```
+      <RegisterSupplier/>
     </Accordion>
   </Step>
 
@@ -121,53 +79,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
     For quick setup, use our pre-configured workflow below:
 
     <Accordion title="Invoice Processing Workflow example">
-      ```json
-{
-    "name": "Send invoice to InvoiceXpress",
-    "description": null,
-    "steps": [
-        {
-            "id": "61b16e10-b8c9-11ef-b752-d31a7493e92d",
-            "name": "Send to InvoiceXpress",
-            "provider": "invoicexpress",
-            "config": {
-                "skip_pdf": true
-            }
-        },
-        {
-            "id": "2b65e8e0-2f21-11ef-803c-8d182b3d70cd",
-            "name": "Generate PDF",
-            "config": {
-                "logo_height": 40,
-                "locale": "pt",
-                "date_format": "%Y-%m-%d"
-            },
-            "summary": "Portuguese",
-            "provider": "pdf"
-        },
-        {
-            "id": "6a8f6740-49a1-11ef-8c8c-7bca04ed2465",
-            "name": "Set State",
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "6e7ea2d0-49a1-11ef-8c8c-7bca04ed2465",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        }
-    ]
-}
-      ```
+      <IssueInvoice/>
     </Accordion>
   </Step>
 </Steps>
@@ -193,29 +105,7 @@ Follow these steps to onboard a supplier:
     Example GOBL Party document:
 
     <Accordion title="Example supplier" defaultOpen={false}>
-      ```json
-        {
-          "$schema": "https://gobl.org/draft-0/org/party",
-          "uuid": "9de7584f-ea5c-42a7-b159-5e4c6a280a5c",
-          "tax_id": {
-            "country": "PT",
-            "code": "545259045"
-          },
-          "name": "Hotelzinho",
-          "emails": [
-            {
-              "addr": "maria@example.com"
-            }
-          ],
-          "addresses": [
-            {
-              "street": "Rua do Hotelzinho",
-              "code": "1000-000",
-              "locality": "Lisboa"
-            }
-          ]
-        }
-      ```
+      <ExampleSupplier/>
     </Accordion>
   </Step>
 

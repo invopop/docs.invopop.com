@@ -3,6 +3,10 @@ title: "🇪🇸 Spain · TicketBAI"
 description: Issue invoices in the Basque Country with TicketBAI.
 ---
 
+import WorkflowExample from '/snippets/workflows/templates/es/ticketbai.mdx'
+import B2BInvoice from '/snippets/invoices/es/ticketbai-b2b-invoice.mdx'
+import B2CInvoice from '/snippets/invoices/es/ticketbai-b2c-invoice.mdx'
+
 ## Introduction
 
 TicketBAI is a fiscal initiative developed collaboratively by the Basque Government and the provincial tax authorities of Álava, Gipuzkoa, and Bizkaia. Its primary objective is to combat tax fraud by ensuring that all invoices issued by individuals and entities conducting economic activities in the Basque Country are reported to the corresponding tax authorities.
@@ -80,76 +84,7 @@ Create a new **Invoices** workflow with the following steps:
 
 You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries which we strongly recomend.
 
-```json Example TicketBAI Invoice Workflow with States
-{
-  "name": "TicketBAI Invoice",
-  "steps": [
-    {
-      "id": "dd319d60-8bc1-11ef-96af-b55bf69bb0b8",
-      "name": "Add Sequential Code",
-      "config": {
-        "name": "TicketBAI Invoice",
-        "sign": true,
-        "start": 1,
-        "prefix": "F",
-        "padding": 6
-      },
-      "summary": "Dynamic · TicketBAI Invoice · F000001",
-      "provider": "sequence.enumerate"
-    },
-    {
-      "id": "ba77d5b0-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
-      "config": {
-        "state": "processing"
-      },
-      "summary": "Set state to `processing`{.state .processing}",
-      "provider": "silo.state"
-    },
-    {
-      "id": "fc618ea0-a757-11ef-8377-c15ac3014ffb",
-      "name": "Generate TicketBAI (Spain)",
-      "provider": "ticketbai.generate"
-    },
-    {
-      "id": "0448df60-a758-11ef-8377-c15ac3014ffb",
-      "name": "Send TicketBAI (Spain)",
-      "provider": "ticketbai.send"
-    },
-    {
-      "id": "c61adaa0-7b55-11ef-bffc-d9a10ebf9f89",
-      "name": "Generate PDF",
-      "config": {
-        "locale": "es",
-        "date_format": "%Y-%m-%d",
-        "logo_height": 40
-      },
-      "summary": "Spanish",
-      "provider": "pdf"
-    },
-    {
-      "id": "d8693d70-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
-      "config": {
-        "state": "sent"
-      },
-      "summary": "Set state to `sent`{.state .sent}",
-      "provider": "silo.state"
-    }
-  ],
-  "rescue": [
-    {
-      "id": "dd889490-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
-      "config": {
-        "state": "error"
-      },
-      "summary": "Set state to `error`{.state .error}",
-      "provider": "silo.state"
-    }
-  ]
-}
-```
+<WorkflowExample />
 
 </Accordion>
 
@@ -187,79 +122,7 @@ Scenario details:
 - They're selling software development services with standard VAT.
 - The series for the invoice is "F1".
 
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$addons": ["es-tbai-v1"],
-  "series": "F1",
-  "supplier": {
-    "name": "HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr",
-    "tax_id": {
-      "country": "ES",
-      "code": "A99805194"
-    },
-    "addresses": [
-      {
-        "num": "42",
-        "street": "San Frantzisko",
-        "locality": "Bilbo",
-        "region": "Bizkaia",
-        "code": "48003",
-        "country": "ES"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "billing@example.com"
-      }
-    ]
-  },
-  "customer": {
-    "name": "Receive One S.L.",
-    "tax_id": {
-      "country": "ES",
-      "code": "B98602642"
-    },
-    "emails": [
-      {
-        "addr": "billing@example.com"
-      }
-    ],
-    "addresses": [
-      {
-        "num": "42",
-        "street": "Calle Pradillo",
-        "locality": "Madrid",
-        "region": "Madrid",
-        "code": "28002",
-        "country": "ES"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "quantity": "20",
-      "item": {
-        "name": "Development services",
-        "price": "90.00",
-        "unit": "h"
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    }
-  ],
-  "notes": [
-    {
-      "key": "general",
-      "text": "Invoice for development services"
-    }
-  ]
-}
-```
+<B2BInvoice />
 
 Key details to take away from this example:
 
@@ -277,62 +140,7 @@ In this example:
 - Physical goods are being sold with a standard VAT rate.
 - The series for the invoice is "FS1".
 
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$addons": ["es-tbai-v1"],
-  "series": "FS1",
-  "tax": {
-    "prices_include": "VAT"
-  },
-  "supplier": {
-    "name": "HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr",
-    "tax_id": {
-      "country": "ES",
-      "code": "A99805194"
-    },
-    "addresses": [
-      {
-        "num": "42",
-        "street": "San Frantzisko",
-        "locality": "Bilbo",
-        "region": "Bizkaia",
-        "code": "48003",
-        "country": "ES"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "billing@example.com"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "quantity": "1",
-      "item": {
-        "name": "Advanced screwdriver set",
-        "price": "25.10",
-        "ext": {
-          "es-tbai-product": "goods"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    }
-  ],
-  "notes": [
-    {
-      "key": "general",
-      "text": "In person sale"
-    }
-  ]
-}
-```
+<B2CInvoice />
 
 Observations:
 

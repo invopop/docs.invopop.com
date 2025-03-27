@@ -3,6 +3,9 @@ title: "🇬🇷 Greece · myDATA & IAPR"
 description: Send invoices and credit notes to the Greek IAPR via the myDATA platform.
 ---
 
+import WorkflowExample from  '/snippets/workflows/templates/gr/issue-iapr-invoice.mdx';
+import B2BInvoice from '/snippets/inovices/gr/iapr-b2b-invoice.mdx';
+
 ## Introduction
 
 The myDATA (My Digital Accounting and Tax Application) platform is Greece’s standardized electronic invoicing and bookkeeping system, managed by the Independent Authority for Public Revenue (IAPR). This system enables businesses to report invoices and accounting data in real time, ensuring compliance with Greek tax regulations.
@@ -64,60 +67,7 @@ Tap the **Save** button to ensure the workflow has been persisted.
 
 <Accordion title= "Issue IAPR Invoice workflow example">
 Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Issue IAPR Invoice",
-    "description":"  ",
-    "steps": [
-        {
-            "id": "883baa10-abd5-11ef-8b96-dd5de8906f90",
-            "name": "Set Silo Entry State",
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        },
-        {
-            "id": "e9fad100-abd4-11ef-8b96-dd5de8906f90",
-            "name": "Add Sequential Code",
-            "config": {
-                "name": "IAPR Invoices",
-                "sign": true,
-                "start": 1,
-                "padding": 3
-            },
-            "summary": "Dynamic · IAPR Invoices · 1",
-            "provider": "sequence.enumerate"
-        },
-        {
-            "id": "649aca50-9064-11ef-8f9e-39835766d0bc",
-            "name": "Send to IAPR (via ILYDA)",
-            "provider": "ilyda.send"
-        },
-        {
-            "id": "6f77ad10-a32b-11ef-9707-79bbd71238cd",
-            "name": "Set Silo Entry State",
-            "config": {
-                "state": "sent"
-            },
-            "summary": "Set state to `sent`{.state .sent}",
-            "provider": "silo.state"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "e8c9c0a0-a32a-11ef-9707-79bbd71238cd",
-            "name": "Set Silo Entry State",
-            "config": {
-                "state": "error"
-            },
-            "summary": "Set state to `error`{.state .error}",
-            "provider": "silo.state"
-        }
-    ]
-}
-```
+<WorkflowExample />
 </Accordion>
 
 </Step>
@@ -166,108 +116,7 @@ Notice:
 - only VAT rates (`standard` and `exempt`) have been specified; percentages and values for the `gr-mydata-vat-rate` extension will be set automatically, and,
 - there are no totals or calculations; all these will be made automatically when uploading.
 
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$regime": "EL",
-  "$addons": ["gr-mydata-v1"],
-  "$tags": ["services"],
-  "series": "XXGR",
-  "supplier": {
-    "name": "Ελληνικά Τρόφιμα Α.Ε.",
-    "tax_id": {
-      "country": "EL",
-      "code": "177472438"
-    },
-    "addresses": [
-      {
-        "num": "12",
-        "street": "Λεωφόρος Βουλιαγμένης",
-        "locality": "Αθήνα",
-        "code": "11636",
-        "country": "GR"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "hellenicfoods@example.com"
-      }
-    ]
-  },
-  "customer": {
-    "name": "Αιγαίο Λιανική Α.Ε.",
-    "tax_id": {
-      "country": "EL",
-      "code": "841442160"
-    },
-    "addresses": [
-      {
-        "num": "45",
-        "street": "Οδός Εγνατίας",
-        "locality": "Θεσσαλονίκη",
-        "code": "54625",
-        "country": "GR"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "aegeanretail@example.com"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "quantity": "20",
-      "item": {
-        "name": "Υπηρεσίες Ανάπτυξης",
-        "price": "90.00",
-        "unit": "h",
-        "ext": {
-          "gr-mydata-income-cat": "category1_3",
-          "gr-mydata-income-type": "E3_561_001"
-        }
-      },
-      "discounts": [
-        {
-          "reason": "Ειδική Έκπτωση",
-          "percent": "10%"
-        }
-      ],
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    },
-    {
-      "quantity": "1",
-      "item": {
-        "name": "Tax-exempt item",
-        "price": "100.00",
-        "ext": {
-          "gr-mydata-income-cat": "category1_3",
-          "gr-mydata-income-type": "E3_561_001"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "exempt",
-          "ext": {
-            "gr-mydata-exemption": "3"
-          }
-        }
-      ]
-    }
-  ],
-  "payment": {
-    "instructions": {
-      "key": "cash"
-    }
-  }
-}
-```
+<B2BInvoice />
 
 </Accordion>
 </AccordionGroup>

@@ -1,0 +1,63 @@
+```json
+{
+  "name": "VERI*FACTU Invoice",
+  "description": "Convert to VERI*FACTU, send to AEAT and generate PDF",
+  "steps": [
+    {
+      "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "4efb9330-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Sign Envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate Verifactu (Spain)",
+      "provider": "verifactu.generate"
+    },
+    {
+      "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Send Verifactu (Spain)",
+      "provider": "verifactu.send"
+    },
+    {
+      "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate PDF",
+      "config": {
+        "locale": "es",
+        "date_format": "%Y-%m-%d",
+        "logo_height": 40
+      },
+      "summary": "Spanish",
+      "provider": "pdf"
+    },
+    {
+      "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "sent"
+      },
+      "summary": "Set state to `sent`{.state .sent}",
+      "provider": "silo.state"
+    }
+  ],
+  "rescue": [
+    {
+      "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
+}
+```
