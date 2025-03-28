@@ -1,0 +1,77 @@
+---
+title: "Sync with ChargeBee and convert to X-Rechnung"
+description: "Issue a B2G Invoice in Germany with CB sync"
+countryCode: "de"
+appId: "chargebee"
+schema: "bill/invoice"
+---
+
+
+```json Example Chargebee X-Rechnung Workflow
+{
+    "name": "Sync with ChargeBee and convert to X-Rechnung",
+    "description": "",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "78504b10-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Convert to XRechnung/Factur-X",
+            "provider": "xinvoice.convert"
+        },
+        {
+            "id": "7ad436d0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Generate PDF",
+            "config": {
+                "locale": "en",
+                "date_format": "%Y-%m-%d",
+                "logo_height": 40
+            },
+            "summary": "English",
+            "provider": "pdf"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "553f8c03-c0ff-4de5-9a66-33685b8f9c65",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "c35d34c0-b7af-11ef-86a5-99a247862412",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+```

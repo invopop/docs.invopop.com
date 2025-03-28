@@ -1,0 +1,79 @@
+---
+title: "Issue TicketBAI Invoice"
+description: "Issue B2B invoices in the Basque Country"
+countryCode: "es"
+appId: "ticketbai"
+schema: "bill/invoice"
+---
+
+```json Example TicketBAI Invoice Workflow with States
+{
+  "name": "TicketBAI Invoice",
+  "description": "Issue B2G invoices in Germany",
+  "steps": [
+    {
+      "id": "dd319d60-8bc1-11ef-96af-b55bf69bb0b8",
+      "name": "Add Sequential Code",
+      "config": {
+        "name": "TicketBAI Invoice",
+        "sign": true,
+        "start": 1,
+        "prefix": "F",
+        "padding": 6
+      },
+      "summary": "Dynamic · TicketBAI Invoice · F000001",
+      "provider": "sequence.enumerate"
+    },
+    {
+      "id": "ba77d5b0-7b3a-11ef-bffc-d9a10ebf9f89",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "fc618ea0-a757-11ef-8377-c15ac3014ffb",
+      "name": "Generate TicketBAI (Spain)",
+      "provider": "ticketbai.generate"
+    },
+    {
+      "id": "0448df60-a758-11ef-8377-c15ac3014ffb",
+      "name": "Send TicketBAI (Spain)",
+      "provider": "ticketbai.send"
+    },
+    {
+      "id": "c61adaa0-7b55-11ef-bffc-d9a10ebf9f89",
+      "name": "Generate PDF",
+      "config": {
+        "locale": "es",
+        "date_format": "%Y-%m-%d",
+        "logo_height": 40
+      },
+      "summary": "Spanish",
+      "provider": "pdf"
+    },
+    {
+      "id": "d8693d70-7b3a-11ef-bffc-d9a10ebf9f89",
+      "name": "Set State",
+      "config": {
+        "state": "sent"
+      },
+      "summary": "Set state to `sent`{.state .sent}",
+      "provider": "silo.state"
+    }
+  ],
+  "rescue": [
+    {
+      "id": "dd889490-7b3a-11ef-bffc-d9a10ebf9f89",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
+}
+```

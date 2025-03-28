@@ -1,0 +1,56 @@
+---
+title: "Register Supplier with InvoiceXpress"
+description: "Register a supplier in Portugal"
+countryCode: "pt"
+appId: "invoicexpress"
+schema: "org/party"
+---
+
+
+```json
+{
+  "name": "Register in InvoiceXpress",
+  "description": " ",
+  "steps": [
+    {
+      "id": "e78ab920-b8be-11ef-9825-f56714a03659",
+      "name": "Sign Envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "01d3e8a0-499e-11ef-b4fe-47a6daefa429",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "dbac1680-b8be-11ef-9825-f56714a03659",
+      "name": "Register InvoiceXpress issuer",
+      "provider": "invoicexpress.register"
+    },
+    {
+      "id": "0eb04c30-499e-11ef-b4fe-47a6daefa429",
+      "name": "Set State",
+      "config": {
+        "state": "registered"
+      },
+      "summary": "Set state to `registered`{.state .registered}",
+      "provider": "silo.state"
+    }
+  ],
+  "rescue": [
+    {
+      "id": "12ad6a70-499e-11ef-b4fe-47a6daefa429",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
+}
+```
