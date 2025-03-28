@@ -134,6 +134,43 @@ When finished, this step returns:
 - `KO` for unrecoverable errors
 - `SKIP` if the invoice was already sent
 
+This step will also return a code that provides more information about the response from SDI. The codes can be one of the following:
+
+| Code | Description |
+|------|-------------|
+| `rejected` | **Notifica di scarto (NS)** - SDI has rejected your invoice because it contains errors. |
+| `delivered` | **Ricevuta consegna (RC)** - SDI has successfully delivered your B2B invoice to the recipient. |
+| `delivered-pa` | **Ricevuta consegna (RC)** - SDI has successfully delivered your invoice to a Public Administration (PA). |
+| `not-delivered` | **Mancata consegna (MC)** - SDI could not deliver the invoice to the recipient. |
+| `not-delivered` | **Attestazione trasmissione con impossibilità di recapito (AT)** - SDI couldn't deliver your invoice to PA after 10 days. |
+| `accepted-pa` | **Notifica esito (NE)** - A PA has decided to accept your invoice (outcome EC01). |
+| `rejected-pa` | **Notifica esito (NE)** - A PA has decided to reject your invoice (outcome EC02). |
+| `deadline-terms` | **Notifica decorrenza termini (DT)** - A PA didn't reply with acceptance or rejection within 15 days. |
+| `invoice-error` | An error occurred during the acquisition of a notification. |
+| `sent` | The invoice has been submitted to SDI and is awaiting a response. |
+| `not-received` | The invoice was not received by the recipient. |
+
+Some SDI notifications (File metadati - MT, Esito committente - EC, Scarto esito committente - SE) don't directly change the code of the invoice.
+
+When the SDI step processes these codes, they map to different step results as follows:
+
+- **OK Result**: The following codes indicate successful processing and return an `OK` status:
+  - `delivered` - Invoice successfully delivered to B2B recipient
+  - `not-delivered` - Invoice couldn't be delivered, but the process completed
+  - `not-received` - Invoice wasn't received, but the process completed
+  - `accepted-pa` - Invoice accepted by Public Administration
+
+- **KO Result**: The following codes indicate errors and return a `KO` status:
+  - `rejected` - Invoice rejected due to errors
+  - `rejected-pa` - Invoice rejected by Public Administration
+  - `invoice-error` - Error during notification processing
+  - `deadline-terms` - PA didn't respond within deadline
+
+- **QUEUED Result**: The following codes indicate the process is still ongoing and return a `QUEUED` status:
+  - `sent` - Invoice submitted to SDI, awaiting response
+  - `delivered-pa` - Invoice delivered to PA, awaiting acceptance/rejection
+
+When a step returns `QUEUED`, the workflow will check again later for updates from SDI.
 
 ## Example Invoices
 
