@@ -1,0 +1,452 @@
+---
+title: "Italy - SDI: Sending Invoices"
+description: "Generate and issue electronic invoices through Italy's SDI system"
+---
+
+## Introduction
+
+In Italy, electronic invoicing is mandatory for all businesses. The Sistema di Interscambio (SDI) is the Italian government's electronic invoicing system that acts as the central hub for transmitting, validating, and delivering all electronic invoices in the country. FatturaPA is the standardized XML format required for all electronic invoices in Italy, ensuring that invoices contain all required information and follow strict validation rules set by the Italian tax authority (Agenzia delle Entrate).
+
+---*Visual representation of the SDI system and how electronic invoices flow between businesses in Italy*---
+
+Invopop simplifies SDI integration by allowing you to work with GOBL format instead of complex XML, providing synchronous validation before submission, and offering a simple API integration with automatic handling of SDI notifications and status updates. For receiving invoices through SDI, see our companion guide: [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving).
+
+## Setup
+
+<Steps>
+<Step title="Connect the SDI Italy app">
+1. Navigate to **Configuration** > **Apps**
+2. Locate **SDI Italy** in the app discovery list
+3. Click **Connect** to activate
+
+---*Screenshot of the Apps page with SDI Italy highlighted*---
+
+The initial connection requires no configuration for sending invoices.
+</Step>
+
+<Step title="Configure sending workflow">
+First, review our [workflows guide](/guides/workflows) to understand the basics of setting up workflows.
+
+Create a workflow with these essential steps:
+
+1. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+2. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
+3. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
+
+---*Screenshot of workflow configuration with the essential steps highlighted*---
+
+<Info>
+The legacy **Send to SDI (Italy) (Legacy)** step that combines both generation and sending is still available, but its use is discouraged. It is marked with a legacy tag.
+</Info>
+
+<Info>
+SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third-party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
+</Info>
+
+<AccordionGroup>
+<Accordion title="Example Sending Invoice Workflow">
+This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
+
+```json
+{
+    "name": "Invoice - Send with States",
+    "description": "Generate and issue an invoice through SDI and set the state to `sent` if successful",
+    "steps": [
+        {
+            "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "24f5c340-fd12-11ef-998c-e97f18c9212e",
+            "name": "Generate FatturaPA",
+            "provider": "sdi-it.generate",
+            "summary": "Create XML document"
+        },
+        {
+            "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
+            "name": "Send to SDI (Italy)",
+            "provider": "sdi-it.send",
+            "summary": "Sandbox · Accepted by PA (Notifica esito)",
+            "config": {
+                "environment": "sandbox",
+                "response": "NE"
+            }
+        },
+        {
+            "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Italian",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "locale": "it",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
+</Accordion>
+</AccordionGroup>
+</Step>
+</Steps>
+
+## Sending Invoices
+
+Invopop uses the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library to process conversions. When creating invoices for SDI, you need to:
+
+1. Set the `regime` field to `IT` in your GOBL invoice
+2. Add the `it-sdi-v1` addon to enable Italian-specific validations and extensions
+
+Detailed information about the SDI-specific extensions and validations can be found in:
+- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
+- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
+
+Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
+
+### How the process works
+
+<Steps>
+<Step title="Generate FatturaPA">
+This step converts a GOBL invoice into the required FatturaPA XML format and stores it as an attachment to the silo entry.
+</Step>
+
+<Step title="Send to SDI">
+This step takes the generated XML attachment and sends it to SDI through our integration partner. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
+</Step>
+</Steps>
+
+---*Process flow diagram showing the steps from GOBL document to SDI submission*---
+
+<Info>
+A legacy combined step that performs both generation and sending in one operation is also available. While still functional, we recommend using the separate steps for better control and error handling.
+</Info>
+
+When the Send step completes, it returns one of three results:
+- `OK` if successful
+- `KO` for unrecoverable errors
+- `SKIP` if the invoice was already sent
+
+## Example Invoices
+
+<AccordionGroup>
+<Accordion title="B2C Standard Invoice">
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "IT",
+  "$addons": [
+    "it-sdi-v1"
+  ],
+  "uuid": "0190a63a-1a80-7e1e-a868-08c7859b6470",
+  "type": "standard",
+  "series": "FT",
+  "code": "020",
+  "issue_date": "2024-07-12",
+  "currency": "EUR",
+  "tax": {
+    "prices_include": "VAT",
+    "ext": {
+      "it-sdi-document-type": "TD01",
+      "it-sdi-format": "FPR12"
+    }
+  },
+  "supplier": {
+    "name": "Company Name S.r.l.",
+    "tax_id": {
+      "country": "IT",
+      "code": "12345678903"
+    },
+    "addresses": [
+      {
+        "num": "102",
+        "street": "Via California",
+        "locality": "Palermo",
+        "region": "PA",
+        "code": "33213",
+        "country": "IT"
+      }
+    ],
+    "registration": {
+      "capital": "50000.00",
+      "currency": "EUR",
+      "office": "RM",
+      "entry": "123456"
+    },
+    "ext": {
+      "it-sdi-fiscal-regime": "RF01"
+    }
+  },
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "1",
+      "item": {
+        "name": "Cleaning services",
+        "price": "125.00"
+      },
+      "sum": "125.00",
+      "taxes": [
+        {
+          "cat": "VAT",
+          "rate": "standard",
+          "percent": "22.0%"
+        }
+      ],
+      "total": "125.00"
+    }
+  ],
+  "totals": {
+    "sum": "125.00",
+    "tax_included": "22.54",
+    "total": "102.46",
+    "taxes": {
+      "categories": [
+        {
+          "code": "VAT",
+          "rates": [
+            {
+              "key": "standard",
+              "base": "102.46",
+              "percent": "22.0%",
+              "amount": "22.54"
+            }
+          ],
+          "amount": "22.54"
+        }
+      ],
+      "sum": "22.54"
+    },
+    "tax": "22.54",
+    "total_with_tax": "125.00",
+    "payable": "125.00"
+  }
+}
+```
+</Accordion>
+<Accordion title="B2B Invoice">
+```json
+{
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "$regime": "IT",
+    "$addons": [
+        "it-sdi-v1"
+    ],
+    "$tags": [
+        "freelance"
+    ],
+    "uuid": "0190c0ec-8109-756b-a4f0-88c4b542ab6e",
+    "type": "standard",
+    "series": "SAMPLE",
+    "code": "001",
+    "issue_date": "2023-03-02",
+    "currency": "EUR",
+    "tax": {
+        "ext": {
+            "it-sdi-document-type": "TD06",
+            "it-sdi-format": "FPR12"
+        }
+    },
+    "supplier": {
+        "name": "MªF. Services",
+        "tax_id": {
+            "country": "IT",
+            "code": "12345678903"
+        },
+        "people": [
+            {
+                "name": {
+                    "given": "GIANCARLO",
+                    "surname": "ROSSI"
+                }
+            }
+        ],
+        "addresses": [
+            {
+                "num": "1",
+                "street": "VIALE DELLA LIBERTÀ",
+                "locality": "ROMA",
+                "region": "RM",
+                "code": "00100",
+                "country": "IT"
+            }
+        ],
+        "ext": {
+            "it-sdi-fiscal-regime": "RF01"
+        }
+    },
+    "customer": {
+        "name": "MARIO LEONI",
+        "tax_id": {
+            "country": "IT",
+            "code": "09876543217"
+        },
+        "addresses": [
+            {
+                "num": "32",
+                "street": "VIALE DELI LAVORATORI",
+                "locality": "FIRENZE",
+                "region": "FI",
+                "code": "50100",
+                "country": "IT"
+            }
+        ]
+    },
+    "lines": [
+        {
+            "i": 1,
+            "quantity": "20",
+            "item": {
+                "name": "Development services",
+                "price": "90.00",
+                "unit": "h"
+            },
+            "sum": "1800.00",
+            "taxes": [
+                {
+                    "cat": "VAT",
+                    "rate": "standard",
+                    "percent": "22.0%"
+                }
+            ],
+            "total": "1800.00"
+        }
+    ],
+    "totals": {
+        "sum": "1800.00",
+        "total": "1800.00",
+        "taxes": {
+            "categories": [
+                {
+                    "code": "VAT",
+                    "rates": [
+                        {
+                            "key": "standard",
+                            "base": "1800.00",
+                            "percent": "22.0%",
+                            "amount": "396.00"
+                        }
+                    ],
+                    "amount": "396.00"
+                }
+            ],
+            "sum": "396.00"
+        },
+        "tax": "396.00",
+        "total_with_tax": "2196.00",
+        "payable": "2196.00"
+    }
+}
+```
+</Accordion>
+</AccordionGroup>
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Is electronic invoicing mandatory in Italy?">
+
+Yes, electronic invoicing through SDI is mandatory in Italy for B2G, B2B, and B2C transactions.
+
+All invoices must be issued in FatturaPA format and transmitted through the SDI (Sistema di Interscambio) platform.
+
+</Accordion>
+<Accordion title="How can I correct an invoice?">
+
+There are two main ways to correct an invoice in the Italian SDI system:
+
+1. Issue a credit note (Nota di Credito - TD04) to fully or partially cancel the original invoice.
+2. Issue a debit note (Nota di Debito - TD05) to integrate/correct the original invoice with additional charges.
+
+The corrective document must reference the original invoice number and date.
+
+</Accordion>
+<Accordion title="Why is my invoice processing taking so long?">
+
+The SDI system can take up to 24 hours to process invoices, especially during peak periods. While waiting, the "Send to SDI" step will remain in the `QUEUED` state. The system will automatically check for updates, and the status will change once SDI has processed the invoice.
+
+</Accordion>
+<Accordion title="How do I know if my invoice was delivered successfully?">
+
+Once the SDI process is complete, the workflow will show one of several status codes:
+- `delivered` - The invoice was successfully delivered to a B2B recipient
+- `accepted-pa` - The invoice was accepted by a Public Administration
+- `not-delivered` - The invoice couldn't be delivered, but was processed correctly by SDI
+
+Check the workflow history to see the exact status.
+
+</Accordion>
+<Accordion title="Can I use the same workflow for both sending and receiving invoices?">
+
+No, sending and receiving invoices require different workflows:
+- For sending invoices, a workflow with the Generate FatturaPA and Send to SDI steps is needed
+- For receiving invoices, two workflows are required: 
+  1. A Customer Registration workflow (run once for each company that needs to receive invoices)
+  2. An Import Invoices workflow (configured to run automatically)
+
+For more information on receiving invoices, see our [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving) guide.
+
+</Accordion>
+</AccordionGroup>
+
+## Technical Details
+
+<AccordionGroup>
+<Accordion title="SDI Response Codes and Statuses">
+When the SDI step processes a document, it returns detailed status codes that provide information about the response from SDI:
+
+| Code | Description |
+|------|-------------|
+| `rejected` | **Notifica di scarto (NS)** - SDI has rejected the invoice because it contains errors. |
+| `delivered` | **Ricevuta consegna (RC)** - SDI has successfully delivered a B2B invoice to the recipient. |
+| `delivered-pa` | **Ricevuta consegna (RC)** - SDI has successfully delivered an invoice to a Public Administration (PA). |
+| `not-delivered` | **Mancata consegna (MC)** - SDI could not deliver the invoice to the recipient. |
+| `not-delivered` | **Attestazione trasmissione con impossibilità di recapito (AT)** - SDI couldn't deliver an invoice to PA after 10 days. |
+| `accepted-pa` | **Notifica esito (NE)** - A PA has decided to accept an invoice (outcome EC01). |
+| `rejected-pa` | **Notifica esito (NE)** - A PA has decided to reject an invoice (outcome EC02). |
+| `deadline-terms` | **Notifica decorrenza termini (DT)** - A PA didn't reply with acceptance or rejection within 15 days. |
+| `invoice-error` | An error occurred during the acquisition of a notification. |
+| `sent` | The invoice has been submitted to SDI and is awaiting a response. |
+| `not-received` | The invoice was not received by the recipient. |
+
+Some SDI notifications (File metadati - MT, Esito committente - EC, Scarto esito committente - SE) don't directly change the code of the invoice.
+
+These codes map to different step results as follows:
+
+- **OK Result**: `delivered`, `not-delivered`, `not-received`, `accepted-pa`
+- **KO Result**: `rejected`, `rejected-pa`, `invoice-error`, `deadline-terms`
+- **QUEUED Result**: `sent`, `delivered-pa`
+
+When a step returns `QUEUED`, the workflow will check again later for updates from SDI.
+</Accordion>
+</AccordionGroup> 
