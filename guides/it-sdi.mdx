@@ -25,26 +25,23 @@ To receive invoices, these items are necessary:
   - Italian tax ID (Partita IVA)
 - A registered Recipient Code (Codice Destinatario) with the Italian tax authority
 
-## Setup
+## Common Setup
 
-Follow these steps to configure an Invopop Workspace for SDI invoicing:
-
-<Steps>
-<Step title="Connect the SDI Italy app">
+### Connect the SDI Italy app
 
 1. Navigate to **Configuration** > **Apps**.
 2. Locate **SDI Italy** in the app discovery list.
 3. Click **Connect** to activate.
 
-No additional configuration is needed.
+The initial connection requires no configuration. However, additional setup will be needed later if you plan to receive invoices.
 
-</Step>
+## Setup for Sending Invoices
 
-<Step title="Configure invoice workflows">
+### Configure sending workflow
 
 First, review our [workflows guide](/guides/workflows) to understand the basics.
 
-For **sending invoices**, create a workflow with these essential steps:
+Create a workflow with these essential steps:
 
 1. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
 2. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
@@ -57,47 +54,6 @@ The legacy **Send to SDI (Italy) (Legacy)** step that combines both generation a
 <Info>
 SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third-party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
 </Info>
-
-For **receiving invoices**, two workflows must be set up:
-
-1. **Customer Registration** workflow with:
-   - **Register SDI Customer (Italy)** - Registers a company's tax ID to receive invoices through SDI.
-
-2. **Import Invoices** workflow with:
-   - **Import from SDI (Italy)** - Converts received FatturaPA documents into GOBL format.
-
-</Step>
-
-<Step title="Configure app for import">
-
-To enable automatic processing of received invoices:
-
-1. Navigate to **Configuration** > **Apps**.
-2. Find the **SDI Italy** app and click **Configure**.
-3. In the sidebar that opens, select the appropriate **Import Invoices** workflow.
-4. This workflow will automatically trigger whenever a new invoice is received through SDI.
-
-Any errors in the import process will trigger the rescue steps in the workflow, allowing identification and resolution of issues.
-
-</Step>
-
-<Step title="Register to receive invoices">
-
-To receive invoices, register the Recipient Code (Codice Destinatario) with the Italian tax authority:
-
-1. Access the Italian tax authority's website (https://ivaservizi.agenziaentrate.gov.it/portale/) and log in with valid credentials.
-2. Click on the "Fatture e Corrispettivi" section.
-3. In the box "Fatturazione elettronica," click on "Registrazione delle modalità di ricezione della fattura elettronica."
-4. Select the Recipient Code (Codice Destinatario) option and enter the code `JKKZDGR` provided by Invopop.
-5. Click on "Conferma."
-
-After completing this registration, execute the Customer Registration workflow to complete the setup.
-
-<Info>
-Registration is only required for receiving invoices, not for sending them. Each company that needs to receive invoices must be registered separately.
-</Info>
-</Step>
-</Steps>
 
 <AccordionGroup>
 <Accordion title="Example Sending Invoice Workflow">
@@ -173,7 +129,52 @@ This JSON can be copied and pasted while editing a Workflow in "developer" mode.
 }
 ```
 </Accordion>
+</AccordionGroup>
 
+## Setup for Receiving Invoices
+
+### Configure receiving workflows
+
+For receiving invoices, two workflows must be set up:
+
+1. **Customer Registration** workflow with:
+   - **Register SDI Customer (Italy)** - Registers a company's tax ID to receive invoices through SDI.
+
+2. **Import Invoices** workflow with:
+   - **Import from SDI (Italy)** - Converts received FatturaPA documents into GOBL format.
+
+### Configure app for receiving invoices
+
+Additional app configuration is required to process incoming invoices:
+
+1. Navigate to **Configuration** > **Apps**.
+2. Find the **SDI Italy** app and click **Configure**.
+3. In the sidebar that opens, select the appropriate **Import Invoices** workflow.
+4. This workflow will automatically trigger whenever a new invoice is received through SDI.
+
+Any errors in the import process will trigger the rescue steps in the workflow, allowing identification and resolution of issues.
+
+### Register with Italian tax authority
+
+For each company you want to receive invoices for in Invopop, you must register the Recipient Code (Codice Destinatario) with the Italian tax authority:
+
+1. Access the Italian tax authority's website (https://ivaservizi.agenziaentrate.gov.it/portale/) and log in with valid credentials for the company being registered.
+2. Click on the "Fatture e Corrispettivi" section.
+3. In the box "Fatturazione elettronica," click on "Registrazione delle modalità di ricezione della fattura elettronica."
+4. Select the Recipient Code (Codice Destinatario) option and enter the code `JKKZDGR` provided by Invopop.
+5. Click on "Conferma."
+
+After completing this registration with the tax authority, execute the Customer Registration workflow in Invopop to complete the setup for that company.
+
+<Info>
+Important: Both steps must be completed for each company:
+1. Register the Codice Destinatario `JKKZDGR` with the Italian tax authority for that company
+2. Run the Customer Registration workflow for that company in Invopop
+
+Registration is only required for receiving invoices, not for sending them.
+</Info>
+
+<AccordionGroup>
 <Accordion title="Example Customer Registration Workflow">
 Use this workflow to register a company to receive invoices through SDI.
 
@@ -257,9 +258,9 @@ Use this workflow to import and process invoices received through SDI. This work
             "id": "8a0b2d50-fd13-11ef-998c-e97f18c9212e",
             "name": "Set State",
             "provider": "silo.state",
-            "summary": "Set state to `received`{.state .received}",
+            "summary": "Set state to `sent`{.state .sent}",
             "config": {
-                "state": "received"
+                "state": "sent"
             }
         }
     ],
@@ -343,9 +344,9 @@ When a step returns `QUEUED`, the workflow will check again later for updates fr
 
 ### Receiving Invoices
 
-To receive invoices through SDI, complete these three important steps:
+To receive invoices through SDI, complete these three important steps for each company:
 
-1. **Register with Italian tax authority** - Register the Recipient Code `JKKZDGR` with the Italian tax authority as outlined in the setup steps.
+1. **Register with Italian tax authority** - Register the Recipient Code `JKKZDGR` with the Italian tax authority for each company that needs to receive invoices, as outlined in the setup steps.
 
 2. **Set up the Customer Registration workflow** - Run this workflow for each company that needs to receive invoices. This registers the company's tax ID with our SDI integration partner to subscribe to invoice events for that organization.
 
@@ -617,12 +618,12 @@ No, sending and receiving invoices require different workflows:
 </Accordion>
 <Accordion title="Can I register multiple companies to receive invoices?">
 
-Yes, multiple companies can be registered to receive invoices through a single Invopop workspace. Each company must:
-1. Register the Recipient Code `JKKZDGR` with the Italian tax authority
-2. Have its tax ID registered using the Customer Registration workflow
+Yes, multiple companies can be registered to receive invoices through a single Invopop workspace. For each company, you must:
+1. Register the Recipient Code `JKKZDGR` with the Italian tax authority for that specific company
+2. Have its tax ID registered using the Customer Registration workflow in Invopop
 3. Use the same Import Invoices workflow configured in the app settings
 
-This is particularly useful for white-labeling scenarios where a user manages multiple entities.
+This two-step registration process (with the tax authority and with Invopop) must be completed for each company you want to register. This is particularly useful for white-labeling scenarios where a user manages multiple entities.
 
 </Accordion>
 </AccordionGroup>
