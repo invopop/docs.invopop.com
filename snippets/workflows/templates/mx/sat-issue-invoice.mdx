@@ -1,0 +1,66 @@
+---
+title: "Issue SAT Invoice"
+description: "Issue an invoice and set the state to `sent` if successful"
+countryCode: "mx"
+appId: "sat-mx"
+schema: "bill/invoice"
+---
+
+```json
+{
+    "name": "Issue SAT Invoices",
+    "steps": [
+        {
+            "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · SAT Invoices · 000001",
+            "config": {
+                "sign": true,
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "1f60a0b0-ea9f-11ee-8846-3d414f6173e4",
+            "name": "Send to SAT (Mexico)",
+            "config": {
+                "generate_pdf": false,
+                "prepaid": false
+            },
+            "provider": "sat-mx"
+        },
+        {
+            "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": {
+                "logo_height": 40,
+                "locale": "en",
+                "date_format": "%Y-%m-%d"
+            }
+        },
+        {
+            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "sent"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}"
+        }
+    ]
+}
+```

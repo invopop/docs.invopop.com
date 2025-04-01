@@ -1,0 +1,136 @@
+---
+title: "🇵🇹 Portugal · InvoiceXpress"
+description: Issue invoices in Portugal using the InvoiceXpress provider.
+---
+
+import IssueInvoice from '/snippets/workflows/templates/pt/ix-issue-invoice.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/pt/ix-register-supplier.mdx';
+import ExampleSupplier from '/snippets/suppliers/pt/ix-supplier.mdx';
+
+## Introduction
+
+Invopop partners with the local invoicing provider [InvoiceXpress](https://invoicexpress.com/) to issue invoices, invoice-receipts, and credit notes in Portugal and allow users to submit their tax reports (SAF-T) to the Portuguese tax authority (AT).
+
+This guide explains how to integrate with [InvoiceXpress](https://invoicexpress.com/), a Portuguese invoicing provider that enables you to:
+* Issue compliant invoices, invoice-receipts, and credit notes in Portugal
+* Submit tax reports (SAF-T) to the Portuguese tax authority (AT)
+* Enable real-time tax reporting
+
+For technical details and examples of Portuguese GOBL documents, see the [GOBL Portugal Tax Regime documentation](https://github.com/invopop/gobl/blob/main/regimes/pt/README.md).
+
+## Prerequisites
+To issue invoices through InvoiceXpress, you'll need the following information:
+
+* Supplier Details, including:
+  * Legal business name
+  * Tax ID (Número de Identificação Fiscal)
+  * Complete business address
+  * Contact email address
+
+* Invoice details, including:
+  * Line item descriptions
+  * Quantities and unit prices
+  * Applicable Portuguese VAT rates
+
+## Setup
+
+The integration requires three main components:
+
+1. InvoiceXpress app connection
+2. Supplier registration workflow
+3. Invoice processing workflow
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+<Steps>
+  <Step title="Connect InvoiceXpress App">
+    1. Navigate to the **Configuration** section
+    2. Select **Apps**
+    3. Locate **InvoiceXpress Portugal**
+    4. Click **Connect**
+  </Step>
+
+  <Step title="Configure Supplier Registration Workflow">
+    Create a workflow to register your suppliers with InvoiceXpress:
+
+    1. Go to the **Workflows** section
+    2. Create a new "Contacts" workflow
+    3. Name it "Register supplier in InvoiceXpress"
+    4. Add the following required steps:
+       * **Sign the Envelope** - Validates the document
+       * **Register InvoiceXpress issuer** - Creates supplier account
+       * **Set State** - Marks progress as `processing`
+
+    For quick setup, use our pre-configured workflow below:
+
+    <Accordion title="Supplier Registration Workflow example">
+      <RegisterSupplier/>
+    </Accordion>
+  </Step>
+
+  <Step title="Set Up Invoice Processing Workflow">
+    Create a workflow for processing invoices with these essential steps:
+
+    1. Name the workflow "Send invoice to InvoiceXpress"
+    2. Add these required steps:
+       * **Send to InvoiceXpress** - Transmits invoice data
+       * **Generate PDF** - Creates document (configure for your environment)
+       * **Set State** - Updates status to "sent"
+
+    For quick setup, use our pre-configured workflow below:
+
+    <Accordion title="Invoice Processing Workflow example">
+      <IssueInvoice/>
+    </Accordion>
+  </Step>
+</Steps>
+
+## Running
+
+### Sandbox Environment
+
+InvoiceXpress provides a way to configure their accounts to use the AT's sandbox environment so that you can test the issuance of invoices and credit notes end-to-end without fiscal or legal consequences. If you wish to use this environment, please contact us via Slack or support@invopop.com and we will walk you through the setup process.
+
+### Supplier Onboarding
+
+InvoiceXpress supports multiple suppliers under one integration. Each supplier receives their own account for document issuance and tax reporting.
+
+Follow these steps to onboard a supplier:
+<Steps>
+  <Step title="Submit Supplier Information">
+    Send a [GOBL Party](https://docs.gobl.org/draft-0/org/party) document to your supplier registration workflow. The system will automatically:
+
+    * Create an InvoiceXpress account
+    * Send login credentials to the supplier's email (first email in the `emails` list)
+
+    Example GOBL Party document:
+
+    <Accordion title="Example supplier" defaultOpen={false}>
+      <ExampleSupplier/>
+    </Accordion>
+  </Step>
+
+  <Step title="Configure InvoiceXpress account">
+    The user invited to the new account will now have to log in to InvoiceXpress and complete the account's configuration.
+
+    An account will be ready to issue invoices once a default sequence is registered in the AT. This guide from InvoiceXpress' documentation explains how to do it:
+    - [Sequence Registration Guide (English)](https://invoicexpress.helpscoutdocs.com/article/219-step-by-step-guide-to-creating-and-registering-series)
+    - [Guia de Registro de Séries (Portuguese)](https://invoicexpress.helpscoutdocs.com/article/212-atcud-guia-passo-a-passo-para-criar-e-registar-series)
+
+    **Important Notes:**
+    * You'll find a pre-created sequence in the account pending to be registered. You can register and use that one, or create a different one, as you prefer.
+    * In any case, you must ensure the sequence you want to use is the default one in the account. Currently, only the default series can be used to issue documents.
+  </Step>
+</Steps>
+
+### Send an invoice
+Once configured, you can begin issuing documents:
+
+1. Create [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) documents following [PT regime specifications](https://github.com/invopop/gobl/blob/main/regimes/pt/README.md)
+2. Send to your invoice processing workflow
+3. Ensure the `supplier` UUID and Tax ID match the registered supplier details
+
+### Additional Features
+
+Suppliers can:
+- Export SAF-T reports through InvoiceXpress UI
+- Configure real-time tax reporting using this guide: [Portal das Finanças Integration Guide](https://invoicexpress.helpscoutdocs.com/article/92-como-crio-um-sub-utilizador-no-portal-das-financas)
