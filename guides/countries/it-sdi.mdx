@@ -1,0 +1,118 @@
+---
+title: "🇮🇹 Italy · SDI"
+description: Issue invoices in Italy
+---
+
+import WorkflowExample from '/snippets/workflows/templates/it/sdi.mdx';
+import B2CInvoice from '/snippets/invoices/it/sdi-b2c.mdx';
+import B2BInvoice from '/snippets/invoices/it/sdi-b2b.mdx';
+import B2BAdditional from '/snippets/invoices/it/sdi-b2b-additional.mdx';
+import Creditnote from '/snippets/invoices/it/sdi-creditnote.mdx';
+
+## Introduction
+
+Invopop's SDI Italy provider allows you to generate and issue FatturaPA documents in Italy.
+
+## Prerequisites
+
+To issue invoices, you need:
+
+- Supplier details:
+  - Company name and address
+  - Italian tax ID (Partita IVA)
+- For B2B sales, customer details including:
+  - Italian tax ID (Partita IVA)
+- Invoice line items with
+  - Price
+  - VAT rates
+
+## Setup
+
+Follow these steps to configure your Invopop Workspace for SDI invoicing:
+
+<Steps>
+<Step title="Connect the SDI Italy app">
+
+1. Navigate to **Configuration** > **Apps**.
+2. Locate **SDI Italy** in the app discovery list.
+3. Click **Connect** to activate.
+
+No additional configuration is needed.
+
+</Step>
+
+<Step title="Configure invoice workflow">
+
+First, review our [workflows guide](/guides/workflows) to understand the basics.
+
+Create an **Invoices** workflow with these essential steps:
+
+1. **Sign Envelope** - Signs the GOBL document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+2. **Send to SDI (Italy)** - Generates the required FatturaPA document and submits it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI has to be set.
+
+<Info>
+SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
+</Info>
+</Step>
+</Steps>
+
+<AccordionGroup>
+<Accordion title="Example SDI Invoice Workflow">
+You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries and handling errors, both of which we strongly recomend.
+<WorkflowExample />
+</Accordion>
+</AccordionGroup>
+
+## Running
+
+Invopop uses the [GOBL](https://gobl.org) library to process conversions, in particular the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+
+Be sure to set the `regime` field to `IT` in your invoices and add the `it-sdi-v1` addon. This will add some extra validations and normalizations to ensure the document is compliant, and automatically add the necessary extensions, which can be found [here](https://github.com/invopop/gobl/tree/main/regimes/it#italy-specific-requirements).
+
+The SDI service usually responds within seconds but may take up to 24 hours. While waiting, the **Send to SDI** step remains `Queued`.
+
+When finished, this step returns:
+
+- `OK` if successful
+- `KO` for unrecoverable errors
+- `SKIP` if the invoice was already sent
+
+
+## Example Invoices
+
+<AccordionGroup>
+<Accordion title="B2C Standard Invoice">
+  <B2CInvoice />
+</Accordion>
+<Accordion title="B2B Invoice">
+  <B2BInvoice />
+</Accordion>
+<Accordion title="B2B Invoice with Additional Fields">
+  <B2BAdditional />
+</Accordion>
+<Accordion title="Credit Note">
+    <Creditnote />
+</Accordion>
+</AccordionGroup>
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Is electronic invoicing mandatory in Italy?">
+
+Yes, electronic invoicing through SDI is mandatory in Italy for B2G, B2B and B2C transactions.
+
+All invoices must be issued in FatturaPA format and transmitted through the SDI (Sistema di Interscambio) platform.
+
+</Accordion>
+<Accordion title="How can I correct an invoice?">
+
+There are two main ways to correct an invoice in the Italian SDI system:
+
+1. Issue a credit note (Nota di Credito - TD04) to fully or partially cancel the original invoice.
+2. Issue a debit note (Nota di Debito - TD05) to integrate/correct the original invoice with additional charges.
+
+The corrective document must reference the original invoice number and date.
+
+</Accordion>
+</AccordionGroup>

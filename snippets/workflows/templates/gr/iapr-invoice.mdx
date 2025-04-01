@@ -1,0 +1,62 @@
+---
+title: "Issue IAPR Invoice"
+description: "Send GOBL invoices to the Greek IAPR via ILYDA eInvoicing."
+countryCode: "gr"
+appId: "ilyda"
+schema: "bill/invoice"
+---
+
+```json
+{
+    "name": "Issue IAPR Invoice",
+    "description":"Send GOBL invoices to the Greek IAPR via ILYDA eInvoicing.",
+    "steps": [
+        {
+            "id": "883baa10-abd5-11ef-8b96-dd5de8906f90",
+            "name": "Set Silo Entry State",
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        },
+        {
+            "id": "e9fad100-abd4-11ef-8b96-dd5de8906f90",
+            "name": "Add Sequential Code",
+            "config": {
+                "name": "IAPR Invoices",
+                "sign": true,
+                "start": 1,
+                "padding": 3
+            },
+            "summary": "Dynamic · IAPR Invoices · 1",
+            "provider": "sequence.enumerate"
+        },
+        {
+            "id": "649aca50-9064-11ef-8f9e-39835766d0bc",
+            "name": "Send to IAPR (via ILYDA)",
+            "provider": "ilyda.send"
+        },
+        {
+            "id": "6f77ad10-a32b-11ef-9707-79bbd71238cd",
+            "name": "Set Silo Entry State",
+            "config": {
+                "state": "sent"
+            },
+            "summary": "Set state to `sent`{.state .sent}",
+            "provider": "silo.state"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e8c9c0a0-a32a-11ef-9707-79bbd71238cd",
+            "name": "Set Silo Entry State",
+            "config": {
+                "state": "error"
+            },
+            "summary": "Set state to `error`{.state .error}",
+            "provider": "silo.state"
+        }
+    ]
+}
+```
