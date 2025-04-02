@@ -3,7 +3,7 @@ title: "🇮🇹 Italy · SDI Sending"
 description: "Generate and issue electronic invoices through Italy's SDI system"
 ---
 
-import WorkflowExample from '/snippets/workflows/templates/it/sdi.mdx';
+import SDISendWorkflow from '/snippets/workflows/templates/it/sdi-send.mdx';
 import B2CInvoice from '/snippets/invoices/it/sdi-b2c.mdx';
 import B2BInvoice from '/snippets/invoices/it/sdi-b2b.mdx';
 import B2BAdditional from '/snippets/invoices/it/sdi-b2b-additional.mdx';
@@ -21,25 +21,25 @@ Invopop simplifies SDI integration by allowing you to work with GOBL format inst
 
 <Steps>
 <Step title="Connect the SDI Italy app">
-1. Navigate to **Configuration** > **Apps**
+1. Navigate to **Configuration** → **Apps**
 2. Locate **SDI Italy** in the app discovery list
-3. Click **Connect** to activate
+3. Tap **Connect** to activate
 
-<img src="/guides/images/it-sdi-connect.png" alt="Connect SDI Italy app" />
+<Frame>
+<img width="450" src="/guides/images/it-sdi-connect.png" alt="Connect SDI Italy app" />
+</Frame>
 
 The initial connection requires no configuration for sending invoices.
 </Step>
 
 <Step title="Configure sending workflow">
-First, review our [workflows guide](/guides/workflows) to understand the basics of setting up workflows.
-
-Create a workflow with these essential steps:
+First, review our [workflows guide](/guides/workflows) to understand the basics of setting up workflows, then create a workflow with these essential steps:
 
 1. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
 2. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
 3. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
 
-<img src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" />
+<Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
 
 <Info>
 The legacy **Send to SDI (Italy) (Legacy)** step that combines both generation and sending is still available, but its use is discouraged. It is marked with a legacy tag.
@@ -52,76 +52,7 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 <AccordionGroup>
 <Accordion title="Example Sending Invoice Workflow">
 This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
-
-```json
-{
-    "name": "Invoice - Send with States",
-    "description": "Generate and issue an invoice through SDI and set the state to `sent` if successful",
-    "steps": [
-        {
-            "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        },
-        {
-            "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "24f5c340-fd12-11ef-998c-e97f18c9212e",
-            "name": "Generate FatturaPA",
-            "provider": "sdi-it.generate",
-            "summary": "Create XML document"
-        },
-        {
-            "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
-            "name": "Send to SDI (Italy)",
-            "provider": "sdi-it.send",
-            "summary": "Sandbox · Accepted by PA (Notifica esito)",
-            "config": {
-                "environment": "sandbox",
-                "response": "NE"
-            }
-        },
-        {
-            "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "Italian",
-            "config": {
-                "date_format": "%Y-%m-%d",
-                "locale": "it",
-                "logo_height": 40
-            }
-        },
-        {
-            "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
+<SDISendWorkflow />
 </Accordion>
 </AccordionGroup>
 </Step>
@@ -152,8 +83,6 @@ This step takes the generated XML attachment and sends it to SDI through our int
 </Step>
 </Steps>
 
-<img src="/guides/images/it-sdi-sending-process.png" alt="Sending invoice process" />
-
 <Info>
 A legacy combined step that performs both generation and sending in one operation is also available. While still functional, we recommend using the separate steps for better control and error handling.
 </Info>
@@ -167,7 +96,7 @@ When the Send step completes, it returns one of three results:
 
 <AccordionGroup>
 <Accordion title="B2C Standard Invoice">
-  <B2CInvoice />
+  <B2BInvoice />
 </Accordion>
 <Accordion title="B2B Invoice">
   <B2BInvoice />
@@ -236,14 +165,14 @@ When the SDI step processes a document, it returns detailed status codes that pr
 
 | Code | Description |
 |------|-------------|
-| `rejected` | **Notifica di scarto (NS)** - SDI has rejected the invoice because it contains errors. |
-| `delivered` | **Ricevuta consegna (RC)** - SDI has successfully delivered a B2B invoice to the recipient. |
-| `delivered-pa` | **Ricevuta consegna (RC)** - SDI has successfully delivered an invoice to a Public Administration (PA). |
-| `not-delivered` | **Mancata consegna (MC)** - SDI could not deliver the invoice to the recipient. |
-| `not-delivered` | **Attestazione trasmissione con impossibilità di recapito (AT)** - SDI couldn't deliver an invoice to PA after 10 days. |
-| `accepted-pa` | **Notifica esito (NE)** - A PA has decided to accept an invoice (outcome EC01). |
-| `rejected-pa` | **Notifica esito (NE)** - A PA has decided to reject an invoice (outcome EC02). |
-| `deadline-terms` | **Notifica decorrenza termini (DT)** - A PA didn't reply with acceptance or rejection within 15 days. |
+| `rejected` | **Notifica di scarto (NS)** <br />SDI has rejected the invoice because it contains errors. |
+| `delivered` | **Ricevuta consegna (RC)** <br />SDI has successfully delivered a B2B invoice to the recipient. |
+| `delivered-pa` | **Ricevuta consegna (RC)**<br /> SDI has successfully delivered an invoice to a Public Administration (PA). |
+| `not-delivered` | **Mancata consegna (MC)** <br />SDI could not deliver the invoice to the recipient. |
+| `not-delivered` | **Attestazione trasmissione con impossibilità di recapito (AT)** <br />SDI couldn't deliver an invoice to PA after 10 days. |
+| `accepted-pa` | **Notifica esito (NE)** <br />A PA has decided to accept an invoice (outcome EC01). |
+| `rejected-pa` | **Notifica esito (NE)**<br /> A PA has decided to reject an invoice (outcome EC02). |
+| `deadline-terms` | **Notifica decorrenza termini (DT)**<br /> A PA didn't reply with acceptance or rejection within 15 days. |
 | `invoice-error` | An error occurred during the acquisition of a notification. |
 | `sent` | The invoice has been submitted to SDI and is awaiting a response. |
 | `not-received` | The invoice was not received by the recipient. |
