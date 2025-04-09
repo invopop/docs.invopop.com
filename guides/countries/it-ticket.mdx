@@ -1,5 +1,5 @@
 ---
-title: "Italy - Ticket (DC)"
+title: "🇮🇹 Italy - Ticket (DC)"
 description: Issue e-receipts in Italy
 ---
 
@@ -7,47 +7,43 @@ description: Issue e-receipts in Italy
 
 Invopop's Ticket (DC) Italy provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
 
-The documento commerciale is a digital fiscal document used to record and transmit sales transactions to the Agenzia delle Entrate (AdE), ensuring tax compliance and transparency. It serves as proof of purchase for customers and replaces the traditional paper receipt while maintaining its function as a fiscal document.
+The documento commerciale is a digital fiscal document that records sales transactions and transmits them to the Agenzia delle Entrate (AdE). This digital receipt replaces traditional paper receipts while maintaining full fiscal compliance and serves as official proof of purchase for your customers.
 
-With the introduction of the scontrino elettronico, businesses must transmit sales data digitally using a certified [Registratore Telematico (RT) or the AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica), eliminating manual record-keeping and paper summaries. Ticket (DC) acts as a streamlined interface, securely relaying sales data to the AdE via a local provider.
+Italian law requires businesses to transmit sales data digitally through either a certified Registratore Telematico (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Ticket (DC) streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
 
-The Documento Commerciale is **NOT**:
-- An invoice (fattura); invoices contain detailed buyer information and follow different tax rules.
-- A replacemnet for commercial documents that accompany goods (documento di trasporto).
-- A simple receipt for internal business use; it has a mandatory fiscal function and must be transmitted to the AdE.
-- Allowed to include deferred VAT payment; VAT is included at the moment of sale.
-
+Important distinctions for the Documento Commerciale:
+- It is not an invoice (fattura) - invoices require detailed buyer information and follow different tax rules
+- It does not replace transport documents (documento di trasporto)
+- It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission
+- It must include VAT at the time of sale - deferred VAT payment is not permitted
 
 ## Prerequisites
 
-To issue e-receipts, you need:
+Before you begin, ensure you have:
 
-- Supplier details:
-  - Italian tax ID (Partita IVA)
-- Invoice line items with:
+- An Italian tax ID (Partita IVA) for the supplier
+- Invoice line items that include:
   - Quantity
   - Name 
-  - Price (Vat included)
+  - Price (including VAT)
   - VAT rate
-  - Type of item (defined in extension)
+  - Item type (specified in extension)
 
 ## Setup
 
 There are five key processes to prepare:
 
-1. create supplier post-registration workflow,
-2. connect the Ticket (DC) Italy app,
-3. configure a supplier registration workflow,
-4. prepare an invoicing workflow,
-5. prepare a voiding workflow
+1. Create a supplier post-registration workflow
+2. Connect the Ticket (DC) Italy app
+3. Configure a supplier registration workflow
+4. Prepare an invoicing workflow
+5. Prepare a voiding workflow
 
 <Info>
-  These instructions apply to both the sandbox and live environments, with a few
-  exceptions for supplier data and registration details when real details are
-  not available.
+These instructions work in both sandbox and live environments. The only differences are in supplier data and registration details when using test environments.
 </Info>
 
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+Follow these steps in the [Invopop Console](https://console.invopop.com).
 
 <Steps>
 <Step title="Create Supplier post-registration workflow (optional)">
@@ -269,8 +265,11 @@ You can register suppliers either manually via the Invopop Console or programmat
   performed manually by a representative of the supplier.
 </Warning>
 
-Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. 
-Copy and paste the following example that uses example data. This will only work in sandbox environments, in production you'll need the details of a real company:
+1. Navigate to **Contacts** > **Suppliers** in the sidebar
+2. Click **+ New Supplier**
+3. In the editor, enter the supplier details
+
+Here's an example using test data (only valid for sandbox environments):
 
 ```json
 {
@@ -329,19 +328,21 @@ We will update the supplier with the provided codice fiscale for future use but 
 
 ### Send an Invoice
 
-The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+Use these GOBL document examples as templates in the [Invopop Console](https://console.invopop.com) or when creating silo entries via the API.
 
-GOBL Invoices sent to the AdE CF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+For proper validation and normalization, set these properties in your GOBL Invoices:
 
-- `$region` to be set to [`IT`](https://docs.gobl.org/regimes/it)
-- `$addons` to include [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1)
+- Set `$region` to [`IT`](https://docs.gobl.org/regimes/it)
+- Include [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1) in `$addons`
+
+While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
 
 <AccordionGroup>
 <Accordion title="B2C Invoice">
 
-In this example we're issuing a simple B2C invoice from an Italian supplier.
+This example shows a simple B2C invoice from an Italian supplier.
 
-Notice:
+Key points to note:
 
 - we've added the `it-ticket-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
 - extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way, for example:
@@ -413,7 +414,12 @@ Notice:
 
 ### Void an Invoice
 
-In this case, only Invoices that have been sent with this app can then be voided. To void an Invoice just run the "Void AdE CF Invoices" we defined earlier with the appropiate [silo entry uuid](/api-ref/silo/entries/fetch-an-entry). This will start a job that will void said invoice.
+To void an invoice:
+
+1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice you want to void
+2. Run the "Void AdE CF Invoices" workflow with this uuid
+
+Note: You can only void invoices that were originally sent through this app.
 
 ## FAQ
 
@@ -425,8 +431,10 @@ Please contact the [Invopop support team](email:support@invopop.com) if you have
   AdE CF is **not** a substitute for [SDI](/guides/it-sdi). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
 </Accordion>
 
-<Accordion title="What happens if I make a mistake on an issued AdE CF invoice?">
-  If an error occurs on an issued AdE CF invoice, you cannot modify it directly. Instead, you must void the invoice using the "Void AdE CF Invoices" workflow and issue a new corrected invoice.
+<Accordion title="How do I correct mistakes in an issued AdE CF invoice?">
+You cannot modify an AdE CF invoice after issuing it. Instead you must:
+1. Void the incorrect invoice using the "Void AdE CF Invoices" workflow
+2. Issue a new invoice with the correct information
 </Accordion>
 
 </AccordionGroup>
