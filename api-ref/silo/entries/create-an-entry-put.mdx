@@ -1,11 +1,16 @@
 ---
-title: "Create an entry"
+title: "Create an entry with ID"
+sidebarTitle: "Create an entry"
 openapi: "PUT /silo/v1/entries/{id}"
 ---
 
 ## New Documents
 
 The fastest way to upload data to Invopop is by creating an entry with the <code>data</code> property containing the GOBL JSON of either a pre-built [Envelope](https://docs.gobl.org/draft-0/envelope) or a partial document like an [Invoice](https://docs.gobl.org/draft-0/bill/invoice) or [Party](https://docs.gobl.org/draft-0/org/party).
+
+The `key` property can be used to ensure idempotency, preventing the creation of duplicate entries with the same key within the workspace.
+
+A `409 Conflict` response will be provided if either the entry ID or key have been used in an existing document.
 
 ```json Invoice Body Example
 {
