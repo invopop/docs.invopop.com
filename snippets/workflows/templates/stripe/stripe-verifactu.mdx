@@ -1,0 +1,104 @@
+---
+title: "Sync with Stripe and convert to Verifactu"
+description: "Issue a Verifactu invoice in Spain"
+countryCode: "es"
+appId: "stripe"
+schema: "bill/invoice"
+---
+
+
+```json Example Stripe to Verifactu Workflow
+{
+    "name": "Stripe in Verifactu",
+    "description": "",
+    "steps": [
+        {
+            "id": "7dd8e370-139b-11f0-b939-af2e8ae705ac",
+            "name": "Import data from Stripe",
+            "provider": "stripe.import"
+        },
+        {
+            "id": "95a82a10-139b-11f0-b939-af2e8ae705ac",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "794f78d0-139d-11f0-9ab7-c391120166e0",
+            "name": "Modify Silo Entry",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "addons": [
+                    "es-verifactu-v1"
+                ],
+                "allow_invalid_json": false,
+                "data": {
+                    "doc": {
+                        "notes": [
+                            {
+                                "key": "general",
+                                "text": "Factura"
+                            }
+                        ]
+                    }
+                },
+                "expr": "",
+                "merge_type": "application/merge-patch+json",
+                "sign": false,
+                "tags": []
+            }
+        },
+        {
+            "id": "84cf92a0-139b-11f0-b939-af2e8ae705ac",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "fc307c60-139b-11f0-b939-af2e8ae705ac",
+            "name": "Generate Verifactu (Spain)",
+            "provider": "verifactu.generate"
+        },
+        {
+            "id": "fe479c90-139b-11f0-b939-af2e8ae705ac",
+            "name": "Send Verifactu (Spain)",
+            "provider": "verifactu.send"
+        },
+        {
+            "id": "86a5b230-139b-11f0-b939-af2e8ae705ac",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Spanish - A4",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "layout": "A4",
+                "locale": "es",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "8b321820-139b-11f0-b939-af2e8ae705ac",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "90f4b420-139b-11f0-b939-af2e8ae705ac",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
