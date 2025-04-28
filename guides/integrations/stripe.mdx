@@ -4,9 +4,149 @@ icon: "plug"
 description: Import and process invoices and credit notes from Stripe
 ---
 
-## TODO
+import WorkflowExample from '/snippets/workflows/templates/stripe/stripe-invoice.mdx'
+import VerifactuExample from '/snippets/workflows/templates/stripe/stripe-verifactu.mdx'
 
-* Intro
-* How it works
-* Set-up
-* FAQ
+## Introduction
+
+In this guide, you'll learn how to connect [Stripe](https://stripe.com/) with Invopop to automatically generate tax-compliant invoices and credit notes, from your Stripe dashboard.
+
+The Stripe integration consists of two components:
+1. An Invopop app within your Stripe dashboard
+2. An app in your Invopop console
+
+When a Stripe invoice or credit note reaches the [finalized status](https://support.stripe.com/questions/invoice-states), our integration will automatically create a new job in your selected Invopop workflow.
+<Frame caption="Track invoice status directly in your Stripe dashboard">
+  ![stripe details](/guides/images/stripe-details.png)
+</Frame>
+
+The job will extract the invoice data from Stripe and execute the actions, such as converting it to any e-invoice format and submitting it to your local tax authority.
+
+<Frame caption="View the job information">
+  ![stripe job](/guides/images/stripe-job-details.png)
+</Frame>
+
+## Setup
+
+Before you begin, ensure you have an active Stripe account.
+
+<Steps>
+
+<Step title="Install Invopop in Stripe">
+Navigate to the [Invopop app](https://marketplace.stripe.com/apps/invopop) in Stripe's App Marketplace and click **Install**. 
+Next, Stripe will prompt you to select the Stripe environment you'd like to connect to, you can start with test mode or sandbox and switch to live later.
+
+<Frame caption="Install Invopop in Stripe">
+  ![stripe install](/guides/images/stripe-install.png)
+</Frame>
+
+</Step>
+
+<Step title="Connect Stripe to Invopop">
+After installation, you should be  redirected to your Stripe dashboard and see the Invopop app in the right sidebar. Alternatively, just open the Invopop app in your [Stripe dashboard](https://dashboard.stripe.com/apps/invopop). 
+
+Click **Connect Invopop**. The next page will ask you to login to your Invopop account. If you're new to Invopop, the connection process will guide you through creating your Invopop account and setting up your first workspace.
+
+<Note>
+When connecting a test or sandbox environment in Stripe, select a sandbox workspace in Invopop. For live environments, select a live workspace.
+</Note>
+
+<Frame caption="Connect your Invopop account">
+  ![stripe connect](/guides/images/stripe-connect.png)
+</Frame>
+
+</Step>
+
+<Step title="Select a workspace">
+After connecting your Invopop account to Stripe, you'll be redirected back to Stripe to choose the workspace where you want to process your invoices. 
+
+<Frame caption="Choose your workspace">
+  ![stripe select workspace](/guides/images/stripe-select-workspace.png)
+</Frame>
+
+</Step>
+
+<Step title="Configure your workflow">
+Select or create a workflow to process your invoices and credit notes.
+
+To use an existing workflow:
+1. Select it in the Stripe's sidebar menu
+2. Click **Save Workflow**
+
+To create a new workflow:
+1. Click **Create New Workflow** in the sidebar menu. You'll be redirected to Invopop.
+2. Select **Create New Workflow** on the top right.
+3. Select **Invoices** workflow type. 
+4. Configure the workflow according to your local regulations. You can copy _the Basic PDF workflow_ example below and modify it later for your local needs.
+5. Add the **Import data from Stripe** step as the first step of the workflow.
+
+<Frame caption="Select your processing workflow">
+  ![stripe select workflow](/guides/images/stripe-select-workflow.png)
+</Frame>
+
+<AccordionGroup>
+<Accordion title="Example Workflow - Basic PDF">
+
+Copy and paste the JSON below while editing a Workflow in "developer" mode.
+<WorkflowExample />
+</Accordion>
+<Accordion title="Example Workflow - VeriFactu">
+
+This workflow demonstrates integration with country-specific functionality. 
+Copy and paste the JSON below while editing a Workflow in "developer" mode. 
+<VerifactuExample />
+</Accordion>
+</AccordionGroup>
+
+<Frame>
+  ![stripe import](/guides/images/stripe-import.png)
+</Frame>
+</Step>
+
+<Step title="Verify your setup">
+1. Navigate to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+2. Confirm your workflow configuration is correct
+
+<Frame caption="Review your configuration">
+  ![stripe settings](/guides/images/stripe-settings.png)
+</Frame>
+
+</Step>
+
+</Steps>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can I change the workflow that processes my invoices to a different one?">
+  Yes, you can, at any time select a different workflow to sync your Stripe invoices. You can do this both from Stripe or Invopop.
+
+  Option 1: From Stripe
+  1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+  2. Select a different workflow
+  3. Click **Save changes**
+
+  <Frame caption="Select a different workflow in Stripe">
+    ![stripe change workflow](/guides/images/stripe-settings.png)
+  </Frame>
+
+  Option 2: Through Invopop
+  1. Navigate to the **Apps** section in your (Invopop console)[https://console.invopop.com/]
+  2. Locate the Stripe app settings
+  3. Select your new workflow
+
+  <Frame caption="Select a different workflow in Invopop">
+    ![stripe change workflow](/guides/images/stripe-invopop-settings.png)
+  </Frame>
+
+  </Accordion>
+
+  <Accordion title="How can I switch to a different Invopop workspace?">
+  You can switch to the Stripe connection to a different workspace by disconnecting and reconnecting the app.
+  1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+  2. Click the **Disconnect** button
+  3. Reconnect the app and select your new workspace
+
+  </Accordion>
+
+</AccordionGroup> 
