@@ -26,14 +26,15 @@ Invopop allows you to send and receive documents through the Peppol network usin
 This guide walks you through the steps to register a company in Invopop and then issue and receive invoices on its behalf.
 
 ## Setup
-Let's prepare your workspace to work with Peppol. We'll configure the Peppol app and create four [workflows](/guides/features/workflows.mdx):
+Let's prepare your workspace to work with Peppol. We'll configure the Peppol app and create three [workflows](/guides/features/workflows.mdx):
 
 - **Invoice issuance workflow**: Send invoices through the Peppol network
 - **Invoice reception workflow**: Receive invoices from the Peppol network
 - **Party registration workflow**: Programmatically onboard companies (Parties) with Invopop
-- **Party post-registration workflow**: Automatically triggered by the Peppol app after a Party completes registration, used to inform your systems that onboarding is complete
 
-If you only want to _send_ invoices through Peppol, you can skip steps 4, 5, and 6 of the setup. Alternatively, if you only want to _receive_ invoices through Peppol, you can skip step 3.
+If you only want to _send_ invoices through Peppol, you can skip step 3 and 4 of the setup. Alternatively, if you only want to _receive_ invoices through Peppol, you can skip step 2.
+
+The Peppol app is designed to only send and receive the document, generating and importing the appropriate file is delegated to format specific apps such as Oasis UBL or UN/CEFACT CII. This is done to keep the Peppol app simple and focused on the Peppol protocol, while allowing you to use the format that best suits your needs.
 
 <Steps>
 <Step title="Connect the Peppol app">
@@ -47,18 +48,19 @@ If you only want to _send_ invoices through Peppol, you can skip steps 4, 5, and
 </Step>
 
 <Step title="Configure a workflow to issue invoices">
-Now we'll create the workflow that converts invoices to the Peppol BIS Billing 3.0 format and sends them through the Peppol network.
+Now we'll create the workflow that converts invoices to a valid Peppol format and sends them through the Peppol network. In this example, we'll generate a Peppol BIS Billing UBL 3.0 document.
+
 Skip this step if you only want to _receive_ invoices via Peppol.
 
 Use the [Console](https://console.invopop.com/) to build a [workflow](/guides/features/workflows.mdx) of the Invoice type. Include these essential steps:
 
 1. **Sign Envelope** - Signs the GOBL document (can be substituted with `Add Sequential Code` with the `Sign Document` option enabled)
-2. **Generate Peppol document** - Converts the GOBL document to Peppol BIS 3.0 (XML) format and attaches it to the original invoice entry
+2. **Generate UBL document** - Converts the GOBL document to a Peppol BIS Billing UBL 3.0 document and attaches it to the original invoice entry.
 3. **Send Peppol document** - Sends the generated XML attachment through the Peppol network
 
 You can copy-paste the workflow template below into your workspace.
 <AccordionGroup>
-<Accordion title="Example: Sending Invoice Workflow">
+<Accordion title="Example: Send Invoice Workflow">
  This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
 <PeppolSendWorkflow />
 </Accordion>
@@ -71,7 +73,12 @@ You can copy-paste the workflow template below into your workspace.
 <Step title="Configure a workflow to receive invoices">
 This workflow receives incoming documents from the Peppol network and converts them to the GOBL format.
 
-Use the [Console](https://console.invopop.com/) to build a workflow of the Invoice type and include the _Import Peppol Document_ step. Consider adding a _Send Webhook_ step at the end to receive notifications for incoming invoices.
+Use the [Console](https://console.invopop.com/) to build a workflow of the Invoice type and include the following steps:
+
+- **Import Peppol Document** - Fetches the document from the Peppol network
+- **Import UBL Document** - Parses the incoming document from the underlying format (e.g. UBL) to GOBL
+
+We recommend adding a _Send Webhook_ step at the end to receive notifications for incoming invoices.
 
 <AccordionGroup>
 <Accordion title="Example: Receive Invoice Workflow">
@@ -81,12 +88,20 @@ Use the [Console](https://console.invopop.com/) to build a workflow of the Invoi
 </AccordionGroup>
 </Step>
 
+<Step title="Configure the Peppol app">
+Within the [Console](https://console.invopop.com/), navigate to **Configuration** → **Apps**, find the Peppol App and click **Configure**. You'll need to set two fields:
+
+- **Incoming Workflow**: Select the Receive Invoice Workflow created in Step 3. This is where the app will send incoming invoices (expenses) received from the Peppol network.
+</Step>
+
+
 <Step title="Configure a Party registration workflow">
 This workflow onboards companies (Peppol participants) to Invopop before they can issue or receive invoices. If you're managing only your own invoices, you may use this workflow just once. However, if you're offering Peppol to your customers through Invopop ([white-label use case](/guides/use-cases/white-label.mdx)), you'll run this workflow for each merchant you onboard.
 
 Within the [Console](https://console.invopop.com/), navigate to **Workflows** → **New Workflow** and create a _Parties_ workflow. Include at least the _Register Peppol Party_ step, along with any other relevant actions such as state-handling and webhooks.
 
 Alternatively, copy-paste the workflow template below into your workspace.
+
 <AccordionGroup>
 <Accordion title="Example: Party Registration Workflow">
  This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
@@ -96,26 +111,11 @@ Alternatively, copy-paste the workflow template below into your workspace.
 <Frame>
 <img width="450" src="/guides/images/peppol-register.png" alt="Party Registration Workflow" />
 </Frame>
+As you can see, the _Register Peppol Party_ step also has a few configuration options depending on the formats you want to work with and if you want to send, receive or both.
 </Step>
 
-<Step title="Configure a post-registration workflow (optional)">
-When a party successfully registers with Invopop, the Peppol app can optionally run a post-registration workflow on that party. For example, you can configure this workflow to change the party's status to _registered_ and send a notification webhook.
-
-You can skip this step or copy-paste the workflow template below into your workspace.
-<AccordionGroup>
-<Accordion title="Example: Post-Registration Workflow">
- This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
-<PeppolPostRegisterWorkflow />
-</Accordion> 
-</AccordionGroup>
-</Step>
-<Step title="Configure the Peppol app">
-Within the [Console](https://console.invopop.com/), navigate to **Configuration** → **Apps**, find the Peppol App and click **Configure**. You'll need to set two fields:
-
-- **Incoming Workflow**: Select the Receive Invoice Workflow created in Step 3. This is where the app will send incoming invoices (expenses) received from the Peppol network.
-- **Party post-registration workflow**: Select the Post-Registration Workflow created in Step 5. This workflow runs automatically after a party completes onboarding.
-</Step>
 </Steps>
+
 Congratulations! Your workspace is now configured to send and receive Peppol documents and programmatically onboard Peppol participants with Invopop.
 
 ## Running
@@ -142,11 +142,7 @@ The mandatory fields for Peppol registration are:
 - Fiscal name
 - Peppol participant ID
 
-The `peppol-visibility` field in meta determines the party's visibility within the Peppol network:
-
-- `smp`: Published only in the SMP
-- `smp+sml`: Published in the SMP and SML
-- `smp+sml+peppol`: Published in the SMP, SML, and Peppol
+_Tax ID is optional, but recommended._
 
 Click **Build** to validate the document, then **Save**.
 
@@ -197,3 +193,26 @@ When creating your invoice, ensure you:
 Invopop automatically processes invoices received from the Peppol network using your configured _Incoming Workflow_.
 
 The workflow converts Peppol documents to GOBL format and creates Silo Entries for each invoice. Configure your workflow with webhooks or Google Drive integration to deliver these invoices to your systems.
+
+## FAQ
+
+Please contact the [Invopop support team](email:support@invopop.com) if you have any questions that are not listed here.
+
+<AccordionGroup>
+
+<Accordion title="What visibility do I need to have in my Peppol Party?">
+The visibility of your Peppol Party determines what documents you can send and receive.
+
+- `smp`: Only SMP
+- `smp+sml`: SMP and SML
+- `smp+sml+peppol`: SMP, SML, and Peppol
+
+In general, you should use the highest visibility available. If you are only sending documents, no visibility is required.
+
+</Accordion>
+
+<Accordion title="How can I disable Peppol for a Party?">
+You can disable Peppol for a Party by running a workflow with the _Register Peppol Party_ step and setting the Status to `Disabled`.
+</Accordion>
+
+</AccordionGroup>
