@@ -1,15 +1,15 @@
 ---
-title: "🇮🇹 Italy - Ticket (DC)"
+title: "🇮🇹 Italy - Smart Receipts"
 description: Issue e-receipts in Italy
 ---
 
 ## Introduction
 
-Invopop's Ticket (DC) Italy provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
+Invopop's Smart Receipts provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
 
 The documento commerciale is a digital fiscal document that records sales transactions and transmits them to the Agenzia delle Entrate (AdE). This digital receipt replaces traditional paper receipts while maintaining full fiscal compliance and serves as official proof of purchase for your customers.
 
-Italian law requires businesses to transmit sales data digitally through either a certified Registratore Telematico (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Ticket (DC) streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
+Italian law requires businesses to transmit sales data digitally through either a certified Registratore Telematico (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Smart Receipts streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
 
 Important distinctions for the Documento Commerciale:
 - It is not an invoice (fattura) - invoices require detailed buyer information and follow different tax rules
@@ -34,7 +34,7 @@ Before you begin, ensure you have:
 There are five key processes to prepare:
 
 1. Create a supplier post-registration workflow
-2. Connect the Ticket (DC) Italy app
+2. Connect the Italian Smart Receipts app
 3. Configure a supplier registration workflow
 4. Prepare an invoicing workflow
 5. Prepare a voiding workflow
@@ -47,11 +47,11 @@ Follow these steps in the [Invopop Console](https://console.invopop.com).
 
 <Steps>
 <Step title="Create Supplier post-registration workflow (optional)">
-Head over to the **Workflows** section and create a new "Contacts" workflow.
+Head over to the **Workflows** section and create a new "Parties" workflow.
 
 <Frame>
   <img
-    alt="New Contacts Workflow"
+    alt="New Parties Workflow"
     width="350px"
     src="/guides/images/it-ticket-new-workflow.png"
   />
@@ -84,10 +84,10 @@ Copy and paste the following example in the workflow editor:
 </Accordion>
 </Step>
 
-<Step title="Connect the AdE CF Italy app">
+<Step title="Connect the Italian Smart Receipts app">
 
 1. Navigate to **Configuration** > **Apps**.
-2. Find **Ticket (DC) Italy** in the app discovery list.
+2. Find **Italian Smart Receipts** in the app discovery list.
 3. Click **Connect** to activate.
 
 <Frame>
@@ -111,30 +111,46 @@ The new workflow will need to perform three steps:
 
 Add any additional steps you may need, and save the new workflow.
 
+<Frame>
+  <img src="/guides/images/it-ticket-reg.png" alt="Register Supplier Workflow" />
+</Frame>
+
 <Accordion title="Supplier registration workflow example">
 Copy and paste the following example in the workflow editor:
 ```json
 {
     "name": "Register Supplier",
+    "description": "",
     "steps": [
         {
-            "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
+            "id": "1a1be400-2b32-11f0-984e-0542d5f28f0b",
             "name": "Sign Envelope",
             "provider": "silo.close"
         },
         {
-            "id": "82ea9050-f84f-11ef-b227-e571c5dda17b",
-            "name": "Register AdE CF Issuer (Italy)",
-            "provider": "it-ticket.register"
+            "id": "de116bb0-25b4-11f0-864a-193f213df097",
+            "name": "Register a supplier for AdE",
+            "provider": "ticket-it.register"
         },
         {
-            "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
+            "id": "e0a1b380-25b4-11f0-864a-193f213df097",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
             "config": {
                 "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "1deb1470-2b32-11f0-984e-0542d5f28f0b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
         }
     ]
 }
@@ -145,60 +161,67 @@ Copy and paste the following example in the workflow editor:
 
 <Step title="Prepare Invoice Workflow">
 
-For this example the workflow will be named something like "Issue AdE CF Invoices", and it will consist of the following Steps:
+For this example the workflow will be named something like "Issue Italian Smart Receipts", and it will consist of the following Steps:
 
-- **Add Sequential Code** - with dynamic sequences, and name like "AdE Invoices".
-- **Send to AdE CF (Italy)**.
+- **Add Sequential Code** - with dynamic sequences, and name like "Italian Smart Receipts".
+- **Send a receipt to AdE**.
 - **Generate PDF** - configured for your environment.
 - **Set State** - to "sent".
 
 Tap the **Save** button to ensure the workflow has been persisted.
 
-<Accordion title="Issue Italian AdE CF invoice workflow example">
+<Frame>
+  <img src="/guides/images/it-ticket-invoice.png" alt="Issue Italian Smart Receipts" />
+</Frame>
+
+<Accordion title="Issue Italian Smart Receipts workflow example">
 Copy and paste the following example in the workflow editor:
 ```json
 {
-    "name": "Issue AdE CF Invoices",
+    "name": "Send receipt",
+    "description": "",
     "steps": [
         {
-            "id": "3cbf8d50-a819-11ef-87b2-fd751e6d3b88",
-            "name": "Add Sequential Code",
-            "provider": "sequence.enumerate",
-            "summary": "Dynamic · Ade Invoices · 000001",
-            "config": {
-                "sign": true,
-                "padding": 6,
-                "start": 1
-            }
+            "id": "0b0bdb00-25b5-11f0-864a-193f213df097",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
         },
         {
-            "id": "d46dc310-f850-11ef-9f23-251af03f375a",
-            "name": "Send a CF to AdE (Italy)",
-            "config": {
-                "generate_pdf": false,
-                "prepaid": false
-            },
-            "provider": "ticket.send"
+            "id": "04427d60-25b5-11f0-864a-193f213df097",
+            "name": "Send a receipt to AdE",
+            "provider": "ticket-it.send"
         },
         {
-            "id": "7a645420-1358-11ef-af96-a18cfb3774fa",
+            "id": "9e973e00-2b2d-11f0-984e-0542d5f28f0b",
             "name": "Generate PDF",
             "provider": "pdf",
-            "summary": "English",
+            "summary": "English - A4",
             "config": {
                 "logo_height": 40,
                 "locale": "en",
-                "date_format": "%Y-%m-%d"
+                "date_format": "%Y-%m-%d",
+                "layout": "A4"
             }
         },
         {
-            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "id": "112326b0-25b5-11f0-864a-193f213df097",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
             "config": {
                 "state": "sent"
-            },
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "194a66a0-25b5-11f0-864a-193f213df097",
+            "name": "Set State",
             "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}"
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
         }
     ]
 }
@@ -209,36 +232,48 @@ Copy and paste the following example in the workflow editor:
 
 <Step title="Prepare Void Workflow">
 
-And finaly, we need a workflow to void invoices. In this case the workflow will be named "Void AdE CF Invoices", and it will consist of the following Steps:
+And finaly, we need a workflow to void invoices. In this case the workflow will be named "Void Italian Smart Receipts", and it will consist of the following Steps:
 
-- **Void the invoice**.
+- **Void a receipt in AdE**.
 - **Set State** - to "sent".
 
 Tap the **Save** button to ensure the workflow has been persisted.
 
-<Accordion title="Issue Italian AdE CF invoice workflow example">
+<Frame>
+  <img src="/guides/images/it-ticket-void.png" alt="Void Italian Smart Receipts" />
+</Frame>
+
+<Accordion title="Void Italian Smart Receipts workflow example">
 Copy and paste the following example in the workflow editor:
 ```json
 {
-    "name": "Void AdE CF Invoices",
+    "name": "Void receipt",
+    "description": "",
     "steps": [
         {
-            "id": "a96a68d0-f850-11ef-9f23-251af03f375a",
-            "name": "Void a CF in AdE (Italy)",
-            "config": {
-                "generate_pdf": false,
-                "prepaid": false
-            },
-            "provider": "ticket.void"
+            "id": "02a62be0-2b2e-11f0-984e-0542d5f28f0b",
+            "name": "Void a receipt in AdE",
+            "provider": "ticket-it.void"
         },
         {
-            "id": "85bf20c0-1358-11ef-af96-a18cfb3774fa",
+            "id": "1583e220-2b2e-11f0-984e-0542d5f28f0b",
             "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
             "config": {
                 "state": "void"
-            },
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "25c98860-2b2e-11f0-984e-0542d5f28f0b",
+            "name": "Set State",
             "provider": "silo.state",
-            "summary": "Set state to `void`{.state .void}"
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
         }
     ]
 }
@@ -322,8 +357,7 @@ The details from this form are sent securely to local partner who will be respon
 We will update the supplier with the provided codice fiscale for future use but will not store any type of credentials.
 
 <Warning>
-{/* TODO: Decide on the best way to do this renewal*/}
-  AdE Credentials need to be renwed every 90 days. This can be done using this same portal that is created when registering a supplier. 
+  These credentials will expire every 90 days. You must first update your credentials on the official AdE web portal, then enter these new credentials in our registration form. You can use the same registration link to update your credentials.
 </Warning>
 
 ### Send an Invoice
@@ -412,7 +446,15 @@ Key points to note:
 </Accordion>
 </AccordionGroup>
 
+The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
+
+<Frame>
+  <img src="/guides/images/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
+</Frame>
+
 ### Void an Invoice
+
+You may need to void an invoice for a number of reasons, for example if the customer requests a refund or if you need to correct the invoice.
 
 To void an invoice:
 
@@ -435,6 +477,10 @@ Please contact the [Invopop support team](email:support@invopop.com) if you have
 You cannot modify an AdE CF invoice after issuing it. Instead you must:
 1. Void the incorrect invoice using the "Void AdE CF Invoices" workflow
 2. Issue a new invoice with the correct information
+</Accordion>
+
+<Accordion title="Do I still need to add a series and code to the invoice?">
+We recommend adding a series and code to the invoice so that you can keep track internally even though the AdE will generate a document number.
 </Accordion>
 
 </AccordionGroup>
