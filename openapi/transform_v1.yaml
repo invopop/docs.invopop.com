@@ -346,10 +346,22 @@ components:
           description: Description of the workflow.
           title: Description
           type: string
+        draft:
+          description: When true, the current version of the workflow will not be
+            published.
+          title: Draft
+          type: boolean
         name:
           description: Name of the workflow.
           title: Name
           type: string
+        rescue:
+          description: Array of steps to execute en case of an unmanaged KO.
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          nullable: true
+          title: Rescue
+          type: array
         schema:
           description: Short schema name that the workflow will be allowed to process.
           example: bill/invoice
@@ -365,6 +377,13 @@ components:
       type: object
     TransformEvent:
       properties:
+        args:
+          additionalProperties:
+            type: string
+          description: Map of additional arguments that will be included in embedded
+            actions.
+          title: Arguments
+          type: object
         at:
           description: When the event was created.
           example: "2021-09-15T15:04:05.999Z"
@@ -456,6 +475,12 @@ components:
       type: object
     TransformJob:
       properties:
+        args:
+          additionalProperties:
+            type: string
+          description: Any additional arguments that might be used by workflow actions.
+          title: Args
+          type: object
         attachments:
           description: Any attachments that have been generated while processing the
             job in the workflow will be here.
@@ -498,12 +523,6 @@ components:
           description: Key assigned to the job, used to identify it in the system.
           title: Key
           type: string
-        meta:
-          additionalProperties:
-            type: string
-          description: Any additional data that might be relevant for processing.
-          title: Meta
-          type: object
         silo_entry_id:
           example: 75fa764a-cdd0-11ed-afa1-0242ac120002
           title: Silo Entry ID
@@ -600,10 +619,22 @@ components:
           description: Updated description.
           title: Description
           type: string
+        draft:
+          description: When true, the current version of the workflow will not be
+            published.
+          title: Draft
+          type: boolean
         name:
           description: New name for the workflow.
           title: Name
           type: string
+        rescue:
+          description: Array of steps to execute en case of an unmanaged KO.
+          items:
+            $ref: '#/components/schemas/TransformStep'
+          nullable: true
+          title: Rescue
+          type: array
         steps:
           description: Array of Steps to use for this workflow.
           items:
@@ -675,6 +706,13 @@ components:
           description: Version of the workflow's contents currently defined.
           title: Version
           type: string
+        versions:
+          description: List of previously published versions of this workflow, only
+            provided when requesting the primary workflow.
+          items:
+            $ref: '#/components/schemas/TransformWorkflowVersion'
+          title: Versions
+          type: array
       type: object
     TransformWorkflowCollection:
       properties:
@@ -703,6 +741,33 @@ components:
           description: Short schema name that the workflows have been filtered by.
           example: bill/invoice
           title: Schema
+          type: string
+      type: object
+    TransformWorkflowVersion:
+      properties:
+        created_at:
+          description: Timestamp of when the version was created.
+          title: Created At
+          type: string
+        hash:
+          description: Partial hash to identify the workflow definition.
+          title: Hash
+          type: string
+        name:
+          description: Name of the previous version.
+          title: Name
+          type: string
+        src:
+          description: Key for the source of the version when created, like 'user'.
+          title: Src
+          type: string
+        src_id:
+          description: ID of the source object that published the version.
+          title: Src ID
+          type: string
+        version:
+          description: Version number of the workflow.
+          title: Version
           type: string
       type: object
   securitySchemes:

@@ -27,9 +27,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccessEnrollment'
           description: OK
-    put:
+    patch:
       description: Update the embedded configuration details of an enrollment. (Only
         Applications!)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessEnrollment'
+          description: OK
+  /access/v1/enrollment/:id:
+    put:
+      description: |-
+        Create a new enrollment between the application and a workspace on behalf of a user. This
+        endpoint requires the user's OAuth token alongside the application's Client ID and Secret.
+
+        (Only applications!)
       responses:
         "200":
           content:
@@ -53,6 +67,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessEnrollment'
+          description: OK
+  /access/v1/orgs:
+    get:
+      description: |-
+        Fetch the organizations the user has access to, including the workspaces within each.
+
+        This operation can only be performed using an OAuth token issued to a user.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessOrg'
           description: OK
   /access/v1/workspace:
     get:
@@ -97,7 +124,7 @@ components:
         id:
           description: The ID of the enrollment to authorize to use as an alternative
             to the owner ID.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          example: 01950020-daef-7d75-b1ba-33e7e392a658
           title: ID
           type: string
         owner_id:
@@ -132,7 +159,7 @@ components:
           type: boolean
         id:
           description: UUID of the enrollment.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          example: 01950020-daef-7d75-b1ba-33e7e392a658
           title: ID
           type: string
         owner_id:
@@ -155,6 +182,40 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Updated At
           type: string
+      type: object
+    AccessOrg:
+      properties:
+        created_at:
+          description: The date and time the org was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        domain:
+          description: The domain of the organization.
+          example: myorg.com
+          title: Domain
+          type: string
+        id:
+          description: UUID of the organization.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+        name:
+          description: The name of the organization.
+          example: My Organization
+          title: Name
+          type: string
+        updated_at:
+          description: The date and time the org was last updated.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Updated At
+          type: string
+        workspaces:
+          description: Workspaces associated with the organization, if requested.
+          items:
+            $ref: '#/components/schemas/AccessWorkspace'
+          title: Workspaces
+          type: array
       type: object
     AccessUpdateWorkspace:
       properties:
