@@ -33,13 +33,42 @@ The initial connection requires no configuration for sending invoices.
 </Step>
 
 <Step title="Configure sending workflow">
-First, review our [workflows guide](/guides/features/workflows) to understand the basics of setting up workflows, then create a workflow with these essential steps:
 
-1. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
-2. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
-3. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
 
-<Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
+<Tabs>
+  <Tab title="Template">
+    This workflow template signs and converts the GOBL document into the FatturaPA XML format and then sends it to SDI.
+    <Card iconType="duotone" title="Send SDI Invoice" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send">
+    Open in Console →
+    </Card>
+    In the next screen you will select the workspace where you want to create this workflow.
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new **Blank Invoice workflow** code view.
+    <SDISendWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose **Empty Invoice workflow** as the base. Then add the following steps:
+
+        1. **Set State** - To "Processing".
+        2. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+        3. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
+        4. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
+        5. **Set State** - To "Sent".
+
+      In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
+
+      This is the minimal workflow with state handling required to automate the reception and visualization of invoices received through SDI. You may expand it with additional steps such as storing a backup copy, notifying clients, or integrating the documents into an ERP system.
+
+      <Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
+
+  </Tab>
+</Tabs>
+
+
 
 <Info>
 The legacy **Send to SDI (Italy) (Legacy)** step that combines both generation and sending is still available, but its use is discouraged. It is marked with a legacy tag.

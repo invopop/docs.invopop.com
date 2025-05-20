@@ -3,6 +3,12 @@ title: "🇮🇹 Italy - Smart Receipts"
 description: Issue e-receipts in Italy
 ---
 
+import PostRegistrationFlow from '/snippets/workflows/templates/it/sdi-post-registration-flow.mdx';
+import TicketRegisterSupplier from '/snippets/workflows/templates/it/ticket-register-supplier.mdx';
+import TicketIssueReceipt from '/snippets/workflows/templates/it/ticket-issue-receipt.mdx';
+import TicketVoidReceipt from '/snippets/workflows/templates/it/ticket-void-receipt.mdx';
+import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+
 ## Introduction
 
 Invopop's Smart Receipts provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
@@ -12,32 +18,32 @@ The documento commerciale is a digital fiscal document that records sales transa
 Italian law requires businesses to transmit sales data digitally through either a certified Registratore Telematico (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Smart Receipts streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
 
 Important distinctions for the Documento Commerciale:
-- It is not an invoice (fattura) - invoices require detailed buyer information and follow different tax rules
-- It does not replace transport documents (documento di trasporto)
-- It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission
-- It must include VAT at the time of sale - deferred VAT payment is not permitted
+- It is not an invoice (fattura) - invoices require detailed buyer information and follow different tax rules.
+- It does not replace transport documents (documento di trasporto).
+- It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission.
+- It must include VAT at the time of sale - deferred VAT payment is not permitted.
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
-- An Italian tax ID (Partita IVA) for the supplier
+- An Italian tax ID (Partita IVA) for the supplier.
 - Invoice line items that include:
-  - Quantity
-  - Name 
-  - Price (including VAT)
-  - VAT rate
-  - Item type (specified in extension)
+  - quantity,
+  - name ,
+  - price (including VAT),
+  - VAT rate,
+  - item type (specified in extension).
 
 ## Setup
 
 There are five key processes to prepare:
 
-1. Create a supplier post-registration workflow
-2. Connect the Italian Smart Receipts app
-3. Configure a supplier registration workflow
-4. Prepare an invoicing workflow
-5. Prepare a voiding workflow
+1. Create a supplier post-registration workflow.
+2. Connect the Italian Smart Receipts app.
+3. Configure a supplier registration workflow.
+4. Prepare an invoicing workflow.
+5. Prepare a voiding workflow.
 
 <Info>
 These instructions work in both sandbox and live environments. The only differences are in supplier data and registration details when using test environments.
@@ -46,42 +52,33 @@ These instructions work in both sandbox and live environments. The only differen
 Follow these steps in the [Invopop Console](https://console.invopop.com).
 
 <Steps>
-<Step title="Create Supplier post-registration workflow (optional)">
-Head over to the **Workflows** section and create a new "Parties" workflow.
+<Step title="Create Supplier post-registration workflow">
 
-<Frame>
-  <img
-    alt="New Parties Workflow"
-    width="350px"
-    src="/guides/images/it-ticket-new-workflow.png"
-  />
-</Frame>
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="Supplier post-registration workflow template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+    This workflow marks Suppliers as `Registered`. You will select this workflow in the Italian Smart Receipts app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new **Blank Party workflow** code view.
+    <PostRegistrationFlow />
+  </Tab>
+  <Tab title="Build from scratch">
 
-Rename the workflow to something you can identify later, in this case we decided to call it "Post-registration flow", and add a single step to change the state to `registered`.
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-At this point you can add any webhooks or notification steps that might be useful for your systems to receive after a supplier has successfully registered.
+      In [Console](https://console.invopop.com), create a new workflow and choose **Empty Party workflow** as the base. Then name the workflow with a descriptive label such as "SDI Post-registration flow".
 
-Tap the **Save** button.
+      This worfkow is composed by a single step:
 
-<Accordion title="Supplier post-registration workflow example">
-Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Post-registration flow",
-    "steps": [
-        {
-            "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
-            "name": "Set State",
-            "config": {
-                "state": "registered"
-            },
-            "summary": "Set state to `registered`{.state .registered}",
-            "provider": "silo.state"
-        }
-    ]
-}
-```
-</Accordion>
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
 </Step>
 
 <Step title="Connect the Italian Smart Receipts app">
@@ -91,194 +88,119 @@ Copy and paste the following example in the workflow editor:
 3. Click **Connect** to activate.
 
 <Frame>
-<img src="/guides/images/it-ticket-app.png" width="360px" alt="SAT MX App" />
+<img src="/guides/images/it-ticket-app.png" width="360px" alt="SDI Ticket App" />
 </Frame>
 
-Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
+Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step.
 
 Click the **Save** button.
 
 </Step>
 
 <Step title="Configure the supplier registration workflow">
-Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
 
-The new workflow will need to perform three steps:
 
-- **Sign the Envelope**
-- **Register the Issuer**
-- **Set State** - with configuration set to `processing`.
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="Register Supplier workflow template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+    This workflow will issue a registration request for a supplier to complete in order to issue receipts through SDI.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new **Blank Party workflow** code view.
+    <TicketRegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Add any additional steps you may need, and save the new workflow.
+      In [Console](https://console.invopop.com), create a new workflow and choose **Empty Party workflow** as the base. Then name the workflow with a descriptive label such as "SDI Register Supplier".
 
-<Frame>
-  <img src="/guides/images/it-ticket-reg.png" alt="Register Supplier Workflow" />
-</Frame>
+    The new workflow will need to perform three steps:
 
-<Accordion title="Supplier registration workflow example">
-Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Register Supplier",
-    "description": "",
-    "steps": [
-        {
-            "id": "1a1be400-2b32-11f0-984e-0542d5f28f0b",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "de116bb0-25b4-11f0-864a-193f213df097",
-            "name": "Register a supplier for AdE",
-            "provider": "ticket-it.register"
-        },
-        {
-            "id": "e0a1b380-25b4-11f0-864a-193f213df097",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "1deb1470-2b32-11f0-984e-0542d5f28f0b",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
-</Accordion>
+    - **Sign the Envelope**
+    - **Register the Issuer**
+    - **Set State** - with configuration set to `processing`.
 
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
 </Step>
 
 <Step title="Prepare Invoice Workflow">
 
-For this example the workflow will be named something like "Issue Italian Smart Receipts", and it will consist of the following Steps:
 
-- **Add Sequential Code** - with dynamic sequences, and name like "Italian Smart Receipts".
-- **Send a receipt to AdE**.
-- **Generate PDF** - configured for your environment.
-- **Set State** - to "sent".
+    <Tabs>
+      <Tab title="Template">
+        
+        <Card iconType="duotone" title="Issue Italian Smart Receipts Workflow Template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+        This workflow will issue a Smart Receipt through AdE.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new **Blank Invoice workflow** code view.
+        <TicketIssueReceipt />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Tap the **Save** button to ensure the workflow has been persisted.
+          In [Console](https://console.invopop.com), create a new workflow and choose **Empty Invoice workflow** as the base. Then name the workflow with a descriptive label such as "Issue Italian Smart Receipts".
 
-<Frame>
-  <img src="/guides/images/it-ticket-invoice.png" alt="Issue Italian Smart Receipts" />
-</Frame>
+        The new workflow will need to perform three steps:
 
-<Accordion title="Issue Italian Smart Receipts workflow example">
-Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Send receipt",
-    "description": "",
-    "steps": [
-        {
-            "id": "0b0bdb00-25b5-11f0-864a-193f213df097",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "04427d60-25b5-11f0-864a-193f213df097",
-            "name": "Send a receipt to AdE",
-            "provider": "ticket-it.send"
-        },
-        {
-            "id": "9e973e00-2b2d-11f0-984e-0542d5f28f0b",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "English - A4",
-            "config": {
-                "logo_height": 40,
-                "locale": "en",
-                "date_format": "%Y-%m-%d",
-                "layout": "A4"
-            }
-        },
-        {
-            "id": "112326b0-25b5-11f0-864a-193f213df097",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "194a66a0-25b5-11f0-864a-193f213df097",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
-</Accordion>
+        - **Add Sequential Code** - with dynamic sequences, and name like "Italian Smart Receipts".
+        - **Send a receipt to AdE**.
+        - **Generate PDF** - configured for your environment.
+        - **Set State** - to `sent`.
+
+        Finally, in the error Handling area you can add the **Set State** action and select `Error` in the State dropdown.
+
+        Add any additional steps you may need, and save the new workflow.
+
+        <Frame>
+          <img src="/guides/images/it-ticket-invoice.png" alt="Issue Italian Smart Receipts" />
+        </Frame>
+
+      </Tab>
+    </Tabs>
 
 </Step>
 
 <Step title="Prepare Void Workflow">
 
-And finaly, we need a workflow to void invoices. In this case the workflow will be named "Void Italian Smart Receipts", and it will consist of the following Steps:
 
-- **Void a receipt in AdE**.
-- **Set State** - to "sent".
+<Tabs>
+      <Tab title="Template">
+        
+        <Card iconType="duotone" title="Void Italian Smart Receipts Template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+        This workflow will void Smart Receipts from the AdE.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new **Blank Invoice workflow** code view.
+        <TicketVoidReceipt />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Tap the **Save** button to ensure the workflow has been persisted.
+          In [Console](https://console.invopop.com), create a new workflow and choose **Empty Invoice workflow** as the base. Then name the workflow with a descriptive label such as "Void Italian Smart Receipts".
 
-<Frame>
-  <img src="/guides/images/it-ticket-void.png" alt="Void Italian Smart Receipts" />
-</Frame>
+        The new workflow will need to perform three steps:
 
-<Accordion title="Void Italian Smart Receipts workflow example">
-Copy and paste the following example in the workflow editor:
-```json
-{
-    "name": "Void receipt",
-    "description": "",
-    "steps": [
-        {
-            "id": "02a62be0-2b2e-11f0-984e-0542d5f28f0b",
-            "name": "Void a receipt in AdE",
-            "provider": "ticket-it.void"
-        },
-        {
-            "id": "1583e220-2b2e-11f0-984e-0542d5f28f0b",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `void`{.state .void}",
-            "config": {
-                "state": "void"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "25c98860-2b2e-11f0-984e-0542d5f28f0b",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
-</Accordion>
+        - **Void a receipt in AdE**.
+        - **Set State** - to `sent`.
+
+        Finally, in the error Handling area you can add the **Set State** action and select `Error` in the State dropdown.
+
+        Add any additional steps you may need, and save the new workflow.
+
+        <Frame>
+          <img src="/guides/images/it-ticket-void.png" alt="Void Italian Smart Receipts" />
+        </Frame>
+
+      </Tab>
+    </Tabs>
 
 </Step>
 
@@ -306,6 +228,9 @@ You can register suppliers either manually via the Invopop Console or programmat
 
 Here's an example using test data (only valid for sandbox environments):
 
+<AccordionGroup>
+
+<Accordion title="View supplier Data for sandbox">
 ```json
 {
     "$schema": "https://gobl.org/draft-0/org/party",
@@ -326,12 +251,16 @@ Here's an example using test data (only valid for sandbox environments):
 <Info>
   You may notice that we included the Italian fiscal code in the supplier, this is not necessary at the moment but will be asked for, if not provided, during the registration process.
 </Info>
+</Accordion>
+
+</AccordionGroup>
+
 
 Tap **Build**, ensure there are no errors, and click **Save**.
 
 We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
 
-The execution should be successful, and the silo entry will now be in the "Processing" state. Tap the **Meta** tab to see the registration link:
+The execution should be successful, and the silo entry will now be in the `Processing` state. Tap the **Meta** tab to see the registration link:
 
 <Frame>
   <img
@@ -386,62 +315,7 @@ Key points to note:
 - VAT for the "Cleaning Products" will automatically set the percentage at the standard rate, and,
 - there are no totals nor calculations, all of these will be made automatically when uploading.
 
-
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$addons": ["it-ticket-v1"],
-  "series": "XXIT",
-  "currency": "EUR",
-  "tax": {
-    "prices_include": "VAT"
-  },
-  "type": "standard",
-  "supplier": {
-    "name": "Cleaning SRL",
-    "tax_id": {
-      "country": "IT",
-      "code": "12345678903"
-    }
-  },
-  "lines": [
-    {
-      "quantity": "1",
-      "item": {
-        "name": "Cleaning services",
-        "price": "125.00",
-        "ext": {
-            "it-ticket-product": "services"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "ext":{
-            "it-ticket-exempt": "N3"
-          }
-        }
-      ]
-    },
-    {
-      "quantity": "3",
-      "item": {
-        "name": "Cleaning products",
-        "price": "137.50",
-        "ext": {
-            "it-ticket-product": "goods"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    }
-  ]
-}
-```
+<TicketB2CInvoice />
 
 </Accordion>
 </AccordionGroup>

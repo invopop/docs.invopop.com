@@ -3,6 +3,8 @@ title: "🇨🇴 Colombia · DIAN"
 description: Issue invoices and credit notes in Colombia to the DIAN.
 ---
 
+import WorkflowExample from '/snippets/workflows/templates/co/dian-invoice.mdx'
+
 <Warning>
   This document is out of date and currently pending updates. Please check back
   soon.
@@ -90,17 +92,32 @@ We'll ask you to provide us with all the data necessary to set up the account, i
 
 At this point, you'll be ready to set up the workflow to issue invoices:
 
-1. Sign in to Invopop's Console at [https://console.invopop.com](https://console.invopop.com/).
-2. If you have multiple companies, choose the one you want to use at the top left.
-3. Go to “Workflows” and create a new workflow.
-4. Add a first step using the “Series Enumerator” provider. The simplest setup here would be to use a "Dynamic" series. That will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range. Generally, you'll want to set the padding to 1 (so no zeros are prepended) and put no prefix or suffix.
 
-   _Note that this configuration assumes you'll set the proper `series` value in the GOBL invoices or credit notes you send to the workflow._
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="DIAN-Colombia Invoice Workflow" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=co-dian-invoice">
+    Open in Console →
+    </Card>
+    In the next screen you will select the workspace where you want to create this workflow.
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new **Blank Invoice workflow** code view.
+    <WorkflowExample />
+  </Tab>
+  <Tab title="Build from scratch">
+    In [Console](https://console.invopop.com) create a new workflow and select **Empty Invoice workflow** in the template selector, then add the following steps:
 
-5. Add a second step using the “Plemsi” provider. Nothing to configure here.
-6. Add a third and final step using the “PDF Generator” provider. You can configure a logo to appear at the header of your invoice PDFs, the language and some formats.
+      1. **Set State** - Select "Processing". This initial state marks the document as being processed.
+      2. **Add Sequential Code** - Use a "Dynamic" series which will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range. Generally, you'll want to set the padding to 1 (so no zeros are prepended) and put no prefix or suffix.
+      3. **Send to DIAN via Plemsi (Colombia)** - No configuration required.
+      4. **Generate PDF** - Select "es-Spanish" as the Locale.
+      4. **Set State** - Select "Sent".
 
-This is the minimal workflow you can use to issue invoices in Colombia. You can now add other optional integrations to, for example, send an email with the invoice, notify another system with a webhook or upload the invoices to a Dropbox account.
+      Finally, in the error Handling area you can add the **Set State** action and select "Error" in the State dropdown.
+
+      This is the minimal workflow you can use to issue invoices in Colombia. You can now add other optional integrations to, for example, send an email with the invoice, notify another system with a webhook or upload the invoices to a Dropbox account.
+  </Tab>
+</Tabs>
 
 ### And you're done!
 
