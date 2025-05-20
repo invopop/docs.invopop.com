@@ -304,33 +304,29 @@ For proper validation and normalization, set these properties in your GOBL Invoi
 
 While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
 
+The example below shows a simple B2C invoice from an Italian supplier. Key points to note:
+
+- The `it-ticket-v1` addon ensures validation using AdE CF V1 rules
+- Extensions (`ext`) fields specify values that cannot be determined otherwise:
+  - Items have an extension identifying them as goods or services
+  - VAT exemptions require an Italian exemption code
+- The `prices_include` field indicates that item prices include VAT
+- VAT for "Cleaning Products" automatically sets to the standard rate
+- Totals and calculations are generated automatically
+
 <Accordion title="B2C Invoice">
-
-This example shows a simple B2C invoice from an Italian supplier.
-
-Key points to note:
-
-- we've added the `it-ticket-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
-- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way, for example:
-    - Items have an extension that identifies if its a good or a service.
-    - When the VAT is exempt, an italian exemption code is required.
-- The `prices_include` field in GOBL indicates that the item prices already include VAT,
-- VAT for the "Cleaning Products" will automatically set the percentage at the standard rate, and,
-- there are no totals nor calculations, all of these will be made automatically when uploading.
-
 <TicketB2CInvoice />
 </Accordion>
 
-Once the invoice is sent, the AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
+The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
 
 <Frame>
   <img src="/guides/images/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
 </Frame>
 
+After the AdE accepts the invoice, they add a reference to each line item. This reference, stored in the `it-ticket-line-ref` extension, is essential for processing refunds. The example below shows a complete invoice with these references.
+
 <Accordion title="B2C Invoice Complete">
-
-After the AdE accepts the invoice, we add their reference to each line item. This reference facilitates the refund process. The example below shows how the `it-ticket-line-ref` extension appears in the accepted invoice.
-
 <TicketB2CInvoiceComplete/>
 </Accordion>
 
@@ -338,20 +334,19 @@ After the AdE accepts the invoice, we add their reference to each line item. Thi
 
 When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
 
-To create a corrective invoice:
+To create a corrective invoice take a original GOBL Invoice and:
 
 1. Set the `type` field to `corrective`
 2. Add a reference to the original invoice using the `preceeding` object
 3. Include the original document number stamp from the first invoice
+4. Keep the lines and quantities you want to refund
+
+The example below shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. The corrective invoice:
+- Preserves the `it-ticket-line-ref` extension from the original invoice
+- References the original invoice using the `preceeding` object
+- Maintains the same line item references for accurate tracking
 
 <Accordion title="Corrective Invoice">
-
-This example shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. Note that:
-
-- The `it-ticket-line-ref` extension from the original invoice is preserved
-- The `preceeding` object references the original invoice
-- The corrective invoice maintains the same line item references for accurate tracking
-
 <TicketB2CInvoiceCorrective/>
 </Accordion>
 
@@ -373,7 +368,7 @@ Please contact the [Invopop support team](email:support@invopop.com) if you have
 <AccordionGroup>
 
 <Accordion title="Is this a substitute for SDI?">
-  AdE CF is **not** a substitute for [SDI](/guides/countries/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
+AdE CF is **not** a substitute for [SDI](/guides/countries/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
 </Accordion>
 
 <Accordion title="How do I correct mistakes in an issued AdE CF invoice?">
