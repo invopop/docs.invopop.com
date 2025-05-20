@@ -4,12 +4,13 @@ description: Issue invoices in Spain with VERI*FACTU.
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/es/verifactu-invoice.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/es/verifactu-supplier-registration.mdx';
 import B2CInvoice from '/snippets/invoices/es/verifactu-b2c.mdx';
 import B2BInvoice from '/snippets/invoices/es/verifactu-b2b.mdx';
 
 ## Introduction
 
-VeriFactu is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities.
+VERI\*FACTU is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities.
 
 ## Prerequisites
 
@@ -26,29 +27,54 @@ To register a supplier and issue invoices, you need:
 
 ## Setup
 
-<Warning>
-  VERI\*FACTU does not allow document modifications after submission. If a document is rejected, you must create a new document with corrections and submit again.
-</Warning>
-
-
 Follow these steps to configure your Invopop Workspace for VERI\*FACTU invoicing:
 
 <Steps>
-  <Step title="Connect the VERI*FACTU app">
 
-  1. Navigate to **Configuration** > **Apps**.
+  <Step title="Connect the VERI*FACTU app">
+  1. Navigate to **Configuration** → **Apps**.
   2. Locate **VERI\*FACTU** in the app discovery list.
   3. Click **Connect** to activate.
 
   No additional configuration is needed.
   </Step>
+
+  <Step title="Configure the supplier registration workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="Register Supplier workflow template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+        This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new **Blank Party workflow** code view.
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose **Empty Party workflow** as the base. Then name the workflow with a descriptive label such as "VERI*\FACTU Supplier Registration".
+
+        The new workflow will need to perform a single step:
+
+        1. **Register for VERI*\FACTU** - Prepares the system so that provided supplier can send invoices.
+
+        Finally, in the error Handling area you can add the **Set State** action and select `Error` in the State dropdown.
+
+        Add any additional steps you may need, and save the new workflow.
+
+      </Tab>
+    </Tabs>
+  </Step>
+
+
+
   <Step title="Configure invoice workflow">
     <Tabs>
       <Tab title="Template">
-        <Card iconType="duotone" title="VERI*FACTU Invoice Workflow" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=es-verifactu-invoice">
-        Open in Console →
+        <Card iconType="duotone" title="VERI*FACTU Invoice Workflow" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Select workspace to create workflow in Console">
+          This workflow will issue an invoice through VERI*\FACTU.
         </Card>
-        In the next screen you will select the workspace where you want to create this workflow.
       </Tab>
       <Tab title="Code">
         Copy and paste into a new **Blank Invoice workflow** code view.
@@ -65,6 +91,10 @@ Follow these steps to configure your Invopop Workspace for VERI\*FACTU invoicing
           Finally, in the error Handling area you can add the **Set State** action and select "Error" in the State dropdown.
       </Tab>
     </Tabs>
+    
+    <Info>
+      VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains invalid information, make the modifications to the GOBL details and send again to the same workflow.
+    </Info>
   </Step>
 </Steps>
 
@@ -99,12 +129,24 @@ There are three ways to correct an invoice:
 
 1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VERI\*FACTU translates to a "Factura Rectificativa por Diferencias".
 2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VERI\*FACTU translates to a "Factura Rectificativa por Sustitución".
-3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority, and then issue a new invoice with the correct information.
+3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority. This should only be used under special circumstances and not as part of a regular workflow.
 
 </Accordion>
-<Accordion title="I can only issue invoices in Sandbox mode, where is the live environment?">
+<Accordion title="What should I do if an invoice is rejected by VERI*FACTU?">
 
-The AEAT has not yet launched the production endpoints for VERI\*FACTU. Once they are published, the `Send VERI\*FACTU (Spain)` step will support the live environment.
+The response from VERI*FACTU should contain all the details you need to be able to decide what changes need to be made to the GOBL document in order to be processed correctly. Make the changes either via the Invopop API or console **directly on the same document**, and simply resend to the VERI*\FACTU workflow.
+
+Invopop will ensure that the correct substition document is generated by checking previous attempts and including the correct codes in the new request.
+</Accordion>
+
+<Accordion title="What is the VERI*FACTU chain?">
+
+VERI\*FACTU requires every request to be linked with a fingerprint or hash. During the "Generate VERI\*FACTU" and "Cancel VERI\*FACTU" actions, Invopop will automatically find the last request made for the same supplier, and incorporate the chained data into the new reuqest.
+
+Its important to understand the VERI\*FACTU focusses on requests, and not individual documents; a single invoice may have multiple entries in the chain if it has been processed multiple times due to incorrect details, cancellations, or substitutions.
+
+Invopop guarantees the chain is never broken using database transactions and retries in the case of collisions.
 
 </Accordion>
+
 </AccordionGroup>

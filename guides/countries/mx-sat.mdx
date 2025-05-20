@@ -8,6 +8,9 @@ import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supp
 import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
 import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
 import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
+import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 
 ## Introduction
 
@@ -203,7 +206,7 @@ The details from this form are sent securely to the PAC (Authorised Certificatio
 
 The CSD comprises two files (with extensions `.cer` and `.key`) and a password. Suppliers, companies or individuals, can follow [this guide on how to obtain one](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan).
 
-Certificates have already been registered for all sandbox users, so you can safely run the "Post-registration flow" workflow manually and leave the new supplier in the `sent` state.
+Certificates have already been registered for all sandbox users, so you can safely run the "Post-registration workflow" manually and leave the new supplier in the `sent` state.
 
 From this point on you can now send invoices on behalf of the supplier.
 
@@ -219,7 +222,7 @@ GOBL Invoices sent to the SAT require the following properties in order to perfo
 <AccordionGroup>
 <Accordion title="B2B Invoice">
 
-In this example we're issuing a simple B2B invoice from a Mexican supplier to another Mexican customer.
+This main type of invoice is a standard B2B invoice from a Mexican supplier to another Mexican customer.
 
 Notice:
 
@@ -231,6 +234,45 @@ Notice:
 <B2BInvoice />
 
 </Accordion>
+
+<Accordion title="Simplified Invoice">
+
+Another type of invoice is the simplified invoice, which does not require a customer to be specified.
+
+Notice:
+
+- the `$tags` field has been used to identify this as a simplified invoice.
+
+<SimplifiedInvoice />
+
+</Accordion>
+
+<Accordion title="Global Invoice">
+
+The Global Invoice is used to group a set of invoices into a single CFDI document.
+
+Notice:
+
+- the `$tags` field has been used to identify this as a global invoice,
+- each `line` has a `ref` which is used to identify the invoice that it belongs to,
+- the `tax.ext.mx-cfdi-global-month`, `mx-cfdi-global-period`, and `mx-cfdi-global-year` fields have been used to identify the global invoice period.
+<GlobalInvoice />
+
+</Accordion>
+
+<Accordion title="Credit Note">
+
+The Credit Note is used to cancel an invoice.
+
+Notice:
+
+- the `$type` field has been set to `credit-note`,
+- the `preceding` field has been used to identify the invoice that is being cancelled.
+
+<CreditNote />
+
+</Accordion>
+
 </AccordionGroup>
 
 ## FAQ

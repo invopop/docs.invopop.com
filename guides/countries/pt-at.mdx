@@ -9,6 +9,12 @@ import IssueInvoice from '/snippets/workflows/templates/pt/at-issue-invoice.mdx'
 import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
 import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
 
+<Warning>
+  We are currently in the process of certifying our direct integration with the Portuguese Tax Authority (AT). As a result, the AT implementation —described in this guide— is not yet available for use.
+
+  In the meantime, if you need to issue documents in Portugal, you can use our fully functional integration via [InvoiceXpress](/guides/countries/pt-invoicexpress).
+</Warning>
+
 ## Introduction
 
 Invopop, as a certified provider in Portugal, allows you to issue fully-compliant tax documents and report them to the Autoridade Tributária e Aduaneira (AT). Using the AT Portugal app, you can generate PDFs with the correct signatures, ATCUD and QR codes for all your documents (invoices, transport documents, payments, etc.). Also, you can report them to the AT either in batch, via periodic SAF-T PT reports, or in real-time, using the AT web services.
@@ -43,10 +49,40 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 
+<Step title="Create Supplier post-registration workflow">
+
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="Supplier post-registration workflow template" icon="code-branch" href="https://console.invopop-staging.com/redirect/workflows/new?template=it-sdi-send" cta="Select workspace to create workflow in Console">
+    This workflow marks Suppliers as `Registered`. You will select this workflow in the PT-AT app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new **Blank Party workflow** code view.
+    <PostRegistrationFlow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose **Empty Party workflow** as the base. Then name the workflow with a descriptive label such as "PT-AT Post-registration workflow".
+
+      This worfkow is composed by a single step:
+
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+
 <Step title="Create Supplier post-registration workflow (optional)">
 Head over to the **Workflows** section and create a new "Contacts" workflow.
 
-Rename the workflow to "Post-registration flow", and add a single step to change the state to `registered`.
+Rename to "Post-registration workflow", and add a single step to change the state to `registered`.
 
 The app will execute this workflow automatically after a supplier has successfully registered and is ready to issue documents. So, for instance, you can add a Webhook, or a Slack step at the end of this workflow to get a notification when that happens.
 
@@ -62,7 +98,7 @@ Copy and paste the following example in the workflow editor:
 <Step title="Connect the AT Portugal App">
 Enter the **Configuration** section, then click **Apps**. Click on the **Connect** button of the **AT Portugal** app.
 
-Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty if you don't want to use it.
+Click the **Configure** button on the App, and choose the "Post-registration workflow" we created in the previous step, or leave empty if you don't want to use it.
 
 Click the **Save** button.
 </Step>
@@ -161,7 +197,7 @@ Now, the supplier will need to complete the registration process in the Invopop'
 3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press **Save**.
 4. Go to the **Series** section, click **+ Register** and register at least a series for each document type that the supplier will issue.
 
-Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration flow" workflow if one was configured.
+Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration workflow" if one was configured.
 
 </Step>
 

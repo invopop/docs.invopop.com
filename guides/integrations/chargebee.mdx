@@ -5,7 +5,7 @@ description: Import and process invoices and credit notes from Chargebee
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/chargebee/cb-invoice.mdx'
-import XRechnungExample from '/snippets/workflows/templates/chargebee/cb-xrechnung.mdx'
+import ZUGfERDExample from '/snippets/workflows/templates/chargebee/cb-zugferd.mdx'
 
 ## Introduction
 
@@ -56,10 +56,10 @@ It's essential to add the **Import Chargebee document** step at the very beginni
 Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
 <WorkflowExample />
 </Accordion>
-<Accordion title="Example Workflow - X-Rechnung">
+<Accordion title="Example Workflow - ZUGfERD">
 
-This is an example that combines the Chargebee app with a country-specific functionality (in this case, the X-Rechnung conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
-<XRechnungExample />
+This is an example that combines the Chargebee app with a country-specific functionality (in this case, the ZUGfERD conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
+<ZUGfERDExample />
 </Accordion>
 </AccordionGroup>
 </Step>
@@ -136,39 +136,47 @@ Currently, Invopop listens to the "Invoice Generated" and the "Credit Note Creat
 
 You are now ready to start importing invoices and credit notes from Chargebee. The app will automatically create GOBL invoices and add them to your Invopop account. The invoices will then be processed using the workflow you set up.
 
-### Custom Data
+### Custom Fields & Metadata
 
-The following prefixes are used to map custom data from Chargebee to GOBL:
+The following prefixes are used to map custom fields from Chargebee to GOBL:
 
-| Prefix | Description | Type | Custom field example |
-|--------|-------------|------|---------------------|
-| `gobl-tax-` | Invoice tax extension | Single line text | `cf_gobl_tax_gr_mydata_invoice_type` |
-| `gobl-customer-` | Customer extension | Single line text | `cf_gobl_customer_mx_cfdi_fiscal_regime` |
-| `gobl-customer-identity-` | Customer identity | Single line text | `cf_gobl_customer_identity_de_tax_number` |
-| `gobl-customer-inbox-` | Customer inbox | Single line text | `cf_gobl_customer_inbox_it_sdi_pec` |
-| `gobl-item-` | Item extension | Single line text | `cf_gobl_item_br_nfse_service` |
-| `gobl-line-vat-` | VAT extension | Single line text | `cf_gobl_line_vat_pt_saft_exemption` |
-| `gobl-purchase-identity-` | Ordering purchase identity | Single line text | `cf_gobl_purchase_identity_CIG` |
+| Prefix | Description | Type | Example |
+|--------|-------------|------|---------|
+| `cf_gobl_tax_` | Invoice tax extension | Single line text | `cf_gobl_tax_gr_mydata_invoice_type` |
+| `cf_gobl_customer_` | Customer extension | Single line text | `cf_gobl_customer_mx_cfdi_fiscal_regime` |
+| `cf_gobl_customer_identity_` | Customer identity | Single line text | `cf_gobl_customer_identity_de_tax_number` |
+| `cf_gobl_customer_inbox_` | Customer inbox | Single line text | `cf_gobl_customer_inbox_it_sdi_pec` |
+| `cf_gobl_item_` | Item extension | Single line text | `cf_gobl_item_br_nfse_service` |
+| `cf_gobl_line_vat_` | VAT extension | Single line text | `cf_gobl_line_vat_pt_saft_exemption` |
+| `cf_gobl_purchase_identity_` | Ordering purchase identity | Single line text | `cf_gobl_purchase_identity_CIG` |
+
+<Note>
+In addition to using custom fields, you can also set GOBL data as [metadata in Chargebee](https://www.chargebee.com/docs/2.0/metadata.html). When using metadata, underscores must be replaced with hyphens, and the `cf-` prefix can be omitted.
+
+For example, the custom field `cf_gobl_item_br_nfse_service` would become `gobl-item-br-nfse-service` if passed as metadata.
+
+This applies to all the fields listed in this section.
+</Note>
 
 In addition to the prefixes above, the following keys can be used to set specific GOBL fields:
 
-| Key | Description | Type | Custom field example |
-|-----|-------------|------|---------------------|
-| `gobl-tags` | Invoice tags (comma-separated list) | Single line text | `cf_gobl_tags` |
-| `gobl-addons` | Invoice addons (comma-separated list) | Single line text | `cf_gobl_addons` |
-| `gobl-ordering` | Invoice ordering (full JSON) | Single line text | `cf_gobl_ordering` |
+| Key | Description | Type |
+|-----|-------------|------|
+| `cf_gobl_tags` | Invoice tags (comma-separated list) | Single line text |
+| `cf_gobl_addons` | Invoice addons (comma-separated list) | Single line text |
+| `cf_gobl_ordering` | Invoice ordering (full JSON) | Single line text |
 
 Finally, you can use the following custom fields to choose which customer's invoices Invopop should import and which ones we shouldn't or to route specific customers to a different workflow:
 
-| Key | Description | Type | Custom field example |
-|-----|-------------|------|---------------------|
-| `invopop-include` | Customer to include when importing (if "True") | Checkbox | `cf_invopop_include` |
-| `invopop-exclude` | Customer to exclude when importing (if "True") | Checkbox | `cf_invopop_exclude` |
-| `invopop-workflow` | Workflow to use for this Customer (overrides the default one) | Dropdown | `cf_invopop_workflow` |
+| Key | Description | Type |
+|-----|-------------|------|
+| `cf_invopop_include` | Customer to include when importing (if "True") | Checkbox |
+| `cf_invopop_exclude` | Customer to exclude when importing (if "True") | Checkbox |
+| `cf_invopop_workflow` | Workflow to use for this Customer (overrides the default one) | Dropdown |
 
-[Here](https://youtu.be/WgWofLDzDg4) is a video of how you can set up the `invopop-include` in your Chargebee site.
+[Here](https://youtu.be/WgWofLDzDg4) is a video of how you can set up the `cf_invopop_include` in your Chargebee site.
 <Tip>
-You would typically use either `invopop-include` to allowlist the customers to be imported, or `invopop-exclude` to denylist them, but not both. They are optional, though, and if not set, all customers' invoices will be imported.
+You would typically use either `cf_invopop_include` to allowlist the customers to be imported, or `cf_invopop_exclude` to denylist them, but not both. They are optional, though, and if not set, all customers' invoices will be imported.
 </Tip>
 
 <Warning>
