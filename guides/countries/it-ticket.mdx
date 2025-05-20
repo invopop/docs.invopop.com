@@ -8,6 +8,8 @@ import TicketRegisterSupplier from '/snippets/workflows/templates/it/ticket-regi
 import TicketIssueReceipt from '/snippets/workflows/templates/it/ticket-issue-receipt.mdx';
 import TicketVoidReceipt from '/snippets/workflows/templates/it/ticket-void-receipt.mdx';
 import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+import TicketB2CInvoiceComplete from '/snippets/invoices/it/ticket-b2c-complete.mdx';
+import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
 
 ## Introduction
 
@@ -22,6 +24,8 @@ Important distinctions for the Documento Commerciale:
 - It does not replace transport documents (documento di trasporto).
 - It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission.
 - It must include VAT at the time of sale - deferred VAT payment is not permitted.
+
+The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
 
 ## Prerequisites
 
@@ -300,7 +304,6 @@ For proper validation and normalization, set these properties in your GOBL Invoi
 
 While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
 
-<AccordionGroup>
 <Accordion title="B2C Invoice">
 
 This example shows a simple B2C invoice from an Italian supplier.
@@ -316,26 +319,52 @@ Key points to note:
 - there are no totals nor calculations, all of these will be made automatically when uploading.
 
 <TicketB2CInvoice />
-
 </Accordion>
-</AccordionGroup>
 
-The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
+Once the invoice is sent, the AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
 
 <Frame>
   <img src="/guides/images/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
 </Frame>
 
+<Accordion title="B2C Invoice Complete">
+
+After the AdE accepts the invoice, we add their reference to each line item. This reference facilitates the refund process. The example below shows how the `it-ticket-line-ref` extension appears in the accepted invoice.
+
+<TicketB2CInvoiceComplete/>
+</Accordion>
+
+### Refund an Invoice
+
+When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
+
+To create a corrective invoice:
+
+1. Set the `type` field to `corrective`
+2. Add a reference to the original invoice using the `preceeding` object
+3. Include the original document number stamp from the first invoice
+
+<Accordion title="Corrective Invoice">
+
+This example shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. Note that:
+
+- The `it-ticket-line-ref` extension from the original invoice is preserved
+- The `preceeding` object references the original invoice
+- The corrective invoice maintains the same line item references for accurate tracking
+
+<TicketB2CInvoiceCorrective/>
+</Accordion>
+
 ### Void an Invoice
 
-You may need to void an invoice for a number of reasons, for example if the customer requests a refund or if you need to correct the invoice.
+You can void an invoice if it was issued in error, such as when a receipt is accidentally sent twice. To void an invoice:
 
-To void an invoice:
-
-1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice you want to void
+1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice
 2. Run the "Void AdE CF Invoices" workflow with this uuid
 
-Note: You can only void invoices that were originally sent through this app.
+<Warning>
+You can only void invoices that were originally sent through this app during the same business day.
+</Warning>
 
 ## FAQ
 
