@@ -3,6 +3,10 @@ title: "🇮🇹 Italy - Smart Receipts"
 description: Issue e-receipts in Italy
 ---
 
+import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+import TicketB2CInvoiceComplete from '/snippets/invoices/it/ticket-b2c-complete.mdx';
+import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
+
 ## Introduction
 
 Invopop's Smart Receipts provider allows you to generate and issue electronic tickets (documento commerciale/scontrino elettronico) in Italy.
@@ -16,6 +20,8 @@ Important distinctions for the Documento Commerciale:
 - It does not replace transport documents (documento di trasporto)
 - It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission
 - It must include VAT at the time of sale - deferred VAT payment is not permitted
+
+The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
 
 ## Prerequisites
 
@@ -91,7 +97,7 @@ Copy and paste the following example in the workflow editor:
 3. Click **Connect** to activate.
 
 <Frame>
-<img src="/guides/images/it-ticket-app.png" width="360px" alt="SAT MX App" />
+<img src="/guides/images/it-ticket-app.png" width="360px" alt="Smart Receipts App" />
 </Frame>
 
 Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
@@ -371,80 +377,19 @@ For proper validation and normalization, set these properties in your GOBL Invoi
 
 While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
 
-<AccordionGroup>
+The example below shows a simple B2C invoice from an Italian supplier. Key points to note:
+
+- The `it-ticket-v1` addon ensures validation using AdE CF V1 rules
+- Extensions (`ext`) fields specify values that cannot be determined otherwise:
+  - Items have an extension identifying them as goods or services
+  - VAT exemptions require an Italian exemption code
+- The `prices_include` field indicates that item prices include VAT
+- VAT for "Cleaning Products" automatically sets to the standard rate
+- Totals and calculations are generated automatically
+
 <Accordion title="B2C Invoice">
-
-This example shows a simple B2C invoice from an Italian supplier.
-
-Key points to note:
-
-- we've added the `it-ticket-v1` addon, this ensures the document will be validated using the AdE CF V1 rules built into the GOBL library,
-- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way, for example:
-    - Items have an extension that identifies if its a good or a service.
-    - When the VAT is exempt, an italian exemption code is required.
-- The `prices_include` field in GOBL indicates that the item prices already include VAT,
-- VAT for the "Cleaning Products" will automatically set the percentage at the standard rate, and,
-- there are no totals nor calculations, all of these will be made automatically when uploading.
-
-
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$addons": ["it-ticket-v1"],
-  "series": "XXIT",
-  "currency": "EUR",
-  "tax": {
-    "prices_include": "VAT"
-  },
-  "type": "standard",
-  "supplier": {
-    "name": "Cleaning SRL",
-    "tax_id": {
-      "country": "IT",
-      "code": "12345678903"
-    }
-  },
-  "lines": [
-    {
-      "quantity": "1",
-      "item": {
-        "name": "Cleaning services",
-        "price": "125.00",
-        "ext": {
-            "it-ticket-product": "services"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "ext":{
-            "it-ticket-exempt": "N3"
-          }
-        }
-      ]
-    },
-    {
-      "quantity": "3",
-      "item": {
-        "name": "Cleaning products",
-        "price": "137.50",
-        "ext": {
-            "it-ticket-product": "goods"
-        }
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "rate": "standard"
-        }
-      ]
-    }
-  ]
-}
-```
-
+<TicketB2CInvoice />
 </Accordion>
-</AccordionGroup>
 
 The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
 
@@ -452,16 +397,42 @@ The AdE will automatically generate a document number for the invoice. Once the 
   <img src="/guides/images/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
 </Frame>
 
+After the AdE accepts the invoice, they add a reference to each line item. This reference, stored in the `it-ticket-line-ref` extension, is essential for processing refunds. The example below shows a complete invoice with these references.
+
+<Accordion title="B2C Invoice Complete">
+<TicketB2CInvoiceComplete/>
+</Accordion>
+
+### Refund an Invoice
+
+When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
+
+To create a corrective invoice take a original GOBL Invoice and:
+
+1. Set the `type` field to `corrective`
+2. Add a reference to the original invoice using the `preceeding` object
+3. Include the original document number stamp from the first invoice
+4. Keep the lines and quantities you want to refund
+
+The example below shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. The corrective invoice:
+- Preserves the `it-ticket-line-ref` extension from the original invoice
+- References the original invoice using the `preceeding` object
+- Maintains the same line item references for accurate tracking
+
+<Accordion title="Corrective Invoice">
+<TicketB2CInvoiceCorrective/>
+</Accordion>
+
 ### Void an Invoice
 
-You may need to void an invoice for a number of reasons, for example if the customer requests a refund or if you need to correct the invoice.
+You can void an invoice if it was issued in error, such as when a receipt is accidentally sent twice. To void an invoice:
 
-To void an invoice:
-
-1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice you want to void
+1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice
 2. Run the "Void AdE CF Invoices" workflow with this uuid
 
-Note: You can only void invoices that were originally sent through this app.
+<Warning>
+You can only void invoices that were originally sent through this app during the same business day.
+</Warning>
 
 ## FAQ
 
@@ -470,7 +441,7 @@ Please contact the [Invopop support team](email:support@invopop.com) if you have
 <AccordionGroup>
 
 <Accordion title="Is this a substitute for SDI?">
-  AdE CF is **not** a substitute for [SDI](/guides/countries/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
+AdE CF is **not** a substitute for [SDI](/guides/countries/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
 </Accordion>
 
 <Accordion title="How do I correct mistakes in an issued AdE CF invoice?">
@@ -484,4 +455,3 @@ We recommend adding a series and code to the invoice so that you can keep track 
 </Accordion>
 
 </AccordionGroup>
-
