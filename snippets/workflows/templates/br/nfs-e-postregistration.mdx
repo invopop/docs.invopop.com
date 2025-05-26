@@ -1,6 +1,6 @@
 ---
-title: "Supplier post-registration workflow"
-description: "Workflow to set suppliers as registered"
+title: "NFS-e register supplier"
+description: "Issues a registration request for a supplier to complete in order to issue invoices through NFS-e."
 countryCode: "br"
 appId: "nfe-br"
 schema: "org/party"
@@ -8,16 +8,39 @@ schema: "org/party"
 
 ```json
 {
-    "name": "Post-registration workflow",
+    "name": "Register supplier",
     "steps": [
         {
-            "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
+            "id": "67f80a60-abd4-11ef-8b96-dd5de8906f90",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "85ba8ea0-9064-11ef-8f9e-39835766d0bc",
+            "name": "Register NFS-e supplier (Brazil)",
+            "next": [],
+            "provider": "nfe-br.register"
+        },
+        {
+            "id": "0439e900-a32b-11ef-9707-79bbd71238cd",
+            "name": "Set Silo Entry State",
+            "next": [],
+            "config": {
+                "state": "processing"
+            },
+            "summary": "Set state to `processing`{.state .processing}",
+            "provider": "silo.state"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
             "name": "Set State",
             "config": {
-                "state": "registered"
+                "state": "error"
             },
-            "summary": "Set state to `registered`{.state .registered}",
-            "provider": "silo.state"
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}"
         }
     ]
 }
