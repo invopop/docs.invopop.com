@@ -1,10 +1,17 @@
+---
+title: "Peppol send invoice"
+description: "Send Peppol BIS invoice through Peppol network"
+appId: "peppol"
+schema: "bill/invoice"
+---
+
 ```json
 {
-    "name": "Peppol: Send Invoice",
-    "description": "",
+    "name": "Peppol send invoice",
+    "description": "Send Peppol BIS invoice through Peppol network",
     "steps": [
         {
-            "id": "7d00a700-25d2-11f0-b641-350e77c28eed",
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
             "name": "Set State",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
@@ -13,26 +20,35 @@
             }
         },
         {
-            "id": "b079af50-25d2-11f0-b641-350e77c28eed",
+            "id": "2354afd0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · PPL · PPL000001",
+            "config": {
+                "name": "PPL",
+                "padding": 6,
+                "prefix": "PPL",
+                "sign": false,
+                "start": 1
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
             "name": "Sign Envelope",
             "provider": "silo.close"
         },
         {
-            "id": "5bb0d200-25d2-11f0-b641-350e77c28eed",
-            "name": "Generate UBL Document",
-            "provider": "ubl.generate",
-            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
-            "config": {
-                "doc_type": "bis-invoice-v3"
-            }
+            "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Generate Peppol Document",
+            "provider": "peppol.generate"
         },
         {
-            "id": "606d96c0-25d2-11f0-b641-350e77c28eed",
+            "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
             "name": "Send Peppol Document",
             "provider": "peppol.send"
         },
         {
-            "id": "7a321db0-25d2-11f0-b641-350e77c28eed",
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
             "name": "Set State",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
@@ -43,7 +59,7 @@
     ],
     "rescue": [
         {
-            "id": "82674050-25d2-11f0-b641-350e77c28eed",
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
             "name": "Set State",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
