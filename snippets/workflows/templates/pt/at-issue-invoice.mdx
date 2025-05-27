@@ -1,85 +1,86 @@
 ---
-title: "Issue AT Invoice"
-description: "Issue an invoice in Portugal"
+title: "AT issue invoice"
+description: "Issue an invoice in Portugal and generate PDF"
 countryCode: "pt"
 appId: "pt-at"
 schema: "bill/invoice"
 ---
 
-```json
+```json Example AT issue invoice workflow with states
 {
-    "name": "Issue AT document",
-    "description": "",
-    "steps": [
+  "name": "Issue AT invoice",
+  "description": "Issue an invoice in Portugal and generate PDF",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "6f884d90-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "78055c60-f2be-11ef-b357-abb0f65e5f45",
+      "name": "Add Sequential Code",
+      "provider": "sequence.enumerate",
+      "summary": "Dynamic · AT documents · 1",
+      "config": {
+        "name": "AT documents",
+        "padding": 1,
+        "sign": true,
+        "start": 1
+      }
+    },
+    {
+      "id": "750b2170-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Seal for the AT (Portugal)",
+      "provider": "at-pt.seal"
+    },
+    {
+      "id": "76f194b0-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Record for SAF-T reporting (Portugal)",
+      "provider": "at-pt.record"
+    },
+    {
+      "id": "93795a50-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Generate PDF",
+      "provider": "pdf",
+      "summary": "Portuguese - A4",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "layout": "A4",
+        "locale": "pt",
+        "logo_height": 40
+      }
+    },
+    {
+      "id": "7a708240-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `sent`{.state .sent}",
+      "next": [
         {
-            "id": "6f884d90-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Set Silo Entry State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        },
-        {
-            "id": "78055c60-f2be-11ef-b357-abb0f65e5f45",
-            "name": "Add Sequential Code",
-            "provider": "sequence.enumerate",
-            "summary": "Dynamic · AT documents · 1",
-            "config": {
-                "name": "AT documents",
-                "padding": 1,
-                "sign": true,
-                "start": 1
-            }
-        },
-        {
-            "id": "750b2170-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Seal for the AT (Portugal)",
-            "provider": "at-pt.seal"
-        },
-        {
-            "id": "76f194b0-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Record for SAF-T reporting (Portugal)",
-            "provider": "at-pt.record"
-        },
-        {
-            "id": "93795a50-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "Portuguese - A4",
-            "config": {
-                "date_format": "%Y-%m-%d",
-                "layout": "A4",
-                "locale": "pt",
-                "logo_height": 40
-            }
-        },
-        {
-            "id": "7a708240-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Set Silo Entry State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "next": [
-                {
-                    "status": "NA",
-                    "stop": true
-                }
-            ],
-            "config": {
-                "state": "sent"
-            }
+          "status": "NA",
+          "stop": true
         }
-    ],
-    "rescue": [
-        {
-            "id": "805bdbf0-f2b9-11ef-acb2-cd64e858247e",
-            "name": "Set Silo Entry State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
+      ],
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "805bdbf0-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
 }
 ```

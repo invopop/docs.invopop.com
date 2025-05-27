@@ -1,5 +1,6 @@
 ---
-title: "🇵🇹 Portugal · AT"
+title: "Portugal · AT Guide"
+sidebarTitle: "🇵🇹 Portugal · AT"
 description: Issue documents in Portugal using Invopop's certified implementation.
 ---
 
@@ -49,69 +50,111 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 
-<Step title="Create Supplier post-registration workflow (optional)">
-Head over to the **Workflows** section and create a new "Contacts" workflow.
+<Step title="Create Supplier post-registration workflow">
 
-Rename the workflow to "Post-registration flow", and add a single step to change the state to `registered`.
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="AT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-postregistration" cta="Select a workspace to use this template">
+    Marks Suppliers as `Registered`. You will select this workflow in the AT (Portugal) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
 
-The app will execute this workflow automatically after a supplier has successfully registered and is ready to issue documents. So, for instance, you can add a Webhook, or a Slack step at the end of this workflow to get a notification when that happens.
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Click the **Save** button.
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "PT-AT Post-registration workflow".
 
-<Accordion title="Supplier post-registration workflow example">
-Copy and paste the following example in the workflow editor:
-<PostRegistration/>
-</Accordion>
+      This worfkow is composed by a single step:
 
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
 </Step>
+
+
 
 <Step title="Connect the AT Portugal App">
-Enter the **Configuration** section, then click **Apps**. Click on the **Connect** button of the **AT Portugal** app.
 
-Click the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty if you don't want to use it.
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **AT Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
 
-Click the **Save** button.
+  Click the **Configure** button on the app, and choose the "Post-registration workflow" we created in the previous step.
+
+  Click the **Save** button.
 </Step>
 
-<Step title="Configure the Supplier Registration Workflow">
-Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
 
-The new workflow will need to perform three steps:
+<Step title="Configure the supplier registration workflow">
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="AT supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-register-supplier" cta="Select a workspace to use this template">
+      Issues a registration request for a supplier to complete.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+      <RegisterSupplier />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-- **Set State** - with configuration set to `processing`.
-- **Sign the Envelope**
-- **Register AT Issuer (Portugal)**
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "AT supplier registration".
 
-Add any additional steps you may need, and save the new workflow.
+      The new workflow will need to perform three steps:
 
-<Accordion title="Supplier Registration Workflow Example">
-Copy and paste the following example in the workflow editor:
-<RegisterSupplier/>
-</Accordion>
+      - **Set State** - with configuration set to `processing`.
+      - **Sign the Envelope**
+      - **Register AT Issuer (Portugal)**
 
+       Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+
+    </Tab>
+  </Tabs>
 </Step>
 
 <Step title="Prepare the document processing workflow">
-Finally, we need to prepare the actual workflow that will process invoices and other documents. For this example, you can name the workflow something like "Issue AT document". It will consist of the following steps:
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-invoice" cta="Select a workspace to use this template">
+        This workflow will issue an invoice through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-- **Set State** - to "processing".
-- **Add Sequential Code** - with dynamic sequences, and name like "AT Documents".
-- **Seal for the AT (Portugal)**.
-- **Record for SAF-T reporting (Portugal)**.
-- **Generate PDF** - configured for your environment.
-- **Set State** - to "sent".
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "AT issue invoice".
 
-Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
+        The new workflow will need to perform these steps:
 
-Click the **Save** button to ensure the workflow has been persisted.
+        - **Set State** - to "processing".
+        - **Add Sequential Code** - with dynamic sequences, and name like "AT Documents".
+        - **Seal for the AT (Portugal)**.
+        - **Record for SAF-T reporting (Portugal)**.
+        - **Generate PDF** - configured for your environment.
+        - **Set State** - to "sent".
 
-<Accordion title="Issue AT invoice workflow example">
-Copy and paste the following example in the workflow editor:
-<IssueInvoice/>
-</Accordion>
+        Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-</Step>
-
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
 </Steps>
 
 ## Running
@@ -167,7 +210,7 @@ Now, the supplier will need to complete the registration process in the Invopop'
 3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press **Save**.
 4. Go to the **Series** section, click **+ Register** and register at least a series for each document type that the supplier will issue.
 
-Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration flow" workflow if one was configured.
+Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration workflow" if one was configured.
 
 </Step>
 

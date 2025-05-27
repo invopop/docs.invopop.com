@@ -1,48 +1,57 @@
-```json
+---
+title: "SDI import invoices"
+description: "Import and process invoices received through SDI"
+countryCode: "it"
+appId: "sdi-it"
+schema: "bill/invoice"
+---
+
+```json Example SDI import invoice workflow with states
 {
-    "name": "Import SDI Invoices",
-    "description": "Import and process invoices received through SDI",
-    "steps": [
-        {
-            "id": "6e8f0b30-fd13-11ef-998c-e97f18c9212e",
-            "name": "Import from SDI (Italy)",
-            "provider": "sdi-it.import",
-            "summary": "Convert received FatturaPA to GOBL",
-            "config": {
-                "environment": "production"
-            }
-        },
-        {
-            "id": "7f9a1c40-fd13-11ef-998c-e97f18c9212e",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "Italian",
-            "config": {
-                "date_format": "%Y-%m-%d",
-                "locale": "it",
-                "logo_height": 40
-            }
-        },
-        {
-            "id": "8a0b2d50-fd13-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "9b1c3e60-fd13-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
+  "name": "Import SDI Invoices",
+  "description": "Import and process invoices received through SDI",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "6e8f0b30-fd13-11ef-998c-e97f18c9212e",
+      "name": "Import from SDI (Italy)",
+      "provider": "sdi-it.import",
+      "summary": "Convert received FatturaPA to GOBL",
+      "config": {
+        "environment": "production"
+      }
+    },
+    {
+      "id": "7f9a1c40-fd13-11ef-998c-e97f18c9212e",
+      "name": "Generate PDF",
+      "provider": "pdf",
+      "summary": "Italian",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "locale": "it",
+        "logo_height": 40
+      }
+    },
+    {
+      "id": "8a0b2d50-fd13-11ef-998c-e97f18c9212e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `sent`{.state .sent}",
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "9b1c3e60-fd13-11ef-998c-e97f18c9212e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
 }
 ```

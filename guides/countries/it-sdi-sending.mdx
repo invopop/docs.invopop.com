@@ -1,6 +1,7 @@
 ---
-title: "🇮🇹 Italy · SDI Sending"
-description: "Generate and issue electronic invoices through Italy's SDI system"
+title: "Italy · SDI Sending Invoices Guide"
+sidebarTitle: "🇮🇹 Italy · SDI Sending"
+description: "🇮🇹 Generate and issue electronic invoices through Italy's SDI system"
 ---
 
 import SDISendWorkflow from '/snippets/workflows/templates/it/sdi-send.mdx';
@@ -33,28 +34,43 @@ The initial connection requires no configuration for sending invoices.
 </Step>
 
 <Step title="Configure sending workflow">
-First, review our [workflows guide](/guides/features/workflows) to understand the basics of setting up workflows, then create a workflow with these essential steps:
-
-1. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
-2. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
-3. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
-
-<Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
-
-<Info>
-The legacy **Send to SDI (Italy) (Legacy)** step that combines both generation and sending is still available, but its use is discouraged. It is marked with a legacy tag.
-</Info>
 
 <Info>
 SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopop's third-party submission service, [A-Cube](https://www.acubeapi.com), simulates a response from SDI.
 </Info>
 
-<AccordionGroup>
-<Accordion title="Example Sending Invoice Workflow">
-This JSON can be copied and pasted while editing a Workflow in "developer" mode. The example adds support for setting states on silo entries and handling errors, both of which are strongly recommended.
-<SDISendWorkflow />
-</Accordion>
-</AccordionGroup>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SDI send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-send" cta="Select a workspace to use this template">
+      Signs and converts the GOBL document into the FatturaPA XML format and then sends it to SDI.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <SDISendWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
+
+        1. **Set State** - To "Processing".
+        2. **Sign Envelope** - Signs the GOBL document. This can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+        3. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
+        4. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
+        5. **Set State** - To "Sent".
+
+      In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
+
+      This is the minimal workflow with state handling required to automate the reception and visualization of invoices received through SDI. You may expand it with additional steps such as storing a backup copy, notifying clients, or integrating the documents into an ERP system.
+
+      <Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
+
+  </Tab>
+</Tabs>
+
 </Step>
 </Steps>
 
@@ -82,10 +98,6 @@ This step converts a GOBL invoice into the required FatturaPA XML format and sto
 This step takes the generated XML attachment and sends it to SDI through our integration partner. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
 </Step>
 </Steps>
-
-<Info>
-A legacy combined step that performs both generation and sending in one operation is also available. While still functional, we recommend using the separate steps for better control and error handling.
-</Info>
 
 When the Send step completes, it returns one of three results:
 - `OK` if successful

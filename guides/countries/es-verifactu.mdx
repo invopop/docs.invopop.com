@@ -1,9 +1,11 @@
 ---
-title: "🇪🇸 Spain · VERI*FACTU"
-description: Issue invoices in Spain with VERI*FACTU.
+title: "Spain · VERI*FACTU Guide"
+sidebarTitle: "🇪🇸 Spain · VERI*FACTU"
+description: 🇪🇸 Issue invoices in Spain with VERI*FACTU.
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/es/verifactu-invoice.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/es/verifactu-supplier-registration.mdx';
 import B2CInvoice from '/snippets/invoices/es/verifactu-b2c.mdx';
 import B2BInvoice from '/snippets/invoices/es/verifactu-b2b.mdx';
 
@@ -29,50 +31,73 @@ To register a supplier and issue invoices, you need:
 Follow these steps to configure your Invopop Workspace for VERI\*FACTU invoicing:
 
 <Steps>
-<Step title="Connect the VERI*FACTU app">
 
-1. Navigate to **Configuration** > **Apps**.
-2. Locate **VERI\*FACTU** in the app discovery list.
-3. Click **Connect** to activate.
+  <Step title="Connect the VERI*FACTU app">
+  1. Navigate to **Configuration** → **Apps**.
+  2. Locate **VERI\*FACTU** in the app discovery list.
+  3. Click **Connect** to activate.
 
-No additional configuration is needed.
+  No additional configuration is needed.
+  </Step>
 
-</Step>
+  <Step title="Configure the supplier registration workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="VERI*FACTU supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-supplier-registration" cta="Select a workspace to use this template">
+        This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-<Step title="Configure supplier registration workflow">
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "VERI*\FACTU Supplier Registration".
 
-First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+        The new workflow will need to perform a single step:
 
-Create a **Parties** workflow called **VERI*FACTU: register party** with a single step:
+        1. **Register for VERI*\FACTU** - Prepares the system so that provided supplier can send invoices.
 
-1. **Register with VERI*FACTU** - prepares the system so that provided supplier can send invoices.
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-</Step>
+        Add any additional steps you may need, and save the new workflow.
 
-<Step title="Configure invoice workflow">
+      </Tab>
+    </Tabs>
+  </Step>
 
-Create an **Invoices** workflow with these essential steps:
 
-1. **Sign Envelope** - Signs the VERI\*FACTU document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
-2. **Generate VERI\*FACTU (Spain)** - Creates the required XML document, adding it to the chain and fingerprinting it. It can be seen in the `Files` section of the console.
-3. **Send VERI\*FACTU (Spain)** - Submits the generated XML to AEAT gateway and returns a response.
-4. **Generate PDF** - Generates the PDF invoice with the required QR code.
 
-<Info>
-  VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains invalid information, make the modifications to the GOBL details and send again to the same workflow.
-</Info>
+  <Step title="Configure invoice workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="VERI*FACTU invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Select a workspace to use this template">
+          This workflow will issue an invoice through VERI*\FACTU.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-</Step>
+          1. **Sign Envelope** - Signs the VERI\*FACTU document. Can be substituted with `Add Sequential Code` with the `Sign Document` option enabled.
+          2. **Generate VERI\*FACTU (Spain)** - Creates the required XML document, adding it to the chain and fingerprinting it. It can be seen in the `Files` section of the console.
+          3. **Send VERI\*FACTU (Spain)** - Submits the generated XML to AEAT gateway and returns a response.
+          4. **Generate PDF** - Generates the PDF invoice with the required QR code.
+
+          Finally, in the Error Handling area, add the **Set State** action and select "Error" in the State dropdown.
+      </Tab>
+    </Tabs>
+    
+    <Info>
+      VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains invalid information, make the modifications to the GOBL details and send again to the same workflow.
+    </Info>
+  </Step>
 </Steps>
-
-<AccordionGroup>
-<Accordion title="Example VERI*FACTU Invoice Workflow">
-You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recomend.
-
-<WorkflowExample />
-
-</Accordion>
-</AccordionGroup>
 
 ## Running
 
@@ -105,12 +130,12 @@ There are three ways to correct an invoice:
 
 1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VERI\*FACTU translates to a "Factura Rectificativa por Diferencias".
 2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VERI\*FACTU translates to a "Factura Rectificativa por Sustitución".
-3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority. This should only be used under special circumstances and not as part of a regular flow.
+3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority. This should only be used under special circumstances and not as part of a regular workflow.
 
 </Accordion>
 <Accordion title="What should I do if an invoice is rejected by VERI*FACTU?">
 
-The response from VERI*FACTU should contain all the details you need to be able to decide what changes need to be made to the GOBL document in order to be processed correctly. Make the changes either via the Invopop API or console **directly on the same document**, and simply resend to the VERI\*FACTU workflow.
+The response from VERI*FACTU should contain all the details you need to be able to decide what changes need to be made to the GOBL document in order to be processed correctly. Make the changes either via the Invopop API or console **directly on the same document**, and simply resend to the VERI*\FACTU workflow.
 
 Invopop will ensure that the correct substition document is generated by checking previous attempts and including the correct codes in the new request.
 </Accordion>

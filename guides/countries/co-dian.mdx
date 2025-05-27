@@ -1,7 +1,10 @@
 ---
-title: "🇨🇴 Colombia · DIAN"
-description: Issue invoices and credit notes in Colombia to the DIAN.
+title: "Colombia · DIAN Guide"
+sidebarTitle: "🇨🇴 Colombia · DIAN"
+description: 🇨🇴 Issue invoices and credit notes in Colombia to the DIAN.
 ---
+
+import WorkflowExample from '/snippets/workflows/templates/co/dian-invoice.mdx'
 
 <Warning>
   This document is out of date and currently pending updates. Please check back
@@ -52,55 +55,66 @@ Your test invoices will need to use the supplier's tax ID code and series above.
 
 You can invoice using the Plemsi provider on behalf of multiple suppliers. For each supplier, these are the steps you'll need to follow:
 
-### Step 1: Authorise Plemsi to issue invoices on your behalf
+<Steps>
 
-First, the supplier's legal representative must authorise the Plemsi technology provider to issue invoices on your behalf in the DIAN.
+  <Step title="Authorise Plemsi to issue invoices on your behalf">
+    First, the supplier's legal representative must authorise the Plemsi technology provider to issue invoices on your behalf in the DIAN.
 
-The following guide explains how to do it, but note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later in this guide:
+    The following guide explains how to do it, but note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later in this guide:
 
-📘 [Habilitar documentos electrónicos DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/habilitar-documentos-electronicos-dian/)
+    📘 [Habilitar documentos electrónicos DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/habilitar-documentos-electronicos-dian/)
+  </Step>
+  <Step title="Get a billing numbering range authorisation">
+    Next, the supplier's legal representative must get a DIAN authorisation for the billing numbering range you wish to use in your invoices. This guide explains how to do it:
 
-### Step 2: Get a billing numbering range authorisation
+    📘 [Solicitud de Autorización de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf)
 
-Next, the supplier's legal representative must get a DIAN authorisation for the billing numbering range you wish to use in your invoices. This guide explains how to do it:
+    Please note that these authorisations have a limit and an expiration date. If you need to renew an existing one, this other guide explains how to do it:
 
-📘 [Solicitud de Autorización de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf)
+    📘 [Solicitud de Habilitación de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf)
 
-Please note that these authorisations have a limit and an expiration date. If you need to renew an existing one, this other guide explains how to do it:
+    The DIAN will provide you with an 1876 form at the end of the process. Keep it at hand; you'll need it in the following steps.
+</Step>
+  <Step title="Authorise Plemsi to use the numbering range">
+    Now, the supplier representative must give the Plemsi technology provider permission to use the numbering range when issuing their invoices.
 
-📘 [Solicitud de Habilitación de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf)
+    The following guide explains how to do it, but again, note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later on:
 
-The DIAN will provide you with an 1876 form at the end of the process. Keep it at hand; you'll need it in the following steps.
+    📘 [Asociar una resolución o numeración DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/registrar-resolucion-dian/)
+      </Step>
+  <Step title="Create and configure your Plemsi account">
+    Now you need a Plemsi account created and configured. We have to do this for you, so please contact us via Slack or [support@invopop.com](mailto:support@invopop.com).
 
-### Step 3: Authorise Plemsi to use the numbering range
+    We'll ask you to provide us with all the data necessary to set up the account, including the fiscal data of the company as it must appear in your invoices, and some information from the previous steps.
+  </Step>
+  <Step title="Create a workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="DIAN-Colombia Invoice Workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=co-dian-invoice" cta="Select a workspace to use this template">
+        This workflow will issue an invoice through DIAN.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-Now, the supplier representative must give the Plemsi technology provider permission to use the numbering range when issuing their invoices.
+          1. **Set State** - Select `Processing`. This initial state marks the document as being processed.
+          2. **Add Sequential Code** - Use a `Dynamic` series which will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range. Generally, you'll want to set the padding to 1 (so no zeros are prepended) and put no prefix or suffix.
+          3. **Send to DIAN via Plemsi (Colombia)** - No configuration required.
+          4. **Generate PDF** - Select `es-Spanish` as the Locale and layout `Letter`.
+          4. **Set State** - Select `Sent`.
 
-The following guide explains how to do it, but again, note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later on:
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-📘 [Asociar una resolución o numeración DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/registrar-resolucion-dian/)
+          This is the minimal workflow you can use to issue invoices in Colombia. You can now add other optional integrations to, for example, send an email with the invoice, notify another system with a webhook or upload the invoices to a Dropbox account.
+      </Tab>
+    </Tabs>
 
-### Step 4: Create and configure your Plemsi account
-
-Now you need a Plemsi account created and configured. We have to do this for you, so please contact us via Slack or [support@invopop.com](mailto:support@invopop.com).
-
-We'll ask you to provide us with all the data necessary to set up the account, including the fiscal data of the company as it must appear in your invoices, and some information from the previous steps.
-
-### Step 5: Create a workflow
-
-At this point, you'll be ready to set up the workflow to issue invoices:
-
-1. Sign in to Invopop's Console at [https://console.invopop.com](https://console.invopop.com/).
-2. If you have multiple companies, choose the one you want to use at the top left.
-3. Go to “Workflows” and create a new workflow.
-4. Add a first step using the “Series Enumerator” provider. The simplest setup here would be to use a "Dynamic" series. That will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range. Generally, you'll want to set the padding to 1 (so no zeros are prepended) and put no prefix or suffix.
-
-   _Note that this configuration assumes you'll set the proper `series` value in the GOBL invoices or credit notes you send to the workflow._
-
-5. Add a second step using the “Plemsi” provider. Nothing to configure here.
-6. Add a third and final step using the “PDF Generator” provider. You can configure a logo to appear at the header of your invoice PDFs, the language and some formats.
-
-This is the minimal workflow you can use to issue invoices in Colombia. You can now add other optional integrations to, for example, send an email with the invoice, notify another system with a webhook or upload the invoices to a Dropbox account.
+  </Step>
+</Steps>
 
 ### And you're done!
 

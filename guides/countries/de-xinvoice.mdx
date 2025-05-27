@@ -1,6 +1,7 @@
 ---
-title: "🇩🇪 🇫🇷 DE & FR · XInvoice"
-description: Issue invoices in Germany (X-Rechnung & ZUGFeRD) and France (Factur-X).
+title: "Germany and France · XInvoice Guide"
+sidebarTitle: "🇩🇪 🇫🇷 DE & FR · XInvoice"
+description:  🇩🇪 🇫🇷 Issue invoices in Germany (X-Rechnung & ZUGFeRD) and France (Factur-X).
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/de/x-rechnung.mdx'
@@ -10,7 +11,7 @@ import B2BAdditional from '/snippets/invoices/de/xinvoice-b2b-additional.mdx'
 
 ## Introduction
 
-X-Invoice covers the German and French electronic invoice standards. The integration is the same for both countries. The supported standards are:
+XInvoice covers the German and French electronic invoice standards. The integration is the same for both countries. The supported standards are:
 
 - **X-Rechnung**: one of the two standards used in Germany. It consists on an XML file. It can be implemented using two different *syntaxes*, CII and UBL. They both contain the same information, but include different field names.
 - **ZUGFeRD**: the other standard used in Germany. It a hybrid format that consists on a PDF document with an embedded X-Rechnung file. The only supported syntax for this case is CII.
@@ -24,7 +25,7 @@ X-Invoice covers the German and French electronic invoice standards. The integra
 
 ## Prerequisites
 
-To convert invoices to X-Invoice format, ensure you have:
+To convert invoices to XInvoice format, ensure you have:
 
 - A valid API key and a basic understanding of the [workflow engine](/guides/features/workflows) and [API](api-ref/introduction).
 - An invoice with:
@@ -38,7 +39,7 @@ To issue invoices, follow these instructions in the [Invopop Console](https://co
 <Steps>
 <Step title="Connect the XInvoice app">
 
-1. Navigate to **Configuration** > **Apps**.
+1. Navigate to **Configuration** → **Apps**.
 2. Locate **XInvoice France/Germany** in the app discovery list.
 3. Click **Connect** to activate.
 
@@ -46,24 +47,33 @@ No additional configuration is needed.
 </Step>
 <Step title="Configure invoice workflow">
 
-First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="XInvoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-x-rechnung" cta="Select a workspace to use this template">
+    This workflow will generate an XInvoice XML document and embed it into a PDF. 
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <WorkflowExample />
+  </Tab>
+  <Tab title="Build from scratch">
 
-Create an **Invoices** workflow with these essential steps:
+    First, review our [workflows guide](/guides/features/workflows) to understand the basics.
 
-- **Sign Envelope**: The envelope must be signed before processing. This can also be done in the **Add Sequential Code** step, which handles the invoice number.
-- **Convert to X-Invoice**: Generates the X-Invoice XML document.
-- **Generate PDF**: For ZUGFeRD and Factur-X formats, this step creates the PDF with the embedded XML.
+    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the essential steps:
+
+    - **Sign Envelope**: The envelope must be signed before processing. This can also be done in the **Add Sequential Code** step, which handles the invoice number.
+    - **Convert to XInvoice**: Generates the XInvoice XML document.
+    - **Generate PDF**: For ZUGFeRD and Factur-X formats, this step creates the PDF with the embedded XML.
+
+    This is the minimal workflow you can use to issue an invoice Germany/France in the XInvoice format.
+  </Tab>
+</Tabs>
+
 </Step>
 </Steps>
 
-<AccordionGroup>
-<Accordion title="Example X-Rechnung Workflow">
-
-Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
-
-<WorkflowExample />
-</Accordion>
-</AccordionGroup>
 
 ## Running
 
@@ -84,7 +94,7 @@ Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will ad
     <B2BAdditional />
 </Accordion>
 </AccordionGroup>
-You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [X-Invoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
+You can now generate invoices in the XInvoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [XInvoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
 
 ## FAQ
 <AccordionGroup>

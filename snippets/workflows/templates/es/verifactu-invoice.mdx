@@ -1,80 +1,81 @@
 ---
-title: "Issue VERI*FACTU Invoice"
-description: "Convert to VERI*FACTU, send to AEAT and generate PDF"
+title: "VERI*FACTU issue invoice"
+description: "Generate and send VERI*FACTU to AEAT, then generate PDF with QR"
 countryCode: "es"
 appId: "verifactu"
 schema: "bill/invoice"
 ---
 
-```json
+```json Example VERI*FACTU invoice workflow with states
 {
-    "name": "VERI*FACTU Invoice",
-    "description": "Convert to VERI*FACTU, send to AEAT and generate PDF",
-    "steps": [
-        {
-            "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        },
-        {
-            "id": "ec41cce0-0fc3-11f0-8a81-7911b3ecee3c",
-            "name": "Add Sequential Code",
-            "provider": "sequence.enumerate",
-            "summary": "Dynamic · Verifactu · 000001",
-            "config": {
-                "name": "Verifactu",
-                "padding": 6,
-                "sign": true,
-                "start": 1
-            }
-        },
-        {
-            "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
-            "name": "Generate Verifactu (Spain)",
-            "provider": "verifactu.generate"
-        },
-        {
-            "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Send Verifactu (Spain)",
-            "provider": "verifactu.send"
-        },
-        {
-            "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "Spanish - A4",
-            "config": {
-                "date_format": "%Y-%m-%d",
-                "layout": "A4",
-                "locale": "es",
-                "logo_height": 60,
-                "logo_url": "https://ams3.digitaloceanspaces.com/invopop-console-files-dev/bebac1f29c0b782421bec81f518860200f17379da7a003a238eca16e8e5ede82"
-            }
-        },
-        {
-            "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
+  "name": "VERI*FACTU issue invoice",
+  "description": "Generate and send VERI*FACTU to AEAT, then generate PDF with QR",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "ec41cce0-0fc3-11f0-8a81-7911b3ecee3c",
+      "name": "Add Sequential Code",
+      "provider": "sequence.enumerate",
+      "summary": "Dynamic · Verifactu · 000001",
+      "config": {
+        "name": "Verifactu",
+        "padding": 6,
+        "sign": true,
+        "start": 1
+      }
+    },
+    {
+      "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate Verifactu (Spain)",
+      "provider": "verifactu.generate"
+    },
+    {
+      "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Send Verifactu (Spain)",
+      "provider": "verifactu.send"
+    },
+    {
+      "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Generate PDF",
+      "provider": "pdf",
+      "summary": "Spanish - A4",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "layout": "A4",
+        "locale": "es",
+        "logo_height": 60
+      }
+    },
+    {
+      "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `sent`{.state .sent}",
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
 }
+
 ```

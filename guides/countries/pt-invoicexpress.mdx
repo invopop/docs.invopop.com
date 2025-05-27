@@ -1,6 +1,7 @@
 ---
-title: "🇵🇹 Portugal · InvoiceXpress"
-description: Issue invoices in Portugal using the InvoiceXpress provider.
+title: "Portugal · InvoiceXpress Guide"
+sidebarTitle: "🇵🇹 Portugal · InvoiceXpress"
+description: 🇵🇹 Issue invoices in Portugal using InvoiceXpress as a provider.
 ---
 
 import IssueInvoice from '/snippets/workflows/templates/pt/ix-issue-invoice.mdx';
@@ -12,9 +13,10 @@ import ExampleSupplier from '/snippets/suppliers/pt/ix-supplier.mdx';
 Invopop partners with the local invoicing provider [InvoiceXpress](https://invoicexpress.com/) to issue invoices, invoice-receipts, and credit notes in Portugal and allow users to submit their tax reports (SAF-T) to the Portuguese tax authority (AT).
 
 This guide explains how to integrate with [InvoiceXpress](https://invoicexpress.com/), a Portuguese invoicing provider that enables you to:
-* Issue compliant invoices, invoice-receipts, and credit notes in Portugal
-* Submit tax reports (SAF-T) to the Portuguese tax authority (AT)
-* Enable real-time tax reporting
+
+* Issue compliant invoices, invoice-receipts, and credit notes in Portugal.
+* Submit tax reports (SAF-T) to the Portuguese tax authority (AT).
+* Enable real-time tax reporting.
 
 For technical details and examples of Portuguese GOBL documents, see the [GOBL Portugal Tax Regime documentation](https://github.com/invopop/gobl/blob/main/regimes/pt/README.md).
 
@@ -22,15 +24,15 @@ For technical details and examples of Portuguese GOBL documents, see the [GOBL P
 To issue invoices through InvoiceXpress, you'll need the following information:
 
 * Supplier Details, including:
-  * Legal business name
-  * Tax ID (Número de Identificação Fiscal)
-  * Complete business address
-  * Contact email address
+  * legal business name,
+  * tax ID (Número de Identificação Fiscal),
+  * complete business address,
+  * contact email address.
 
 * Invoice details, including:
-  * Line item descriptions
-  * Quantities and unit prices
-  * Applicable Portuguese VAT rates
+  * line item descriptions,
+  * quantities and unit prices,
+  * applicable Portuguese VAT rates.
 
 ## Setup
 
@@ -42,45 +44,78 @@ The integration requires three main components:
 
 All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 <Steps>
-  <Step title="Connect InvoiceXpress App">
-    1. Navigate to the **Configuration** section
-    2. Select **Apps**
-    3. Locate **InvoiceXpress Portugal**
-    4. Click **Connect**
-  </Step>
 
-  <Step title="Configure Supplier Registration Workflow">
-    Create a workflow to register your suppliers with InvoiceXpress:
+<Step title="Connect InvoiceXpress App">
 
-    1. Go to the **Workflows** section
-    2. Create a new "Contacts" workflow
-    3. Name it "Register supplier in InvoiceXpress"
-    4. Add the following required steps:
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **InvoiceXpress Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
+
+  Click the **Configure** button on the app, and choose the "Post-registration workflow" we created in the previous step.
+
+  Click the **Save** button.
+
+</Step>
+
+<Step title="Configure the supplier registration workflow">
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="InvoiceXpress register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-ix-register-supplier" cta="Select a workspace to use this template">
+      Issues a registration request for a supplier to complete.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+      <RegisterSupplier />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "InvoiceXpress Register Supplier".
+
+      The new workflow will need to perform three steps:
+
        * **Sign the Envelope** - Validates the document
        * **Register InvoiceXpress issuer** - Creates supplier account
        * **Set State** - Marks progress as `processing`
 
-    For quick setup, use our pre-configured workflow below:
+       Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-    <Accordion title="Supplier Registration Workflow example">
-      <RegisterSupplier/>
-    </Accordion>
-  </Step>
+      Add any additional steps you may need, and save the new workflow.
 
-  <Step title="Set Up Invoice Processing Workflow">
-    Create a workflow for processing invoices with these essential steps:
+    </Tab>
+  </Tabs>
+</Step>
 
-    1. Name the workflow "Send invoice to InvoiceXpress"
-    2. Add these required steps:
-       * **Send to InvoiceXpress** - Transmits invoice data
-       * **Generate PDF** - Creates document (configure for your environment)
-       * **Set State** - Updates status to "sent"
 
-    For quick setup, use our pre-configured workflow below:
+<Step title="Prepare Invoice Workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="InvoiceXpress issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-ix-issue-invoice" cta="Select a workspace to use this template">
+        This workflow will issue an invoice through InvoiceXpress.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-    <Accordion title="Invoice Processing Workflow example">
-      <IssueInvoice/>
-    </Accordion>
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Send invoice to InvoiceXpress".
+
+        The new workflow will need to perform these steps:
+
+         * **Send to InvoiceXpress** - Transmits invoice data
+         * **Generate PDF** - Creates document (configure for your environment)
+         * **Set State** - Updates status to "sent"
+
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
   </Step>
 </Steps>
 
@@ -95,6 +130,7 @@ InvoiceXpress provides a way to configure their accounts to use the AT's sandbox
 InvoiceXpress supports multiple suppliers under one integration. Each supplier receives their own account for document issuance and tax reporting.
 
 Follow these steps to onboard a supplier:
+
 <Steps>
   <Step title="Submit Supplier Information">
     Send a [GOBL Party](https://docs.gobl.org/draft-0/org/party) document to your supplier registration workflow. The system will automatically:

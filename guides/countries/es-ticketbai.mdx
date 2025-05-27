@@ -1,6 +1,7 @@
 ---
-title: "🇪🇸 Spain · TicketBAI"
-description: Issue invoices in the Basque Country with TicketBAI.
+title: "Spain · TicketBAI Guide"
+sidebarTitle: "🇪🇸 Spain · TicketBAI"
+description: 🇪🇸 Issue invoices in the Basque Country with TicketBAI.
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/es/ticketbai-invoice.mdx'
@@ -46,7 +47,7 @@ To correctly issue TicketBAI invoices, you will need to prepare your Invopop Wor
 <Steps>
 <Step title="Connect the TicketBAI app">
 
-Head over to **Configuration**, **Apps**, and find **TicketBAI** from the list of apps to discover. Tap the **Connect** button to enable.
+Head over to **Configuration** > **Apps**, and find **TicketBAI** from the list of apps to discover. Tap the **Connect** button to enable.
 
 No further configuration is required.
 
@@ -54,39 +55,52 @@ No further configuration is required.
 
 <Step title="Create invoice workflow">
 
-If you haven't already, checkout the [workflows guide](/guides/features/workflows) and ensure you're familiar with the process.
 
-Create a new **Invoices** workflow with the following steps:
+    <Tabs>
+      <Tab title="Template">
+        
+        <Card iconType="duotone" title="TicketBAI issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-invoice" cta="Select a workspace to use this template">
+        This workflow will issue an invoice through TicketBAI.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view. This example adds support for setting states on silo entries which we strongly recomend.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-- **Add Sequential Code** - chose the **dynamic** sequence option, set a name, and check the **Sign document** checkbox.
-- **Generate TicketBAI (Spain)** - this step generates the TicketBAI XML document.
-- **Generate PDF** - configure as required, the PDF will use the QR code generated in the previous step. After this step, you may want to add a webhook or similar.
-- **Send TicketBAI (Spain)** - will take the previously generate XML document, and send to the appropriate gateway.
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "TicketBAI issue invoice".
 
-<Tip>
-  Invoices must be signed before processing with TicketBAI. If you choose not to
-  use the _Add Sequential Code_ step, be sure to add the _Sign Envelope_ step
-  instead.
-</Tip>
+        The new workflow will need to perform these steps:
 
-<Warning>
-  If in the unlikely scenario a document is rejected, you will need to try and
-  correct the error inside a new document and resend. As documents are all
-  chained together in the _Generate TicketBAI_ step, modifications are not
-  permitted.
-</Warning>
+        - **Add Sequential Code** - chose the **dynamic** sequence option, set a name, and check the **Sign document** checkbox.
+        - **Generate TicketBAI (Spain)** - this step generates the TicketBAI XML document.
+        - **Generate PDF** - configure as required, the PDF will use the QR code generated in the previous step. After this step, you may want to add a webhook or similar.
+        - **Send TicketBAI (Spain)** - will take the previously generate XML document, and send to the appropriate gateway.
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+        <Tip>
+          Invoices must be signed before processing with TicketBAI. If you choose not to
+          use the _Add Sequential Code_ step, be sure to add the _Sign Envelope_ step
+          instead.
+        </Tip>
+
+      </Tab>
+    </Tabs>
+
+    <Warning>
+      If in the unlikely scenario a document is rejected, you will need to try and
+      correct the error inside a new document and resend. As documents are all
+      chained together in the _Generate TicketBAI_ step, modifications are not
+      permitted.
+    </Warning>
 
 </Step>
 
 </Steps>
-
-<Accordion title="Example TicketBAI Invoice Workflow">
-
-You can copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries which we strongly recomend.
-
-<WorkflowExample />
-
-</Accordion>
 
 ## Running
 

@@ -1,6 +1,7 @@
 ---
-title: "🇲🇽 Mexico · CFDI & SAT"
-description: Issue CFDI documents in Mexico using the SAT Mexico provider.
+title: "Mexico · CFDI & SAT Guide"
+sidebarTitle: "🇲🇽 Mexico · CFDI & SAT"
+description: 🇲🇽 Issue CFDI documents in Mexico using the SAT Mexico provider.
 ---
 
 import PostRegistration from '/snippets/workflows/templates/mx/sat-postregistration.mdx';
@@ -52,77 +53,101 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 
-<Step title="Create Supplier post-registration workflow (optional)">
-Head over to the **Workflows** section and create a new "Contacts" workflow.
+<Step title="Create Supplier post-registration workflow">
 
-<Frame>
-  <img
-    alt="New Contacts Workflow"
-    width="350px"
-    src="/guides/images/mx-sat-new-workflow.png"
-  />
-</Frame>
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" cta="Select a workspace to use this template">
+    This workflow marks Suppliers as `Registered`. You will select this workflow in the SAT (Mexico) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
 
-Rename the workflow to "Post-registration flow", and add a single step to change the state to `registered`.
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-At this point you can add any webhooks or notification steps that might be useful for your systems to receive after a supplier has successfully registered.
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Post-registration flow".
 
-Tap the **Save** button.
+      This worflow is composed by a single step:
 
-<Accordion title="Supplier post-registration workflow example">
-Copy and paste the following example in the workflow editor:
-<PostRegistration />
-</Accordion>
+      1. **Set State** - To `Registered`.
 
-</Step>
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
 
-<Step title="Connect the SAT Mexico App">
-Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **SAT Mexico** app.
-<Frame>
-<img src="/guides/images/mx-sat-app.png" width="360px" alt="SAT MX App" />
-</Frame>
-
-Tap the **Configure** button on the App, and choose the "Post-registration flow" workflow we created in the previous step, or leave empty.
-
-Tap the **Save** button.
-
+  </Tab>
+</Tabs>
 </Step>
 
 <Step title="Configure the supplier registration workflow">
-Back in the **Workflows** section, create a new "Contacts" workflow called "Register Supplier".
 
-The new workflow will need to perform three steps:
 
-- **Sign the Envelope**
-- **Register SAT Issuer**
-- **Set State** - with configuration set to `processing`.
+<Tabs>
+  <Tab title="Template">
+    
+    <Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" cta="Select a workspace to use this template">
+    Issues a registration request for a supplier to complete in order to issue invoices through SAT.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Add any additional steps you may need, and save the new workflow.
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Register Supplier".
 
-<Accordion title="Supplier registration workflow example">
-Copy and paste the following example in the workflow editor:
-<RegisterSupplier />
-</Accordion>
+    The new workflow will need to perform these steps:
 
+  - **Sign the Envelope**
+  - **Register SAT Issuer**
+  - **Set State** - with configuration set to `processing`.
+
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
 </Step>
+
 
 <Step title="Prepare Invoice Workflow">
-Finally, we need to prepare the actual workflow that will be used to process invoices. For this example the workflow should be named something like "Issue SAT Invoices", and it will consist of the following Steps:
 
-- **Add Sequential Code** - with dynamic sequences, and name like "SAT Invoices".
-- **Send to SAT (Mexico)**.
-- **Generate PDF** - configured for your environment.
-- **Set State** - to "sent".
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="SAT issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-issue-invoice" cta="Select a workspace to use this template">
+        Issue a CFDI invoice through SAT.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Tap the **Save** button to ensure the workflow has been persisted.
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Issue SAT Invoices".
 
-<Accordion title="Issue Mexican invoice workflow example">
-Copy and paste the following example in the workflow editor:
-<IssueInvoice />
-</Accordion>
+        The new workflow will need to perform these steps:
 
-</Step>
+        - **Add Sequential Code** - with dynamic sequences, and name like "SAT Invoices".
+        - **Send to SAT (Mexico)**.
+        - **Generate PDF** - configured for your environment.
+        - **Set State** - to "sent".
 
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+        <Frame>
+          <img src="/guides/images/it-ticket-invoice.png" alt="Issue Italian Smart Receipts" />
+        </Frame>
+      </Tab>
+    </Tabs>
+  </Step>
 </Steps>
 
 ## Running
@@ -182,7 +207,7 @@ The details from this form are sent securely to the PAC (Authorised Certificatio
 
 The CSD comprises two files (with extensions `.cer` and `.key`) and a password. Suppliers, companies or individuals, can follow [this guide on how to obtain one](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan).
 
-Certificates have already been registered for all sandbox users, so you can safely run the "Post-registration flow" workflow manually and leave the new supplier in the `sent` state.
+Certificates have already been registered for all sandbox users, so you can safely run the "Post-registration workflow" manually and leave the new supplier in the `sent` state.
 
 From this point on you can now send invoices on behalf of the supplier.
 

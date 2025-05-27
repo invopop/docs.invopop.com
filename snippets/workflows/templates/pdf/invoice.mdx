@@ -1,0 +1,49 @@
+---
+title: "PDF Invoice"
+description: "Add a sequential code and generate PDF"
+schema: "bill/invoice"
+---
+
+```json Example PDF invoice workflow with states
+{
+  "name": "PDF Invoice",
+  "description": "Add a sequential code and generate PDF",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "6b16c200-a75f-11ef-ba08-91f336761c6c",
+      "name": "Add Sequential Code",
+      "provider": "sequence.enumerate",
+      "summary": "Dynamic · Invoice · 000001",
+      "config": {
+        "sign": true,
+        "padding": 6,
+        "start": 1,
+        "name": "Invoice"
+      }
+    },
+    {
+      "id": "c61adaa0-7b55-11ef-bffc-d9a10ebf9f89",
+      "name": "Generate PDF",
+      "config": {
+        "logo_height": 40,
+        "locale": "en",
+        "date_format": "%Y-%m-%d"
+      },
+      "summary": "English",
+      "provider": "pdf"
+    }
+  ],
+  "rescue": [
+        {
+            "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
+            "name": "Set State",
+            "config": {
+                "state": "error"
+            },
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}"
+        }
+    ]
+}
+```

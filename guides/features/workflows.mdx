@@ -1,59 +1,44 @@
 ---
-title: "Workflows"
+title: "Workflows Guide"
+sidebarTitle: "Workflows"
 icon: "code-branch"
 description: Configure a workflow in Invopop to process documents.
 ---
 
 ## What is a Workflow?
 
-A workflow in Invopop is essentially a list of steps that are executed sequentially for an incoming _job_. Each step in a workflow is linked to a provider of a specific service, such as:
+A workflow in Invopop is a sequence of steps executed for each incoming job. Each step is powered by the provider of a service. Examples of services include:
 
-- generating a PDF,
-- forwarding invoices to an external tax agency,
-- modifying documents,
-- sending emails,
-- posting webhooks,
-- forwarding documents to ERPs or other systems, etc.
+* Generating PDFs
+* Forwarding invoices to tax agencies
+* Modifying documents
+* Sending emails
+* Posting webhooks
+* Sending documents to ERPs or other systems
 
-Workflows allow you to automate and streamline processes related to document handling. Invopop handles the complexity of ensuring that every step is executed using retries and error handling.
+Workflows automate and streamline your document processes. Invopop ensures each step is executed reliably, with built-in retries and error handling.
 
 ## How to create a Workflow
 
-While it is possible to create workflows via the API, we strongly recommend using the [Invopop Console](https://console.invopop.com) as the UI will help you correctly define and configure each of the different steps.
+Although workflows can be created via the API, we strongly recommend using the [Invopop Console](https://console.invopop.com) for an easier set up.
 
-<Steps>
 
-<Step title="Go to the workflows section">
-  Use the sidebar and tap on the **Workflows** section.
-</Step>
+In the **Workflows** section click on **Create Workflow**. You will see a template selection screen. The first items are blank workflows for each document type:
 
-<Step title="Click create workflow">
-  You'll be presented with a modal to start creating the new workflow.
-</Step>
+- **Empty Invoice workflow**: for sales or expenses.
+- **Empty Party workflow**: for suppliers or customers.
+- **Empty Payments workflow**: for payments or receipts.
+- **Empty Order workflow**: for purchase or sales orders.
+- **Empty Delivery workflow**: for delivery notes.
 
-<Step title="Select document type">
-There are currently five document types:
+Choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) for this example and then click **Load Template**.
 
-- **Invoices** - sales or expenses.
-- **Contacts** - suppliers or customers.
-- **Payments** - payments or receipts.
-- **Orders**
-- **Deliveries**
 
-Choose **Invoices** for this example.
+Give your workflow a name and description by filling the fields on the right sidebar.
 
-</Step>
-<Step title="Click Create Workflow">
-This will save the new workflow and present the empty workflow editor screen.
-</Step>
+Add steps to your new workflow by tapping on the **+ Add step** button and selecting an action from the right. Some steps will require configuration in order to function correctly.
 
-</Steps>
-
-Give your workflow a name for easy identification, like "Process Invoice" by tapping on the pencil symbol in the top bar.
-
-Add steps to your new workflow by tapping on the **+** button and selecting an action from the right. Some steps will require configuration in order to function correctly.
-
-The "developer mode" switch at the top right can be used to display the workflow as a JSON document. This makes it really easy to copy and paste workflows from examples or other workspaces. Just be sure to return to the visual editor view to ensure the document is validated.
+The "developer mode" switch at the top right of the canvas can be used to display the JSON representation of the workflow. This makes it easy to copy and paste workflows from examples or other workspaces. Make sure to return to the visual editor view to ensure the document is validated.
 
 <Frame caption="Visual or Developer Switcher">
   ![workflow switcher](/guides/images/workflow-switcher.png)
@@ -63,11 +48,11 @@ The "developer mode" switch at the top right can be used to display the workflow
 
 Workflows in Invopop are executed:
 
-- manually via the invopop console,
-- via API calls to the [create job endpoint](/api-ref/transform/jobs/create-a-job-put), or,
-- automatically by an embedded application.
+- Manually via the Invopop Console
+- Via API calls to the [create job endpoint](/api-ref/transform/jobs/create-a-job-put)
+- Automatically by an embedded application.
 
-Before a job can be executed however, you need to [upload the data](/api-ref/silo/entries/create-an-entry-put) you'll be working with to the "silo" as a "silo entry".
+Before a job can be executed you must [upload the data](/api-ref/silo/entries/create-an-entry-put) you'll be working with to the "silo" as a "silo entry".
 
 As a job is executed, the silo entry will be updated with any changes or attachments generated during processing.
 
@@ -75,4 +60,4 @@ The status of a job can be seen in the silo entry's activity tab, or in the **Wo
 
 ## Error Handling
 
-Any error that causes a `KO` (an error from which the workflow can't recover) will trigger error handling in a workflow. To enable this section, tap on "Handle Errors" at the bottom of the workflow creation screen. To add actions into this section select an action from the list, or drag steps into the **Error Handling** area.
+Any error that causes a `KO` (an error from which the workflow can't recover) will trigger error handling in a workflow. To enable this section, tap on **Handle Errors** at the bottom of the workflow creation screen. To add actions into this section select an action from the list, or drag steps into the **Error Handling** area.

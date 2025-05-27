@@ -43,33 +43,65 @@ Note that when generating invoices, the app will merge the supplier information 
 
 </Step>
 
+
 <Step title="Prepare a Workflow">
-Now, you need to set up the workflow in Invopop to process the invoices imported from Chargebee. Go to **Workflows** in the Invopop console and create a new **Invoices** workflow.
 
-The workflow will need to be prepared to convert and publish invoices as local regulations require. You can also add steps for any other automation you want to perform, such as emailing the invoices or storing them in a cloud service.
+<Tabs>
+  <Tab title="Template">
+      <Card iconType="duotone" title="ChargeBee Basic PDF workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-invoice" cta="Select a workspace to use this template">
+      This workflow syncs with ChargeBee and generates a basic PDF.
+      </Card>
+  </Tab>
 
-It's essential to add the **Import Chargebee document** step at the very beginning of the workflow to import the document. Also, be sure to add a **Sync with Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
+  <Tab title="Code">
+    Copy and paste the following JSON into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view. This example adds support for setting states on silo entries, which we strongly recommend.
+    <WorkflowExample />
+  </Tab>
+  <Tab title="Build from scratch">
 
-<AccordionGroup>
-<Accordion title="Example Workflow - Basic PDF">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
-<WorkflowExample />
-</Accordion>
-<Accordion title="Example Workflow - ZUGfERD">
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with ChargeBee".
+      
+      It's essential to add the **Import Chargebee document** step at the very beginning of the workflow to import the document. Also, be sure to add a **Sync with Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
 
-This is an example that combines the Chargebee app with a country-specific functionality (in this case, the ZUGfERD conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
-<ZUGfERDExample />
-</Accordion>
-</AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Tabs>
+  <Tab title="Template">
+      <Card iconType="duotone" title="ChargeBee ZUGfERD" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" cta="Select a workspace to use this template">
+      This workflow syncs with ChargeBee and generates a ZUGfERD XML and PDF.
+      </Card>
+  </Tab>
+
+  <Tab title="Code">
+    This is an example that combines the Chargebee app with a country-specific functionality (in this case, the ZUGfERD conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
+
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <ZUGfERDExample />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with ChargeBee".
+      
+      It's essential to add the **Import Chargebee document** step at the very beginning of the workflow to import the document. Also, be sure to add a **Sync with Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
+
+  </Tab>
+</Tabs>
+
+
+
 </Step>
 
 <Step title="Connect the Chargebee app">
 
-You are now ready to connect and configure the Chargebee app itself. Go to **Configuration** > **Apps** in the Invopop console. Find the **Chargebee** app then click on **Connect**. The app will be added to the list of active apps. Click on the app's **Configure** button. You'll see a form with the following fields:
+You are now ready to connect and configure the Chargebee app itself. Go to **Configuration** → **Apps** in the Invopop console. Find the **Chargebee** app then click on **Connect**. The app will be added to the list of active apps. Click on the app's **Configure** button. You'll see a form with the following fields:
 
 - **Chargebee Site:** The identifier of your Chargebee site. It is the part of the URL when you log in to Chargebee before the `.chargebee.com` domain. For example, if your URL is `https://my-site.chargebee.com`, your site is `my-site`.
-- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" > "Configure Chargebee" > "API Keys" in the Chargebee UI to create one. Keep in mind the used API must be a Full-Access Key.
+- **Chargebee API Key:** The API key used to access Chargebee. Go to "Settings" → "Configure Chargebee" → "API Keys" in the Chargebee UI to create one. Keep in mind the used API must be a Full-Access Key.
 - **Supplier:** The supplier who will be issuing the invoices. You can select the one you created earlier.
 - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
 - **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
