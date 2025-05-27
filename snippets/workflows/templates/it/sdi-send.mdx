@@ -7,70 +7,72 @@ schema: "bill/invoice"
 ---
 ```json
 {
-    "name": "SDI Send Invoice",
-    "description": "Generate and issue an invoice through SDI",
-    "steps": [
-        {
-            "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        },
-        {
-            "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "24f5c340-fd12-11ef-998c-e97f18c9212e",
-            "name": "Generate FatturaPA",
-            "provider": "sdi-it.generate",
-            "summary": "Create XML document"
-        },
-        {
-            "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
-            "name": "Send to SDI (Italy)",
-            "provider": "sdi-it.send",
-            "summary": "Sandbox · Accepted by PA (Notifica esito)",
-            "config": {
-                "environment": "sandbox",
-                "response": "NE"
-            }
-        },
-        {
-            "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
-            "name": "Generate PDF",
-            "provider": "pdf",
-            "summary": "Italian",
-            "config": {
-                "date_format": "%Y-%m-%d",
-                "locale": "it",
-                "logo_height": 40
-            }
-        },
-        {
-            "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
+  "name": "SDI send invoice",
+  "description": "Generate and issue an invoice through SDI",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "1a692ae0-cd12-11ef-998c-e97f18c9212e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "1855b430-cd12-11ef-998c-e97f18c9212e",
+      "name": "Sign Envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "24f5c340-fd12-11ef-998c-e97f18c9212e",
+      "name": "Generate FatturaPA",
+      "provider": "sdi-it.generate",
+      "summary": "Create XML document"
+    },
+    {
+      "id": "2042f860-cd12-11ef-998c-e97f18c9212e",
+      "name": "Send to SDI (Italy)",
+      "provider": "sdi-it.send",
+      "summary": "Sandbox · Accepted by PA (Notifica esito)",
+      "config": {
+        "environment": "sandbox",
+        "response": "NE"
+      }
+    },
+    {
+      "id": "236965b0-cd12-11ef-998c-e97f18c9212e",
+      "name": "Generate PDF",
+      "provider": "pdf",
+      "summary": "Italian",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "locale": "it",
+        "logo_height": 40
+      }
+    },
+    {
+      "id": "2b6db450-cd12-11ef-998c-e97f18c9212e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `sent`{.state .sent}",
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "2d5d7660-cd12-11ef-998c-e97f18c9212e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
 }
+
 ```

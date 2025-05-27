@@ -1,47 +1,50 @@
 ---
 title: "NFS-e register supplier"
-description: "Issues a registration request for a supplier to complete in order to issue invoices through NFS-e."
+description: "Issues a registration request for a NFS-e supplier to complete"
 countryCode: "br"
 appId: "nfe-br"
 schema: "org/party"
 ---
 
-```json
+```json Example NFS-e supplier registration workflow with states
 {
-    "name": "Register supplier",
-    "steps": [
-        {
-            "id": "67f80a60-abd4-11ef-8b96-dd5de8906f90",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "85ba8ea0-9064-11ef-8f9e-39835766d0bc",
-            "name": "Register NFS-e supplier (Brazil)",
-            "next": [],
-            "provider": "nfe-br.register"
-        },
-        {
-            "id": "0439e900-a32b-11ef-9707-79bbd71238cd",
-            "name": "Set Silo Entry State",
-            "next": [],
-            "config": {
-                "state": "processing"
-            },
-            "summary": "Set state to `processing`{.state .processing}",
-            "provider": "silo.state"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
-            "name": "Set State",
-            "config": {
-                "state": "error"
-            },
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}"
-        }
-    ]
+  "name": "NFS-e register supplier",
+  "description": "Issues a registration request for a NFS-e supplier to complete",
+  "schema": "org/party",
+  "steps": [
+    {
+      "id": "67f80a60-abd4-11ef-8b96-dd5de8906f90",
+      "name": "Sign Envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "85ba8ea0-9064-11ef-8f9e-39835766d0bc",
+      "name": "Register NFS-e supplier (Brazil)",
+      "next": [],
+      "provider": "nfe-br.register"
+    },
+    {
+      "id": "0439e900-a32b-11ef-9707-79bbd71238cd",
+      "name": "Set Silo Entry State",
+      "next": [],
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    }
+  ],
+  "rescue": [
+    {
+      "id": "9a7b3d50-1358-11ef-af96-a18cfb3774fa",
+      "name": "Set State",
+      "config": {
+        "state": "error"
+      },
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}"
+    }
+  ]
 }
+
 ```
