@@ -20,34 +20,39 @@ paths:
     get:
       description: Fetch all the silo entries in the current company.
       parameters:
-      - description: Folder to search within.
+      - description: The folder in which to search for entries.
         in: query
         name: folder
         schema:
-          description: Folder to search within.
+          description: The folder in which to search for entries.
           example: invoices
           title: Folder
           type: string
-      - description: Date from which results are provided.
+      - description: The starting date and time for retrieving results in descending
+          order, formatted as an ISO timestamp.
         in: query
         name: created_at
         schema:
-          description: Date from which results are provided.
+          description: The starting date and time for retrieving results in descending
+            order, formatted as an ISO timestamp.
           example: "2023-08-02T00:00:00.000Z"
           title: Created At
           type: string
-      - description: Position provided by the previous result's next_cursor property.
+      - description: The position marker from the previous result's next_cursor property,
+          used for pagination.
         in: query
         name: cursor
         schema:
-          description: Position provided by the previous result's next_cursor property.
+          description: The position marker from the previous result's next_cursor
+            property, used for pagination.
           title: Cursor
           type: string
-      - description: Maximum number of entries to show in a page of results.
+      - description: The maximum number of entries to return in a single page of results.
         in: query
         name: limit
         schema:
-          description: Maximum number of entries to show in a page of results.
+          description: The maximum number of entries to return in a single page of
+            results.
           example: 20
           title: Limit
           type: integer
@@ -319,44 +324,52 @@ paths:
     get:
       description: Find silo entries whose document mentions the given entry's UUID.
       parameters:
-      - description: Document UUID to find relations for.
+      - description: The unique identifier of the document to find related entries
+          for.
         in: query
         name: uuid
         schema:
-          description: Document UUID to find relations for.
+          description: The unique identifier of the document to find related entries
+            for.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: UUID
           type: string
-      - description: Context within a document for which the silo entry's UUID has
-          been mentioned.
+      - description: The specific context within a document where the silo entry's
+          UUID is referenced.
         in: query
         name: context
         schema:
-          description: Context within a document for which the silo entry's UUID has
-            been mentioned.
+          description: The specific context within a document where the silo entry's
+            UUID is referenced.
           example: line.item
           title: Context
           type: string
-      - description: Date from which results are provided.
+      - description: The starting date and time for retrieving related entries in
+          descending order, formatted as an ISO timestamp.
         in: query
         name: created_at
         schema:
-          description: Date from which results are provided.
+          description: The starting date and time for retrieving related entries in
+            descending order, formatted as an ISO timestamp.
           example: "2023-08-02T00:00:00.000Z"
           title: Created At
           type: string
-      - description: Position provided by the previous result's next_cursor property.
+      - description: The position marker from the previous result's next_cursor property,
+          used for pagination.
         in: query
         name: cursor
         schema:
-          description: Position provided by the previous result's next_cursor property.
+          description: The position marker from the previous result's next_cursor
+            property, used for pagination.
           title: Cursor
           type: string
-      - description: Maximum number of entries to show in a page of results.
+      - description: The maximum number of related entries to return in a single page
+          of results.
         in: query
         name: limit
         schema:
-          description: Maximum number of entries to show in a page of results.
+          description: The maximum number of related entries to return in a single
+            page of results.
           example: 20
           title: Limit
           type: integer
@@ -400,44 +413,52 @@ paths:
     get:
       description: Find silo entries whose document mentions the UUID parameter.
       parameters:
-      - description: Document UUID to find relations for.
+      - description: The unique identifier of the document to find related entries
+          for.
         in: query
         name: uuid
         schema:
-          description: Document UUID to find relations for.
+          description: The unique identifier of the document to find related entries
+            for.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: UUID
           type: string
-      - description: Context within a document for which the silo entry's UUID has
-          been mentioned.
+      - description: The specific context within a document where the silo entry's
+          UUID is referenced.
         in: query
         name: context
         schema:
-          description: Context within a document for which the silo entry's UUID has
-            been mentioned.
+          description: The specific context within a document where the silo entry's
+            UUID is referenced.
           example: line.item
           title: Context
           type: string
-      - description: Date from which results are provided.
+      - description: The starting date and time for retrieving related entries in
+          descending order, formatted as an ISO timestamp.
         in: query
         name: created_at
         schema:
-          description: Date from which results are provided.
+          description: The starting date and time for retrieving related entries in
+            descending order, formatted as an ISO timestamp.
           example: "2023-08-02T00:00:00.000Z"
           title: Created At
           type: string
-      - description: Position provided by the previous result's next_cursor property.
+      - description: The position marker from the previous result's next_cursor property,
+          used for pagination.
         in: query
         name: cursor
         schema:
-          description: Position provided by the previous result's next_cursor property.
+          description: The position marker from the previous result's next_cursor
+            property, used for pagination.
           title: Cursor
           type: string
-      - description: Maximum number of entries to show in a page of results.
+      - description: The maximum number of related entries to return in a single page
+          of results.
         in: query
         name: limit
         schema:
-          description: Maximum number of entries to show in a page of results.
+          description: The maximum number of related entries to return in a single
+            page of results.
           example: 20
           title: Limit
           type: integer
@@ -538,6 +559,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntrySearchCollection'
           description: OK
+  /silo/v1/spool:
+    post:
+      description: Upload temporary file data to the silo spool. Requires 'enrolled'
+        scope.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  description: Base64 encoded binary data.
+                  format: byte
+                  type: string
+                name:
+                  description: File name associated with the data.
+                  example: invoice.xml
+                  title: Name
+                  type: string
+                type:
+                  description: MIME Type of the data
+                  example: application/xml
+                  title: Type
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloUploadTempFileResponse'
+          description: OK
+  /silo/v1/spool/{key}:
+    delete:
+      description: Delete a previously uploaded entry from the spool.
+      parameters:
+      - description: Key of the file provided during upload
+        in: path
+        name: key
+        required: true
+        schema:
+          description: Key of the file provided during upload
+          example: 2025-W20-123467abcde-invoice.xml
+          title: Key
+          type: string
+      responses:
+        "204":
+          description: No Content
+    get:
+      description: Download a previously uploaded entry from the spool.
+      parameters:
+      - description: Key of the file provided during upload
+        in: path
+        name: key
+        required: true
+        schema:
+          description: Key of the file provided during upload
+          example: 2025-W20-123467abcde-invoice.xml
+          title: Key
+          type: string
+      responses:
+        "200":
+          description: Contains the originally uploaded data.
 components:
   schemas:
     DsigDigest:
@@ -851,8 +934,8 @@ components:
     SiloEntryCollection:
       properties:
         created_at:
-          description: Date from which results are provided.
-          example: "2018-01-01T00:00:00.000Z"
+          description: Date from which results are provided in descending order.
+          example: "2025-05-01T00:00:00.000Z"
           title: Created At
           type: string
         cursor:
@@ -871,7 +954,7 @@ components:
           title: Limit
           type: integer
         list:
-          description: Array of entries.
+          description: Array of entries sorted by creation time in descending order.
           items:
             $ref: '#/components/schemas/SiloEntry'
           nullable: true
@@ -896,7 +979,7 @@ components:
           title: Limit
           type: integer
         list:
-          description: Array of entries.
+          description: Array of entries ordered by relevance.
           items:
             $ref: '#/components/schemas/SiloEntry'
           nullable: true
@@ -956,6 +1039,11 @@ components:
           example: 347c5b04-cde2-11ed-afa1-0242ac120002:source:key
           title: ID
           type: string
+        indexed:
+          description: When true, the meta entry is indexed for search.
+          example: true
+          title: Indexed
+          type: boolean
         key:
           description: Key used to identify the meta entry by the source.
           example: service-id
@@ -972,6 +1060,11 @@ components:
           example: https://example.com/info
           title: Link URL
           type: string
+        owned:
+          description: When true, the meta entry is indexed by owner ID.
+          example: true
+          title: Owned
+          type: boolean
         owner_id:
           description: UUID of the owner of the silo entry, typically a workspace
             ID. Included for reference when the authentication token does not already
@@ -983,6 +1076,12 @@ components:
             ID is not available.
           title: Reference
           type: string
+        secure:
+          description: When true, the meta entry is never included in lists and needs
+            to be specifically requested.
+          example: true
+          title: Secure
+          type: boolean
         shared:
           description: When true, the meta entry may be shared with other applications.
           example: true
@@ -1092,6 +1191,13 @@ components:
           example: false
           title: Sign
           type: boolean
+      type: object
+    SiloUploadTempFileResponse:
+      properties:
+        key:
+          description: Use this key to download the file again later.
+          title: Key
+          type: string
       type: object
   securitySchemes:
     authToken:
