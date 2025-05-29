@@ -1,0 +1,42 @@
+---
+title: "VERI*FACTU cancel document"
+description: "Cancel a VERI*FACTU document and report it to AEAT"
+countryCode: "es"
+appId: "verifactu"
+schema: "bill/invoice"
+---
+
+```json Example VERI*FACTU cancel workflow with states
+{
+    "name": "VERI*FACTU cancel document",
+    "description": "Cancel a VERI*FACTU document and report it to AEAT",
+    "steps": [
+        {
+            "id": "2f897e30-3c9c-11f0-8690-a921c0418914",
+            "name": "Cancel VERI*FACTU (Spain)",
+            "provider": "verifactu.cancel"
+        },
+        {
+            "id": "334ffc10-3c9c-11f0-8690-a921c0418914",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "384cfe20-3c9c-11f0-8690-a921c0418914",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+
+```
