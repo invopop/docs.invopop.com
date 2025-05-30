@@ -15,24 +15,13 @@ servers:
   url: https://api.invopop.com
 - description: local development
   url: https://api.invopop.dev
+security:
+- authToken: []
 paths:
   /transform/v1/jobs:
     post:
       description: Create a new job without an explicit ID.
       parameters:
-      - description: Additional arguments that may be used by workflow actions. Binary
-          data may provided inside a Data URI, including the 'name' parameter.
-        explode: true
-        in: query
-        name: args
-        schema:
-          additionalProperties:
-            type: string
-          description: Additional arguments that may be used by workflow actions.
-            Binary data may provided inside a Data URI, including the 'name' parameter.
-          title: Args
-          type: object
-        style: deepObject
       - description: Maximum number of seconds to block the http request waiting for
           the job to complete and provide a response.
         in: query
@@ -45,18 +34,41 @@ paths:
           type: integer
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               properties:
                 args:
-                  additionalProperties:
-                    type: string
                   description: Additional arguments that may be used by workflow actions.
                     Binary data may provided inside a Data URI, including the 'name'
                     parameter.
-                  nullable: true
                   title: Args
                   type: object
+                data:
+                  description: Raw JSON data of the GOBL Envelope or Object when the
+                    Silo Entry ID is empty.
+                  title: Data
+                  type: object
+                key:
+                  description: Key to associate with the job for idempotency.
+                  title: Key
+                  type: string
+                silo_entry_id:
+                  description: ID for the entry in the silo as an alternative for
+                    the raw data object.
+                  title: Silo Entry ID
+                  type: string
+                tags:
+                  description: Tags to associate with the job.
+                  items:
+                    type: string
+                  title: Tags
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  title: Workflow ID
+                  type: string
+              required:
+              - workflow_id
               type: object
       responses:
         "202":
@@ -88,19 +100,6 @@ paths:
     put:
       description: Create a new job with the given ID.
       parameters:
-      - description: Additional arguments that may be used by workflow actions. Binary
-          data may provided inside a Data URI, including the 'name' parameter.
-        explode: true
-        in: query
-        name: args
-        schema:
-          additionalProperties:
-            type: string
-          description: Additional arguments that may be used by workflow actions.
-            Binary data may provided inside a Data URI, including the 'name' parameter.
-          title: Args
-          type: object
-        style: deepObject
       - description: Maximum number of seconds to block the http request waiting for
           the job to complete and provide a response.
         in: query
@@ -123,18 +122,41 @@ paths:
           type: string
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               properties:
                 args:
-                  additionalProperties:
-                    type: string
                   description: Additional arguments that may be used by workflow actions.
                     Binary data may provided inside a Data URI, including the 'name'
                     parameter.
-                  nullable: true
                   title: Args
                   type: object
+                data:
+                  description: Raw JSON data of the GOBL Envelope or Object when the
+                    Silo Entry ID is empty.
+                  title: Data
+                  type: object
+                key:
+                  description: Key to associate with the job for idempotency.
+                  title: Key
+                  type: string
+                silo_entry_id:
+                  description: ID for the entry in the silo as an alternative for
+                    the raw data object.
+                  title: Silo Entry ID
+                  type: string
+                tags:
+                  description: Tags to associate with the job.
+                  items:
+                    type: string
+                  title: Tags
+                  type: array
+                workflow_id:
+                  description: WorkflowID description
+                  title: Workflow ID
+                  type: string
+              required:
+              - workflow_id
               type: object
       responses:
         "202":
@@ -749,5 +771,7 @@ components:
   securitySchemes:
     authToken:
       bearerFormat: JWT
+      description: 'Use the `Bearer` scheme with a valid JWT token to authenticate
+        requests. Example: `Authorization: Bearer <token>`'
       scheme: bearer
       type: http
