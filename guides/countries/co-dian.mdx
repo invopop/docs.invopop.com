@@ -6,11 +6,6 @@ description: 🇨🇴 Issue invoices and credit notes in Colombia to the DIAN.
 
 import WorkflowExample from '/snippets/workflows/templates/co/dian-invoice.mdx'
 
-<Warning>
-  This document is out of date and currently pending updates. Please check back
-  soon.
-</Warning>
-
 ## Introduction
 
 The [DIAN](https://www.dian.gov.co/) in Colombia stands for Dirección de Impuestos y Aduanas Nacionales (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
@@ -19,7 +14,11 @@ Electronic invoicing in Colombia is mandatory and operates on a real-time cleara
 
 Businesses in Colombia must be registered with the DIAN and have an active RUT (Registro Único Tributario) to issue electronic invoices.
 
-In this guide we'll discuss how Invopop can help you comply with e-invoicing regulation in Colombia.
+Invopop has partnered with [Plemsi](https://plemsi.com) to issue invoices in Colombia (DIAN). You have the option of either using Invopop's Plemsi billing account or create your own and provide your own credentials.
+
+This guide will walk you through the steps necessary to set up the workflows that will let you issue GOBL documents in Colombia using the Plemsi provider.
+
+Please refer to the docs of the [GOBL's Colombia Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) to learn about the specifics of Colombian GOBL documents and to get examples.
 
 ## Prerequisites
 
@@ -29,14 +28,6 @@ In order to complete this guide in a live Invopop environment, you will need:
 - Customer details for B2B transactions, including name, RUT or international ID, address, and municipality code national transactions.
 - Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
 - Have authorized "Plemsi", the provider used by Invopop, to issue invoices on the supplier's behalf in the DIAN, and followed the specific onboarding process for each supplier (details below).
-
-### Authorization with the DIAN
-
-Invopop has partnered with [Plemsi](https://plemsi.com) to issue invoices in Colombia (DIAN). You have the option of either using Invopop's Plemsi billing account or create your own and provide your own credentials.
-
-This guide will walk you through the steps necessary to set up the workflows that will let you issue GOBL documents in Colombia using the Plemsi provider.
-
-Please refer to the docs of the [GOBL's Colombia Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) to learn about the specifics of Colombian GOBL documents and to get examples.
 
 ## Sandbox Setup
 
@@ -74,18 +65,45 @@ You can invoice using the Plemsi provider on behalf of multiple suppliers. For e
     📘 [Solicitud de Habilitación de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf)
 
     The DIAN will provide you with an 1876 form at the end of the process. Keep it at hand; you'll need it in the following steps.
-</Step>
+  </Step>
   <Step title="Authorise Plemsi to use the numbering range">
     Now, the supplier representative must give the Plemsi technology provider permission to use the numbering range when issuing their invoices.
 
     The following guide explains how to do it, but again, note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later on:
 
     📘 [Asociar una resolución o numeración DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/registrar-resolucion-dian/)
-      </Step>
+  </Step>
   <Step title="Create and configure your Plemsi account">
     Now you need a Plemsi account created and configured. We have to do this for you, so please contact us via Slack or [support@invopop.com](mailto:support@invopop.com).
 
-    We'll ask you to provide us with all the data necessary to set up the account, including the fiscal data of the company as it must appear in your invoices, and some information from the previous steps.
+    You'll need to provide us with this information about the supplier company:
+
+    - NIT with verification digit
+    - Name
+    - Phone number
+    - E-mail address
+    - Address
+    - City
+    - Region (_Departamento_)
+    - Postal code
+    - Country
+    - Tax Obligations (whether any of the following apply):
+      - _Responsable de IVA_
+      - _Gran contribuyente_
+      - _Autoretenedor_
+      - _Agente de retención en el impuesto sobre las ventas_
+      - _Régimen Simple de Tributación - SIMPLE_
+    - Business registration number (_Número de Registro Mercantil_)
+    - Legal representative data:
+      - Full Name
+      - Identification number (_Cédula de ciudadanía_)
+      - Phone number
+      - E-mail address
+
+    Also, from the previous steps, you'll need to provide us with the following:
+
+    - The `TestID` code resulting from Plemsi authorisation in the DIAN
+    - The numbering range registration document (_Resolución DIAN_)
   </Step>
   <Step title="Create a workflow">
     <Tabs>
