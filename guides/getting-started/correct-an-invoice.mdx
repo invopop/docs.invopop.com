@@ -1,0 +1,289 @@
+---
+title: "Correcting an Invoice"
+icon: "rotate-right"
+description: "How to correct issued invoices with credit notes"
+---
+
+## Goal of this tutorial
+
+In this tutorial, you will:
+
+1. Understand what invoice corrections are and when to use them.
+2. Learn about the three main correction types: **credit notes**, **debit notes**, and **corrective documents**.
+3. Explore different ways to issue a **credit note** to correct an invoice:
+   * **Using the API**:
+     * Upload a fully defined credit note
+     * Auto-generate a credit note from an existing invoice
+   * **Using the Invopop Console** to create the credit note through the interface.
+
+## Understanding Invoice Corrections
+
+If you’ve ever made a mistake on an invoice—or had a client return something—you’ve probably had to deal with some kind of correction document. 
+
+There are three main types, and while they all help fix issues with invoices, they work a little differently. Let’s break them down:
+
+### Credit Note 
+
+Think of a credit note as the seller’s way of saying: *“Hey, we owe you something back.”*
+
+Maybe the customer returned part of their order, or you accidentally overcharged them. Instead of modifying the original invoice, you issue a credit note to reduce the amount they owe—it’s like giving them store credit, or even a refund, for the difference.
+
+Credit notes are widely used and generally accepted, but some countries have specific rules and may not allow them in all cases—so it’s always best to check the local invoicing regulations before issuing one.
+
+### Debit Note 
+
+Now, a debit note flips the script. This usually comes from the buyer.
+
+It’s a formal way of telling the seller: *“There’s a problem with your invoice—here’s what we think you owe us.”*
+
+If a customer receives a damaged product, they might send a debit note to request a refund or adjustment. If the seller agrees, they’ll follow up with a credit note to formalize the correction.
+
+Sellers can issue debit notes too—such as when they forget to include a charge—but it's more commonly the buyer who sends them to request an adjustment.
+
+### Corrective Invoice (or Rectifying Invoice)
+
+This one’s a bit more formal—and stricter.
+
+In some countries (like Germany or Spain), a credit note isn’t always enough to fix an error. Instead, you need to issue a corrective invoice—a brand-new document that cancels and replaces the original.
+
+For example, if you sent an invoice for €1,000 but later realize it should have been €850, you wouldn’t send a credit note. You’d issue a new invoice that clearly states: *"This replaces the previous one, and here’s the corrected amount."*
+
+### Recap
+
+| Document Type        | Who Sends It      | What It Does                                      | Original Invoice Affected? |
+|----------------------|-------------------|---------------------------------------------------|:-----------------------------:|
+| **Credit Note**       | Seller            | Reduces the amount owed (e.g. for returns, errors) | ❌    |
+| **Debit Note**        | Buyer (usually)   | Requests an adjustment or refund                  | ❌     |
+| **Corrective Invoice**| Seller            | Replaces the original invoice with a corrected one| ✅    |
+
+## Correcting Your First Invoice Using a Credit Note
+
+Before we dive in, let’s quickly recap where we are.
+
+If you’ve completed the [Quickstart](/guides/getting-started/quickstart) tutorial, you should now have a processed invoice in your workspace. Great job getting this far!
+
+Now, let’s imagine there was a mistake in that invoice and we need to cancel it. Since invoices submitted to GOBL are immutable, we can’t edit the original — instead, we’ll issue a **credit note** to correct it.
+
+There are two ways to do this:
+
+* From the **Invopop Console**
+* Using the **API**
+
+Let’s walk through both.
+
+<Tabs>
+  <Tab title="Console">
+
+  ### Steps
+    1. In the [Console](https://console.invopop.com), click on **Invoices** in the left sidebar.
+    2. Select the invoice you want to correct.  
+      > The invoice must be in the **Sent** state in order to create a correction.
+    3. Click on the **Correct** button in the top-right corner. This will open the **Correction** dialog.
+    <Frame>
+      <img
+        alt= "Toggle code view"
+        src="/guides/images-tutorials/cn-correct-button.gif"
+        width="550px"
+      />
+    </Frame>
+    4. In the Series field, enter the series code for credit note:`CN`.
+    5. Under **Type**, select `credit-note` from the dropdown.
+    6. Click the **Correct** button at the bottom right of the dialog.
+    > This will generate the credit note based on the original invoice.
+
+    <Frame>
+      <img
+        alt= "Build invoice"
+        src="/guides/images-tutorials/cn-correct-dialog.gif"
+        width="550px"
+      />
+    </Frame>
+
+    7. Click the **Save** button in the top-right corner to store the credit note.
+    > You’ll be redirected to the *invoice detail* view.
+    <Frame>
+      <img
+        alt= "Invoice detail"
+        src="/guides/images-tutorials/cn-result.png"
+        width="550px"
+      />
+    </Frame>
+
+    You've just created your first credit note! You can click on Preview to see how it'd look like in a PDF format. 
+  </Tab>
+
+  <Tab title="API">
+
+    There are two ways to submit a credit note using the API:
+
+    * **Upload a fully defined credit note**: You provide the complete document, including all fields.
+    * **Auto-generate a credit note**: You reference an existing invoice, and Invopop builds the credit note for you.
+
+    Let’s walk through each method:
+
+    ###  1. Upload of a Complete Credit Note
+
+    This method gives you full control over the credit note—you define everything, from line items and taxes to the original invoice reference.
+    It’s perfect if you already have the credit note prepared, whether you built it manually or generated it somewhere else. Just upload it directly to Invopop and you’re good to go.
+
+    #### How it works
+
+    Use the [Create an Entry](/api-ref/silo/entries/create-an-entry-post) API endpoint with a request body that wraps your credit note in the required structure.
+
+    Your request body should look like this:
+
+    ```json
+    {
+      "content_type": "application/json",
+      "data": {}
+    }
+    ```
+    Fill the `data` field with your full credit note object. Here’s an example based on the PDF invoice used earlier:
+
+    ```json expandable
+      {
+        "$schema": "https://gobl.org/draft-0/bill/invoice",
+        "$regime": "GB",
+        "uuid": "01975e35-426f-760e-aab8-a30b942fee07",
+        "type": "credit-note",
+        "series": "SAMPLE",
+        "issue_date": "2025-06-11",
+        "currency": "GBP",
+        "preceding": [
+          {
+            "uuid": "019035bd-4524-73ab-bf44-6037841ce5d9",
+            "type": "standard",
+            "issue_date": "2024-07-31",
+            "series": "SAMPLE",
+            "code": "001"
+          }
+        ],
+        "supplier": {
+          "name": "Test Company Ltd.",
+          "tax_id": {
+            "country": "GB",
+            "code": "000472631"
+          },
+          "addresses": [
+            {
+              "num": "12",
+              "street": "Main Street",
+              "locality": "Hull",
+              "code": "HU17 7PQ",
+              "country": "GB"
+            }
+          ],
+          "emails": [
+            {
+              "addr": "company@example.com"
+            }
+          ]
+        },
+        "customer": {
+          "name": "Random Company Ltd.",
+          "tax_id": {
+            "country": "GB",
+            "code": "350983637"
+          },
+          "addresses": [
+            {
+              "num": "45",
+              "street": "Some Street",
+              "locality": "London",
+              "code": "SW1A 1AA",
+              "country": "GB"
+            }
+          ],
+          "emails": [
+            {
+              "addr": "random@example.com"
+            }
+          ]
+        },
+        "lines": [
+          {
+            "i": 1,
+            "quantity": "20",
+            "item": {
+              "name": "Development services",
+              "price": "90.00",
+              "unit": "h"
+            },
+            "sum": "1800.00",
+            "discounts": [
+              {
+                "reason": "Special discount",
+                "percent": "10%",
+                "amount": "180.00"
+              }
+            ],
+            "taxes": [
+              {
+                "cat": "VAT",
+                "rate": "standard",
+                "percent": "20.0%"
+              }
+            ],
+            "total": "1620.00"
+          }
+        ],
+        "totals": {
+          "sum": "1620.00",
+          "total": "1620.00",
+          "taxes": {
+            "categories": [
+              {
+                "code": "VAT",
+                "rates": [
+                  {
+                    "key": "standard",
+                    "base": "1620.00",
+                    "percent": "20.0%",
+                    "amount": "324.00"
+                  }
+                ],
+                "amount": "324.00"
+              }
+            ],
+            "sum": "324.00"
+          },
+          "tax": "324.00",
+          "total_with_tax": "1944.00",
+          "payable": "1944.00"
+        }
+      }
+    ```
+    
+    If everything goes well, you’ll get a `200 OK` response along with the JSON for your newly registered credit note.
+
+
+    ### 2. Auto-Generate Credit Note from Invoice
+
+    Sending a complete credit note to Invopop is pretty straightforward—as long as you already have the full document ready to go.
+
+    But let’s be honest: building a credit note from scratch can get tricky, and sometimes you just don’t want to deal with all the details.
+
+    That’s where Invopop really shines. Instead of defining everything yourself, you can simply reference the invoice you want to correct. Just pass the **Silo Entry ID** and the type of correction, and Invopop will take care of the rest.
+
+    ### How it works
+
+    Use the [Create an Entry](/api-ref/silo/entries/create-an-entry-post) API endpoint, but this time, skip the `data` field. Instead, you’ll send a request body that tells Invopop to generate the credit note for you:
+
+    ```json
+    {
+      "correct": { "type": "credit-note" },
+      "previous_id": "silo_entry_id"
+    }
+    ````
+
+    * `previous_id` should point to the Silo Entry ID of the original invoice.
+    * `correct.type` should be `"credit-note"` to indicate the correction type.
+
+    If everything goes well, you’ll get a `200 OK` response along with the JSON for your newly registered credit note.
+  </Tab>
+</Tabs>
+
+---
+
+
+
