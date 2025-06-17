@@ -1,0 +1,89 @@
+# OpenAPI PDF v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you test access to the Invopop API and
+    generate data.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Utils Service API
+  version: 1.0.1
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/pdf/v1/preview:
+    post:
+      description: Generate a PDF preview of the provided GOBL document.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                logo_url:
+                  type: string
+                  format: uri
+                  title: Logo URL
+                  description: URL of the logo to include in the PDF.
+                logo_height:
+                  type: integer
+                  title: Logo Height
+                  description: Height of the logo in pixels.
+                locale:
+                  type: string
+                  title: Locale
+                  description: Locale to use for the PDF generation (e.g., "es").
+                date_format:
+                  type: string
+                  title: Date Format
+                  description: |-
+                    Date format to use in the PDF (e.g., "%Y-%m-%d"). Keys: `%Y` = full year,
+                    `%m` = month, `%d` = day.
+                hide_promo:
+                  type: boolean
+                  title: Hide Promo
+                  description: Whether to hide the Invopop footer.
+                layout:
+                  type: string
+                  title: Layout
+                  description: Layout to use for the PDF (e.g., "Letter").
+                  enum:
+                    - "A4"
+                    - "Letter"
+                    - "DIN5008"
+                data:
+                  title: GOBL Envelope
+                  type: object
+                  description: The complete GOBL **Envelope** to convert.
+        required: true
+      responses:
+        "200":
+          description: Successfully generated PDF preview.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad Request - Invalid input data.
+        "500":
+          description: Internal Server Error - Failed to generate PDF.
+
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+        Example: `Authorization: Bearer <token>`

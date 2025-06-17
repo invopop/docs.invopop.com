@@ -15,6 +15,8 @@ servers:
   url: https://api.invopop.com
 - description: local development
   url: https://api.invopop.dev
+security:
+- authToken: []
 paths:
   /silo/v1/entries:
     get:
@@ -78,7 +80,32 @@ paths:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
   /silo/v1/entries/{entry_id}/attachments/{id}:
-    post:
+    get:
+      description: Download silo entry attachment's data. Content type and disposition
+        will be set according to the source.
+      parameters:
+      - description: UUID of the attachment to fetch.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the attachment to fetch.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: UUID of the silo entry.
+        in: path
+        name: entry_id
+        required: true
+        schema:
+          description: UUID of the silo entry.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
+      responses:
+        "200":
+          description: Contains the attachment data.
+    put:
       description: Add a new attachment to a silo entry. This is only available to
         applications with 'enrolled' scope at this time.
       parameters:
@@ -103,7 +130,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCreateAttachment'
+              properties:
+                data:
+                  description: Base64 encoded binary data.
+                  format: byte
+                  type: string
+                desc:
+                  description: Description of the file.
+                  example: Invoice for January 2021.
+                  title: Description
+                  type: string
+                embeddable:
+                  description: When true, this attachment may be embedded inside other
+                    attachments, like PDFs. Default is false.
+                  example: true
+                  title: Embeddable
+                  type: boolean
+                meta:
+                  additionalProperties:
+                    type: string
+                  description: Any additional meta data about the attachment.
+                  title: Meta
+                  type: object
+                mime:
+                  description: MIME type of the file to upload. Required when only
+                    creating placeholder.
+                  example: application/pdf
+                  title: MIME
+                  type: string
+                name:
+                  description: Name of the file.
+                  example: invoice.pdf
+                  title: Name
+                  type: string
+                sha256:
+                  description: SHA256 hex hash of the file that will be upload in
+                    a separate request. Required when only creating placeholder.
+                  example: 27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28
+                  title: SHA256
+                  type: string
+              required:
+              - name
+              type: object
       responses:
         "200":
           content:
@@ -718,53 +786,6 @@ components:
           title: Show Options
           type: boolean
       type: object
-    SiloCreateAttachment:
-      properties:
-        data:
-          description: Binary data of the file. Optional if intending to upload data
-            directly to the generated URL in the response.
-          items:
-            minimum: 0
-            type: integer
-          title: Data
-          type: array
-        desc:
-          description: Description of the file.
-          example: Invoice for January 2021.
-          title: Description
-          type: string
-        embeddable:
-          description: When true, this attachment may be embedded inside other attachments,
-            like PDFs. Default is false.
-          example: true
-          title: Embeddable
-          type: boolean
-        meta:
-          additionalProperties:
-            type: string
-          description: Any additional meta data about the attachment.
-          title: Meta
-          type: object
-        mime:
-          description: MIME type of the file to upload. Required when only creating
-            placeholder.
-          example: application/pdf
-          title: MIME
-          type: string
-        name:
-          description: Name of the file.
-          example: invoice.pdf
-          title: Name
-          type: string
-        sha256:
-          description: SHA256 hex hash of the file that will be upload in a separate
-            request. Required when only creating placeholder.
-          example: 27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28
-          title: SHA256
-          type: string
-      required:
-      - name
-      type: object
     SiloCreateEntry:
       properties:
         allow_invalid:
@@ -1202,5 +1223,7 @@ components:
   securitySchemes:
     authToken:
       bearerFormat: JWT
+      description: 'Use the `Bearer` scheme with a valid JWT token to authenticate
+        requests. Example: `Authorization: Bearer <token>`'
       scheme: bearer
       type: http
