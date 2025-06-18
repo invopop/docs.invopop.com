@@ -1,0 +1,265 @@
+---
+title: "France · Chorus Pro Guide"
+sidebarTitle: "🇫🇷 France · Chorus Pro"
+description: 🇫🇷 Issue invoices to French public institutions with Chorus Pro.
+---
+
+import WorkflowExample from '/snippets/workflows/templates/fr/chorus-pro-invoice.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/fr/chorus-pro-supplier-registration.mdx';
+import B2GInvoice from '/snippets/invoices/fr/chorus-pro-b2g.mdx';
+import Supplier from '/snippets/suppliers/fr/chorus-pro.mdx';
+import CreditNote from '/snippets/invoices/fr/chorus-pro-credit-note.mdx';
+
+## Introduction
+
+In this guide, you'll learn how to issue invoices to French public institutions using Chorus Pro.
+
+You will:
+
+1. Learn about Chorus Pro and its format requirements
+2. Set up Invopop workflows:
+   a. Supplier registration workflow
+   b. Invoice submission workflow
+3. Prepare the Chorus Pro platform and create credentials
+4. Register a supplier with Chorus Pro
+5. Send your first invoice to a French public institution
+
+### What is Chorus Pro?
+
+Chorus Pro is a mandatory service provided by the French government for invoicing French public institutions. It allows businesses to upload invoices in multiple e-invoicing formats and track them throughout the French public administration process. All invoices to French public sector entities must be submitted through Chorus Pro.
+
+The platform supports various e-invoicing formats including Cross Industry Invoice (CII), and implements the EN16931 European standard for electronic invoicing with additional French-specific requirements.
+
+### Understanding Chorus Pro Format Requirements
+
+Chorus Pro accepts invoices in CII (Cross Industry Invoice) format based on the EN16931 European standard. However, it adds specific French extensions and validation requirements:
+
+**EN16931 Standard**
+The European Norm 16931 defines the semantic data model for electronic invoices. It ensures interoperability across EU member states while allowing for country-specific extensions.
+
+**Chorus Pro Extensions**
+Chorus Pro extends the base EN16931 standard with additional French requirements:
+- SIRET number validation for French entities
+- Specific invoice types for different purposes
+- Service codes for government departments
+
+In GOBL, these formats are handled via addons which need to be added to each invoice. You'll see some examples of this further below.
+
+## Setup
+Now it's time to configure your Invopop Workspace for Chorus Pro invoicing.
+
+You need to:
+
+<Steps>
+  <Step title="Connect the Chorus Pro app">
+  1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+  2. Find **Chorus Pro France** in the app list.
+  3. Click **Connect** to activate the app.
+
+  After connecting, you'll see Chorus Pro listed in the Enabled Apps section.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-app.png" alt="Chorus Pro app connected" />
+  </Frame>
+
+  </Step>
+
+  <Step title="Configure the supplier registration workflow">
+    Add a new workflow to your workspace for registering suppliers. You can start with the template below.
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="Chorus Pro supplier registration workflow" icon="code-branch" href="" cta="Add to my workspace">
+        This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow]() code view.
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow]() as the base. Then name the workflow with a descriptive label such as "Chorus Pro Supplier Registration".
+
+        The new workflow will need to perform a single step:
+
+        1. **Register for Chorus Pro** - Prepares the system so that provided supplier can send invoices.
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+      </Tab>
+    </Tabs>
+    Keep the workflow ID at hand--you'll need it later.
+  </Step>
+
+  <Step title="Configure invoice workflow">
+    Add a new workflow to your workspace for issuing invoices. You can start with the template below.
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="Chorus Pro invoice workflow" icon="code-branch" href="" cta="Add to my workspace">
+          This workflow will issue an invoice through Chorus Pro.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow]() code view.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow]() in the template selector, then add the following steps:
+
+        1. **Generate CII with EN16931 and Chorus Pro addons** - Creates the XML document with required extensions and adds it to the chain.
+        2. **Send Chorus Pro (France)** - Submits the XML to Chorus Pro and returns the response.
+
+        In the Error Handling section, add the **Set State** action and select `Error`.
+      </Tab>
+    </Tabs>
+    Keep the workflow ID at hand--you'll need it later.
+
+    <Info>
+      Chorus Pro allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow until accepted.
+    </Info>
+  </Step>
+</Steps>
+
+## Running
+
+Learn how to register a business entity and issue Chorus Pro invoices:
+
+### Register a Supplier
+
+Before sending invoices through Chorus Pro, you must register each supplier with their Chorus Pro account credentials. This allows Invopop to submit invoices on their behalf through the government platform.
+
+<Steps>
+  <Step title="Upload a Supplier">
+  Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. The following fields are required:
+
+  - `name`
+  - `tax_id`
+
+    <AccordionGroup>
+    <Accordion title="Example supplier">
+      <Supplier />
+    </Accordion>
+    </AccordionGroup>
+
+  After successful upload, you'll see the supplier in the **Contacts** section with status `Empty`.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-supplier-1.png" alt="Upload supplier to Invopop" />
+  </Frame>
+
+  </Step>
+
+  <Step title="Send the Supplier to the registration workflow">
+  Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+  - The supplier's UUID from the previous step
+  - The Supplier Registration workflow ID from the [Setup](#setup) section
+
+  This workflow will guide the supplier through providing their Chorus Pro credentials securely.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-supplier-2.png" alt="Supplier registration in progress" />
+  </Frame>
+  </Step>
+
+  <Step title="Complete Chorus Pro Authentication">
+  The supplier will receive instructions to provide their Chorus Pro account credentials. This step is essential as Invopop needs access to their account to submit invoices on their behalf. See [Chorus Pro Setup Instructions](#chorus-pro-setup-instructions) for details on what needs to be configured within Chorus Pro.
+
+  The supplier's status will change to `Registered` when authentication is complete.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-supplier-3.png" alt="Supplier registered successfully" />
+  </Frame>
+  </Step>
+</Steps>
+
+<Warning>
+Suppliers must have an existing Chorus Pro account before registration. If they don't have one, they should create it at [chorus-pro.gouv.fr](https://chorus-pro.gouv.fr) before proceeding with the registration workflow.
+</Warning>
+
+### Send an Invoice
+
+Once a supplier is registered, you can send invoices to French public institutions through Chorus Pro.
+
+<Steps>
+  <Step title="Create an Invoice">
+  Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to create a new invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field.
+
+  Key requirements for Chorus Pro invoices:
+  - `supplier` must be a registered Chorus Pro supplier
+  - `customer` must include the public institution identifier
+  - `lines` with proper VAT configuration for B2G transactions
+
+    <AccordionGroup>
+    <Accordion title="Example B2G invoice">
+      <B2GInvoice />
+    </Accordion>
+    </AccordionGroup>
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-invoice-1.png" alt="Create invoice in Invopop" />
+  </Frame>
+  </Step>
+
+  <Step title="Send to Chorus Pro">
+  Send the invoice to Chorus Pro using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+  - The invoice UUID from the previous step
+  - The Chorus Pro Invoice workflow ID from the [Setup](#setup) section
+
+  The system will generate a CII XML file with Chorus Pro extensions and submit it to the platform.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-invoice-2.png" alt="Invoice sent to Chorus Pro" />
+  </Frame>
+  </Step>
+
+  <Step title="Track Invoice Status">
+  After submission, track your invoice in Chorus Pro using the invoice identifier (series + code). You can modify and resubmit invoices until they are accepted by the receiving institution.
+
+  Once accepted, the invoice becomes locked and cannot be modified.
+
+  <Frame>
+  <img width="450" src="/guides/images/fr-chorus-pro-invoice-3.png" alt="Track invoice in Chorus Pro portal" />
+  </Frame>
+  </Step>
+</Steps>
+
+<Note>
+The invoice identifier in Chorus Pro corresponds to your GOBL invoice series and code combined. This helps you locate and track invoices across both systems.
+</Note>
+
+## Chorus Pro Setup Instructions
+
+This section explains what suppliers need to configure within their Chorus Pro account to enable integration with Invopop.
+
+[Space for detailed Chorus Pro setup instructions to be added]
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What invoice formats does Chorus Pro support?">
+  Chorus Pro primarily supports CII (Cross Industry Invoice) format based on EN16931. Invopop currently focuses on CII with plans to add additional formats in the future.
+  </Accordion>
+
+  <Accordion title="Do I need a SIRET number to use Chorus Pro?">
+  French businesses need a SIRET number. Foreign businesses can use their local tax identifier, but should verify acceptance with the receiving French institution.
+  </Accordion>
+
+  <Accordion title="Can I modify invoices after sending to Chorus Pro?">
+  Yes, you can modify and resubmit invoices until they are accepted by the receiving institution. Once accepted, invoices become locked and cannot be modified.
+  </Accordion>
+
+  <Accordion title="How do I find my invoice in Chorus Pro?">
+  Use your GOBL invoice series and code combined as the invoice identifier in the Chorus Pro portal to locate your submitted invoices.
+  </Accordion>
+
+  <Accordion title="What happens if my supplier registration fails?">
+  Ensure the supplier has a valid Chorus Pro account and provided correct credentials. Contact support if issues persist with the registration workflow.
+  </Accordion>
+
+  <Accordion title="Are there file size limits for Chorus Pro invoices?">
+  Chorus Pro has specific file size and format requirements. Invopop handles these automatically when generating CII XML files from your GOBL invoices.
+  </Accordion>
+</AccordionGroup>
