@@ -50,7 +50,7 @@ Configure your Invopop Workspace for VERI\*FACTU invoicing by following these st
       />
     </Frame>
   </Step>
-  <Step title="Configure the supplier registration workflow">
+  <Step title="Configure the Supplier Registration Workflow">
     Add a new workflow to your workspace for registering suppliers. You can start with the template below.
 
     <Tabs>
@@ -78,7 +78,7 @@ Configure your Invopop Workspace for VERI\*FACTU invoicing by following these st
         Add any additional steps you may need, and save the new workflow.
       </Tab>
     </Tabs>
-    Keep the workflow ID at hand--you'll need it later.
+    Keep the `Workflow ID` at hand, you'll use it later.
   </Step>
   <Step title="Configure invoice workflow">
     Add a new workflow to your workspace for issuing invoices. You can start with the template below.
@@ -105,7 +105,7 @@ Configure your Invopop Workspace for VERI\*FACTU invoicing by following these st
         In the Error Handling section, add the **Set State** action and select `Error`.
       </Tab>
     </Tabs>
-    Keep the workflow ID at hand--you'll need it later.
+    Keep the `Workflow ID` at hand, you'll use it later.
 
     <Info>
       VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
@@ -123,11 +123,11 @@ Invopop has a collaboration agreement with the Spanish tax agency (AEAT) that le
 
 However, we need the supplier to provide the following documents:
 
-1. An agreement from the entity
-2. The signatory's fiscal ID
-3. Documentation proving the signatory's authorization
+1. An agreement where the entity allows Invopop to submit invoices to AEAT on its behalf
+2. A copy of signatory's fiscal ID (DNI/NIE)
+3. Documentation proving that signatory is authorized to represent the entity, such as extract from commercial registry, company bylaws or power of attorney
 
-This is handled by the supplier registration workflow we created during setup. Let's see how.
+This is handled by the _Supplier Registration Workflow_ we created during setup. Let's see how.
 
 <Steps>
   <Step title="Upload a Supplier">
@@ -210,8 +210,8 @@ This is handled by the supplier registration workflow we created during setup. L
   <Step title="Send the Invoice to the VERI*FACTU invoice workflow">
     Send the invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - The `Silo Entry ID` of the invoice
-    - The VERI\*FACTU invoice `Workflow ID`
+    - `workflow_id`: use the `Workflow ID` of The VERI\*FACTU invoice workflow we created during setup
+    - `silo_entry_id`: use the The `Silo Entry ID` of the invoice you've just uploaded.
 
     The invoice's status will change to `Sent` when the workflow completes successfully.
 
@@ -277,8 +277,8 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
   <Step title="Send the Credit Note to the VERI*FACTU invoice workflow">
     Send the credit note to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - The `silo_entry_id` of the credit note from step 1
-    - The VERI\*FACTU invoice workflow ID
+    - `workflow_id`: use the `Workflow ID` of The VERI\*FACTU invoice workflow we created during setup
+    - `silo_entry_id`: use the The `Silo Entry ID` of the credit note you've just uploaded.
 
     The credit note's status will change to `Sent` when the workflow completes successfully.
   </Step>
