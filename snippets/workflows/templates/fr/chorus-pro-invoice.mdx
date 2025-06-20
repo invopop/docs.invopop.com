@@ -1,0 +1,63 @@
+---
+title: "Chorus Pro issue invoice"
+description: "Generate and send invoice to Chorus Pro using CII"
+countryCode: "fr"
+appId: "chorus-pro"
+schema: "bill/invoice"
+---
+
+```json Example Chorus Pro invoice workflow with states
+{
+    "name": "Send to Chorus Pro",
+    "description": "Generate and send invoice to Chorus Pro using CII",
+    "steps": [
+        {
+            "id": "241c1b60-4cec-11f0-bcdc-61b84b5eeae8",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "0dba81f0-4ba1-11f0-a0a5-bbd7c9d8117a",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "3d048690-4ba1-11f0-a0a5-bbd7c9d8117a",
+            "name": "Generate UN/CEFACT CII Invoice",
+            "provider": "cii.generate",
+            "summary": "Chorus Pro V1",
+            "config": {
+                "doc_type": "choruspro-v1"
+            }
+        },
+        {
+            "id": "2cd30490-4ba1-11f0-a0a5-bbd7c9d8117a",
+            "name": "Send an invoice to Chorus Pro",
+            "provider": "chorus-pro.send"
+        },
+        {
+            "id": "282dac00-4cec-11f0-bcdc-61b84b5eeae8",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "2b9c6cf0-4cec-11f0-bcdc-61b84b5eeae8",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
