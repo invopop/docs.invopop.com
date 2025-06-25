@@ -9,6 +9,7 @@ import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supp
 import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
 import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
 import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
 import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
 import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
@@ -57,7 +58,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Tabs>
   <Tab title="Template">
-    
+
     <Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" cta="Add to my workspace">
     This workflow marks Suppliers as `Registered`. You will select this workflow in the SAT (Mexico) app configuration later.
     </Card>
@@ -87,7 +88,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Tabs>
   <Tab title="Template">
-    
+
     <Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" cta="Add to my workspace">
     Issues a registration request for a supplier to complete in order to issue invoices through SAT.
     </Card>
@@ -221,7 +222,7 @@ GOBL Invoices sent to the SAT require the following properties in order to perfo
 - `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
 
 <AccordionGroup>
-<Accordion title="B2B Invoice">
+<Accordion title="B2B Invoice (Personas Morales)">
 
 This main type of invoice is a standard B2B invoice from a Mexican supplier to another Mexican customer.
 
@@ -233,6 +234,21 @@ Notice:
 - there are no totals nor calculations, all of these will be made automatically when uploading.
 
 <B2BInvoice />
+
+</Accordion>
+
+<Accordion title="B2C Invoice (Personas Físicas)">
+
+This is a standard B2C invoice from a Mexican supplier to a Mexican físical person with tax details, but no specific tax declaration requirements. This would be for a larger sale when the "Global Invoice" does not apply.
+
+In addition to the observations for regular B2B invoices, note:
+
+- the presense of an RFC in the same format as for companies, and,
+- the customer's `mx-cfdi-fiscal-regime` and `mx-cfdi-use` properties have been set to `616` and `S01` respectively reflecting they have not tax implications.
+
+It is important in Mexico to ensure the correct Fiscal Regime and CFDI Use codes are set correctly, as the SAT will check these details and reject docucments with unexpected combinations.
+
+<B2CInvoice />
 
 </Accordion>
 
