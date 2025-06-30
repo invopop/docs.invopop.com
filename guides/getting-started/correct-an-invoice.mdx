@@ -9,7 +9,7 @@ description: "How to correct issued invoices with credit notes"
 In this tutorial, you will:
 
 1. Understand what invoice corrections are and when to use them.
-2. Learn about the three main correction types: **credit notes**, **debit notes**, and **corrective documents**.
+2. Learn about the three main correction types: **credit notes**, **debit notes**, and **corrective invoice**.
 3. Explore different ways to issue a **credit note** to correct an invoice:
    * **Using the API**:
      * Upload a fully defined credit note
@@ -48,7 +48,7 @@ A corrective invoice is a new document that references and replaces the original
 
 Countries that support corrective invoices include Spain and Poland.
 
-It's worth noting that not all countries support corrective invoices. In some cases, GOBL will automatically map a correction to a credit or debit note format, depending on what the local regime allows. This behavior helps ensure compliance even when the source document is structured as a corrective invoice.
+It's worth noting that not all countries support corrective invoices, and in some countries where the tax regime does, such as Spain, GOBL may attempt to map credit and debit notes into the appropriate corrective format.
 
 ## Correcting Your First Invoice Using a Credit Note
 
@@ -124,11 +124,9 @@ Let's walk through both.
 
     #### How it works
 
-    Use the [Create an Entry](/api-ref/silo/entries/create-an-entry-post) API endpoint with a request body that wraps your credit note in the required structure.
-
-    Unlike a standard invoice entry, a credit note must:
-    - Set the `$schema` field so that it points to the correct schema (https://gobl.org/draft-0/bill/credit-note)
-    - Set the `type` field accordingly (`"credit_note"` instead of `"standard"`).
+    Use the [Create an Entry](/api-ref/silo/entries/create-an-entry-post) API endpoint with a request body that wraps your credit note in the required structure:
+    - Set the `$schema` field so that it points to https://gobl.org/draft-0/bill/credit-note.
+    - Set the `type` field accordingly (`"credit-note"` instead of `"standard"`).
     - Include a reference to the original invoice you're correcting (known as a *preceding block* in GOBL).
 
     Your request body should look something like this:
