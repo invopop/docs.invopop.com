@@ -13,8 +13,6 @@ info:
 servers:
 - description: production
   url: https://api.invopop.com
-- description: local development
-  url: https://api.invopop.dev
 security:
 - authToken: []
 paths:
@@ -84,12 +82,12 @@ paths:
       description: Download silo entry attachment's data. Content type and disposition
         will be set according to the source.
       parameters:
-      - description: UUID of the attachment to fetch.
+      - description: UUID of the attachment to fetch, may be a previous version.
         in: path
         name: id
         required: true
         schema:
-          description: UUID of the attachment to fetch.
+          description: UUID of the attachment to fetch, may be a previous version.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
           title: ID
           type: string
@@ -163,6 +161,12 @@ paths:
                   example: invoice.pdf
                   title: Name
                   type: string
+                private:
+                  description: When true, this attachment is private and can only
+                    be accessed by the owner. Default is false.
+                  example: true
+                  title: Private
+                  type: boolean
                 sha256:
                   description: SHA256 hex hash of the file that will be upload in
                     a separate request. Required when only creating placeholder.
@@ -710,6 +714,12 @@ components:
           example: Invoice for January 2021.
           title: Description
           type: string
+        embeddable:
+          description: When true, the attachment can be embedded inside another attachment,
+            like a PDF.
+          example: true
+          title: Embeddable
+          type: boolean
         entry_id:
           description: The UUID of the entry this attachment belongs to.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
@@ -740,6 +750,16 @@ components:
           example: invoice.pdf
           title: Name
           type: string
+        previous:
+          description: Set of previous versions of the attachment.
+          items:
+            $ref: '#/components/schemas/SiloAttachmentVersion'
+          title: Previous
+          type: array
+        private:
+          description: When true, the attachment will not have a public link.
+          title: Private
+          type: boolean
         size:
           description: Size of the file in bytes.
           example: 12345
@@ -755,6 +775,27 @@ components:
           description: URL where the file's contents can be downloaded.
           title: Public URL
           type: string
+      type: object
+    SiloAttachmentVersion:
+      properties:
+        created_at:
+          description: The date and time this attachment was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        hash:
+          description: The SHA256 of the attachment's contents.
+          title: Hash
+          type: string
+        id:
+          description: The UUID that identifies the attachment when it was originally
+            uploaded.
+          title: ID
+          type: string
+        size:
+          description: Size of the attachment.
+          title: Size
+          type: integer
       type: object
     SiloBuildGOBL:
       properties:
