@@ -58,9 +58,8 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 
         1. **Set State** - To "Processing".
         2. **Sign Envelope** - Signs the GOBL document preventing further modifications.
-        3. **Generate FatturaPA** - Converts the GOBL document to FatturaPA XML format and attaches it to the original invoice entry.
-        4. **Send to SDI (Italy)** - Takes the generated XML attachment and sends it to SDI. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
-        5. **Set State** - To "Sent".
+        3. **Send to SDI (Italy)** - Generates the FatturaPA XML and sends it to SDI. Upon success, the XML file is attached to the invoice entry. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
+        4. **Set State** - To "Sent".
 
       In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
 
@@ -87,17 +86,9 @@ Detailed information about the SDI-specific extensions and validations can be fo
 
 Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
 
-### How the process works
+### How the Send step works
 
-<Steps>
-<Step title="Generate FatturaPA">
-This step converts a GOBL invoice into the required FatturaPA XML format and stores it as an attachment to the silo entry.
-</Step>
-
-<Step title="Send to SDI">
-This step takes the generated XML attachment and sends it to SDI through our integration partner. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
-</Step>
-</Steps>
+This step generates the FatturaPA XML and sends it to SDI through our integration partner. Upon successful completion, the XML file is attached to the invoice entry. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
 
 When the Send step completes, it returns one of three results:
 - `OK` if successful
