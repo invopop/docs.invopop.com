@@ -8,14 +8,37 @@ schema: "org/party"
 
 ```json Example VERI*FACTU supplier registration
 {
-  "name": "VERI*FACTU supplier registration",
+  "name": "VERI*FACTU Supplier Registration",
   "description": "Enables suppliers to register for VERI*FACTU invoice generation",
   "schema": "org/party",
   "steps": [
     {
       "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
-      "name": "Register for VERI*FACTU",
+      "name": "VERI*FACTU Register Supplier",
       "provider": "verifactu.register"
+    },
+    {
+      "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
+      "name": "Set State",
+      "config": {
+        "state": "processing"
+      },
+      "summary": "Set state to `processing`{.state .processing}",
+      "provider": "silo.state"
+    },
+    {
+      "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
+      "name": "VERI*FACTU wait for Registration",
+      "provider": "verifactu.register.wait",
+      "config": {
+        "sleep": "604800"
+      },
+      "summary": "Wait 7 days"
+    },
+    {
+      "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
+      "name": "VERI*FACTU wait for Validation",
+      "provider": "verifactu.register.validate"
     },
     {
       "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
