@@ -16,7 +16,7 @@ import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 
 ## Introduction
 
-The CFDI (Comprobante Fiscal Digital por Internet) is the standardized electronic invoicing format in Mexico, managed by the country’s tax authority, the SAT (Servicio de Administración Tributaria). This system ensures that all fiscal documents are digitally generated, validated, and reported to SAT in compliance with national tax laws.
+The CFDI (Comprobante Fiscal Digital por Internet) is the standardized electronic invoicing format in Mexico, managed by the country's tax authority, the SAT (Servicio de Administración Tributaria). This system ensures that all fiscal documents are digitally generated, validated, and reported to SAT in compliance with national tax laws.
 
 In this guide we'll walk you through the steps required to first register a supplier and then issue invoices in their name.
 
@@ -24,37 +24,34 @@ In this guide we'll walk you through the steps required to first register a supp
 
 To issue invoices in Mexico via the SAT, you will need:
 
-- Supplier details, including:
-  - name,
-  - taxpayer ID or RFC (Registro Federal de Contribuyentes),
-  - address, and,
-  - fiscal regime code issued by SAT.
-- Customer details, the same as the supplier, plus _CFDI use code_ (código de uso CFDI).
-- Line item details including quantities, prices, applicable tax rates, and the SAT _product-service code_.
-- To have chosen an invoice series.
-- Issue place code (lugar de expedición).
-- A _signing certificate_ known as a CSD (Certificado de Sello Digital) issued by the SAT for every supplier.
+- **Supplier Information**: 
+  - Name
+  - Taxpayer ID (RFC - *Registro Federal de Contribuyentes*)
+  - Address 
+  - Fiscal regime code (as defined by SAT)
+- **Customer Information** (same as supplier, plus):
+  - CFDI use code (*Código de uso CFDI*)
+- **Line items**: 
+  - Quantity, unit price, and applicable tax rates
+  - SAT product/service code (*Clave Producto-Servicio*)
+- **Additional requirements** 
+  - Selected invoice series
+  - Place of issue code (*Lugar de expedición*)
+- **Two certificates** required by the SAT: 
+  1.	**e.firma (FIEL)**: Confirms your identity before SAT. Required to obtain the CSD below and to authorise the PAC to issue on your behalf as explained in step 3 of the [Register a Supplier](#register-a-supplier) section below.
+  2.	**CSD (Certificado de Sello Digital)**:  Required to sign electronic invoices and prove they were issued by you.
 
 ## Setup
 
-There are four key processes to prepare:
-
-- create supplier post-registration workflow,
-- connect the SAT Mexico app,
-- configure a supplier registration workflow, and,
-- prepare an invoicing workflow.
+Configure your Invopop workspace for CFDI invoicing by following these steps in the [Invopop Console](https://console.invopop.com):
 
 <Info>
-  These instructions apply to both the sandbox and live environments, with a few
-  exceptions for supplier data and registration details when real details are
-  not available.
+  These instructions apply to both the sandbox and live environments, with a few exceptions related to supplier data and registration details when real information is not available.
 </Info>
-
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
 
-<Step title="Create Supplier post-registration workflow">
+<Step title="Set up the Supplier Post-Registration Workflow">
 
 <Tabs>
   <Tab title="Template">
@@ -83,8 +80,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 </Tabs>
 </Step>
 
-<Step title="Configure the supplier registration workflow">
-
+<Step title="Set up the Supplier Registration Workflow">
 
 <Tabs>
   <Tab title="Template">
@@ -114,8 +110,16 @@ All of the following steps must be carried out from the [Invopop Console](https:
 </Tabs>
 </Step>
 
+<Step title="Connect the SAT Mexico App">
+  In the left sidebar, under the **Configuration** section, click **Apps**. This will display all available apps.
+  
+  Search for SAT Mexico and click **Connect**. The app will move to the “Enabled Apps” section.
 
-<Step title="Prepare Invoice Workflow">
+  Next, click **Configure**. This will open a dialog on the right with two fields:
+	  - **Environment**: Sandbox / Live
+	  - **Post-registration workflow**: SAT supplier post-registration
+</Step>
+<Step title="Set up the SAT Issue Invoice Workflow">
 
     <Tabs>
       <Tab title="Template">
@@ -153,64 +157,83 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 ## Running
 
-In this section we'll provide details on how to first persist and register a supplier, followed by issuing invoices on their behalf.
+Learn how to register a business entity (supplier) and issue CFDI invoices:
 
-As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
+<info>
+  You can complete this process through the Invopop Console or the API. We'll walk through it using the Console, but don't worry, the steps are nearly identical for the API. We'll add notes along the way to clarify any differences.
+</info>
 
 ### Register a Supplier
 
-Suppliers can be registered either manually via the Invopop Console or programatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
+Registering a business entity requires uploading the CSD to our local provider, SW Sapiens, via a form (see Step 2: Complete Supplier Registration). This upload goes to either the sandbox or live environment, depending on your SAT Mexico App configuration.
 
-<Warning>
-  Suppliers in Mexico must authorize the PAC (Procesador Autorizado de
-  Certificación) used by Invopop to sign, stamp and send CFDIs to the SAT on
-  their behalf. Please visit https://firmamanifiesto.lunasoft.net/ and follow
-  the process to authorize [SW Sapiens by Luna Soft S.A. de
-  C.V.](https://sw.com.mx/). This is not an automated service and can only be
-  performed manually by a representative of the supplier.
-</Warning>
+Each CSD is tied to an RFC. When you submit an e-invoice, including the supplier's RFC, SW Sapiens checks for a valid CSD linked to it, as SAT requires a valid certificate to issue invoices.
 
-Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the following example that uses example data provided by the SAT. This will only work in sandbox environments, in production you'll need the details of a real company:
+<Note>
+  To speed things up, we've pre-registered all the test CSDs listed on the [SW Sapien test page](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/) in the sandbox. 
 
-<AccordionGroup>
-<Accordion title="Example: Supplier">
-<Supplier />
-</Accordion>
-</AccordionGroup>
+  If you're working in **sandbox**, you can either:
+  - Skip this section and go straight to [Send an Invoice](#send-an-invoice) using a test RFC, or
+  - Register your own certificate by following the steps below.
+</Note>
 
-Tap **Build**, ensure there are no errors, and click **Save**.
+<Steps>
+  <Step title="Run the Supplier Registration Workflow">
+    In the left sidebar, go to the **Contacts** section and click **Suppliers**. 
 
-We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
+    Then click **+New Supplier** and enter the supplier's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly.
 
-The execution should be successful, and the silo entry will now be in the "Processing" state. Tap the **Meta** tab to see the registration link:
+    Here is an example supplier for reference:
 
-<Frame>
-  <img
-    src="/guides/images/mx-sat-reg-link.png"
-    width="450px"
-    alt="Supplier Registration Link"
-  />
-</Frame>
+    <Supplier />
 
-<Info>
-  You can access the registration link via the API by [fetching the silo
-  entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
-  the `key` is set to `registration-link`.
-</Info>
+    Click **Build**, make sure there are no errors, then click **Save**.
 
-Tap the registration link and a new browser window will be presented with a form to upload the credentials for the supplier. Note that this form can be shared directly with the supplier if required.
+    Next, click **Select Workflow** and execute the **Supplier Registration Workflow**.
+  </Step>
 
-<Frame>
-  <img src="/guides/images/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
-</Frame>
+  <Step title="Complete Supplier Registration">
+    After it completes, open the **Details** window and click on **Meta**. You should see a section called **Registration Link** with a URL:
 
-The details from this form are sent securely to the PAC (Authorised Certification Provider) who will be responsible for signing invoices and sending them to the SAT. You can find test RFCs and CSDs on the [SW Sapien test pages](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/). Download the zip file and extract the certificates if you'd like to try out the full flow.
+    <Frame>
+      <img
+        src="/guides/images/mx-sat-reg-link.png"
+        width="450px"
+        alt="Supplier Registration Link"
+      />
+    </Frame>
 
-The CSD comprises two files (with extensions `.cer` and `.key`) and a password. Suppliers, companies or individuals, can follow [this guide on how to obtain one](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan).
+    <Info>
+      You can access the registration link via the API by [fetching the silo entry](/api-ref/silo/entries/fetch-an-entry) and locating the meta entry where the key is`registration-link`.
+    </Info>
 
-Certificates have already been registered for all sandbox users, so you can safely run the "Post-registration workflow" manually and leave the new supplier in the `sent` state.
+    Visit that URL to access the form for registering the supplier. 
 
-From this point on you can now send invoices on behalf of the supplier.
+    <Note>
+      Note that this form can be shared directly with the supplier if required.
+    </Note>
+
+    <Frame>
+      <img src="/guides/images/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
+    </Frame>
+
+    Fill out the form with the following information: Issuer RFC, CSD certificate file (`.crt`), private key (`.key`), and the private key password.
+    
+    Follow this [guide](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan) to generate the CSD certificate and key.
+
+    When you click **Save**, the form details are securely sent to the PAC (*Proveedor Autorizado de Certificación*), who will handle invoice signing and submission to the SAT.
+  </Step>
+
+  <Step title="Authorize PAC to Issue Invoices">
+    Since we are using a local PAC, you must authorize the PAC to sign, stamp, and send CFDIs to the SAT on your behalf. 
+    
+    To do this, visit the following [page]( https://firmamanifiesto.lunasoft.net/) and **sign the manifesto using your e.firma (FIEL)**.
+  </Step>
+
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the supplier.
+
 
 ### Send an Invoice
 
