@@ -136,11 +136,12 @@ Learn how to register a business entity (supplier) and issue VERI\*FACTU invoice
 
 Invopop has a collaboration agreement with the Spanish tax agency ([AEAT](https://sede.agenciatributaria.gob.es)) allowing us to issue invoices on behalf of any entity using our certificate. This eliminates the need for you to request the entity's certificate.
 
-However, we need the supplier to provide the following documents:
+Suppliers need to provide the following documents for Invopop to issue invoices on their behalf:
 
-1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf) where the entity allows Invopop to submit invoices to AEAT on its behalf.
-2. A copy of signatory's fiscal ID (DNI/NIE)
-3. Documentation proving that signatory is authorized to represent the entity, such as extract from commercial registry, company bylaws or power of attorney. `We are waiting on a response from the AEAT regarding this requirement` 
+1. A signed and stamped [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf). If the supplier is an _autónomo_, stamping is unnecessary.
+2. A copy of signatory's fiscal ID (DNI/NIE).
+
+These documents will be collected through a multi-step web form (_wizard_) which 
 
 The collection of these documents is handled by the _Supplier Registration Workflow_ we created during setup. Let's see how.
 
@@ -184,7 +185,7 @@ The collection of these documents is handled by the _Supplier Registration Workf
 
     ***
 
-    The supplier's status will change to `Processing` while waiting for supplier registration and verification. If these steps are completed successfully, the supplier's status will change to `Registered`. Otherwise, the status will change to `Error`, and you can inspect the job history of this document to see the reason.
+    The supplier will receive an email with the registration link, and the supplier's status will change to `Processing` while waiting for supplier registration and verification. If these steps are completed successfully, the supplier's status will change to `Registered`. Otherwise, the status will change to `Error`, and you can inspect the job history of this document to see the reason.
 
     <Frame>
       <img
@@ -417,12 +418,12 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
     Invopop guarantees the chain is never broken using database transactions and retries in the case of collisions.
   </Accordion>
   <Accordion title="What happens if a supplier does not complete their registration within the allotted wait time?">
-    A KO will be triggered and the supplier will be labelled with the `Error` state. We currently recommend sending a  reminder to the supplier through a webhook, however, in the next few weeks we will automate this process from the workflow itself.
+    A KO will be triggered and the supplier will be labelled with the `Error` state. We currently recommend sending a reminder to the supplier through a webhook.
 
     The registration link will not expire and the entity will still be able to upload their registration documents which will be validated. Should you choose to run this workflow again using this supplier, the supplier will be accepted or rejected immediately because the required documentation has already been provided and validated.
   </Accordion>
   <Accordion title="What happens if a supplier validation is rejected?">
-    A KO will be triggered and the supplier will be labelled with the `Error` state. We currently recommend sending a  notification to the supplier through a webhook, however, in the next few weeks we will automate this process from the workflow itself.
+    A KO will be triggered and the supplier will be labelled with the `Error` state. We currently recommend sending a  notification to the supplier through a webhook.
 
     The supplier can then replace the document(s) which were rejected during the approval process. 
   </Accordion>
@@ -438,6 +439,8 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
     1. Full name
     2. Government ID type and number
     3. Address
+
+    If the entity is an _autónomo_, only the information requested in in the **Legal representative** section is required.
 
   </Accordion>
   <Accordion title="What methods are available to sign the PDF supplier agreements?">
