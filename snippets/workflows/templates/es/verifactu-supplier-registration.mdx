@@ -8,70 +8,55 @@ schema: "org/party"
 
 ```json Example VERI*FACTU supplier registration
 {
-  "name": "VERI*FACTU Supplier Registration",
-  "description": "Enables suppliers to register for VERI*FACTU invoice generation",
-  "schema": "org/party",
-  "steps": [
-    {
-      "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
-      "name": "Register for VERI*FACTU (Spain)",
-      "provider": "verifactu.register"
-    },
-    {
-        "id": "26745b00-664d-11f0-a965-f576aaaf56cd",
-        "name": "Notify via Email",
-        "provider": "email.notify",
-        "summary": "",
-        "config": {
-            "connection_id": "default",
-            "body": "",
-            "subject": "[Important] Register to issue invoices through VERI*FACTU "
+    "name": "VERI*FACTU supplier registration",
+    "description": "Enables suppliers to register for VERI*FACTU invoice generation",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Register with VERI*FACTU",
+            "provider": "verifactu.register"
+        },
+        {
+            "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for Upload VERI*FACTU",
+            "provider": "verifactu.wait.upload"
+        },
+        {
+            "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for Approval VERI*FACTU",
+            "provider": "verifactu.wait.approval"
         }
-    },
-    {
-      "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
-      "name": "Set State",
-      "config": {
-        "state": "processing"
-      },
-      "summary": "Set state to `processing`{.state .processing}",
-      "provider": "silo.state"
-    },
-    {
-      "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
-      "name": "Wait for Registration VERI*FACTU (Spain)",
-      "provider": "verifactu.wait.upload",
-      "config": {
-        "wait": "604800"
-      },
-      "summary": "Wait 7 days"
-    },
-    {
-      "id": "783d40f0-3588-11f0-b3d4-d55d9b8e9554",
-      "name": "Wait for Validation VERI*FACTU (Spain)",
-      "provider": "verifactu.wait.validation"
-    },
-    {
-      "id": "7e8d8070-3870-11ef-af29-4533d56cea03",
-      "name": "Set State",
-      "config": {
-        "state": "registered"
-      },
-      "summary": "Set state to `registered`{.state .registered}",
-      "provider": "silo.state"
-    }
-  ],
-  "rescue": [
-    {
-      "id": "aba49600-3588-11f0-b3d4-d55d9b8e9554",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `error`{.state .error}",
-      "config": {
-        "state": "error"
-      }
-    }
-  ]
+    ],
+    "rescue": [
+        {
+            "id": "76c13260-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
 }
 
 ```
