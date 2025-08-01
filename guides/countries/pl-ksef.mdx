@@ -1,0 +1,117 @@
+---
+title: "KSeF Poland Guide"
+sidebarTitle: "KSeF & FA_VAT"
+description: "Generate and issue electronic invoices through Poland's KSeF system"
+---
+
+import KSeFSendWorkflow from '/snippets/workflows/templates/pl/ksef-send.mdx';
+import KSeFInvoice from '/snippets/invoices/pl/self-billed.mdx';
+
+## Introduction
+
+<Note>
+  On June 30, 2025, Poland's Ministry of Finance released KSeF 2.0. This update includes the publication of the FA(3) Schema, the API 2.0 documentation and supporting materials. FA(3) will become mandatory for large taxpayers on February 2026 and will roll out for other taxpayers on April 2026. Invopop will help you meet these deadlines, [get in touch with us](mailto:support@invopop.com).  
+</Note>
+
+KSeF (Krajowy System e-Faktur) is Poland’s official national platform for electronic invoicing, established and operated by the [Ministry of Finance](https://www.gov.pl/web/finanse). KSeF with the FA_VAT format aim to increase transparency, streamline VAT compliance, and reduce tax fraud in business-to-business (B2B) invoicing.
+
+Invoices are encoded in FA_VAT, a strict XML format published and maintained by Polish tax authorities. The schema enforces standardized fields for both domestic and cross-border transactions, including buyer/seller data, VAT details, and item lines.
+
+The KSeF system performs real-time validation of all submitted invoices, checking against the schema and business rules. Validated invoices receive a unique KSeF ID and official ‘receipt’ timestamp. The platform provides secure archiving for issued and received e-invoices.
+
+Parties can access, verify, and download invoices using authentication methods prescribed by Polish law, such as qualified electronic signatures, trusted profiles, or dedicated system tokens. KSeF ensures strict regulatory compliance, including requirements for data protection, digital signatures, and audit trails, aligned with Polish and EU laws.
+
+## Pre-requisites
+
+This guide assumes that you have a Company NIP and an account in Poland's National System e-Invoices (KSeF). You require an issuer token for each environment, obtained at the KSeF portal ([Test](https://ksef-test.mf.gov.pl/web/login) | [Production](https://ksef.mf.gov.pl/web/login)).
+
+<Frame caption="Generate a token with 'issuing invoices' permissions">
+<img width="600" src="/guides/images/pl-ksef-portal.png" alt="Connect KSeF app" />
+</Frame>
+
+
+## Setup
+
+<Steps>
+<Step title="Connect the KSeF Poland app">
+1. Navigate to **Configuration** → **Apps**
+2. Locate **KSeF Poland** in the app discovery list
+3. Tap **Connect** to activate
+
+<Frame>
+<img width="354" src="/guides/images/pl-ksef-connect.png" alt="Connect KSeF app" />
+</Frame>
+
+The initial connection requires no configuration for sending invoices.
+</Step>
+
+<Step title="Configure sending workflow">
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="KSeF send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-ksef-send" cta="Add to my workspace">
+      Signs and converts the GOBL document into the FA_VAT XML format and then sends it to KSeF.
+    </Card>
+
+    Make sure you configure the **Send to KSeF** step with your Issuer NIP and the Issuer Token generated in the KSeF Portal.
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <KSeFSendWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
+
+        1. **Set State** - To "Processing".
+        2. **Add sequential code** - Add the desired sequence for your invoices.
+        3. **Sign Envelope** - Signs the GOBL document preventing further modifications.
+        4. **Send to KSeF (Poland)** - Generates the FA_VAT XML and sends it to KSeF.
+        5. **Generate PDF** - Generates a PDF with a FA_VAT QR code linked to the KSeF portal.
+        4. **Set State** - To "Sent".
+
+      In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
+
+      This is the minimal workflow with state handling required to automate the issuing FA_VAT invoices through KSeF.
+
+      <Frame caption="KSeF Invoice Workflow"><img width="380" src="/guides/images/pl-ksef-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
+
+  </Tab>
+</Tabs>
+
+</Step>
+</Steps>
+
+### Send an Invoice
+
+The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+GOBL Invoices sent to KSeF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+
+- `$regime` to be set to [`PL`](https://docs.gobl.org/regimes/pl)
+
+<AccordionGroup>
+<Accordion title="Self-billed invoice (KSeF)">
+  <KSeFInvoice />
+</Accordion>
+</AccordionGroup>
+
+
+## FAQ
+
+Please contact the [Invopop support team](mailto:support@invopop.com) if you have any questions that are not listed here.
+
+<AccordionGroup>
+
+<Accordion title= "What types of invoices are supported in Invopop's KSeF Integration?">
+  We currently support Standard Invoices (VAT) and Credit Notes (KOR). We add support for more types as required by our customers.
+</Accordion>
+
+<Accordion title= "I don't have presence in Poland in order to obtain an Issuer NIP or Token">
+  In special cases we facilitate test NIPs and tokens to our clients. Get in touch with the [support team](mailto:support@invopop.com) if you require credentials for testing.
+</Accordion>
+
+</AccordionGroup>
+

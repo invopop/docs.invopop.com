@@ -1,0 +1,87 @@
+---
+title: "KSeF send invoice"
+description: "Generate and issue an invoice through KSeF"
+countryCode: "pl"
+appId: "ksef-pl"
+schema: "bill/invoice"
+---
+
+```json  Example KSeF send invoice workflow with states
+{
+    "name": "PL – Send invoice to KSeF",
+    "description": "Send FA_VAT invoice to KSeF in Poland",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "7be51070-46e5-11f0-8992-b3700a7ae767",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "f63048e0-46e5-11f0-8992-b3700a7ae767",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · KSef Sequence · 000001",
+            "config": {
+                "name": "KSef Sequence",
+                "padding": 6,
+                "sign": false,
+                "start": 1
+            }
+        },
+        {
+            "id": "fe680390-46e5-11f0-8992-b3700a7ae767",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "774dd510-46e5-11f0-8992-b3700a7ae767",
+            "name": "Send to KSeF (Poland)",
+            "provider": "ksef-pl.send",
+            "summary": "Test",
+            "config": {
+                "environment": "test",
+                "issuer_nip": "",
+                "issuer_token": ""
+            }
+        },
+        {
+            "id": "79757000-46e5-11f0-8992-b3700a7ae767",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Polish - A4",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "layout": "A4",
+                "locale": "pl",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "821a1d50-46e5-11f0-8992-b3700a7ae767",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "86a794b0-46e5-11f0-8992-b3700a7ae767",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+
+```
