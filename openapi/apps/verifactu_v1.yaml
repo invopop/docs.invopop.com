@@ -1,0 +1,119 @@
+# OpenAPI PDF v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you test access to the Invopop API and
+    generate data.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: VERI*FACTU Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/verifactu/v1/entry/:silo_entry_id/agreement:
+    get:
+      description: Generate a PDF agreement of a previously prepared org.Party silo entry.
+      responses:
+        "200":
+          description: Successfully generated PDF of the agreement for the supplier or representative to sign.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "422":
+          description: Bad Request - Invalid input data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+        "500":
+          description: Internal Server Error - Failed to generate PDF.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+    post:
+      description: Upload a signed copy of the PDF agreement.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  description: |-
+                    Base64 encoded binary data of the signed PDF agreement. Must be
+                    of type `application/pdf`.
+                  format: byte
+                  type: string
+                signature:
+                  description: |-
+                    Type of signature used to sign the agreement. Use one of the following options:
+                      * `digital` - Signed using a digital certificate belonging to the supplier.
+                      * `hand` - Physically signed by hand, and scanned.
+                  type: string
+                  enum: ["digital", "hand"]
+              required: ["data", "signature"]
+      responses:
+        "202":
+          description: "No content"
+  /apps/verifactu/v1/entry/:silo_entry_id/identity:
+    post:
+      description: Upload an image of an identity document.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  description: |-
+                    Base64 encoded binary data of the image. Must be
+                    of type `image/jpeg` or `image/png`, with a maximum
+                    file size of 10MB. The text of the image should be clearly
+                    visible to be approved.
+                  format: byte
+                  type: string
+                view:
+                  description: |-
+                    Point of view from which the image is taken. Pick one of the
+                    options available:
+
+                      - `front` - Front view of the identity card.
+                      - `back`- Rear or back view of the identity card.
+                      - `page` - Principal identity page of the document.
+                  type: string
+                  enum: ["front", "back", "page"]
+              required: ["data", "view"]
+      responses:
+        "202":
+          description: "No content"
+  /apps/verifactu/v1/entry/:silo_entry_id/confirm:
+    post:
+      description: Confirm that the upload process has completed.
+      responses:
+        "202":
+          description: "No content"
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+        Example: `Authorization: Bearer <token>`
