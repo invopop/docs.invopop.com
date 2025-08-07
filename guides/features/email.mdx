@@ -28,6 +28,15 @@ If you wish to send emails from your own domain such as `Company Name <name@your
 
 <Step title="Connect the Email app.">
 Head over to `Configuration → Apps`, and find `Email` from the list of apps to discover. Tap the **Connect** button to enable.
+
+    <Frame>
+      <img
+        width="388"
+        src="/guides/images/email-connect.png"
+        alt="Email app connected"
+      />
+    </Frame>
+
 </Step>
 
 <Step title="Add Senders">
@@ -61,25 +70,33 @@ The Email app adds two items to your workflow action list:
 
 ## Workflow action configuration
 
-**Sender**
+    <Frame>
+      <img
+        width="462"
+        src="/guides/images/email-configuration.png"
+        alt="VERI*FACTU app connected"
+      />
+    </Frame>
+
+**1. Sender**
 
 Here you will find Senders which were added in the Email app configuration. A sender can be thought of as a person or company name and email address.
 
-**To**
+**2. To**
 
 Check `Automatically add invoice customers` if you wish to send the invoice as an attachment to the customer. This is usually the case for B2C workflows.
 
 If you wish to send the email with attachments to a specific address, tap on the `Add` button and write an address in the email field.
 
-**BCC**
+**3. BCC**
 
 BCC stands for _Blind Carbon Copy_, and is used when you do not want the recipients in this field to appear in the message header. Other recipients won't know that a copy was sent to these addresses. This is useful to send a copy of the invoice to yourself, for example.
 
-**Reply To**
+**4. Reply To**
 
 The "Reply To" field requires a valid email address where recipients' responses will be directed. This field determines where replies go, regardless of the sending address.
 
-**Subject**
+**5. Subject**
 
 The email subject field is a brief heading that summarizes your message's purpose. This field allows you to use template variables in order to customize the subject for the recipient.
 
@@ -87,77 +104,80 @@ The email subject field is a brief heading that summarizes your message's purpos
   For maximum effectiveness, keep it clear and specific (e.g., "Invoice #12345 from Acme Inc."). Many email clients display only the first 60-70 characters of a subject, so prioritize key information at the beginning.
 </Tip>
 
-**Body**
+**6. Body**
 
 The email body textarea is where you compose your message's main content. This field allows template variables and will preserve whitespace.
 
-**Combine attachments into a single zip file**
+**7. Combine attachments into a single zip file**
 
 It is possible that your workflow generates several files per invoice (sometimes an XML and a PDF file are required by legislation). This option allows you to combine and compress all files into a single `.zip` file.
 
-## Custom Variables in Job Args
+***
 
-In addition to the predefined variables available in the UI, you can inject custom data into your email templates using job args. This is particularly useful for dynamic content like payment links, custom messages, or other external data.
+## Custom Template Variables with Job Args
+
+In addition to the predefined variables available in the **Insert variable** menu, you can inject custom variables into your email templates using job args. This is particularly useful for dynamic content like payment links, conditional text, and other external data.
 
 ### How It Works
 
-Custom variables follow this pattern:
-- **Template syntax**: `{{args.variable_name}}` in your email body or subject
-- **API payload**: Include the variable in the `args` object when executing the job
+When [using the API to run a workflow](https://docs.invopop.com/api-ref/transform/jobs/create-a-job-put) you pass an `args` data object with custom variables you want to inject into your email. You will then introduce the variable into the email's subject or body with the following syntax: `{{args.variable_name}}`. If you need to provide a fallback in case the variable is not present, we recommend using the following syntax: `{{ or args.value "Default value" }}`.
+
 
 ### Example: Adding a Payment Link
 
 Let's say you want to send an email with a custom payment link. Here's how to set it up:
 
-**Step 1: Configure your email template**
+<Steps>
+  <Step title="Configure your email template">
+    In the email body field you can use both UI variables (in this case `Customer Name` and `Full Code`) and custom variables `{{args.payment_link}}`.
+    <Frame caption="Body field example with custom arguments">
+      <img
+        width="395"
+        src="/guides/images/email-body.png"
+        alt="VERI*FACTU app connected"
+      />
+    </Frame>
 
-In the email body field, use both UI variables (displayed as clickable tags like `Customer Name` and `Full Code`) and custom variables (in `{{args.name}}` format):
+  </Step>
 
-```
-Hello [Customer Name],
+  <Step title="Execute the job with custom args">
 
-Your invoice [Full Code] is attached to this email.
+     Arguments (`args`) are key-value pairs tailored to specific applications, in this case we are creating a `payment_link` which will be available to the Email App. [Create the job via API](api-ref/transform/jobs/create-a-job-put) with the proper payload: 
 
-You can pay it here: {{args.payment_link}}
+    ```json
+      {
+        "content_type": "application/json",
+        "silo_entry_id": "...",
+        "workflow_id": "...",
+        "args": {
+          "payment_link": "https://your-payment-link.com"
+        }
+      }
+    ```
+  </Step>
+  <Step title="Verify result">
+    The email recipient should receive an email with the following content:
 
-Best regards,
-Invopop
-```
+    ```
+    Hello John Doe,
 
-**Step 2: Execute the job with custom args**
+    Your invoice INV-2025-001 is attached to this email.
 
-When calling the API to run the workflow, include your custom variables in the `args` field:
+    You can pay it here: https://your-payment-link.com
 
-```json
-{
-  "content_type": "application/json",
-  "silo_entry_id": "...",
-  "workflow_id": "...",
-  "args": {
-    "payment_link": "https://your-payment-link.com"
-  }
-}
-```
+    Best regards,
+    Invopop
+    ```
+  </Step>
+</Steps>
 
-**Result**: The customer receives this email:
-
-```
-Hello John Doe,
-
-Your invoice INV-2025-001 is attached to this email.
-
-You can pay it here: https://your-payment-link.com
-
-Best regards,
-Invopop
-```
-
-### Key Points
-
+<Info>
+ **Key Points**
 - Use `{{args.variable_name}}` syntax in email templates for custom variables
 - Include the same variable names in the `args` object when executing the job via API
 - Custom variables work in both email body and subject fields
 - Variable names must match exactly between template and API payload
+</Info>
 
 **FAQ**
 
