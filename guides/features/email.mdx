@@ -89,12 +89,75 @@ The email subject field is a brief heading that summarizes your message's purpos
 
 **Body**
 
-The email body textarea is where you compose your message's main content. This field allows template variables and will preserve whitepsace.
+The email body textarea is where you compose your message's main content. This field allows template variables and will preserve whitespace.
 
 **Combine attachments into a single zip file**
 
 It is possible that your workflow generates several files per invoice (sometimes an XML and a PDF file are required by legislation). This option allows you to combine and compress all files into a single `.zip` file.
 
+## Custom Variables in Job Args
+
+In addition to the predefined variables available in the UI, you can inject custom data into your email templates using job args. This is particularly useful for dynamic content like payment links, custom messages, or other external data.
+
+### How It Works
+
+Custom variables follow this pattern:
+- **Template syntax**: `{{args.variable_name}}` in your email body or subject
+- **API payload**: Include the variable in the `args` object when executing the job
+
+### Example: Adding a Payment Link
+
+Let's say you want to send an email with a custom payment link. Here's how to set it up:
+
+**Step 1: Configure your email template**
+
+In the email body field, use both UI variables (displayed as clickable tags like `Customer Name` and `Full Code`) and custom variables (in `{{args.name}}` format):
+
+```
+Hello [Customer Name],
+
+Your invoice [Full Code] is attached to this email.
+
+You can pay it here: {{args.payment_link}}
+
+Best regards,
+Invopop
+```
+
+**Step 2: Execute the job with custom args**
+
+When calling the API to run the workflow, include your custom variables in the `args` field:
+
+```json
+{
+  "content_type": "application/json",
+  "silo_entry_id": "...",
+  "workflow_id": "...",
+  "args": {
+    "payment_link": "https://your-payment-link.com"
+  }
+}
+```
+
+**Result**: The customer receives this email:
+
+```
+Hello John Doe,
+
+Your invoice INV-2025-001 is attached to this email.
+
+You can pay it here: https://your-payment-link.com
+
+Best regards,
+Invopop
+```
+
+### Key Points
+
+- Use `{{args.variable_name}}` syntax in email templates for custom variables
+- Include the same variable names in the `args` object when executing the job via API
+- Custom variables work in both email body and subject fields
+- Variable names must match exactly between template and API payload
 
 **FAQ**
 
