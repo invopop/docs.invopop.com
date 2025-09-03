@@ -78,11 +78,12 @@ Configure your Invopop Workspace for VERI\*FACTU invoicing by following these st
 
         The new workflow will need to perform the following steps:
 
-        1. **Register for VERI\*FACTU (Spain)** - Sends an email to the supplier with a registration link.
+        1. **Register supplier** - Sends an email to the supplier with a registration link.
         2. **Set State** — select "Processing".
-        3. **Wait for Registration VERI\*FACTU (Spain)** - Configure the wait time (in days) for the supplier to complete the registration form, sign agreements and attach the required documentation.
-        4. **Wait for Validation VERI\*FACTU (Spain)** - Invopop will validate the provided supplier documentation in less than 72 hours. If rejected it will generate an error and block the supplier from issuing invoices. 
-        5. **Set State** — select "Registered"
+        3. **Wait for supplier registration** - Configure the wait time (in days) for the supplier to complete the registration form, sign agreements and attach the required documentation.
+        4. **Set State** — select "Registered".
+        5. **Wait for supplier approval** - Invopop will validate the provided supplier documentation in less than 72 hours. If rejected it will generate an error and block the supplier from issuing invoices. 
+        6. **Set State** — select "Registered"
 
         Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
@@ -109,8 +110,8 @@ Configure your Invopop Workspace for VERI\*FACTU invoicing by following these st
         In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
         1. **Sign Envelope** - Signs the VERI\*FACTU document.
-        2. **Generate VERI\*FACTU (Spain)** - Creates the XML document and adds it to the chain. View it in the `Files` section.
-        3. **Send VERI\*FACTU (Spain)** - Submits the XML to AEAT and returns the response.
+        2. **Generate XML** - Creates the XML document and adds it to the chain. View it in the `Files` section.
+        3. **Issue invoice** - Submits the XML to AEAT and returns the response.
         4. **Generate PDF** - Creates the PDF invoice with the required QR code.
 
         In the Error Handling section, add the **Set State** action and select `Error`.
@@ -140,11 +141,11 @@ The process is best explained looking at the workflow steps:
       />
     </Frame>
 
-    1. **Register with VERI\*FACTU** will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
+    1. **Register supplier** will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
     2. **Set State to Processing** labels the silo entry so you know it's in process of registration.  
-    3. **Wait for Supplier Registration VERI\*FACTU** waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through VERI\*FACTU immediately after the documents are uploaded.
+    3. **Wait for supplier registration** waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through VERI\*FACTU immediately after the documents are uploaded.
     4. **Set State to Registered** labels the silo entry so you know registration is complete.
-    5. **Wait for Approval VERI\*FACTU** Invopop will review the documents provided by the supplier in less than 72 hours. If there are any problems the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier's job history. The supplier's invoice issuing entitlement will be revoked immediately.
+    5. **Wait for supplier approval** Invopop will review the documents provided by the supplier in less than 72 hours. If there are any problems the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier's job history. The supplier's invoice issuing entitlement will be revoked immediately.
 
     <Note>In sandbox, the supplier will be approved as long as the original agreement is uploaded, even if it's not signed. If you want to test rejection, upload any other PDF document. IDs are not taken into consideration in sandbox.</Note>
     
@@ -156,13 +157,13 @@ Suppliers need to provide the following documents for Invopop to issue invoices 
 1. A signed and stamped [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf). If the supplier is a self-employed individual (_autónomo_), stamping is unnecessary.
 2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents).
 
-These documents will be collected through a multi-step web form (_wizard_) which is sent to the supplier (or your company) through the _Supplier Registration Workflow_ we created during setup. 
+These documents will be collected through a multi-step web form (_wizard_) which is sent to the supplier (or your company) through the _Supplier registration workflow_ we created during setup. 
 
-    <Frame caption="Supplier Registration Wizard">
+    <Frame caption="Supplier registration wizard">
       <img
         width="640"
         src="/guides/images/es-verifactu-supplier-registration-portal.png"
-        alt="Supplier Registration Wizard"
+        alt="Supplier registration wizard"
       />
     </Frame>
 
@@ -171,7 +172,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 <Tabs>
   <Tab title="Upload and register third-parties">
   <Steps>
-    <Step title="Upload a Supplier">
+    <Step title="Upload a supplier">
       Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) (you can copy the example below) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. The following fields are required:
 
       - `name`
@@ -195,7 +196,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
       />
     </Frame>
   </Step>
-  <Step title="Send the Supplier to the registration workflow">
+  <Step title="Send the supplier to the registration workflow">
 
     **With the API**: Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
@@ -226,7 +227,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
   <Tabs>
       <Tab title="Template">
         <Card title="VERI*FACTU unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
-          This workflow will revoke invoice issuing for a VERI\*FACTU supplier.
+          This workflow will revoke invoice issuing privileges for a VERI\*FACTU supplier.
         </Card>
       </Tab>
       <Tab title="Code">
@@ -237,7 +238,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
       <Tab title="Build from scratch">
         In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-        1. **Unregister VERI\*FACTU** - Revokes invoice issuing authorization by the AEAT.
+        1. **Unregister supplier** - Revokes invoice issuing authorization by the AEAT.
         2. **Set State** - Select `void` to label the supplier accordingly.
 
         In the Error Handling section, add the **Set State** action and select `Error`.
@@ -250,13 +251,13 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
     <Steps>
     <Step title="Create your company in the Supplier section">
 
-      We will set up your company as a supplier within Invopop so that we can register it for issuing VERI\*FACTU invoices. First, click on **Contacts** on the left sidebar and click on the **New Contact** button at the top right corner of the screen:
+      We will set up your company as a supplier within Invopop so that we can register it for issuing VERI\*FACTU invoices. First, click on **Suppliers** on the left sidebar and click on the **New Supplier** button at the top right corner of the screen:
 
       We suggest that you copy and modify our example supplier to your own information, then you can paste it into the editor in **Code View**. Then switch to **Form view** as indicated in the screenshot, this will build and validate the silo entry and, if there are no errors, you'll be able to save your company's information as a Silo Entry. 
 
       <Supplier />
 
-    After saving, you'll see your company in the **Contacts** section with status `Empty`.
+    After saving, you'll see your company in the **Suppliers** section with status `Empty`.
 
     <Frame caption="Create Supplier in Invopop">
       <img
@@ -268,12 +269,9 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
   </Step>
   <Step title="Send your company to the registration workflow">
 
-    Locate your company in the **Contacts** section and tap on "Select Workflow". From the side panel, select the **VERI\*FACTU supplier registration workflow** you created in the [Setup](##setup) section.
+    Locate your company in the **Suppliers** section and tap on "Select Workflow". From the side panel, select the **VERI\*FACTU supplier registration workflow** you created in the [Setup](##setup) section.
 
-    An email will be sent to the address stated in the email field, and the status will change to `Processing` while waiting for you to upload the required documents. As soon as registration is complete, it will be possible to issue VERI\*FACTU invoices. However, in the rare case we detect a problem with the documentation provided, we will revoke it until the correct documentation is provided.
-
-    After your documentation is reviewed the status will change to `Registered`. Otherwise the status will change to `Error`, and you can inspect the job history of this document to see the reason.
-
+    The status will change to `Processing` while waiting for you to upload the required documents. As soon as the documents are uploaded, the state will change to `registered` and it will be possible to issue VERI\*FACTU invoices. However, in the rare case we detect a problem with the documentation provided, we will revoke it and you must follow the instructions in [what happens if a supplier validation is rejected](/guides/countries/es-verifactu#what-happens-if-a-supplier-validation-is-rejected).
         <Frame caption="Supplier registered successfully">
           <img
             width="600"
@@ -307,7 +305,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
         <B2BInvoice />
       </Accordion>
     </AccordionGroup>
-    After successful upload, you'll see the invoice in the **Invoices** section with status `Empty`.
+    After uploading you'll see the document in the **Invoices** section with status `Empty`.
 
     <Frame caption="Empty invoice">
       <img
@@ -333,7 +331,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
       />
     </Frame>
 
-    You can verify that the PDF was generated by clicking on the Invoice and selecting the PDF from the "Files" tab.
+    You can verify that the PDF was generated by clicking on the invoice and selecting the PDF from the "Files" tab.
 
     <Frame caption="Example VERI*FACTU invoice with QR">
       <img
@@ -458,7 +456,7 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
 
 <Steps>
   <Step title="Add a cancel invoice workflow (only once)">
-    To cancel an invoice, you need a workflow with the _Cancel VERI\*FACTU (Spain)_ step. You can start with the template below.
+    To cancel an invoice, you need a workflow with the _Cancel invoice_ step. You can start with the template below.
 
     <Tabs>
       <Tab title="Template">
@@ -478,7 +476,7 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
 
         We recommend adding the following steps:
 
-        1. **Cancel VERI\*FACTU (Spain)** - Cancels the VERI\*FACTU document.
+        1. **Cancel invoice** - Cancels the VERI\*FACTU document.
         2. **Set State** - select _Void_ in the step configuration. This will set the state of the invoice to `Void`.
         3. In the Error Handling area, **Set State** - select `Error` in the step configuration.
 
