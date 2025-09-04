@@ -4,11 +4,71 @@ sidebarTitle: "VERI*FACTU Suppliers"
 description: "Create and register suppliers in Spain with VERI*FACTU."
 ---
 
+import UnregisterExample from '/snippets/workflows/templates/es/verifactu-unregister.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/es/verifactu-supplier-registration.mdx';
+import Supplier from '/snippets/suppliers/es/verifactu.mdx';
+
+
 ## Introduction
 
 The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es))  requires that companies formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the supplier's legal representative must sign an agreement granting Invopop the necessary consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
 
 For this process, the supplier can sign the agreement PDF with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica), such as one issued by the FNMT, or a handwritten signature with a company stamp (_sello de empresa_), in which case the user must provide a valid ID such as DNI, NIE or passport.
+
+## Set-up
+
+<Steps>
+ <Step title="Connect the VERI*FACTU app">
+    1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+    2. Find **VERI\*FACTU Spain** in the app list.
+    3. Click **Connect** to activate the app.
+
+    <Frame caption="Connect the VERI*FACTU app">
+      <img
+        width="600"
+        src="/guides/images/es-verifactu-app.png"
+        alt="VERI*FACTU app connected"
+      />
+    </Frame>
+
+    After connecting, you'll see VERI\*FACTU listed in the Enabled Apps section.
+
+  </Step>
+  <Step title="Create a supplier registration workflow">
+    Create a new workflow in your workspace for registering suppliers. You should start with the template below:
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="VERI*FACTU supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-supplier-registration" cta="Add to my workspace">
+          This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "VERI\*FACTU Supplier Registration".
+
+        The new workflow will need to perform the following steps:
+
+        1. **Register supplier** - Sends an email to the supplier with a registration link.
+        2. **Set State** — select "Processing".
+        3. **Wait for supplier registration** - Configure the wait time (in days) for the supplier to complete the registration form, sign agreements and attach the required documentation.
+        4. **Set State** — select "Registered".
+        5. **Wait for supplier approval** - Invopop will validate the provided supplier documentation in less than 72 hours. If rejected it will generate an error and block the supplier from issuing invoices. 
+        6. **Set State** — select "Registered"
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
 
 ## How VERI\*FACTU supplier registration works
 
@@ -58,6 +118,11 @@ If you have special needs regarding the onboarding of suppliers for VERI\*FACTU 
     `/silo/v1/entries/{id}`<br />
     Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.  
   </Step>
+  <Step title="Create a job with the supplier registration workflow">
+    [Create a job](/api-ref/transform/jobs/create-a-job-put)<br /> 
+    `https://api.invopop.com/transform/v1/jobs/{id}`<br />
+    The same workflow is used for API onboarding 
+  </Step>
   <Step title="Generate the agreement PDF">
     [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch)<br /> 
     `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
@@ -68,7 +133,7 @@ If you have special needs regarding the onboarding of suppliers for VERI\*FACTU 
     `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
     Upload the agreement into the supplier's silo entry.
 
-    [Upload identity images](/api-ref/apps/verifactu/idenity-upload)<br />
+    [Upload identity images](/api-ref/apps/verifactu/identity-upload)<br />
     `apps/verifactu/v1/entry/:silo_entry_id/identity`<br />
     Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport). 
   </Step>
