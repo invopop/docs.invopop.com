@@ -71,7 +71,7 @@ Skip this step if you only want to _receive_ invoices via Peppol.
     3. **Generate UBL document** - Converts the GOBL document to a Peppol BIS Billing UBL 3.0 document and attaches it to the original invoice entry.
     4. **Send Peppol document** - Sends the generated XML attachment through the Peppol network
     5. **Set State** - to `Sent`.
-
+ 
     Finally, in the Error Handling area, add the **Set State** action and select `Error`.
     <Frame>
       <img width="450" src="/guides/images/peppol-send.png" alt="Invoice sending workflow" />
@@ -102,7 +102,6 @@ Skip this step if you only want to _receive_ invoices via Peppol.
     3. **Send Webhook** (optional) - let your services know a Peppol document was received.
 
     Finally, in the Error Handling area, add the **Set State** action and select `Error`.
-    =
   </Tab>
 </Tabs>
 </Step>
@@ -200,13 +199,19 @@ The execution should succeed, and the silo entry's state will change to "Process
 <img width="450" src="/guides/images/peppol-supplier.png" alt="Sending party to the registration workflow" />
 </Frame>
 
-When successful, you'll see the Peppol Participant ID in the Meta tab of the entry. The party can now send and/or receive invoices in Peppol via Invopop.
+When registration is successful, you'll see the Peppol Participant ID in the Meta tab of the entry and the supplier's entry will contain `inboxes` array. This information should be included in each invoice issued by this supplier. 
+
+<Frame caption="Peppol participant inboxes">
+  <img src="/guides/images/peppol-inboxes.png" alt="Peppol inboxes" />
+</Frame>
+
+The party can now send and/or receive invoices in Peppol via Invopop.
 
 ### Sending invoices
 
-To send an invoice, you need to:
+To send an invoice, you need to store it as a Silo Entry with the 
 
-1. Store it as a [Silo Entry](/api-ref/silo/entries/create-an-entry-put.mdx)
+1. Store it as a [Silo Entry](/api-ref/silo/entries/create-an-entry-put.mdx) with the Peppol inboxes previously obtained.
 2. Send it to the Sending Invoice Workflow created during setup
 
 You can perform these steps manually via the Console or programmatically via the API using the [Create an Entry](/api-ref/silo/entries/create-an-entry-put.mdx) and [Create a Job](/api-ref/transform/jobs/create-a-job-post.mdx) endpoints. For API usage, refer to our [quickstart guide](/api-ref/introduction.mdx).

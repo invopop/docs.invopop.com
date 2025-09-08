@@ -7,66 +7,71 @@ schema: "bill/invoice"
 
 ```json Example Peppol send invoice workflow with states
 {
-  "name": "Peppol send invoice",
-  "description": "Send Peppol BIS invoice through Peppol network",
-  "schema": "bill/invoice",
-  "steps": [
-    {
-      "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `processing`{.state .processing}",
-      "config": {
-        "state": "processing"
-      }
-    },
-    {
-      "id": "2354afd0-10ab-11f0-a09e-7b63571a4ae2",
-      "name": "Add Sequential Code",
-      "provider": "sequence.enumerate",
-      "summary": "Dynamic · PPL · PPL000001",
-      "config": {
-        "name": "PPL",
-        "padding": 6,
-        "prefix": "PPL",
-        "start": 1
-      }
-    },
-    {
-      "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
-      "name": "Sign Envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
-      "name": "Generate Peppol Document",
-      "provider": "peppol.generate"
-    },
-    {
-      "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
-      "name": "Send Peppol Document",
-      "provider": "peppol.send"
-    },
-    {
-      "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `sent`{.state .sent}",
-      "config": {
-        "state": "sent"
-      }
-    }
-  ],
-  "rescue": [
-    {
-      "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `error`{.state .error}",
-      "config": {
-        "state": "error"
-      }
-    }
-  ]
+    "name": "Peppol send invoice",
+    "description": "Send Peppol BIS invoice through Peppol network",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "2354afd0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · PPL · PPL000001",
+            "config": {
+                "name": "PPL",
+                "padding": 6,
+                "prefix": "PPL",
+                "start": 1
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Generate UBL Document",
+            "provider": "ubl.generate",
+            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "config": {
+                "doc_type": "bis-invoice-v3",
+                "private": false
+            }
+        },
+        {
+            "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Send Peppol Document",
+            "provider": "peppol.send"
+        },
+        {
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
 }
 ```
