@@ -1,0 +1,76 @@
+---
+title: "ZUGFeRD generate invoice"
+description: "Issue B2B invoices in Germany"
+countryCode: "de"
+appId: "ubl"
+schema: "bill/invoice"
+---
+
+```json Workflow for generating a PDF with a ZUGFeRD XML attachment 
+{
+    "name": "ZUGFeRD invoice",
+    "description": "Generate PDF with ZUGFeRD XML attachment",
+    "steps": [
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            },
+            "next": []
+        },
+        {
+            "id": "58fb4ce0-6626-11f0-b9ab-1bbe1fa4398c",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "3548d720-6623-11f0-b3db-e7255a5da07c",
+            "name": "Generate UN/CEFACT CII Invoice",
+            "provider": "cii.generate",
+            "summary": "ZUGFeRD V2",
+            "config": {
+                "doc_type": "zugferd-v2"
+            },
+            "next": []
+        },
+        {
+            "id": "56bda1e0-8ef7-11f0-aa0e-dd7c69b95f3c",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English - A4",
+            "config": {
+                "logo_height": 40,
+                "locale": "de",
+                "date_format": "%Y-%m-%d",
+                "layout": "A4",
+                "scripting": false
+            }
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            },
+            "next": []
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            },
+            "next": []
+        }
+    ]
+}
+```

@@ -8,70 +8,89 @@ schema: "bill/invoice"
 
 ```json Example Chargebee ZUGfERD workflow
 {
-  "name": "Chargebee ZUGfERD",
-  "description": "Issue a B2B Invoice in Germany with CB sync",
-  "schema": "bill/invoice",
-  "steps": [
-    {
-      "id": "ff581030-1943-11f0-b031-c71066181289",
-      "name": "Import Chargebee document",
-      "provider": "chargebee.import"
-    },
-    {
-      "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `processing`{.state .processing}",
-      "config": {
-        "state": "processing"
-      }
-    },
-    {
-      "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
-      "name": "Sign Envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "53658cc0-1944-11f0-b031-c71066181289",
-      "name": "Convert to ZUGFeRD (Germany)",
-      "provider": "xinvoice.zugferd.convert"
-    },
-    {
-      "id": "7cf520d0-1946-11f0-b031-c71066181289",
-      "name": "Embed ZUGFeRD/Factur-X XML in PDF",
-      "provider": "xinvoice.embed"
-    },
-    {
-      "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `sent`{.state .sent}",
-      "config": {
-        "state": "sent"
-      }
-    },
-    {
-      "id": "553f8c03-c0ff-4de5-9a66-33685b8f9c65",
-      "name": "Sync with Chargebee",
-      "provider": "chargebee"
-    }
-  ],
-  "rescue": [
-    {
-      "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
-      "name": "Set State",
-      "provider": "silo.state",
-      "summary": "Set state to `error`{.state .error}",
-      "config": {
-        "state": "error"
-      }
-    },
-    {
-      "id": "c35d34c0-b7af-11ef-86a5-99a247862412",
-      "name": "Sync with Chargebee",
-      "provider": "chargebee"
-    }
-  ]
+    "name": "Chargebee ZUGfERD",
+    "description": "",
+    "steps": [
+        {
+            "id": "ff581030-1943-11f0-b031-c71066181289",
+            "name": "Import Chargebee document",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "bd7eb640-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "18910b60-6624-11f0-9087-c716f49f1585",
+            "name": "Modify Silo Entry",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "addons": [
+                    "de-zugferd-v2"
+                ],
+                "allow_invalid_json": false,
+                "data": "",
+                "expr": "",
+                "merge_type": "",
+                "sign": false,
+                "tags": []
+            }
+        },
+        {
+            "id": "3548d720-6623-11f0-b3db-e7255a5da07c",
+            "name": "Generate UN/CEFACT CII Invoice",
+            "provider": "cii.generate",
+            "summary": "ZUGFeRD V2",
+            "config": {
+                "doc_type": "zugferd-v2"
+            }
+        },
+        {
+            "id": "8e665990-81a3-11f0-82cb-9160968ac068",
+            "name": "Embed ZUGFeRD/Factur-X XML in PDF",
+            "provider": "xinvoice.embed"
+        },
+        {
+            "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "553f8c03-c0ff-4de5-9a66-33685b8f9c65",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c94982c0-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        },
+        {
+            "id": "c35d34c0-b7af-11ef-86a5-99a247862412",
+            "name": "Sync with Chargebee",
+            "provider": "chargebee"
+        }
+    ]
 }
-
 ```

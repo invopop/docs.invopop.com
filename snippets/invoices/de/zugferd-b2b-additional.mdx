@@ -1,9 +1,10 @@
-```json B2B Invoice with additional fields
+```json ZUGFeRD B2B Invoice with additional fields
 {
     "$schema": "https://gobl.org/draft-0/bill/invoice",
     "$regime": "DE",
     "$addons": [
-        "eu-en16931-v2017"
+        "eu-en16931-v2017",
+        "de-zugferd-v2"
     ],
     "uuid": "019231f1-9128-71fc-b0e2-820af3036d1b",
     "type": "standard",
@@ -11,6 +12,11 @@
     "code": "001",
     "issue_date": "2024-02-13",
     "currency": "EUR",
+    "tax": {
+        "ext": {
+            "untdid-document-type": "380"
+        }
+    },
     "supplier": {
         "name": "Provide One GmbH",
         "tax_id": {
@@ -79,8 +85,12 @@
             "taxes": [
                 {
                     "cat": "VAT",
-                    "rate": "standard",
-                    "percent": "19%"
+                    "key": "standard",
+                    "rate": "general",
+                    "percent": "19%",
+                    "ext": {
+                        "untdid-tax-category": "S"
+                    }
                 }
             ],
             "total": "1800.00"
@@ -89,37 +99,42 @@
     "discounts": [
         {
             "i": 1,
+            "reason": "Promotion discount",
             "amount": "10.00",
             "taxes": [
-            {
-                "cat": "VAT",
-                "rate": "standard",
-                "percent": "25%"
-            }
+                {
+                    "cat": "VAT",
+                    "key": "standard",
+                    "rate": "general",
+                    "percent": "19%",
+                    "ext": {
+                        "untdid-tax-category": "S"
+                    }
+                }
             ],
-            "reason": "Promotion discount",
             "ext": {
-            "untdid-allowance": "88"
+                "untdid-allowance": "88"
             }
         }
     ],
     "charges": [
         {
             "i": 1,
+            "reason": "Freight",
             "amount": "11.00",
             "taxes": [
                 {
                     "cat": "VAT",
-                    "rate": "standard",
-                    "percent": "25%"
+                    "key": "standard",
+                    "rate": "general",
+                    "percent": "19%",
+                    "ext": {
+                        "untdid-tax-category": "S"
+                    }
                 }
-            ],
-            "reason": "Freight",
-            "ext": {
-                "untdid-charge": "88"
-            }
+            ]
         }
-        ],
+    ],
     "ordering": {
         "code": "PO4711",
         "period": {
@@ -128,17 +143,17 @@
         },
         "contracts": [
             {
-            "code": "2013-05"
+                "code": "2013-05"
             }
         ],
         "receiving": [
             {
-            "code": "3544"
+                "code": "3544"
             }
         ],
         "despatch": [
             {
-            "code": "5433"
+                "code": "5433"
             }
         ]
     },
@@ -146,46 +161,46 @@
         "payee": {
             "name": "Ebeneser Scrooge AS",
             "identities": [
-            {
-                "label": "CompanyID",
-                "code": "989823401"
-            },
-            {
-                "label": "0088",
-                "code": "2298740918237"
-            }
+                {
+                    "label": "CompanyID",
+                    "code": "989823401"
+                },
+                {
+                    "label": "0088",
+                    "code": "2298740918237"
+                }
             ]
         },
         "terms": {
             "due_dates": [
-            {
-                "date": "2013-07-20",
-                "amount": "2142.00",
-                "percent": "100%"
-            }
+                {
+                    "date": "2013-07-20",
+                    "amount": "2143.19",
+                    "percent": "100%"
+                }
             ],
             "notes": "2 % discount if paid within 2 days\n            Penalty percentage 10% from due date"
         },
         "instructions": {
             "key": "credit-transfer",
             "ref": "0003434323213231",
-            "ext": {
-                "untdid-payment-means": "30"
-            },
             "credit_transfer": [
-            {
-                "iban": "NO9386011117947",
-                "bic": "DNBANOKK"
-            }
+                {
+                    "iban": "NO9386011117947",
+                    "bic": "DNBANOKK"
+                }
             ],
-            "direct_debit": {
-                "creditor": "987654321",
-                "account": "DE89370400440532013000",
-                "ref": "1234567890"
-            },
             "card": {
                 "last4": "1234",
                 "holder": "John Doe"
+            },
+            "direct_debit": {
+                "ref": "1234567890",
+                "creditor": "987654321",
+                "account": "DE89370400440532013000"
+            },
+            "ext": {
+                "untdid-payment-means": "30"
             }
         }
     },
@@ -210,14 +225,11 @@
         ],
         "date": "2024-02-10"
     },
-    "tax": {
-        "ext": {
-            "untdid-document-type": "380"
-        }
-    },
     "totals": {
         "sum": "1800.00",
-        "total": "1800.00",
+        "discount": "10.00",
+        "charge": "11.00",
+        "total": "1801.00",
         "taxes": {
             "categories": [
                 {
@@ -225,19 +237,22 @@
                     "rates": [
                         {
                             "key": "standard",
-                            "base": "1800.00",
+                            "ext": {
+                                "untdid-tax-category": "S"
+                            },
+                            "base": "1801.00",
                             "percent": "19%",
-                            "amount": "342.00"
+                            "amount": "342.19"
                         }
                     ],
-                    "amount": "342.00"
+                    "amount": "342.19"
                 }
             ],
-            "sum": "342.00"
+            "sum": "342.19"
         },
-        "tax": "342.00",
-        "total_with_tax": "2142.00",
-        "payable": "2142.00"
+        "tax": "342.19",
+        "total_with_tax": "2143.19",
+        "payable": "2143.19"
     }
 }
 ```
