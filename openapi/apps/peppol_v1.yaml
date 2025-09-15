@@ -1,0 +1,79 @@
+# OpenAPI Peppol v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you register companies for Peppol network
+    participation and manage ownership documentation.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Peppol Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /v1/entry/:silo_entry_id/ownership:
+    post:
+      description: Upload proof of ownership document for company registration in the Peppol network.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  description: |-
+                    Base64 encoded binary data of the ownership document. Must be
+                    of type `application/pdf`. This document proves authorization
+                    to represent the company in Peppol network transactions.
+                  format: byte
+                  type: string
+              required: ["data"]
+      responses:
+        "204":
+          description: "No content - Document uploaded and registration completed successfully"
+        "400":
+          description: Bad Request - Invalid request format or missing data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "422":
+          description: Unprocessable Entity - Invalid document data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "500":
+          description: Internal Server Error - Failed to process the document.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+        Example: `Authorization: Bearer <token>`
