@@ -12,9 +12,9 @@ import Creditnote from '/snippets/invoices/it/sdi-creditnote.mdx';
 
 ## Introduction
 
-Electronic invoicing is mandatory for all businesses in Italy. The Sistema di Interscambio (SDI) serves as the Italian government's central hub for transmitting, validating, and delivering all electronic invoices throughout the country.
+Electronic invoicing is mandatory for all businesses in Italy. The _Sistema di Interscambio_ (SDI) serves as the Italian government's central hub for transmitting, validating, and delivering all electronic invoices throughout the country.
 
-The SDI system operates using a standardized XML format called FatturaPA, which ensures all invoices contain the required information and comply with the strict validation rules established by the Italian tax authority (Agenzia delle Entrate). To ensure proper routing of invoices to the correct recipient, the SDI system uses a unique identifier called a Recipient Code, which is assigned to each registered SDI provider.
+The SDI system operates using a standardized XML format called FatturaPA, which ensures all invoices contain the required information and comply with the strict validation rules established by the Italian tax authority (_Agenzia delle Entrate_). To ensure proper routing of invoices to the correct recipient, the SDI system uses a unique identifier called a Recipient Code, which is assigned to each registered SDI provider.
 
 Invopop simplifies SDI integration by allowing you to work with GOBL format instead of XML, providing synchronous validation before submission, and offering a simple API integration with automatic handling of SDI notifications and status updates. For receiving invoices through SDI, see our companion guide: [Italy - SDI: Receiving Invoices](/guides/countries/it-sdi-receiving).
 
@@ -56,16 +56,18 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 
       In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
 
-        1. **Set State** - To "Processing".
+        1. **Set State** - To `Processing`.
         2. **Sign Envelope** - Signs the GOBL document preventing further modifications.
         3. **Send to SDI (Italy)** - Generates the FatturaPA XML and sends it to SDI. Upon success, the XML file is attached to the invoice entry. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
-        4. **Set State** - To "Sent".
+        4. **Set State** - To `Sent`.
 
-      In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
+      In the **Error Handling** section, add a **Set State** step with the state set to `Error` to capture and flag failed imports.
 
       This is the minimal workflow with state handling required to automate the reception and visualization of invoices received through SDI. You may expand it with additional steps such as storing a backup copy, notifying clients, or integrating the documents into an ERP system.
 
-      <Frame><img width="500" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" /></Frame>
+      <Frame caption="SDI Send Invoice workflow">
+        <img width="300" src="/guides/images/it-sdi-sending-workflow.png" alt="Sending invoice workflow" />
+      </Frame>
 
   </Tab>
 </Tabs>
