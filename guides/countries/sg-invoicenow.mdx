@@ -1,0 +1,137 @@
+---
+title: "Singapore - InvoiceNow"
+sidebarTitle: "InvoiceNow"
+description: Send and receive invoices in Singapore through InvoiceNow
+---
+
+import SupplierRegistration from '/snippets/workflows/templates/sg/sg-invoicenow-register.mdx';
+
+## Introduction
+
+InvoiceNow is Singapore’s nationwide e‑invoicing platform. It is the local implementation of the international Peppol e‑invoicing network. Through InvoiceNow you can:
+- Send and receive Peppol invoices in Singapore 
+- Report invoices to IRAS
+
+This guide covers:
+
+1. How to register a supplier in InvoiceNow.
+2. How to authorize our local partner (Storecove) to report invoices to IRAS on your behalf.
+3. How to send and receive invoices via InvoiceNow in Invopop.
+
+## Prerequisites
+
+In order to register a supplier and issue invoices, you will need:
+
+- Supplier details, including:
+  - Legal Business name
+  - Tax ID (UEN)
+  - Business address
+  - Peppol ID: `SGUEN` + your UEN (example: `SGUEN1234567890`).
+- Corppass account: A [Corppass account](https://www.corppass.gov.sg/portal) is required for InvoiceNow registration.
+
+## Setup
+
+<Steps>
+ <Step title="Connect the InvoiceNow Singapore app">
+    1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+    2. Find **InvoiceNow Singapore** in the app list.
+    3. Click **Connect** to activate the app.
+
+    After connecting, you'll see InvoiceNow Singapore listed in the Enabled Apps section.
+
+  </Step>
+  <Step title="Create a supplier registration workflow">
+    Create a new workflow in your workspace for registering suppliers for invoice sending, receiving and reporting to IRAS. You should start with the template below:
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="InvoiceNow supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=sg-invoicenow-supplier-registration" cta="Add to my workspace">
+          This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "InvoiceNow Supplier Registration".
+
+        The new workflow will need to perform the following steps:
+
+        1. **Set State** — select "Processing".
+        2. **Register in InvoiceNow** - Register the supplier in InvoiceNow.
+        3. **Authorize IRAS Reporting** - Authorize Storecove to report invoices to IRAS on your behalf.
+        4. **Set State** — select "Registered".
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## InvoiceNow registration
+
+There are two registration paths depending on your needs:
+
+1. Send/receive invoices only → Register your company in InvoiceNow.
+2. Send/receive + IRAS reporting → Register in InvoiceNow and authorize Storecove for reporting.
+
+### 1. Registering in InvoiceNow
+First, create a supplier in Invopop with:
+
+- Legal Business name
+- Tax ID (UEN)
+- Business address
+- Peppol ID (key: `peppol`, scheme: `0195`, code: `SGUEN` + your UEN).
+
+Here is a JSON example of a supplier:
+```json
+{
+    "$schema": "https://gobl.org/draft-0/org/party",
+    "uuid": "0199625b-5e4b-7000-8f52-d34327b98f92",
+    "name": "Singapore Company",
+    "tax_id": {
+        "country": "SG",
+        "code": "199912345A"
+    },
+    "inboxes": [
+        {
+            "key": "peppol",
+            "scheme": "0195",
+            "code": "SGUEN199912345A"
+        }
+    ],
+    "addresses": [
+        {
+            "street": "123 Main St",
+            "locality": "Singapore",
+            "code": "123456",
+            "country": "SG"
+        }
+    ]
+}
+```
+
+Next, run the `Register in InvoiceNow` step.
+- This validates the supplier details and generates a Corppass URL.
+- You have **25 minutes** to complete the Corppass flow.
+- If the time expires, the step ends in `KO`, and you'll need to re-run it.
+
+Once completed successfully (`OK`), the supplier is registered and can send/receive invoices via Peppol in Singapore.
+
+### 2. Authorizing Invoice Reporting to IRAS
+If you also need to report invoices to IRAS:
+1. Run the `Authorize IRAS reporting` step.
+    - This requires completing the `Register in InvoiceNow` step first.
+    - Without InvoiceNow registration, you cannot report invoices to IRAS.
+2. The process is similar to registration:
+    - A Corppass URL is generated.
+    - You have **25 minutes** to complete authorization.
+    - If the time expires, the step ends in `KO`, and you'll need to re-run it.
+
+Once successful (`OK`), Storecove will be authorized to report invoices to IRAS on your behalf.

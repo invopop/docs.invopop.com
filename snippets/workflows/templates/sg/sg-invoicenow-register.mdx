@@ -1,0 +1,61 @@
+---
+title: "InvoiceNow supplier registration"
+description: "Register a supplier in InvoiceNow"
+countryCode: "sg"
+appId: "invoicenow"
+schema: "org/party"
+---
+
+
+```json Example InvoiceNow supplier registration workflow with states
+{
+    "name": "InvoiceNow Registration Workflow",
+    "schema": "org/party",
+    "description": "",
+    "steps": [
+        {
+            "id": "2c5f3bd0-9d3d-11f0-b90d-db9398d2aaf8",
+            "name": "Set Silo Entry State",
+            "provider": "silo.state",
+            "next": [],
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "9931bc00-956e-11f0-8804-b12626466c0b",
+            "name": "Register in InvoiceNow",
+            "provider": "invoicenow.register",
+            "next": []
+        },
+        {
+            "id": "2c316bf0-9564-11f0-8d20-9388ce180b95",
+            "name": "Authorize IRAS Reporting",
+            "provider": "invoicenow.authorize",
+            "next": []
+        },
+        {
+            "id": "3c1e4cf0-9d3d-11f0-b90d-db9398d2aaf8",
+            "name": "Set Silo Entry State",
+            "provider": "silo.state",
+            "next": [],
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+    {
+      "id": "7a8bcd20-a32b-11ef-9707-79bbd71238cd",
+      "name": "Set Silo Entry State",
+      "config": {
+        "state": "error"
+      },
+      "summary": "Set state to `error`{.state .error}",
+      "provider": "silo.state"
+    }
+  ]
+}
+```
