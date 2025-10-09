@@ -5,6 +5,10 @@ description: Send and receive invoices in Singapore through InvoiceNow
 ---
 
 import SupplierRegistration from '/snippets/workflows/templates/sg/sg-invoicenow-register.mdx';
+import ReceiveInvoice from '/snippets/workflows/templates/sg/sg-invoicenow-receive.mdx';
+import ReceiveAndReport from '/snippets/workflows/templates/sg/sg-invoicenow-receive-and-report.mdx';
+import SendInvoice from '/snippets/workflows/templates/sg/sg-invoicenow-send.mdx';
+import SendAndReport from '/snippets/workflows/templates/sg/sg-invoicenow-send-and-report.mdx';
 
 ## Introduction
 
@@ -16,7 +20,8 @@ This guide covers:
 
 1. How to register a supplier in InvoiceNow.
 2. How to authorize our local partner (Storecove) to report invoices to IRAS on your behalf.
-3. How to send and receive invoices via InvoiceNow in Invopop.
+3. How to configure workflows for receiving invoices via InvoiceNow.
+4. How to configure workflows for sending invoices via InvoiceNow.
 
 ## Prerequisites
 
@@ -72,16 +77,92 @@ In order to register a supplier and issue invoices, you will need:
       </Tab>
     </Tabs>
   </Step>
+  
+  <Step title="Configure invoice receiving workflow (optional)">
+    If you need to receive invoices via InvoiceNow, create a workflow for processing incoming invoices. Choose the appropriate workflow based on whether you need to report received invoices to IRAS.
+
+    <Tabs>
+      <Tab title="Receive only">
+        Use this workflow if you only need to import invoices without reporting them to IRAS.
+
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <ReceiveInvoice />
+      </Tab>
+      <Tab title="Receive and report">
+        Use this workflow if you need to import invoices and report them to IRAS as purchase invoices.
+
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <ReceiveAndReport />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "InvoiceNow Receive Invoices".
+
+        The workflow should include:
+
+        1. **Import invoices via InvoiceNow** — imports incoming invoices from the InvoiceNow network.
+        2. **Report purchase invoice** (optional) — if you need to report received invoices to IRAS, add this step after the import step.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+
+    <Info>
+      After creating this workflow, you must configure it in the InvoiceNow app settings to automatically process all incoming invoices. Navigate to **Configuration** → **Apps**, find **InvoiceNow Singapore**, click **Configure**, and select this workflow in the app configuration.
+    </Info>
+  </Step>
+
+  <Step title="Configure invoice sending workflow">
+    Create a workflow for sending invoices via InvoiceNow. Choose the appropriate workflow based on whether you need to report sent invoices to IRAS.
+
+    <Tabs>
+      <Tab title="Send only">
+        Use this workflow if you only need to send invoices without reporting them to IRAS.
+
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <SendInvoice />
+      </Tab>
+      <Tab title="Send and report">
+        Use this workflow if you need to send invoices and report them to IRAS in a single step.
+
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <SendAndReport />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "InvoiceNow Send Invoices".
+
+        The workflow should include one of the following:
+
+        **Option 1: Send only**
+        1. **Send invoice via InvoiceNow** — sends the invoice through the InvoiceNow network.
+
+        **Option 2: Send and report**
+        1. **Send invoice via InvoiceNow and report to IRAS** — sends the invoice and reports it to IRAS in a single step.
+
+        Add any additional steps you may need (such as PDF generation or email delivery), and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
 </Steps>
 
-## InvoiceNow registration
+## Running
+
+### Register a Supplier
 
 There are two registration paths depending on your needs:
 
 1. Send/receive invoices only → Register your company in InvoiceNow.
 2. Send/receive + IRAS reporting → Register in InvoiceNow and authorize Storecove for reporting.
 
-### 1. Registering in InvoiceNow
+<Steps>
+  <Step title="Register in InvoiceNow">
 First, create a supplier in Invopop with:
 
 - Legal Business name
@@ -123,8 +204,9 @@ Next, run the `Register in InvoiceNow` step.
 - If the time expires, the step ends in `KO`, and you'll need to re-run it.
 
 Once completed successfully (`OK`), the supplier is registered and can send/receive invoices via Peppol in Singapore.
+  </Step>
 
-### 2. Authorizing Invoice Reporting to IRAS
+  <Step title="Authorize IRAS reporting (optional)">
 If you also need to report invoices to IRAS:
 1. Run the `Authorize IRAS reporting` step.
     - This requires completing the `Register in InvoiceNow` step first.
@@ -135,3 +217,73 @@ If you also need to report invoices to IRAS:
     - If the time expires, the step ends in `KO`, and you'll need to re-run it.
 
 Once successful (`OK`), Storecove will be authorized to report invoices to IRAS on your behalf.
+  </Step>
+</Steps>
+
+### Receive Invoices
+
+Once you've configured a receiving workflow and connected it to the InvoiceNow app, incoming invoices will be automatically imported and processed.
+
+<Steps>
+  <Step title="Configure automatic import">
+    To enable automatic invoice import:
+
+    1. Navigate to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+    2. Find **InvoiceNow Singapore** in the Enabled Apps section.
+    3. Click **Configure**.
+    4. Select your receiving workflow (created in the Setup section) from the dropdown.
+    5. Click **Save**.
+
+    All invoices received via InvoiceNow will now be automatically sent to this workflow for processing.
+  </Step>
+
+  <Step title="Monitor incoming invoices">
+    Received invoices will appear in your workspace's **Invoices** section with the status reflecting the workflow's processing:
+
+    - If using the **Import only** workflow, invoices will be imported and stored in your workspace.
+    - If using the **Import and Report** workflow, invoices will be imported and then reported to IRAS as purchase invoices.
+
+    You can track the status of each invoice in the Console or via the API.
+  </Step>
+</Steps>
+
+### Send Invoices
+
+To send invoices via InvoiceNow, create GOBL invoice documents and send them to your invoice sending workflow.
+
+<Steps>
+  <Step title="Create an invoice">
+    Create a GOBL invoice with the necessary details:
+
+    - Supplier information (must match a registered supplier)
+    - Customer information including their Peppol ID
+    - Line items with descriptions, quantities, and prices
+    - Applicable tax rates
+
+    Ensure the customer has a Peppol ID configured in their `inboxes` field with:
+    - `key`: `peppol`
+    - `scheme`: `0195` (for Singapore)
+    - `code`: `SGUEN` + customer's UEN
+
+  </Step>
+
+  <Step title="Send to workflow">
+    Send the invoice to your configured sending workflow:
+
+    - If using the **Send only** workflow, the invoice will be transmitted via InvoiceNow.
+    - If using the **Send and report** workflow, the invoice will be sent and simultaneously reported to IRAS.
+
+    The invoice will be delivered to the customer's Peppol access point based on their Peppol ID.
+  </Step>
+
+  <Step title="Track delivery status">
+    Monitor the invoice status in the Console in the Silo Entry Meta:
+
+    - **Sent**: Successfully delivered via InvoiceNow
+    - **Reported**: Successfully reported to IRAS (if using send-and-report workflow)
+    - **Error**: Check the workflow logs for detailed error information
+
+    You can view delivery confirmations and any error messages in the invoice details.
+  </Step>
+</Steps>
+
