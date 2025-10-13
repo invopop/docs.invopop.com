@@ -1,0 +1,101 @@
+---
+title: "🇩🇪 🇫🇷 DE & FR · XInvoice"
+description: Issue invoices in Germany (X-Rechnung & ZUGFeRD) and France (Factur-X).
+---
+
+import WorkflowExample from '/snippets/workflows/templates/de/x-rechnung.mdx'
+import B2BInvoice from '/snippets/invoices/de/xinvoice-b2b.mdx'
+import B2CInvoice from '/snippets/invoices/de/xinvoice-b2c.mdx'
+import B2BAdditional from '/snippets/invoices/de/xinvoice-b2b-additional.mdx'
+
+## Introduction
+
+X-Invoice covers the German and French electronic invoice standards. The integration is the same for both countries. The supported standards are:
+
+- **X-Rechnung**: one of the two standards used in Germany. It consists on an XML file. It can be implemented using two different *syntaxes*, CII and UBL. They both contain the same information, but include different field names.
+- **ZUGFeRD**: the other standard used in Germany. It a hybrid format that consists on a PDF document with an embedded X-Rechnung file. The only supported syntax for this case is CII.
+- **Factur-X**: the standard used in France. It consists on a PDF document with an embedded XML file. It is worth noting that ZUGFeRD and Factur-X are a joint project between Germany and France, and their content is identical.
+
+<Tip>
+    When referring to syntaxes, it is important to note that X-Rechnung, ZUGFeRD and Factur-X are all *semantic data models*. What this means is that they define the data that must be present in the invoice, but not the actual format of the data or the explicit name of the fields.
+
+    To implement the semantic models, there are two syntaxes approved by the EU: UN/CEFACT Cross Industry Invoice ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) and OpenOasis Universal Business Language ([UBL](https://docs.oasis-open.org/ubl/UBL-2.1.html)).
+</Tip>
+
+## Prerequisites
+
+To convert invoices to X-Invoice format, ensure you have:
+
+- A valid API key and a basic understanding of the [workflow engine](/guides/features/workflows) and [API](api-ref/introduction).
+- An invoice with:
+  - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) and [French](https://docs.gobl.org/regimes/fr) regimes for specifics.
+  - Line items with name, price, and applicable taxes.
+
+## Setup
+
+To issue invoices, follow these instructions in the [Invopop Console](https://console.invopop.com):
+
+<Steps>
+<Step title="Connect the XInvoice app">
+
+1. Navigate to **Configuration** > **Apps**.
+2. Locate **XInvoice France/Germany** in the app discovery list.
+3. Click **Connect** to activate.
+
+No additional configuration is needed.
+</Step>
+<Step title="Configure invoice workflow">
+
+First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+
+Create an **Invoices** workflow with these essential steps:
+
+- **Sign Envelope**: The envelope must be signed before processing. This can also be done in the **Add Sequential Code** step, which handles the invoice number.
+- **Convert to X-Invoice**: Generates the X-Invoice XML document.
+- **Generate PDF**: For ZUGFeRD and Factur-X formats, this step creates the PDF with the embedded XML.
+</Step>
+</Steps>
+
+<AccordionGroup>
+<Accordion title="Example X-Rechnung Workflow">
+
+Copy and paste the following JSON while editing a Workflow in "developer" mode. This example adds support for setting states on silo entries, which we strongly recommend.
+
+<WorkflowExample />
+</Accordion>
+</AccordionGroup>
+
+## Running
+
+Invopop uses the [GOBL](https://gobl.org) library to process conversions. Some example invoices are provided below, along with an example workflow to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+
+Be sure to set the `regime` field to `DE` or `FR` in your invoices. This will add some extra validations to ensure the document is compliant. If you plan to issue X-Rechnung invoices, we also recommend using the X-Rechnung addon in the invoice file (see example below), to add further validation.
+
+## Sample Invoices
+
+<AccordionGroup>
+<Accordion title="Regular B2B Invoice">
+    <B2BInvoice />
+</Accordion>
+<Accordion title="Regular B2C Invoice">
+    <B2CInvoice />
+</Accordion>
+<Accordion title="B2B Invoice with Additional Fields">
+    <B2BAdditional />
+</Accordion>
+</AccordionGroup>
+You can now generate invoices in the X-Invoice format via the API or console. For more details, visit the [GOBL docs](https://docs.gobl.org) and [X-Invoice repo](https://github.com/invopop/gobl.xinvoice), or contact [Invopop Support](mailto:support@invopop.com).
+
+## FAQ
+<AccordionGroup>
+<Accordion title="Which X-Rechnung syntax should I choose, UBL or CII?">
+Both syntaxes are equally valid and contain the same information, so in the majority of cases the choice has no consequences.
+
+If you plan on sending Invoices through the PEPPOL network, we recommend using UBL as it is the supported format. If you plan on also issuing invoices in ZUGFeRD or Factur-X, it might be more convenient to use CII, as it is the syntax also supported by ZUGFeRD and Factur-X.
+</Accordion>
+<Accordion title="How can I view an XML attached to a PDF?">
+For ZUGFeRD and Factur-X PDFs, the XML file is embedded within the PDF itself. To extract and view it, you can use the `Attachments` section in Adobe Acrobat Reader.
+
+Alternatively, you can use specialized tools like the [SysTools PDF Extractor](https://www.systoolsgroup.com/pdf/extractor/) to extract the XML file.
+</Accordion>
+</AccordionGroup>
