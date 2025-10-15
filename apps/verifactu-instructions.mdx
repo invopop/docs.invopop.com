@@ -1,0 +1,364 @@
+---
+title: "Implementation Guide"
+description: Implement VERI*FACTU in your workspace 
+keywords: ['verifactu']
+---
+
+This guide will get you started in Sandbox, onboard your suppliers, issue invoices, credit notes and corrective invoices, as well as taking your workspace live.
+
+## Quickstart in Sandbox
+
+Let's get you started asap:
+
+<Tabs>
+  <Tab title="Console">
+1. Create a new Party
+2. Upload documentation
+3. Run the approval workflow
+4. Create a new Silo Entry
+5. Run the invoicing workflow
+  </Tab>
+  <Tab title="API">
+1. Create a new Party
+2. Upload documentation
+3. Run the approval workflow
+4. Create a new Silo Entry
+5. Run the invoicing workflow
+  </Tab>
+<Tabs>
+
+## Suppliers
+
+## Onboard a supplier (Live)
+
+These steps do not apply if you are a B2B client.
+
+<Tabs>
+  <Tab title="Console">
+1. Upload a supplier (Console/API)
+2. Run the supplier registration workflow
+3. Wait for the supplier to complete his registration
+  </Tab>
+  <Tab title="API">
+1. Upload a supplier (Console/API)
+2. Run the supplier registration workflow
+3. Wait for the supplier to complete his registration
+  </Tab>
+<Tabs>
+
+## Handle supplier rejections
+
+These steps do not apply if you are a B2B client.
+
+<Tabs>
+  <Tab title="Console">
+    1. Run the rejected supplier workflow
+  </Tab>
+  <Tab title="API">
+    1. Run the rejected supplier workflow
+  </Tab>
+<Tabs>
+
+
+## Unregister a supplier
+
+These steps do not apply if you are a B2B client.
+
+<Tabs>
+  <Tab title="Console">
+    1. Run the unregister supplier workflow
+  </Tab>
+  <Tab title="API">
+    1. Run the unregister supplier workflow
+  </Tab>
+<Tabs>
+
+## Issue an invoice
+
+You can skip this step if you are a B2B client.
+
+<Tabs>
+  <Tab title="Console">
+    1. Upload an invoice
+    2. Run the issue invoice workflow
+  </Tab>
+  <Tab title="API">
+    1. Upload an invoice
+    2. Run the issue invoice workflow
+  </Tab>
+<Tabs>
+
+## Issue an invoice
+
+## Issue a Credit Note
+
+## Issue a Corrective Invoice
+
+## Cancel an invoice
+
+## Going live
+
+
+
+Add a new workflow to your workspace for issuing invoices. You can start with the template below.
+
+<Tabs>
+  <Tab title="Template">
+    <Card title="VERI*FACTU invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
+      This workflow will issue an invoice through VERI\*FACTU.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <WorkflowExample />
+  </Tab>
+  <Tab title="Build from scratch">
+    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
+
+    1. **Sign Envelope** - Signs the VERI\*FACTU document.
+    2. **Generate XML** - Creates the XML document and adds it to the chain. View it in the `Files` section.
+    3. **Issue invoice** - Submits the XML to AEAT and returns the response.
+    4. **Generate PDF** - Creates the PDF invoice with the required QR code.
+
+    In the Error Handling section, add the **Set State** action and select `Error`.
+
+  </Tab>
+</Tabs>
+
+Keep the `Workflow ID` at hand, you'll use it later.
+
+<Info>
+  VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
+</Info>
+
+
+## Issue an Invoice
+
+<Steps>
+  <Step title="Upload an Invoice">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the invoice details. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field with these required fields:
+
+    - `regime`: `ES`
+    - Add the `es-verifactu-v1` addon
+    - `supplier`: Use the details of the supplier you've registered before.
+
+    You can copy one of the example invoices below as a reference.
+
+    <AccordionGroup>
+      <Accordion title="B2C Standard Invoice">
+        <B2CInvoice />
+      </Accordion>
+      <Accordion title="B2B Standard Invoice">
+        <B2BInvoice />
+      </Accordion>
+    </AccordionGroup>
+    After uploading you'll see the document in the **Invoices** section with status `Empty`.
+
+    <Frame caption="Empty invoice">
+      <img
+        width="600"
+        src="/guides/images/es-verifactu-invoice-1.png"
+        alt="Empty invoice"
+      />
+    </Frame>
+  </Step>
+  <Step title="Send the Invoice to the VERI*FACTU invoice workflow">
+    Send the invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice: workflow we created during setup
+    - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
+
+    The invoice's status will change to `Sent` when the workflow completes successfully.
+
+    <Frame caption="Sent invoice">
+      <img
+        width="600"
+        src="/guides/images/es-verifactu-invoice-2.png"
+        alt="Sent invoice"
+      />
+    </Frame>
+
+    You can verify that the PDF was generated by clicking on the invoice and selecting the PDF from the "Files" tab.
+
+    <Frame caption="Example VERI*FACTU invoice with QR">
+      <img
+        width="420"
+        src="/guides/images/es-verifactu-example-pdf.png"
+        alt="Example VERI*FACTU invoice with QR"
+      />
+    </Frame>
+    
+  </Step>
+</Steps>
+
+## Issue a Credit Note (Rectificativa por Diferencias)
+
+In Spain, one way to correct an invoice is by issuing a credit note, known as a _Rectificativa por Diferencias_.
+An alternative method is to issue a _Rectificativa por Sustitución_, which involves creating a new invoice with the type corrective.
+
+The difference between the two is subtle but important:
+
+- A credit note adjusts the value of the original invoice.
+- A corrective invoice replaces the original invoice entirely.
+
+For example, if you issued an invoice for €100 but later realized it should have been €80, you can either:
+
+- Issue a credit note for €20, or
+- Issue a corrective invoice for €80.
+
+Unless you have a specific requirement to use a corrective invoice we recommend only using credit notes. They're more widely supported across countries, while corrective invoices are specific to a few jurisdictions like Spain.
+
+<Steps>
+  <Step title="Upload a Credit Note">
+    A credit note in Invopop is an invoice of the type credit note. So the process is very similar to uploading an invoice. Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a credit note. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
+
+    - `regime`: `ES`
+    - Add the `es-verifactu-v1` addon
+    - `supplier`: use the same supplier details as in the original invoice
+    - `type`: `credit-note`
+    - `preceding`: references the original invoice, within it, you must include:
+      - `uuid`: the UUID of the original invoice (optional but recommended)
+      - `type`: type of the original invoice
+      - `issue_date`: the date of the original invoice
+      - `series`: the series of the original invoice
+      - `code`: the code of the original invoice
+
+    You can copy the example credit notes below as a reference.
+
+    <CreditNote />
+
+    After successful upload, you'll see the credit note in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the credit note we've just created in the _Related_ tab of the invoice.
+
+    <Frame caption="Link to the credit note">
+      <img
+        width="100%"
+        src="/guides/images/es-verifactu-invoice-cn.png"
+        alt="Invoice related to a credit note"
+      />
+    </Frame>
+  </Step>
+  <Step title="Send the Credit Note to the VERI*FACTU invoice workflow">
+    Send the credit note to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice _workflow we created during setup
+    - `silo_entry_id`: use the The Silo Entry ID of the credit note you've just uploaded.
+
+    The credit note's status will change to `Sent` when the workflow completes successfully.
+  </Step>
+</Steps>
+
+## Issue a Corrective Invoice (Rectificativa por Sustitución)
+
+<Steps>
+  <Step title="Upload a Corrective Invoice">
+    A corrective invoice in Invopop is an invoice of the type `corrective`. So the process is very similar to uploading an invoice. Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a corrective invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
+
+    - `regime`: `ES`
+    - Add the `es-verifactu-v1` addon
+    - `supplier_id`: use the same supplier details as in the original invoice
+    - `type`: `corrective`
+    - `preceding`: references the original invoice, within it, you must include:
+      - `uuid`: the UUID of the original invoice (optional but recommended)
+      - `type`: type of the original invoice
+      - `issue_date`: the date of the original invoice
+      - `series`: the series of the original invoice
+      - `code`: the code of the original invoice
+      - `tax`: the tax section of the original invoice, you can copy it from the original invoice
+
+    You can copy one of the example corrective invoices below as a reference.
+
+    <CorrectiveInvoice />
+
+    After successful upload, you'll see the corrective invoice in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the corrective invoice we've just created in the _Related_ tab of the invoice.
+
+    <Frame caption="Link to the corrective invoice">
+      <img
+        width="600"
+        src="/guides/images/es-verifactu-invoice-corrective.png"
+        alt="Invoice related to a corrective invoice"
+      />
+    </Frame>
+  </Step>
+  <Step title="Send the Corrective Invoice to the VERI*FACTU invoice workflow">
+    Send the corrective invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice_ workflow we created during setup
+    - `silo_entry_id`: use the The Silo Entry ID of the corrective invoice you've just uploaded.
+
+    The corrective invoice's status will change to `Sent` when the workflow completes successfully.
+  </Step>
+</Steps>
+
+## Cancel an Invoice
+
+VERI\*FACTU also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
+
+Different from a credit note or a corrective, canceling an invoice doesn't produce a second document, which means you don't have a paper to hand to your customer to show the cancellation. That's why, if the invoice has been handed to the customer, we recommend issuing a credit note instead.
+
+<Steps>
+  <Step title="Add a cancel invoice workflow (only once)">
+    To cancel an invoice, you need a workflow with the _Cancel invoice_ step. You can start with the template below.
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-cancel" cta="Add to my workspace">
+          This workflow will cancel a VERI\*FACTU document.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <CancelInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "VERI\*FACTU Cancel Invoice".
+
+        We recommend adding the following steps:
+
+        1. **Cancel invoice** - Cancels the VERI\*FACTU document.
+        2. **Set State** - select _Void_ in the step configuration. This will set the state of the invoice to `Void`.
+        3. In the Error Handling area, **Set State** - select `Error` in the step configuration.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Send to cancellation workflow">
+    To cancel an invoice, simply send it to the VERI\*FACTU cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
+
+    The invoice's status will change to `Void` when the workflow completes successfully.
+  </Step>
+</Steps>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Is VERI*FACTU compliance mandatory in Spain?">
+    VERI\*FACTU will be mandatory for companies from January 1st, 2026. The rest of tax payers (mainly self-employed indidividuals) from 1 July 2026. Companies reporting with SII (large companies) or TicketBAI are exempt from reporting with VERI\*FACTU.
+  </Accordion>
+  <Accordion title="How can I correct an invoice?">
+    There are three ways to correct an invoice:
+
+    1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VERI\*FACTU translates to a "Factura Rectificativa por Diferencias".
+    2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VERI\*FACTU translates to a "Factura Rectificativa por Sustitución".
+    3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority. This should only be used under special circumstances and not as part of a regular workflow.
+  </Accordion>
+  <Accordion title="What should I do if an invoice is rejected by VERI*FACTU?">
+    The response from VERI\*FACTU should contain all the details you need to be able to decide what changes need to be made to the GOBL document in order to be processed correctly. Make the changes either via the Invopop API or console directly on the same document, and simply resend to the VERI\*FACTU workflow.
+
+    Invopop will ensure that the correct substitution document is generated by checking previous attempts and including the correct codes in the new request.
+  </Accordion>
+  <Accordion title="What is the VERI*FACTU chain?">
+    VERI\*FACTU requires every request to be linked with a fingerprint or hash. During the "Generate VERI\*FACTU" and "Cancel VERI\*FACTU" actions, Invopop will automatically find the last request made for the same supplier, and incorporate the chained data into the new request.
+
+    Its important to understand the VERI\*FACTU focuses on requests, and not individual documents; a single invoice may have multiple entries in the chain if it has been processed multiple times due to incorrect details, cancellations, or substitutions.
+
+    Invopop guarantees the chain is never broken using database transactions and retries in the case of collisions.
+  </Accordion>
+  <Accordion title="Can invoices have an issue date in the past in VERI*FACTU?">
+    Yes, VERI\*FACTU allows issue dates to be in the past, as long as they are after October 28, 2024. Note that the issue date can't be set with a date in the future.
+  </Accordion>
+</AccordionGroup>
