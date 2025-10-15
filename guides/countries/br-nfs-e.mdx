@@ -12,36 +12,36 @@ import ServiceNote from '/snippets/invoices/br/nfs-e-service-note.mdx'
 
 ## Introduction
 
-The NFS-e (Nota Fiscal de Serviços Eletrônica) is the electronic service invoice used in Brazil to report tax information to municipalities. Each municipality has its own rules, format, and API for issuing service notes.
+The NFS-e (_Nota Fiscal de Serviços Eletrônica_) is the electronic document that Brazilian service providers must issue to report service transactions to municipalities for ISS tax collection. Each municipality has its own rules, format, and API for issuing service invoices.
 
-Invopop's “Notas Fiscais Eletrônicas" app provides a unified way to issue NFS-e documents across over 2000 municipalities using GOBL. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
+Invopop's **Notas Fiscais Eletrônicas** app provides a unified way to issue NFS-e documents across over 2000 municipalities using GOBL. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
 
-This guide will walk you through the steps required first to register a supplier and then issue service notes in their name.
+This guide will walk you through the steps required first to register a supplier and then issue service invoices in their name.
 
 ## Prerequisites
 
-To issue service notes in Brazil, you will need:
+To issue service invoices in Brazil, you will need:
 
 - Supplier details, including:
   - name,
-  - CNPJ (Cadastro Nacional da Pessoa Jurídica),
+  - CNPJ (_Cadastro Nacional da Pessoa Jurídica_),
   - address,
   - municipality code (IGBE),
   - municipal registration number,
-  - whether the supplier opts into the "Simples Nacional" tax regime,
+  - whether the supplier opts into the _Simples Nacional_ tax regime,
   - whether the supplier benefits from a fiscal incentive, and,
   - optionally, any special tax regime (MEI, estimated, coop…) the supplier is subject to.
 - Customer details.
-- Details of the service provided, including quantity, price, applicable ISS rate, and service code (Código Item Lista Serviço) as defined by the municipality.
+- Details of the service provided, including quantity, price, applicable ISS rate, and service code (_Código Item Lista Serviço_) as defined by the municipality.
 - To have chosen an invoice series.
-- A certificate and password accepted by the municipality to send service notes in the name of every supplier.
+- A certificate and password accepted by the municipality to send service invoices in the name of every supplier.
 
 ## Setup
 
 There are four key processes to prepare:
 
 - create supplier post-registration workflow,
-- connect the Notas Fiscais Eletrônicas Brazil app,
+- connect the **Notas Fiscais Eletrônicas Brazil** app,
 - configure a supplier registration workflow, and,
 - prepare an invoicing workflow.
 
@@ -55,12 +55,14 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Step title="Create supplier post-registration workflow">
 
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
 <Tabs>
   <Tab title="Template">
-    
     <Card iconType="duotone" title="NFS-e supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-nfs-e-postregistration" cta="Add to my workspace">
-    This workflow marks suppliers as `Registered`. You will select this workflow in the "Notas Fiscais Eletrônicas Brazil" app configuration later.
+    This workflow marks suppliers as "Registered". You will select this workflow in the "Notas Fiscais Eletrônicas Brazil" app configuration later.
     </Card>
+
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
@@ -86,7 +88,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **Notas Fiscais Eletrônicas Brazil** app.
 
 <Frame>
-  <img src="/guides/images/br-nfe-app.png" width="400px" alt="NFe Brazil App" />
+  <img src="/guides/images/br-nfe-app.png" alt="NFe Brazil App" width="400" noZoom />
 </Frame>
 
 Tap the **Configure** button on the app, and choose the "Post-registration workflow" we created in the previous step, or leave it empty.
@@ -97,10 +99,11 @@ Tap the **Save** button.
 
 <Step title="Configure the supplier registration workflow">
 
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
 
 <Tabs>
   <Tab title="Template">
-    
+
     <Card iconType="duotone" title="NFS-e register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-nfs-e-register-supplier" cta="Add to my workspace">
     This workflow will issue a registration request for a supplier to complete in order to issue invoices through NFS-e.
     </Card>
@@ -118,16 +121,20 @@ Tap the **Save** button.
 
     - **Sign the Envelope**
     - **Register NFS-e supplier**
-    - **Set State** - with configuration set to `processing`.
+    - **Set State** - with configuration set to `Processing`.
 
     Add any additional steps you may need, and save the new workflow.
 
   </Tab>
+
 </Tabs>
 
 </Step>
 
 <Step title="Prepare Invoice Workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
   <Tabs>
     <Tab title="Template">
       <Card iconType="duotone" title="NFS-e issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-nfs-e-invoice" cta="Add to my workspace">
@@ -145,10 +152,10 @@ Tap the **Save** button.
 
       The new workflow will need to perform these steps:
 
-      - **Set State** - to `processing`.
+      - **Set State** - to `Processing`.
       - **Add Sequential Code** - with dynamic sequences and a name like "NFS-e".
       - **Send NFS-e (Brazil)**.
-      - **Set State** - to `sent`.
+      - **Set State** - to `Sent`.
 
       Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
@@ -160,23 +167,17 @@ Tap the **Save** button.
 
 ## Running
 
-In this section, we'll provide details on how to first persist and register a supplier, followed by issuing service notes on their behalf.
+In this section, we'll provide details on how to first persist and register a supplier, followed by issuing service invoices on their behalf.
 
 As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
 
 ### Register a Supplier
 
-Suppliers can be registered either manually via the Invopop Console or programmatically via the API. The process is essentially the same, so we'll demonstrate the manual method for this guide.
+Suppliers can be registered manually via the Invopop Console, or programmatically via the API. The process is essentially the same, so we'll demonstrate the manual method for this guide.
 
-Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the following example that uses a fictitious example. This will only work in the sandbox environment; in production, you'll need the details of an actual company:
+Find the **Contacts** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the example provided below (for demonstration purposes only). This will only work in the sandbox environment; in production, you'll need the details of an actual company:
 
-<AccordionGroup>
-
-<Accordion title="Supplier for Sandbox">
-  <Supplier />
-</Accordion>
-
-</AccordionGroup>
+<Supplier />
 
 Tap **Build**, ensure there are no errors, and click **Save**.
 
@@ -187,8 +188,9 @@ The execution should be successful, and the silo entry will now be in the `Proce
 <Frame>
   <img
     src="/guides/images/br-nfe-reg-link.png"
-    width="450px"
+    width="420"
     alt= "Supplier Registration Link"
+    noZoom
   />
 </Frame>
 
@@ -198,19 +200,19 @@ The execution should be successful, and the silo entry will now be in the `Proce
  the `key` is set to `registration-link`.
 </Info>
 
-Tap the registration link, and a new browser window will open with a form to upload the supplier's credentials. Note that this form can be shared directly with the supplier if necessary.
+Tap the registration link. A new browser window will open with a form to upload the supplier's credentials. Note that this form can be shared directly with the supplier, if necessary.
 
 <Frame>
-  <img src="/guides/images/br-nfe-reg-cer.png" width="580px" alt="Issuer Registration Form"/>
+  <img src="/guides/images/br-nfe-reg-cer.png" width="500" alt="Issuer Registration Form"/>
 </Frame>
 
 The details from this form are sent securely to Invopop's local partner, PlugNotas, who will use them to authenticate in the corresponding municipality API.
 
 The supplier must ensure that the certificate and password are valid and accepted by the municipality where they are registered.
 
-Once the form is submitted, the supplier will be registered, and the post-registration workflow will be executed, changing the supplier's state to `registered`.
+Once the form is submitted, the supplier will be registered, and the post-registration workflow will be executed, changing the supplier's state to `Registered`.
 
-From this point on, you can send service notes on behalf of the supplier.
+From this point on, you can send service invoices on behalf of the supplier.
 
 ### Send a Services Invoice
 
@@ -227,22 +229,18 @@ GOBL Invoices sent as NFS-e require the following properties to perform the corr
 - `$region` to be set to [`BR`](https://docs.gobl.org/regimes/br)
 - `$addons` to include [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1)
 
-<AccordionGroup>
-<Accordion title="B2B Service Note">
+#### B2B Service Invoice
 
-In this example, we're issuing a simple service note from a Brazilian supplier to another Brazilian customer.
+In this example, we're issuing a simple service invoice from a Brazilian supplier to another Brazilian customer.
 
-Notice:
+Please note:
 
-- we've added the `br-nfse-v1` addon; this ensures the document will be validated using the NFS-e rules built into the GOBL library,
-- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-- ISS percentage is provided explicitly as it varies depending on the municipality and type of service, and,
-- there are no totals or calculations; all these will be made automatically when uploading.
+- We've added the `br-nfse-v1` addon; this ensures the document will be validated using the NFS-e rules built into the GOBL library.
+- Extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way.
+- ISS percentage is provided explicitly as it varies depending on the municipality and type of service.
+- There are no totals or calculations; all these will be made automatically when uploading.
 
 <ServiceNote />
-
-</Accordion>
-</AccordionGroup>
 
 ## FAQ
 

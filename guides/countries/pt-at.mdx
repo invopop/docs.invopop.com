@@ -2,6 +2,7 @@
 title: "AT Guide"
 sidebarTitle: "AT (Autoridade Tributária)"
 description: Issue documents in Portugal using Invopop's certified implementation.
+tag: "NEW"
 ---
 
 import PostRegistration from '/snippets/workflows/templates/pt/at-postregistration.mdx';
@@ -10,15 +11,9 @@ import IssueInvoice from '/snippets/workflows/templates/pt/at-issue-invoice.mdx'
 import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
 import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
 
-<Warning>
-  We are currently in the process of certifying our direct integration with the Portuguese Tax Authority (AT). As a result, the AT implementation —described in this guide— is not yet available for use.
-
-  In the meantime, if you need to issue documents in Portugal, you can use our fully functional integration via [InvoiceXpress](/guides/countries/pt-invoicexpress).
-</Warning>
-
 ## Introduction
 
-Invopop, as a certified provider in Portugal, allows you to issue fully-compliant tax documents and report them to the Autoridade Tributária e Aduaneira (AT). Using the AT Portugal app, you can generate PDFs with the correct signatures, ATCUD and QR codes for all your documents (invoices, transport documents, payments, etc.). Also, you can report them to the AT either in batch, via periodic SAF-T PT reports, or in real-time, using the AT web services.
+Invopop, as a certified provider in Portugal, allows you to issue fully-compliant tax documents and report them to the _Autoridade Tributária e Aduaneira_ (AT). Using the AT Portugal app, you can generate PDFs with the correct signatures, ATCUD and QR codes for all your documents (invoices, transport documents, payments, etc.). Also, you can report them to the AT either in batch, via periodic SAF-T PT reports, or in real-time, using the AT web services.
 
 This guide will walk you through the process of registering a supplier, issuing invoices in their name, and generating a SAF-T PT report.
 
@@ -50,13 +45,21 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 
+<Step title="Connect the AT Portugal App">
+
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **AT Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
+
+</Step>
+
 <Step title="Create Supplier post-registration workflow">
 
 <Tabs>
   <Tab title="Template">
     
     <Card iconType="duotone" title="AT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-postregistration" cta="Add to my workspace">
-    Marks Suppliers as `Registered`. You will select this workflow in the AT (Portugal) app configuration later.
+    Marks Suppliers as "Registered". You will select this workflow in the AT (Portugal) app configuration later.
     </Card>
   </Tab>
   <Tab title="Code">
@@ -79,20 +82,15 @@ All of the following steps must be carried out from the [Invopop Console](https:
 </Tabs>
 </Step>
 
+  <Step title="Configure the AT Portugal App">
 
+      1. Navigate to **Configuration** →  **Apps**.
+      2. Find **AT Portugal** in the connected apps list.
+      3. Click **Configure** and choose the "Post-registration workflow" we created in the previous step.
+      4. Click the **Save** button.
 
-<Step title="Connect the AT Portugal App">
-
-  1. Navigate to **Configuration** →  **Apps**.
-  2. Find **AT Portugal** in the app discovery list.
-  3. Click **Connect** to activate.
-
-  Click the **Configure** button on the app, and choose the "Post-registration workflow" we created in the previous step.
-
-  Click the **Save** button.
-</Step>
-
-
+  
+  </Step>
 <Step title="Configure the supplier registration workflow">
   <Tabs>
     <Tab title="Template">
@@ -111,7 +109,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
       The new workflow will need to perform three steps:
 
-      - **Set State** - with configuration set to `processing`.
+      - **Set State** - with configuration set to `Processing`.
       - **Sign the Envelope**
       - **Register AT Issuer (Portugal)**
 
@@ -121,6 +119,9 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
     </Tab>
   </Tabs>
+
+
+
 </Step>
 
 <Step title="Prepare the document processing workflow">
@@ -141,12 +142,12 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
         The new workflow will need to perform these steps:
 
-        - **Set State** - to "processing".
+        - **Set State** - to `Processing`.
         - **Add Sequential Code** - with dynamic sequences, and name like "AT Documents".
         - **Seal for the AT (Portugal)**.
         - **Record for SAF-T reporting (Portugal)**.
         - **Generate PDF** - configured for your environment.
-        - **Set State** - to "sent".
+        - **Set State** - to `Sent`.
 
         Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
         Finally, in the Error Handling area, add the **Set State** action and select `Error`.
@@ -174,9 +175,7 @@ This can be done either manually via the Invopop Console or programmatically via
 
 Find the **Contacts** section of the sidebar and click **Suppliers**. Click the **+ New Supplier** button to be presented with a new editor. You can use the following example as a template, and replace it with the details of your company. Note that you'll need the details of a real company both in the sandbox and production environments:
 
-<Accordion title="Supplier example">
   <Supplier />
-</Accordion>
 
 Click **Build**, ensure there are no errors, and click **Save**.
 
@@ -226,10 +225,9 @@ The following examples show partial GOBL documents you can copy and paste direct
   - `$addons` to include [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1)
 </Tip>
 
-<AccordionGroup>
-<Accordion title="B2B Invoice">
-
 In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
+
+<B2BInvoice />
 
 Notice:
 
@@ -242,10 +240,7 @@ Notice:
 - the `pt-region` extension will automatically be set to the default value of `PT`, and
 - there are no totals or calculations; all these will be made automatically when uploading.
 
-<B2BInvoice />
 
-</Accordion>
-</AccordionGroup>
 
 ### Generate a SAF-T report
 

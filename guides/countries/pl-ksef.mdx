@@ -26,7 +26,7 @@ Parties can access, verify, and download invoices using authentication methods p
 This guide assumes that you have a Company NIP and an account in Poland's National System e-Invoices (KSeF). You require an issuer token for each environment, obtained at the KSeF portal ([Test](https://ksef-test.mf.gov.pl/web/login) | [Production](https://ksef.mf.gov.pl/web/login)).
 
 <Frame caption="Generate a token with 'issuing invoices' permissions">
-<img width="600" src="/guides/images/pl-ksef-portal.png" alt="Connect KSeF app" />
+<img width="100%" src="/guides/images/pl-ksef-portal.png" alt="Connect KSeF app" />
 </Frame>
 
 
@@ -65,14 +65,14 @@ The initial connection requires no configuration for sending invoices.
 
       In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
 
-        1. **Set State** - To "Processing".
+        1. **Set State** - To `Processing`.
         2. **Add sequential code** - Add the desired sequence for your invoices.
         3. **Sign Envelope** - Signs the GOBL document preventing further modifications.
         4. **Send to KSeF (Poland)** - Generates the FA_VAT XML and sends it to KSeF.
         5. **Generate PDF** - Generates a PDF with a FA_VAT QR code linked to the KSeF portal.
-        4. **Set State** - To "Sent".
+        6. **Set State** - To `Sent`.
 
-      In the **Error Handling** section, add a **Set State** step with the state set to `"Error"` to capture and flag failed imports.
+      In the **Error Handling** section, add a **Set State** step with the state set to `Error` to capture and flag failed imports.
 
       This is the minimal workflow with state handling required to automate the issuing FA_VAT invoices through KSeF.
 
@@ -88,16 +88,9 @@ The initial connection requires no configuration for sending invoices.
 
 The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
 
-GOBL Invoices sent to KSeF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+GOBL Invoices sent to KSeF require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining `$regime` to be set to [`PL`](https://docs.gobl.org/regimes/pl)
 
-- `$regime` to be set to [`PL`](https://docs.gobl.org/regimes/pl)
-
-<AccordionGroup>
-<Accordion title="Self-billed invoice (KSeF)">
   <KSeFInvoice />
-</Accordion>
-</AccordionGroup>
-
 
 ## FAQ
 
