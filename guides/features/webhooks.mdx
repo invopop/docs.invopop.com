@@ -1,0 +1,111 @@
+---
+title: "Webhook Guide"
+sidebarTitle: "Webhooks"
+icon: "webhook"
+description: Integrate your system with Invopop through webhooks.
+---
+
+## Introduction
+
+This guide will show you how to configure the Webhook workflow step to send HTTP requests automatically from your workflows. You can use webhooks to notify external systems, trigger automations, or synchronize data with third-party APIs whenever an event occurs.
+
+Included in this guide are the configuration options for the **Send Webhook** workflow step, a sample response with an explanation for each field, and the procedure for retries.
+
+## Setup and configuration
+
+Add the **Send Webhook** step to your workflow (or workflow condition) by searching or locating it in the actions list under the **Notify** section.
+
+<Frame>
+  <img
+    width="399"
+    src="/guides/images/webhooks-list.png"
+    alt="Webhook app connected"
+  />
+</Frame>
+
+Then configure your Webhook:
+
+<Frame>
+  <img
+    width="399"
+    src="/guides/images/webhooks.png"
+    alt="Webhook step configuration"
+  />
+</Frame>
+
+**Webhook URL**<br />
+The endpoint that will receive the `POST` request.
+
+**Event (optional)**<br />
+Specify a custom event name such as `success`, `error`, or `invoice_sent`. This will appear under the `event` field in the JSON payload.
+
+**Authentication Bearer Token (optional)**<br />
+If your endpoint requires authorization, include a token here. The request will include a header: `Authorization: Bearer <your_token>`. Invopop does not recommend whitelisting IPs for security as the static IP is likely to change in the future.
+
+<Warning>Never expose sensitive credentials directly in the webhook URL. Always use Bearer Tokens or custom headers for secure authentication.</Warning>
+
+**Custom Headers (optional)**<br />
+Add one or more HTTP headers. This is useful for services that require API keys, content types, or verification signatures.
+
+**Sample Body**<br />
+Below is an example of the JSON payload that will be sent:
+
+```json
+{
+  "id": "",
+  "event": "",
+  "transform_job_id": "",
+  "silo_entry_id": "",
+  "owner_id": "",
+  "key": "",
+  "meta": {},
+  "faults": []
+}
+```
+
+- `id` the id of the webhook event.
+- `event` custom event name set up in the step (if any).
+- `transform_job_id`  the id of a job run through the [Transform Job endpoint](https://docs.invopop.com/api-ref/transform/jobs/fetch-a-job-by-key)
+- `silo_entry_id` the id of the [silo entry](https://docs.invopop.com/api-ref/silo/entries/fetch-an-entry)
+- `key` the job's [key](https://docs.invopop.com/api-ref/transform/jobs/create-a-job-put#body-key) to ensure [idempotency](https://docs.invopop.com/api-ref/idempotency).
+- `meta` certain workflow steps can add data to the meta field which is then made available to subsequent steps and to webhook payloads.
+- `faults` array of [fault](https://docs.invopop.com/api-ref/transform/jobs/fetch-a-job#response-faults) objects that represent errors that occurred during the processing of the job.
+
+<Info> The webhook will expect a `200` or `204` response code. Any other response will be treated as an error and will be automatically retried after a delay. </Info>
+
+## Retries
+
+When a webhook is triggered, Invopop will wait for a response. The behavior is as follows:
+
+* Success (`200`/`204`) → Webhook will produce an `OK` status and no retry process will be triggered.
+* Anything else → Webhook will trigger the retry process.
+
+Retries happen automatically using exponential backoff for error messages in jobs:
+5s → 10s → 20s → 40s → 80s → … doubling up to 1,280s. Subsequently, the system will wait 30 minutes between retries until a maximum of 12 hours is reached.
+
+If you wish to change this behavior, include a `retry_in` field in your response with the number of seconds you wish to wait between retries. The system will then retry up to 32 times returning a `KO` status code. Here is an example of such a response:
+
+```
+{
+  "code":"503",
+  "message":"Service Unavailable",
+  "retry_in": 20
+}
+```
+
+## FAQ
+<AccordionGroup>
+    <Accordion title="What happens if my webhook endpoint is down?">
+        If your endpoint fails to respond or returns a non-`200`/`204` status code, Invopop will retry automatically. If the
+        error persists, the webhook step will return a `KO` status.
+    </Accordion>
+    <Accordion title="Can I send multiple webhooks in the same workflow?">
+        Yes. You can add multiple **Send Webhook** actions in the same workflow, each targeting a different endpoint or event.
+    </Accordion>
+    <Accordion title="What security options are available?">
+        You can authenticate using Bearer Tokens or custom headers (e.g. `X-Signature`, `X-API-Key`). It’s recommended to use HTTPS and verify the token or header server-side.
+    </Accordion>
+    <Accordion title="What content type do webhooks use?">
+        All webhook requests are sent with `Content-Type: application/json`.
+    </Accordion>
+</AccordionGroup>
