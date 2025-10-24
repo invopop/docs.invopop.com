@@ -11,9 +11,11 @@ import Supplier from '/snippets/suppliers/es/verifactu.mdx';
 
 ## Introduction
 
-The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es))  requires that companies formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the supplier's legal representative must sign an agreement granting Invopop the necessary consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
+The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es)) requires that companies formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the supplier's legal representative must sign an agreement granting Invopop the necessary consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
 
-For this process, the supplier can sign the agreement PDF with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica), such as one issued by the FNMT, or a handwritten signature with a company stamp (_sello de empresa_), in which case the user must provide a valid ID such as DNI, NIE or passport.
+For this process, the supplier can sign the agreement PDF with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica), such as one issued by the FNMT, or a handwritten signature with a company stamp (_sello de empresa_), in which case the user must provide a valid ID such as DNI, NIE or passport. In the case of self-employed individuals (_autónomos_) a company stamp is not required.
+
+This guide will walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label)), the process of completing the supplier onboarding wizard, explaining the approval process and what to do in case of rejection.
 
 ## Set-up
 
@@ -55,11 +57,11 @@ For this process, the supplier can sign the agreement PDF with a valid [digital 
 
         The new workflow will need to perform the following steps:
 
-        1. **Register supplier** - Sends an email to the supplier with a registration link.
+        1. **Register supplier** - will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
         2. **Set State** — select "Processing".
-        3. **Wait for supplier registration** - Configure the wait time (in days) for the supplier to complete the registration form, sign agreements and attach the required documentation.
+        3. **Wait for supplier registration** - waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through VERI\*FACTU immediately after the documents are uploaded.
         4. **Set State** — select "Registered".
-        5. **Wait for supplier approval** - Invopop will validate the provided supplier documentation in less than 72 hours. If rejected it will generate an error and block the supplier from issuing invoices. 
+        5. **Wait for supplier approval** - In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
         6. **Set State** — select "Registered"
 
         Finally, in the Error Handling area, add the **Set State** action and select `Error`.
@@ -96,9 +98,11 @@ The process is best explained looking at the workflow steps:
 Suppliers need to provide the following documents for Invopop to issue invoices on their behalf:
 
 1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf). If the supplier is a self-employed individual (_autónomo_), stamping is unnecessary.
-2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents) if the agreement is not e-signed with a valid certificate.
+2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents) if the agreement is not signed with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica) such as one from the FNMT.
 
-These documents can be collected through a multi-step web form (_wizard_) which enabled through the _Supplier registration workflow_ created during [VERI\*FACTU Invoicing setup](/guides/countries/es-verifactu). 
+These documents can be collected through a multi-step web form (_wizard_) which enabled through the _Supplier registration workflow_ created during [VERI\*FACTU Invoicing setup](/guides/countries/es-verifactu) or [sent via the API](https://docs.invopop.com/api-ref/apps/verifactu/agreement-upload) if you wish to have control over the process.
+
+### Onboard suppliers through the supplier registration wizard
 
 <Frame caption="Supplier registration wizard">
   <img
@@ -108,9 +112,10 @@ These documents can be collected through a multi-step web form (_wizard_) which 
   />
 </Frame>
 
-If you have special needs regarding the onboarding of suppliers for VERI\*FACTU (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
 
 ### Onboard suppliers through the API
+
+If you have special needs regarding the onboarding of suppliers for VERI\*FACTU (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
 
 <Steps>
   <Step title="Upload supplier">
