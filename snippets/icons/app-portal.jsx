@@ -1,0 +1,18 @@
+export const SvgComponent = ({size}) => {
+  return (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 16 16"
+    width={size}
+    height={size}
+  >
+    <path
+      fill="#008852"
+      fillOpacity={0.4}
+      stroke="#008852"
+      d="M2 .5h12A1.5 1.5 0 0 1 15.5 2v12a1.5 1.5 0 0 1-1.5 1.5H2A1.5 1.5 0 0 1 .5 14V2A1.5 1.5 0 0 1 2 .5Z"
+    />
+  </svg>
+  )
+}
