@@ -1,4 +1,4 @@
-export const SvgComponent = ({size}) => {
+export const CiiIcon = ({size}) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

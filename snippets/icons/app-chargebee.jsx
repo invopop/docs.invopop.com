@@ -1,4 +1,4 @@
-export const SvgComponent = ({size}) => {
+export const ChargebeeIcon = ({size}) => {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 235" width={size} height={size}>
       <path fill="#f30" d="m77.18 117.82 154.67-36.88V.73h-80.2Z" />

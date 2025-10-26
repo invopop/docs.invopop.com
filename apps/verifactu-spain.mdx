@@ -6,20 +6,23 @@ keywords: ['verifactu']
 mode: "wide"
 ---
 
-import WorkflowExample from '/snippets/workflows/templates/es/verifactu-invoice.mdx';
+import InvoiceWorkflow from '/snippets/workflows/templates/es/verifactu-invoice.mdx';
+import RegisterWorkflow from '/snippets/workflows/templates/es/verifactu-supplier-registration.mdx';
+import UnregisterWorkflow from '/snippets/workflows/templates/es/verifactu-unregister.mdx';
+import CancelWorkflow from '/snippets/workflows/templates/es/verifactu-cancel.mdx';
 import B2CInvoice from '/snippets/invoices/es/verifactu-b2c.mdx';
 import B2BInvoice from '/snippets/invoices/es/verifactu-b2b.mdx';
-import CreditNote from '/snippets/invoices/es/verifactu-credit-note.mdx';
+import CreditNoteInvoice from '/snippets/invoices/es/verifactu-credit-note.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
 import CancelInvoice from '/snippets/workflows/templates/es/verifactu-cancel.mdx';
-import { VerifactuIcon } from '/snippets/icons/verifactu.jsx';
+import VerifactuIcon from '/snippets/icons/es-verifactu.jsx';
 
 
 <Tabs>
 	<Tab title="Description">
 		<div class="flex gap-8">
 			<Card title="VERI*FACTU Spain" icon={ <VerifactuIcon /> } 
-			  href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Install in my workspace">
+			  href="/apps/verifactu-instructions" cta="View implementation guide">
 					This app allows you to issue VERI\*FACTU invoices and onboard suppliers
 			</Card>
 			<div class="flex-shrink">
@@ -33,11 +36,11 @@ import { VerifactuIcon } from '/snippets/icons/verifactu.jsx';
 	</div>
 
 	
-    Invopop's VERI\*FACTU app is designed to support full compliance with Spain’s VERI\*FACTU e-invoicing regulation. It provides endpoints and workflows to automate supplier onboarding, document upload, identity verification, and invoice generation, enabling businesses and intermediaries to issue e-invoices in accordance with Spanish law.
+    Invopop's **VERI\*FACTU app** is designed to support full compliance with Spain’s VERI\*FACTU e-invoicing regulation. It provides endpoints and workflows to automate supplier onboarding, document upload, identity verification, and invoice generation, enabling businesses and intermediaries to issue e-invoices in accordance with Spanish law.
     
     <Frame caption="Example VERI*FACTU invoice with QR">
       <img
-        width="420"
+        width="300"
         src="/guides/images/es-verifactu-example-pdf.png"
         alt="Example VERI*FACTU invoice with QR"
       />
@@ -84,219 +87,19 @@ import { VerifactuIcon } from '/snippets/icons/verifactu.jsx';
 
 
 	<AccordionGroup>
-		<Accordion title="VERI*FACTU invoice workflow">
-		```json expandable
-		{
-		  "name": "VERI*FACTU issue invoice",
-		  "description": "Generate and send VERI*FACTU to AEAT, then generate PDF with QR",
-		  "schema": "bill/invoice",
-		  "steps": [
-		    {
-		      "id": "59f4dee0-bc8f-11ef-8ca1-573cbe7db4cd",
-		      "name": "Set State",
-		      "provider": "silo.state",
-		      "summary": "Set state to `processing`{.state .processing}",
-		      "config": {
-		        "state": "processing"
-		      }
-		    },
-		    {
-		      "id": "ec41cce0-0fc3-11f0-8a81-7911b3ecee3c",
-		      "name": "Add Sequential Code",
-		      "provider": "sequence.enumerate",
-		      "summary": "Dynamic · Verifactu · 000001",
-		      "config": {
-		        "name": "Verifactu",
-		        "padding": 6,
-		        "start": 1
-		      }
-		    },
-		    {
-		      "id": "fc75e4f0-8721-11ef-a962-73e3f2037a52",
-		      "name": "Sign Envelope",
-		      "provider": "silo.close"
-		    },
-		    {
-		      "id": "ef2ce710-bc8e-11ef-8ca1-573cbe7db4cd",
-		      "name": "Generate Verifactu (Spain)",
-		      "provider": "verifactu.generate"
-		    },
-
-		    {
-		      "id": "61661540-bc8f-11ef-8ca1-573cbe7db4cd",
-		      "name": "Send Verifactu (Spain)",
-		      "provider": "verifactu.send"
-		    },
-		    {
-		      "id": "65312700-bc8f-11ef-8ca1-573cbe7db4cd",
-		      "name": "Generate PDF",
-		      "provider": "pdf",
-		      "summary": "Spanish - A4",
-		      "config": {
-		        "date_format": "%Y-%m-%d",
-		        "layout": "A4",
-		        "locale": "es",
-		        "logo_height": 60
-		      }
-		    },
-		    {
-		      "id": "6abb4de0-bc8f-11ef-8ca1-573cbe7db4cd",
-		      "name": "Set State",
-		      "provider": "silo.state",
-		      "summary": "Set state to `sent`{.state .sent}",
-		      "config": {
-		        "state": "sent"
-		      }
-		    }
-		  ],
-		  "rescue": [
-		    {
-		      "id": "798b1d00-bc8f-11ef-8ca1-573cbe7db4cd",
-		      "name": "Set State",
-		      "provider": "silo.state",
-		      "summary": "Set state to `error`{.state .error}",
-		      "config": {
-		        "state": "error"
-		      }
-		    }
-		  ]
-		}
-
-		```
+		<Accordion title="VERI*FACTU issue invoice">
+			<InvoiceWorkflow />
 		</Accordion>
-	
-  		<Accordion title="VERI*FACTU cancel document">
-		```json expandable
-		{
-		    "name": "VERI*FACTU cancel document",
-		    "description": "Cancel a VERI*FACTU document and report it to AEAT",
-		    "schema": "bill/invoice",
-		    "steps": [
-		        {
-		            "id": "2f897e30-3c9c-11f0-8690-a921c0418914",
-		            "name": "Cancel VERI*FACTU (Spain)",
-		            "provider": "verifactu.cancel"
-		        },
-		        {
-		            "id": "334ffc10-3c9c-11f0-8690-a921c0418914",
-		            "name": "Set State",
-		            "provider": "silo.state",
-		            "summary": "Set state to `void`{.state .void}",
-		            "config": {
-		                "state": "void"
-		            }
-		        }
-		    ],
-		    "rescue": [
-		        {
-		            "id": "384cfe20-3c9c-11f0-8690-a921c0418914",
-		            "name": "Set State",
-		            "provider": "silo.state",
-		            "summary": "Set state to `error`{.state .error}",
-		            "config": {
-		                "state": "error"
-		            }
-		        }
-		    ]
-		}
-
-		```
+	  	<Accordion title="VERI*FACTU cancel invoice">
+			<CancelWorkflow />
+  		</Accordion>
+  		<Accordion title="VERI*FACTU register supplier">
+			<RegisterWorkflow />
   		</Accordion>
 
-  
-  <Accordion title="VERI*FACTU supplier registration">
-```json expandable
-{
-    "name": "VERI*FACTU supplier registration",
-    "description": "Enables suppliers to register for VERI*FACTU invoice generation",
-    "schema": "org/party",
-    "steps": [
-        {
-            "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Register with VERI*FACTU",
-            "provider": "verifactu.register"
-        },
-        {
-            "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `processing`{.state .processing}",
-            "config": {
-                "state": "processing"
-            }
-        },
-        {
-            "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Wait for Upload VERI*FACTU",
-            "provider": "verifactu.wait.upload"
-        },
-        {
-            "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `registered`{.state .registered}",
-            "config": {
-                "state": "registered"
-            }
-        },
-        {
-            "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Wait for Approval VERI*FACTU",
-            "provider": "verifactu.wait.approval"
-        }
-    ],
-    "rescue": [
-        {
-            "id": "76c13260-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
-  </Accordion>
-
-  <Accordion title="Unregister VERI*FACTU supplier">
-```json expandable
-{
-    "name": "VERI*FACTU unregister supplier",
-    "description": "Revokes invoice issuing entitlement for a VERI*FACTU supplier.",
-    "schema": "org/party",
-    "steps": [
-        {
-            "id": "8a613610-67ba-11f0-bcaf-170efff782a9",
-            "name": "Unregister VERI*FACTU",
-            "provider": "verifactu.unregister"
-        },
-        {
-            "id": "96a6b0d0-67ba-11f0-bcaf-170efff782a9",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `void`{.state .void}",
-            "config": {
-                "state": "void"
-            }
-        }
-    ],
-    "rescue": [
-        {
-            "id": "e8d2a6b0-67bb-11f0-bcaf-170efff782a9",
-            "name": "Set State",
-            "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
-            "config": {
-                "state": "error"
-            }
-        }
-    ]
-}
-```
-[Open in GOBL builder](https://build.gobl.org)
-  </Accordion>
+	  <Accordion title="Unregister VERI*FACTU supplier">
+			<UnregisterWorkflow />
+	  </Accordion>
 </AccordionGroup>
 
 
@@ -305,407 +108,38 @@ import { VerifactuIcon } from '/snippets/icons/verifactu.jsx';
 	<Tab title="Example documents">
 		<AccordionGroup>
 			<Accordion title="VERI*FACTU B2B Invoice (essential)">
-				
-				```json expandable
-		{
-				"$schema": "https://gobl.org/draft-0/bill/invoice",
-				"$regime": "ES",
-				"$addons": [
-					"es-verifactu-v1"
-				],
-				"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
-				"type": "standard",
-				"series": "SAMPLE",
-				"code": "004",
-				"issue_date": "2024-11-13",
-				"currency": "EUR",
-				"tax": {
-					"ext": {
-						"es-verifactu-doc-type": "F1"
-					}
-				},
-				"supplier": {
-					"name": "Invopop S.L.",
-					"tax_id": {
-						"country": "ES",
-						"code": "B85905495"
-					},
-					"addresses": [
-						{
-							"num": "42",
-							"street": "Calle Pradillo",
-							"locality": "Madrid",
-							"region": "Madrid",
-							"code": "28002",
-							"country": "ES"
-						}
-					],
-					"emails": [
-						{
-							"addr": "billing@example.com"
-						}
-					]
-				},
-				"customer": {
-					"name": "Sample Consumer",
-					"tax_id": {
-						"country": "ES",
-						"code": "B63272603"
-					}
-				},
-				"lines": [
-					{
-						"i": 1,
-						"quantity": "20",
-						"item": {
-							"name": "Development services",
-							"price": "90.00",
-							"unit": "h"
-						},
-						"sum": "1800.00",
-						"taxes": [
-							{
-								"cat": "VAT",
-								"rate": "standard",
-								"percent": "21.0%",
-								"ext": {
-									"es-verifactu-op-class": "S1",
-									"es-verifactu-regime": "01"
-								}
-							}
-						],
-						"total": "1800.00"
-					}
-				],
-				"totals": {
-					"sum": "1800.00",
-					"total": "1800.00",
-					"taxes": {
-						"categories": [
-							{
-								"code": "VAT",
-								"rates": [
-									{
-										"key": "standard",
-										"ext": {
-											"es-verifactu-op-class": "S1",
-											"es-verifactu-regime": "01"
-										},
-										"base": "1800.00",
-										"percent": "21.0%",
-										"amount": "378.00"
-									}
-								],
-								"amount": "378.00"
-							}
-						],
-						"sum": "378.00"
-					},
-					"tax": "378.00",
-					"total_with_tax": "2178.00",
-					"payable": "2178.00"
-				},
-				"notes": [
-					{
-						"key": "general",
-						"text": "This is a sample invoice with a standard tax"
-					}
-				]
-			}
-		```
-
-[Open in GOBL builder](https://build.gobl.org)
-</Accordion>
-<Accordion title="VERI*FACTU Credit Note">
-</Accordion>
-
-<Accordion title="VERI*FACTU B2B Invoice (complete)">
-				
-				```json expandable
-		{
-				"$schema": "https://gobl.org/draft-0/bill/invoice",
-				"$regime": "ES",
-				"$addons": [
-					"es-verifactu-v1"
-				],
-				"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
-				"type": "standard",
-				"series": "SAMPLE",
-				"code": "004",
-				"issue_date": "2024-11-13",
-				"currency": "EUR",
-				"tax": {
-					"ext": {
-						"es-verifactu-doc-type": "F1"
-					}
-				},
-				"supplier": {
-					"name": "Invopop S.L.",
-					"tax_id": {
-						"country": "ES",
-						"code": "B85905495"
-					},
-					"addresses": [
-						{
-							"num": "42",
-							"street": "Calle Pradillo",
-							"locality": "Madrid",
-							"region": "Madrid",
-							"code": "28002",
-							"country": "ES"
-						}
-					],
-					"emails": [
-						{
-							"addr": "billing@example.com"
-						}
-					]
-				},
-				"customer": {
-					"name": "Sample Consumer",
-					"tax_id": {
-						"country": "ES",
-						"code": "B63272603"
-					}
-				},
-				"lines": [
-					{
-						"i": 1,
-						"quantity": "20",
-						"item": {
-							"name": "Development services",
-							"price": "90.00",
-							"unit": "h"
-						},
-						"sum": "1800.00",
-						"taxes": [
-							{
-								"cat": "VAT",
-								"rate": "standard",
-								"percent": "21.0%",
-								"ext": {
-									"es-verifactu-op-class": "S1",
-									"es-verifactu-regime": "01"
-								}
-							}
-						],
-						"total": "1800.00"
-					}
-				],
-				"totals": {
-					"sum": "1800.00",
-					"total": "1800.00",
-					"taxes": {
-						"categories": [
-							{
-								"code": "VAT",
-								"rates": [
-									{
-										"key": "standard",
-										"ext": {
-											"es-verifactu-op-class": "S1",
-											"es-verifactu-regime": "01"
-										},
-										"base": "1800.00",
-										"percent": "21.0%",
-										"amount": "378.00"
-									}
-								],
-								"amount": "378.00"
-							}
-						],
-						"sum": "378.00"
-					},
-					"tax": "378.00",
-					"total_with_tax": "2178.00",
-					"payable": "2178.00"
-				},
-				"notes": [
-					{
-						"key": "general",
-						"text": "This is a sample invoice with a standard tax"
-					}
-				]
-			}
-		```
-
-[Open in GOBL builder](https://build.gobl.org)
-</Accordion>
-
-	<Accordion title="VERI*FACTU B2C Invoice">
-				
-				```json expandable
-{
-		"$schema": "https://gobl.org/draft-0/bill/invoice",
-		"$regime": "ES",
-		"$addons": [
-			"es-verifactu-v1"
-		],
-		"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
-		"type": "standard",
-		"series": "SAMPLE",
-		"code": "004",
-		"issue_date": "2024-11-13",
-		"currency": "EUR",
-		"tax": {
-			"ext": {
-				"es-verifactu-doc-type": "F1"
-			}
-		},
-		"supplier": {
-			"name": "Invopop S.L.",
-			"tax_id": {
-				"country": "ES",
-				"code": "B85905495"
-			},
-			"addresses": [
-				{
-					"num": "42",
-					"street": "Calle Pradillo",
-					"locality": "Madrid",
-					"region": "Madrid",
-					"code": "28002",
-					"country": "ES"
-				}
-			],
-			"emails": [
-				{
-					"addr": "billing@example.com"
-				}
-			]
-		},
-		"customer": {
-			"name": "Sample Consumer",
-			"tax_id": {
-				"country": "ES",
-				"code": "B63272603"
-			}
-		},
-		"lines": [
-			{
-				"i": 1,
-				"quantity": "20",
-				"item": {
-					"name": "Development services",
-					"price": "90.00",
-					"unit": "h"
-				},
-				"sum": "1800.00",
-				"taxes": [
-					{
-						"cat": "VAT",
-						"rate": "standard",
-						"percent": "21.0%",
-						"ext": {
-							"es-verifactu-op-class": "S1",
-							"es-verifactu-regime": "01"
-						}
-					}
-				],
-				"total": "1800.00"
-			}
-		],
-		"totals": {
-			"sum": "1800.00",
-			"total": "1800.00",
-			"taxes": {
-				"categories": [
-					{
-						"code": "VAT",
-						"rates": [
-							{
-								"key": "standard",
-								"ext": {
-									"es-verifactu-op-class": "S1",
-									"es-verifactu-regime": "01"
-								},
-								"base": "1800.00",
-								"percent": "21.0%",
-								"amount": "378.00"
-							}
-						],
-						"amount": "378.00"
-					}
-				],
-				"sum": "378.00"
-			},
-			"tax": "378.00",
-			"total_with_tax": "2178.00",
-			"payable": "2178.00"
-		},
-		"notes": [
-			{
-				"key": "general",
-				"text": "This is a sample invoice with a standard tax"
-			}
-		]
-	}
-```
+				<B2BInvoice />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
 			</Accordion>
-
+			<Accordion title="VERI*FACTU B2B Invoice (complete)">
+				<B2BInvoice />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
+			</Accordion>
+			<Accordion title="VERI*FACTU Credit Note">
+				<CreditnoteInvoice />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
+			</Accordion>
+			<Accordion title="VERI*FACTU B2C Invoice (essential)">
+				<B2CInvoice />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
+			</Accordion>
 			<Accordion title="VERI*FACTU Supplier (complete)">
-				
-				```json expandable
-				{
-					"$schema": "https://gobl.org/draft-0/org/party",
-					"uuid": "018f73cb-34b3-7000-80f6-4e452c9df78c",
-					"name": "Biz España S.L.",
-					"tax_id": {
-						"country": "ES",
-						"code": "B28774008"
-					},
-					"identities": [
-						{
-							"type": "LEI",
-							"code": "1010101010"
-						},
-						{
-							"code": "ABC1234"
-						}
-					],
-					"addresses": [
-						{
-							"num": "42",
-							"street": "Calle Pradillo",
-							"locality": "Madrid",
-							"region": "Madrid",
-							"code": "28002",
-							"country": "ES"
-						}
-					],
-					"emails": [
-						{
-							"addr": "billing@bizspain.es"
-						}
-					],
-					"logos": [
-						{
-							"label": "Invopop",
-							"url": "https://ams3.digitaloceanspaces.com/invopop-console-files-dev/3c5f601121ad9726776ce51b00a585e4e09387a7375fe352536bacd1793affd0"
-						}
-					]
-				}
-			```
-
-			[Open in GOBL builder](https://build.gobl.org)
+				<SupplierComplete />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
 			</Accordion>
-
 			<Accordion title="VERI*FACTU Supplier (essential)">
-				
-				```json expandable
-				{
-					"$schema": "https://gobl.org/draft-0/org/party",
-					"uuid": "018f73cb-34b3-7000-80f6-4e452c9df78c",
-					"name": "Biz España S.L.",
-					"tax_id": {
-						"country": "ES",
-						"code": "B28774008"
-					}
-				}
-			```
-
-			[Open in GOBL builder](https://build.gobl.org)
+				<SupplierEssential />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
 			</Accordion>
 		</AccordionGroup>
 	</Tab>
 </Tabs>
+
+<Card title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about VERI\*FACTU Spain App →
+</Card>

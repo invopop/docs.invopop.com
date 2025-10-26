@@ -1,4 +1,4 @@
-export const SvgComponent = ({size}) => {
+export const EmailIcon = ({ size }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +71,10 @@ export const SvgComponent = ({size}) => {
           <feGaussianBlur stdDeviation={0.955} />
           <feComposite in2="hardAlpha" operator="out" />
           <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.19 0" />
-          <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_1121_42" />
+          <feBlend
+            in2="BackgroundImageFix"
+            result="effect1_dropShadow_1121_42"
+          />
           <feBlend
             in="SourceGraphic"
             in2="effect1_dropShadow_1121_42"
@@ -80,5 +83,5 @@ export const SvgComponent = ({size}) => {
         </filter>
       </defs>
     </svg>
-  )
-}
+  );
+};
