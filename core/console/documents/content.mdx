@@ -15,48 +15,19 @@ Every document stored in the Invopop Console is represented internally by a sign
 Use this page whenever you need to audit a document, debug a workflow result, or prepare regulatory / customer inquiries.
 
 ## Envelope
-The envelope is the canonical wrapper that encapsulates the business document (invoice, credit note, corrective invoice, receipt, etc.) together with structural metadata and signatures. Think of it as the immutable shell providing:
-1. Header information (identity + classification)
-2. The core GOBL document (business data)
-3. Signature blocks (authenticity & integrity)
+Envelope wraps around a document adding headers and digital signatures.
 
-When workflows run (e.g. issue, cancel, correct), they mutate or extend the envelope in a controlled way—typically by:
-- Adding or updating the document portion (e.g. adding a `preceding` reference)
-- Appending new signature chains
-- Storing workflow output (regulatory codes, hashes) into `meta`
+### JSON Schema ID
+Schema identifies the schema that should be used to understand this document
 
 ### Header
-Contains high-level, mostly immutable attributes:
-- UUID: Primary immutable identifier for this document envelope.
-- Type / Subtype: Invoice, credit-note, corrective, receipt, etc.
-- Regime: Jurisdiction or regulatory context (e.g. ES, IT, PT, PL, MX).
-- Series & Code: Sequential numbering system (often mapped to legal numbering or internal sequence references).
-- Issue Date / Tax Date: Important for compliance and period aggregation.
-- Currency: Monetary denomination used throughout the document.
-- Version / Revision (if shown): Internal envelope revision indicator (not legal numbering).
-- State: Current state (Empty, Draft, Ready, Sent, Issued, Paid, Void, Corrected, Error, etc.).
-
-Best Practices:
-- Avoid changing series/code after issuance—doing so may break legal continuity.
-- For corrections or credit notes, ensure the `preceding` block references the original header’s identifiers.
+Details on what the contents are.
 
 ### Document
-The core business payload stored inside the envelope. For invoices it includes parties, lines, tax breakdown, totals, payment terms, references, and optional regime-specific extensions (addons).
+The data inside the envelope.
 
-Key Sections:
-- Parties: Supplier/Seller and Customer/Buyer, plus optional intermediary or delivery parties.
-- Lines: Itemized goods/services with quantities, unit prices, taxes, allowances/charges.
-- Taxes: Aggregated structuring of tax bases and rates per jurisdiction.
-- Totals: Net, tax, payable, retained, credited amounts.
-- Payment: Terms, due date, settlement details, method hints.
-- References: Prior documents (preceding), contracts, purchase orders, dispatch notes.
-- Addons: Regime or application-specific augmentations (e.g. `es-verifactu-v1`, `it-sdi-v1`).
-- Extensions / Meta Fields: Custom business attributes you’ve injected through workflows or integrations.
-
-Validation Tips:
-- Ensure totals reconcile: Sum(lines + adjustments) == Net; apply VAT rates correctly to produce Tax; Net + Tax - Retentions == Payable.
-- For corrective or credit documents, the `preceding` block should include enough keys (series, code, issue_date, optional uuid) to meet jurisdictional rules.
-- Use addons consistently: The presence/absence determines which workflow actions can run.
+### Signatures
+JSON Web Signatures of the header.
 
 #### Files
 The Files tab lists generated or attached artifacts:
