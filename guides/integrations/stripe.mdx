@@ -121,56 +121,59 @@ To create a new workflow click on **Create New Workflow** in the sidebar menu. Y
 
 </Step>
 
+<Step title="Show your tax ID on invoices">
+By default, Stripe does not display your tax ID on invoices. To enable it, go to Settings > Billing > Invoices. In the `Invoice Tax Information` section, enter your tax ID, set it as the default, and click **Save**.
+
+<Frame caption="Show your tax ID on invoices">
+  ![stripe tax id](/guides/images/stripe-tax-id.png)
+</Frame>
+
+</Step>
+
 </Steps>
 
-## Import a Stripe invoice to Invopop
+## Monitor invoice processing
 
-Once your setup is complete, finalized Stripe invoices are imported into Invopop **automatically**. Use the steps below to verify status, review details, retry processing, and import historical invoices when needed.
+After setup, finalized Stripe invoices are imported into Invopop automatically and saved to the `Sales` folder. Use the steps below to verify status, review details, retry processing, and import historical invoices.
 
 <Steps>
 
-<Step title="Finalize the invoice in Stripe">
-When an invoice reaches Stripe's "Finalized" status, Invopop automatically creates a job in your selected workflow and imports the invoice data.
+<Step title="Check invoice status in Stripe">
+Open the invoice in Stripe and check the Invopop panel in the right sidebar to confirm whether processing succeeded.
 
-<Frame caption="Invoice finalized in Stripe">
-  ![stripe invoice finalized](/guides/images/stripe-invoice-finalized.png)
+<Frame caption="Invoice processed successfully in Stripe">
+  ![stripe invoice status](/guides/images/stripe-invoice-success.png)
 </Frame>
 
 </Step>
 
-<Step title="Check processing status in Stripe">
-Open the invoice in Stripe and view the Invopop app panel in the right sidebar to see whether processing succeeded.
-
-<Frame caption="Processing status in Stripe">
-  ![stripe invoice status](/guides/images/stripe-invoice-status.png)
-</Frame>
-
-</Step>
-
-<Step title="Review details in Invopop">
-For a complete list and detailed logs, go to Invopop and open the job created for the invoice.
+<Step title="Check invoice status in Invopop">
+In the Invopop console, go to `Sales` and open the invoice to view its status. To review the underlying processing job, go to `Workflows` > `History` and open the job details.
 
 <Frame caption="Job details in Invopop">
-  ![stripe job details](/guides/images/stripe-job-invopop.png)
+  ![stripe job details](/guides/images/stripe-invopop-job.png)
 </Frame>
 
 </Step>
 
-<Step title="Retry or process an invoice manually">
-If an invoice was not imported, open the invoice in Stripe and, in the Invopop app panel, click **Process this invoice** to trigger the import again. Use the same action to import older invoices issued before you connected Invopop.
+<Step title="Troubleshoot import errors">
+If an invoice fails, it is usually one of two cases:
 
-<Frame caption="Manually process an invoice">
-  ![stripe manual process](/guides/images/stripe-invoice-process-again.png)
+1. The invoice was not imported into Invopop because converting from Stripe to Invopop failed. Update the data in Stripe and click **Retry** in the Invopop panel. This often happens when attempting to import a draft invoice.
+
+<Frame caption="Retry invoice">
+  ![stripe retry invoice](/guides/images/stripe-retry-import.png)
 </Frame>
 
+2. The invoice was imported into Invopop but submission to the tax authority failed. Correct the invoice in Invopop and re-run a workflow that omits the **Import data from Stripe** step to avoid reimporting the original data. Typical causes include missing required fields or invalid field formats.
+
+<Frame caption="Incorrect invoice details">
+  ![stripe retry invoice](/guides/images/stripe-invoice-wrong-details.png)
+</Frame>
 </Step>
 
-<Step title="Get notified about failures">
-Add a notification action to your workflow's Error Handling section—such as a Slack step, email step, or webhook—so you're alerted if an import fails.
-
-<Frame caption="Configure error notifications">
-  ![stripe error notifications](/guides/images/stripe-error-notifications.png)
-</Frame>
+<Step title="Get notified of failures">
+Add a notification action in your workflow's Error Handling section—Slack, email, or webhook—so you're alerted when an import fails.
 
 </Step>
 
@@ -209,6 +212,27 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
   2. Click the **Disconnect** button
   3. Reconnect the app and select your new workspace
+
+  </Accordion>
+
+  <Accordion title="How can I add a Purchase Order number to the invoice?">
+  Stripe does not include a dedicated Purchase Order field on invoices. Add it as a custom field named `PO Number`.
+
+  You can add the custom field in any of these places:
+  - The specific invoice
+  - The subscription
+  - An invoice template
+
+  </Accordion>
+
+  <Accordion title="Can I import historical invoices (issued before I connected Invopop)?">
+  Yes. Open the invoice in Stripe and click **Process this invoice** in the Invopop panel (right sidebar).
+
+  Note: The invoice issue date will be set to the sync date (today), as required by tax agencies. The operation date remains the original date of the transaction.
+
+  <Frame caption="Import historic invoices">
+    ![stripe import historic invoices](/guides/images/stripe-import-historic-invoices.png)
+  </Frame>
 
   </Accordion>
 
