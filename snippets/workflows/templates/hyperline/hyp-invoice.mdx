@@ -1,0 +1,73 @@
+---
+title: "Hyperline PDF invoice"
+description: "Syncs with Hyperline and generates a basic PDF"
+appId: "hyperline"
+schema: "bill/invoice"
+---
+
+
+```json Example Hyperline PDF invoice workflow with states expandable
+{
+    "name": "Hyperline PDF invoice",
+    "description": "Syncs with Hyperline and generates a basic PDF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "a036b970-a9ae-11f0-aebf-4d4a8c411958",
+            "name": "Import Hyperline Invoice",
+            "provider": "hyperline.import",
+            "next": []
+        },
+        {
+            "id": "c9d569f0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            },
+            "next": []
+        },
+        {
+            "id": "c7a347b0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Sign Envelope",
+            "provider": "silo.close",
+            "next": []
+        },
+        {
+            "id": "d1f2e5e0-ab1e-11ef-a0aa-f554af0a2b6c",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "locale": "en",
+                "logo_height": 40
+            },
+            "next": []
+        },
+        {
+            "id": "6277f270-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            },
+            "next": []
+        }
+    ],
+    "rescue": [
+        {
+            "id": "5504a610-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            },
+            "next": []
+        }
+    ]
+}
+```
