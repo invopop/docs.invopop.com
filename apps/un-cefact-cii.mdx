@@ -1,4 +1,319 @@
 ---
 title: "UN/CEFACT CII"
-description: Information about the UN/CEFACT CII app
+description: Generate, import, validate and exchange UN/CEFACT Cross Industry Invoices (CII) from GOBL documents.
+keywords: ['un-cefact','cii','cross-industry-invoice','e-invoicing','standard','format','mapping']
+mode: wide
+sidebarTitle: "App"
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <div class="flex gap-8">
+      <Card
+        title="UN/CEFACT CII"
+        icon="code-compare"
+        href="https://unece.org/trade/uncefact"
+        cta="UN/CEFACT Reference"
+      >
+        The Cross Industry Invoice (CII) specification for structured e-invoicing in global trade.
+      </Card>
+
+      <div class="flex-shrink">
+        | Information | |
+        |-------------|---|
+        | Developer | Invopop |
+        | Category | Format |
+        | Scope | Global Trade / B2B |
+        | Supported Docs | Invoices, Credit Notes |
+        | Standard | UN/CEFACT Cross Industry Invoice |
+      </div>
+    </div>
+
+    The **UN/CEFACT Cross Industry Invoice (CII)** is a globally-focused e-invoicing data model designed
+    to standardize trade documentation between buyers, suppliers, logistics operators, and tax agencies.
+    The Invopop CII app bridges **GOBL** documents (our canonical business document model) with CII XML
+    representations, streamlining international interoperability.
+
+    <Info>
+      Content on this page is a functional approximation intended to help you design workflows quickly.
+      Always consult the official UN/CEFACT documentation for legal or certification considerations.
+    </Info>
+
+    <Columns cols="3">
+      <Card title="Generate CII XML" icon="file-code">
+        Produce a compliant CII XML from a GOBL invoice or credit note.
+      </Card>
+      <Card title="Validate CII XML" icon="check-double">
+        Run schema and semantic checks on existing CII XML before exchange.
+      </Card>
+      <Card title="Import CII XML" icon="arrow-down-to-line">
+        Convert received CII XML into a GOBL invoice for internal processing.
+      </Card>
+      <Card title="Convert CII ↔ UBL" icon="arrows-left-right">
+        Crosswalk invoice content between CII and UBL where feasible.
+      </Card>
+      <Card title="Attach Supporting Docs" icon="paperclip">
+        Link shipping notices, purchase orders or customs refs to the invoice chain.
+      </Card>
+      <Card title="Generate PDF" icon="file">
+        Render a branded PDF from CII or GOBL source for human-readable distribution.
+      </Card>
+    </Columns>
+
+    <Divider />
+
+    <h3>Typical Use Cases</h3>
+    - You receive a CII invoice from a foreign supplier and need to ingest it into your system.
+    - You issue global trade invoices that must comply with multiple regional platforms.
+    - You need to transform internal GOBL documents into standard exchange formats for partners.
+    - You require a validation layer before submitting data to an intermediary network.
+
+    <h3>Data Mapping Overview</h3>
+    The app maintains direct field mappings between GOBL structures and CII segments:
+    - Parties, addresses, tax IDs
+    - Line items, quantities, prices, allowances/charges
+    - Taxes (multi-rate), currency, totals
+    - Payment means, payment terms
+    - References (order, contract, dispatch, delivery)
+    - Allowance/Charge adjustments on header or line level
+    - Attachments (PDF representation, customs docs, transport docs)
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available when the CII app is installed:
+
+    <Card title="Generate CII XML" icon="file-code" horizontal>
+      Transforms a GOBL invoice entry into a fully structured UN/CEFACT CII XML document and
+      stores it as an attachment.
+    </Card>
+
+    <Card title="Validate CII XML" icon="shield-check" horizontal>
+      Applies XSD schema validation plus semantic rules (currency consistency, total integrity, tax calculation).
+    </Card>
+
+    <Card title="Import CII XML" icon="arrow-down-to-line" horizontal>
+      Parses an external CII XML payload and produces a normalized GOBL invoice entry.
+    </Card>
+
+    <Card title="Convert CII to UBL" icon="arrow-right" horizontal>
+      Attempts a best-effort conversion of CII invoice elements to UBL 2.1 billing structures.
+    </Card>
+
+    <Card title="Convert UBL to CII" icon="arrow-left" horizontal>
+      Maps existing UBL invoice entries into CII equivalent constructs (where supported).
+    </Card>
+
+    <Card title="Generate CII PDF" icon="file" horizontal>
+      Renders a PDF view combining commercial data, tax breakdown, and references extracted from CII XML.
+    </Card>
+
+    <Card title="Attach Trade References" icon="paperclip" horizontal>
+      Adds structured purchase order, dispatch advice or transport references into the invoice chain.
+    </Card>
+
+    <Card title="Enrich Tax Details" icon="percent" horizontal>
+      Recomputes or supplements tax detail nodes when source data is incomplete.
+    </Card>
+
+    <Card title="Finalize CII Envelope" icon="lock" horizontal>
+      Signs and locks the CII XML for downstream exchange or archiving.
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example conceptual workflows you can implement with provided actions:
+
+    <AccordionGroup>
+      <Accordion title="Outbound CII Invoice">
+        <Steps>
+          <Step title="Prepare GOBL Entry">
+            Create or update a GOBL invoice entry with all required commercial details.
+          </Step>
+          <Step title="Generate CII XML">
+            Run the Generate CII XML action to produce the attached structured format.
+          </Step>
+          <Step title="Validate">
+            Apply Validate CII XML; fail early if schema or totals mismatch.
+          </Step>
+          <Step title="Finalize">
+            Run Finalize CII Envelope to sign and mark immutability.
+          </Step>
+          <Step title="Distribution">
+            Send via partner network (Peppol / VAN) or export to SFTP/email channel.
+          </Step>
+          <Step title="Archive">
+            Attach PDF and preserve original XML for audit retention.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Inbound CII Processing">
+        <Steps>
+          <Step title="Receive XML">
+            Capture CII XML via API upload or inbound integration channel.
+          </Step>
+          <Step title="Import">
+            Run Import CII XML to convert into GOBL canonical form.
+          </Step>
+          <Step title="Validate & Normalize">
+            Validate structure and optionally enrich missing tax or reference meta.
+          </Step>
+          <Step title="Route for Approval">
+            Assign to internal workflow (e.g. AP approval) leveraging standard states.
+          </Step>
+          <Step title="Convert to UBL (Optional)">
+            If downstream systems use UBL, run conversion action.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Format Interoperability (CII ↔ UBL)">
+        <Steps>
+          <Step title="Select Source">
+            Choose either a CII or UBL XML input associated with a GOBL invoice.
+          </Step>
+          <Step title="Run Conversion">
+            Execute Convert CII to UBL or Convert UBL to CII.
+          </Step>
+          <Step title="Validate Target">
+            Schema and semantic checks to ensure faithful translation.
+          </Step>
+          <Step title="Attach Result">
+            Persist the new format alongside original for multi-format distribution.
+          </Step>
+        </Steps>
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Example Documents">
+    <h3>Minimal CII Invoice XML (Illustrative)</h3>
+    <Frame caption="Simplified CII XML fragment">
+      ```
+&lt;CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+  xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+  xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"&gt;
+  &lt;rsm:ExchangedDocument&gt;
+    &lt;rsm:ID&gt;INV-2025-00012&lt;/rsm:ID&gt;
+    &lt;rsm:TypeCode&gt;380&lt;/rsm:TypeCode&gt; <!-- 380 = Commercial Invoice -->
+    &lt;rsm:IssueDateTime&gt;
+      &lt;udt:DateTimeString format="102"&gt;20250126&lt;/udt:DateTimeString&gt;
+    &lt;/rsm:IssueDateTime&gt;
+  &lt;/rsm:ExchangedDocument&gt;
+
+  &lt;rsm:SupplyChainTradeTransaction&gt;
+    &lt;rsm:ApplicableHeaderTradeAgreement&gt;
+      &lt;rsm:BuyerReference&gt;BUY-REF-77&lt;/rsm:BuyerReference&gt;
+      &lt;rsm:SellerTradeParty&gt;
+        &lt;rsm:Name&gt;ACME Export GmbH&lt;/rsm:Name&gt;
+        &lt;rsm:SpecifiedTaxRegistration&gt;
+          &lt;rsm:ID schemeID="VAT"&gt;DE123456789&lt;/rsm:ID&gt;
+        &lt;/rsm:SpecifiedTaxRegistration&gt;
+      &lt;/rsm:SellerTradeParty&gt;
+      &lt;rsm:BuyerTradeParty&gt;
+        &lt;rsm:Name&gt;Ocean Retail Ltd.&lt;/rsm:Name&gt;
+        &lt;rsm:SpecifiedTaxRegistration&gt;
+          &lt;rsm:ID schemeID="VAT"&gt;GB987654321&lt;/rsm:ID&gt;
+        &lt;/rsm:SpecifiedTaxRegistration&gt;
+      &lt;/rsm:BuyerTradeParty&gt;
+    &lt;/rsm:ApplicableHeaderTradeAgreement&gt;
+
+    &lt;rsm:ApplicableHeaderTradeDelivery/&gt;
+
+    &lt;rsm:ApplicableHeaderTradeSettlement&gt;
+      &lt;rsm:InvoiceCurrencyCode&gt;EUR&lt;/rsm:InvoiceCurrencyCode&gt;
+      &lt;rsm:SpecifiedTradeSettlementPaymentMeans&gt;
+        &lt;rsm:TypeCode&gt;31&lt;/rsm:TypeCode&gt; <!-- 31 = Credit Transfer -->
+      &lt;/rsm:SpecifiedTradeSettlementPaymentMeans&gt;
+      &lt;rsm:SpecifiedTradeSettlementMonetarySummation&gt;
+        &lt;rsm:LineTotalAmount currencyID="EUR"&gt;100.00&lt;/rsm:LineTotalAmount&gt;
+        &lt;rsm:TaxTotalAmount currencyID="EUR"&gt;21.00&lt;/rsm:TaxTotalAmount&gt;
+        &lt;rsm:GrandTotalAmount currencyID="EUR"&gt;121.00&lt;/rsm:GrandTotalAmount&gt;
+        &lt;rsm:DuePayableAmount currencyID="EUR"&gt;121.00&lt;/rsm:DuePayableAmount&gt;
+      &lt;/rsm:SpecifiedTradeSettlementMonetarySummation&gt;
+    &lt;/rsm:ApplicableHeaderTradeSettlement&gt;
+
+    &lt;rsm:IncludedSupplyChainTradeLineItem&gt;
+      &lt;rsm:AssociatedDocumentLineDocument&gt;
+        &lt;rsm:LineID&gt;1&lt;/rsm:LineID&gt;
+      &lt;/rsm:AssociatedDocumentLineDocument&gt;
+      &lt;rsm:SpecifiedTradeProduct&gt;
+        &lt;rsm:Name&gt;Widget A&lt;/rsm:Name&gt;
+      &lt;/rsm:SpecifiedTradeProduct&gt;
+      &lt;rsm:SpecifiedLineTradeAgreement&gt;
+        &lt;rsm:GrossPriceProductTradePrice&gt;
+          &lt;rsm:ChargeAmount currencyID="EUR"&gt;100.00&lt;/rsm:ChargeAmount&gt;
+        &lt;/rsm:GrossPriceProductTradePrice&gt;
+      &lt;/rsm:SpecifiedLineTradeAgreement&gt;
+      &lt;rsm:SpecifiedLineTradeSettlement&gt;
+        &lt;rsm:SpecifiedTradeSettlementLineMonetarySummation&gt;
+          &lt;rsm:LineTotalAmount currencyID="EUR"&gt;100.00&lt;/rsm:LineTotalAmount&gt;
+        &lt;/rsm:SpecifiedTradeSettlementLineMonetarySummation&gt;
+      &lt;/rsm:SpecifiedLineTradeSettlement&gt;
+    &lt;/rsm:IncludedSupplyChainTradeLineItem&gt;
+  &lt;/rsm:SupplyChainTradeTransaction&gt;
+&lt;/CrossIndustryInvoice&gt;
+      ```
+    </Frame>
+
+    <h3>GOBL → CII Mapping Example (Conceptual)</h3>
+    <Frame caption="Selected field transforms">
+      ```
+GOBL Invoice:
+  supplier.tax_id.number      -> SellerTradeParty.SpecifiedTaxRegistration.ID
+  customer.tax_id.number      -> BuyerTradeParty.SpecifiedTaxRegistration.ID
+  issue_date                  -> ExchangedDocument.IssueDateTime.DateTimeString (format=102)
+  lines[].quantity            -> IncludedSupplyChainTradeLineItem.SpecifiedLineTradeDelivery.BilledQuantity
+  lines[].price               -> SpecifiedLineTradeSettlement.LineTotalAmount (with currency)
+  tax/totals                  -> MonetarySummation.TaxTotalAmount / GrandTotalAmount
+  payment.means = 'credit-transfer' -> PaymentMeans.TypeCode = 31
+      ```
+    </Frame>
+
+    <h3>Validation Highlights</h3>
+    The CII app validator checks:
+    - Currency consistency across monetary nodes
+    - Summations (Line, Tax, Grand Total)
+    - Presence of required party tax registrations
+    - Proper date formats (e.g. format=102 YYYYMMDD)
+    - Allowed code lists (Invoice Type, Payment Means, Tax Category codes)
+    - Non-empty line product references
+
+    <h3>Limitations & Notes</h3>
+    - Some advanced logistics or customs segments may not map directly from minimal GOBL inputs.
+    - UBL ↔ CII conversions are best-effort: semantic nuance (e.g. allowances vs charges grouping) may differ.
+    - Multi-lingual descriptions are preserved when source data includes localized text arrays.
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Is CII mandatory anywhere?">
+        UN/CEFACT CII is a widely recognized model, but national mandates frequently specify syntax variants (e.g. UBL in Peppol). Use CII for multi-lateral or bespoke B2B contexts requiring richer trade semantics.
+      </Accordion>
+      <Accordion title="Can I mix CII and UBL in one workflow?">
+        Yes. Generate both formats from a single GOBL source so partners can consume the format they prefer.
+      </Accordion>
+      <Accordion title="How are taxes handled?">
+        The app aggregates tax totals by category/rate and injects them into CII TaxTotalAmount segments, ensuring line-level sums reconcile.
+      </Accordion>
+      <Accordion title="Does CII support credit notes?">
+        Yes. Use TypeCode 381 for credit notes; the app sets negative line or allowance adjustments per specification.
+      </Accordion>
+      <Accordion title="What is the minimum required for a valid CII invoice?">
+        Seller party, buyer party, issue date, currency, at least one line item with price/quantity, monetary summations, and a document ID.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Divider />
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the UN/CEFACT CII App →
+</Card>

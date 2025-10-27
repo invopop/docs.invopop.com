@@ -1,4 +1,288 @@
 ---
 title: "TicketBAI Spain"
-description: Information about the TicketBAI Spain app
+description: "Issue and report invoices to Basque provincial tax authorities (Álava, Bizkaia, Gipuzkoa) via the TicketBAI system."
+keywords: ['ticketbai', 'spain', 'basque-country', 'e-invoicing']
+sidebarTitle: "App"
 ---
+
+<Tabs>
+
+<Tab title="Description">
+
+<Card
+  title="TicketBAI Spain"
+  icon="building-columns"
+  href="https://www.euskadi.eus/ticketbai"
+  cta="Official info"
+>
+  Automate generation, signature, reporting and PDF output of TicketBAI compliant invoices.
+</Card>
+
+TicketBAI (TBAI) is the mandatory real-time e‑invoicing and anti‑fraud reporting framework being rolled out across the three Basque provincial tax agencies:
+
+- **Álava / Araba (DFA)**
+- **Bizkaia (DFB)**
+- **Gipuzkoa (DFG)**
+
+Each invoice must:
+1. Be serialized and signed before delivery.
+2. Include a unique TicketBAI *ID* and a *QR / TBAI code*.
+3. Be reported electronically to the corresponding provincial Hacienda.
+4. Respect immutable chaining (each document references the hash/fingerprint of the prior one for the same issuer).
+
+This app supplies workflow actions that convert a GOBL invoice into the required TicketBAI XML/JSON (implementation varies slightly by province), applies a cryptographic signature, submits the payload, records acknowledgements, and enriches the invoice with the official TBAI identifiers and QR code for PDF output.
+
+<Info>
+The contents below are illustrative defaults based on typical TicketBAI requirements. Adjust naming and sequencing to match your production setup.
+</Info>
+
+**Key Features**
+
+1. **Multi‑Province Support:** Automatically targets Araba, Bizkaia or Gipuzkoa endpoints based on issuer configuration.
+2. **Secure Signing:** Produces and applies the mandatory signature prior to transmission.
+3. **Chaining & Integrity:** Maintains a ledger of prior submission fingerprints to guarantee chain continuity.
+4. **Automated PDF Enrichment:** Injects TicketBAI code & QR image into the generated invoice PDF.
+5. **Error Recovery:** Re-submit corrected documents using the same original entry (the chain will reflect substitution attempts).
+6. **Cancellation & Rectification:** Provides workflows to void, correct or substitute previously reported invoices if local rules permit.
+
+</Tab>
+
+<Tab title="Actions">
+
+The following workflow actions become available after installing and enabling the TicketBAI app:
+
+<Card title="Prepare TicketBAI" icon="gear" horizontal>
+  Normalize and validate the GOBL Invoice for TicketBAI (regime, required fields, tax breakdown).
+</Card>
+
+<Card title="Generate TicketBAI XML" icon="file-code" horizontal>
+  Transform the GOBL Invoice into the province-specific TicketBAI XML (or JSON) payload.
+</Card>
+
+<Card title="Sign TicketBAI Payload" icon="signature" horizontal>
+  Apply the cryptographic signature & compute the chaining hash referencing the previous submission.
+</Card>
+
+<Card title="Send TicketBAI" icon="paper-plane" horizontal>
+  Submit the signed payload to the corresponding provincial Hacienda endpoint and capture the response.
+</Card>
+
+<Card title="Generate TicketBAI PDF" icon="file" horizontal>
+  Produce a PDF embedding the TicketBAI code and QR referencing the official submission.
+</Card>
+
+<Card title="Void TicketBAI" icon="ban" horizontal>
+  Request cancellation (annulment) of a previously reported invoice where permitted.
+</Card>
+
+<Card title="Correct TicketBAI (Substitution)" icon="rotate" horizontal>
+  Issue a corrective (substitution) invoice referencing the preceding document.
+</Card>
+
+<Card title="Credit Note TicketBAI" icon="arrow-down" horizontal>
+  Generate a rectification by difference using a credit note document type.
+</Card>
+
+<Card title="Lookup TicketBAI Status" icon="magnifying-glass" horizontal>
+  Fetch latest provincial status & metadata (e.g. acceptance, rejection codes).
+</Card>
+
+</Tab>
+
+<Tab title="Workflows">
+
+Below are suggested workflow structures. You can create these in the Console using an Empty Invoice workflow template and then add the actions in order.
+
+<AccordionGroup>
+
+<Accordion title="Issue TicketBAI Invoice">
+1. Prepare TicketBAI
+2. Generate TicketBAI XML
+3. Sign TicketBAI Payload
+4. Send TicketBAI
+5. Generate TicketBAI PDF
+6. Set State: Sent
+Error: Set State → Error
+</Accordion>
+
+<Accordion title="Credit Note (Rectification by Difference)">
+1. Prepare TicketBAI (Credit Note)
+2. Generate TicketBAI XML
+3. Sign TicketBAI Payload
+4. Send TicketBAI
+5. Generate TicketBAI PDF
+6. Set State: Sent
+Error: Set State → Error
+</Accordion>
+
+<Accordion title="Corrective / Substitution Invoice">
+1. Prepare TicketBAI (Substitution)
+2. Generate TicketBAI XML
+3. Sign TicketBAI Payload
+4. Send TicketBAI
+5. Generate TicketBAI PDF
+6. Set State: Sent
+Error: Set State → Error
+</Accordion>
+
+<Accordion title="Void TicketBAI Invoice">
+1. Void TicketBAI
+2. Set State: Void
+Error: Set State → Error
+</Accordion>
+
+<Accordion title="Status Reconciliation">
+1. Lookup TicketBAI Status
+2. If mismatch → Set State: Needs Review
+3. Else → No-op
+Error: Set State → Error
+</Accordion>
+
+</AccordionGroup>
+
+<Info>
+You may include ancillary steps (e.g. Sign Envelope, Store Audit Trail, Notify Slack) around these core actions for extended traceability.
+</Info>
+
+</Tab>
+
+<Tab title="Example documents">
+
+Use GOBL Invoices with the Spain regime plus a TicketBAI addon (example key: `es-ticketbai-v1`). Below are conceptual JSON excerpts (trimmed for brevity).
+
+<AccordionGroup>
+
+<Accordion title="Standard B2B Invoice (Álava)">
+```json
+{
+  "invoice": {
+    "regime": "ES",
+    "addons": ["es-ticketbai-v1"],
+    "series": "TB",
+    "code": "2025-00123",
+    "issue_date": "2025-02-11",
+    "supplier": { "tax_id": "ESB12345678", "province": "ARABA" },
+    "customer": { "tax_id": "ESX9999999X" },
+    "lines": [
+      { "desc": "Consulting services", "qty": 10, "price": 75.0, "tax": { "rate": 21 } }
+    ],
+    "totals": { "currency": "EUR" }
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Credit Note (Rectification by Difference)">
+```json
+{
+  "invoice": {
+    "type": "credit-note",
+    "regime": "ES",
+    "addons": ["es-ticketbai-v1"],
+    "preceding": {
+      "series": "TB",
+      "code": "2025-00123",
+      "issue_date": "2025-02-11"
+    },
+    "lines": [
+      { "desc": "Correction: Overbilled hours", "qty": 2, "price": -75.0, "tax": { "rate": 21 } }
+    ],
+    "totals": { "currency": "EUR" }
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Substitution (Corrective Invoice)">
+```json
+{
+  "invoice": {
+    "type": "corrective",
+    "regime": "ES",
+    "addons": ["es-ticketbai-v1"],
+    "preceding": {
+      "series": "TB",
+      "code": "2025-00123",
+      "issue_date": "2025-02-11",
+      "hash": "prior-doc-hash"
+    },
+    "lines": [
+      { "desc": "Consulting services", "qty": 8, "price": 75.0, "tax": { "rate": 21 } }
+    ],
+    "totals": { "currency": "EUR" }
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Void Request (Metadata Only)">
+```json
+{
+  "ticketbai_void": {
+    "series": "TB",
+    "code": "2025-00123",
+    "reason": "Issued in error before delivery"
+  }
+}
+```
+</Accordion>
+
+</AccordionGroup>
+
+<Info>
+Exact shape may differ depending on GOBL version and addon definitions—treat these snippets as directional templates.
+</Info>
+
+</Tab>
+
+<Tab title="FAQ">
+
+<AccordionGroup>
+
+<Accordion title="Which provinces does TicketBAI cover?">
+Álava (Araba), Bizkaia and Gipuzkoa. Each has minor endpoint / metadata differences but shares the core chain, signature and QR principles.
+</Accordion>
+
+<Accordion title="Is a signature mandatory?">
+Yes. The signed payload ensures authenticity, integrity and chaining. The app performs signing prior to submission.
+</Accordion>
+
+<Accordion title="How are corrections handled?">
+You can either issue a credit note (rectification by difference) or a substitution (corrective) invoice referencing the original. Use the appropriate workflow depending on local accounting requirements.
+</Accordion>
+
+<Accordion title="When should I void instead of issuing a credit note?">
+Void only if the invoice has not been delivered to the customer or was generated with invalid data before acceptance. Once delivered, prefer a credit note or substitution to maintain a full audit trail.
+</Accordion>
+
+<Accordion title="Do I need separate workflows per province?">
+Not necessarily. Province routing can be resolved from the supplier party metadata. However, some teams prefer separate workflows for clearer monitoring.
+</Accordion>
+
+<Accordion title="What happens if the chain breaks?">
+The app attempts automatic recovery by re-fetching prior hashes. If unrecoverable, mark the document for manual review and re-issue a corrected invoice to resume a continuous chain.
+</Accordion>
+
+<Accordion title="Can I resend a rejected invoice?">
+Yes. Update the original GOBL entry (do not create a new one), then re-run the Issue workflow. The chain will incorporate substitution metadata automatically.
+</Accordion>
+
+<Accordion title="Does TicketBAI require real-time submission?">
+It requires submission prior to or *at* issuance. Typical flows submit immediately during the workflow before the document state changes to Sent.
+</Accordion>
+
+</AccordionGroup>
+
+</Tab>
+
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the TicketBAI Spain App →
+</Card>

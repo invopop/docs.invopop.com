@@ -1,4 +1,289 @@
 ---
 title: "NetSuite"
-description: Information about the NetSuite app
+sidebarTitle: "App"
+description: "Integrate Invopop documents and parties with Oracle NetSuite for ERP synchronization."
+keywords:
+  - netsuite
+  - erp
+  - accounting
+  - integration
+mode: wide
 ---
+
+<Tabs>
+
+<Tab title="Description">
+<Card title="NetSuite ERP" icon="plug" cta="Install from Console" href="https://console.invopop.com">
+  Sync invoices, credit notes, parties and payments between Invopop and NetSuite automatically.
+</Card>
+
+Invopop's **NetSuite App** connects your e-invoicing, compliance, and workflow layer with Oracle NetSuite's ERP platform.
+
+It provides:
+- Automated push of invoices and credit notes generated in Invopop into NetSuite.
+- Party synchronization (customers / suppliers) based on GOBL party definitions.
+- Optional PDF attachment of the rendered invoice for audit trails in NetSuite.
+- Status and payment reconciliation back into Invopop.
+- Flexible mapping and transformation hooks so you can adapt to custom NetSuite fields and scripts.
+
+<Tip>
+  Start in NetSuite Sandbox first. Once stable, switch credentials to Production under App Configuration.
+</Tip>
+
+**Supported Flows**
+1. Customer / Vendor sync (create + update)
+2. Sales Invoice / Vendor Bill export
+3. Credit Note export
+4. Payment & status reconciliation
+5. Document attachment (PDF + XML if applicable)
+
+</Tab>
+
+<Tab title="Actions">
+The following workflow actions become available after installing the NetSuite App:
+
+<AccordionGroup>
+  <Accordion title="Sync Party to NetSuite">
+    Creates or updates a Customer (sales) or Vendor (purchase) record from a GOBL Party. Detects existence by external ID or tax number (VAT/TIN).
+  </Accordion>
+  <Accordion title="Export Invoice to NetSuite">
+    Pushes a GOBL invoice as a NetSuite Invoice (or Sales Order + Invoice if configured). Handles line items, taxes and currency.
+  </Accordion>
+  <Accordion title="Export Credit Note to NetSuite">
+    Converts a GOBL credit-note document into a NetSuite Credit Memo, linking original invoice by reference if available.
+  </Accordion>
+  <Accordion title="Attach PDF to NetSuite Transaction">
+    Uploads Invopop-generated PDF and links it to the NetSuite transaction record (stored in File Cabinet).
+  </Accordion>
+  <Accordion title="Fetch NetSuite Status">
+    Retrieves latest transaction status (e.g. Pending Approval, Open, Paid) and updates Silo Entry state.
+  </Accordion>
+  <Accordion title="Reconcile Payment from NetSuite">
+    Pulls payment or settlement details, updating GOBL invoice payment section, including partials.
+  </Accordion>
+  <Accordion title="Sync Items / SKU (Optional)">
+    Maps Invopop line item codes to NetSuite Items; creates missing Items if enabled.
+  </Accordion>
+  <Accordion title="Void NetSuite Transaction (Optional)">
+    Attempts to void or mark a transaction inactive based on a cancellation workflow in Invopop.
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  You can mix NetSuite actions with other compliance or format apps inside the same workflow chain.
+</Info>
+</Tab>
+
+<Tab title="Workflows">
+
+### Example Workflows
+
+<AccordionGroup>
+  <Accordion title="Invoice Export Workflow (Template)">
+    <Steps>
+      <Step title="Validate Invoice">
+        Checks regime + required identifiers (e.g. tax IDs, currency). Halts on missing mandatory fields.
+      </Step>
+      <Step title="Sync Customer">
+        Calls "Sync Party to NetSuite" for the buyer. Creates or updates the Customer record.
+      </Step>
+      <Step title="Export Invoice">
+        Pushes the main document. Stores returned NetSuite internal ID in metadata (`netsuite.transaction_id`).
+      </Step>
+      <Step title="Attach PDF">
+        Renders latest PDF and attaches it to the NetSuite Invoice.
+      </Step>
+      <Step title="Fetch Status (Optional)">
+        Polls NetSuite for approval / posting state and sets Silo Entry state accordingly.
+      </Step>
+      <Step title="Set State">
+        Sets Invopop invoice state to `Sent` or `Posted` (configurable).
+      </Step>
+      <Step title="Error Handling">
+        Updates state to `Error` and logs diagnostic details.
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="Credit Note Workflow">
+    <Steps>
+      <Step title="Sync Customer">
+        Ensure customer record exists.
+      </Step>
+      <Step title="Export Credit Note">
+        Creates Credit Memo referencing original invoice (if `preceding` data present).
+      </Step>
+      <Step title="Attach PDF (Optional)">
+        Adds PDF for audit.
+      </Step>
+      <Step title="Set State">
+        Marks document as `Sent`.
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="Party Sync Workflow">
+    <Steps>
+      <Step title="Normalize Party Data">
+        Apply transformations (trim, country code normalization).
+      </Step>
+      <Step title="Sync Party to NetSuite">
+        Create or update Customer/Vendor.
+      </Step>
+      <Step title="Set State">
+        `Ready` or `Updated`.
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="Payment Reconciliation Workflow">
+    <Steps>
+      <Step title="Fetch NetSuite Status">
+        Obtain pay / open balance state.
+      </Step>
+      <Step title="Reconcile Payment from NetSuite">
+        Write payment details into GOBL invoice: amounts, dates, references.
+      </Step>
+      <Step title="Set State">
+        If fully paid -> `Paid`; if partial -> `Partial`.
+      </Step>
+    </Steps>
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Use conditional branching (when available) to skip attachment steps if a PDF already exists.
+</Tip>
+
+</Tab>
+
+<Tab title="Configuration">
+
+### Prerequisites
+
+| Item | Description |
+|------|-------------|
+| Account ID | NetSuite account (e.g. `123456_SB1`). |
+| Role ID | Role with SuiteTalk / REST permissions. |
+| Consumer Key / Secret | From Integration record. |
+| Token Key / Secret | From token-based authentication setup. |
+| Environment | Sandbox or Production flag. |
+| Currency Strategy | "Use GOBL Currency" or "Default to Account Currency". |
+| Item Sync | Enable auto-create of items. |
+| PDF Attachment | Enable automatic PDF upload. |
+
+### Steps
+
+1. Create Integration Record in NetSuite (Token-Based Auth).
+2. Assign role with permissions: Transactions (Invoices, Credit Memos), Lists (Customers, Vendors, Items), Setup (Custom Fields), and Web Services / REST Web Services access.
+3. Generate tokens.
+4. Enter credentials in Invopop App configuration form.
+5. Optional: Provide custom field mappings (JSON).
+6. Test connection with a "Ping NetSuite" test action (if available) or run a Party Sync workflow in Sandbox.
+
+<Tip>
+  If you use SuiteApps or custom fields with internal IDs, add mappings under "Advanced Mapping" to avoid repeated lookups.
+</Tip>
+
+</Tab>
+
+<Tab title="Data Mapping">
+
+### Entity Mapping (Customer/Vendor)
+
+| GOBL Party Field | NetSuite Field | Notes |
+|------------------|---------------|-------|
+| `name` | `companyName` or `entityId` | Uses companyName if business, else entityId. |
+| `tax_id.value` | `vatRegNumber` | Validates format by jurisdiction. |
+| `addresses[0].lines` | `addressbook.address.addr1/addr2` | Multi-line flatten; line overflow truncated. |
+| `addresses[0].postcode` | `zip` | |
+| `addresses[0].locality` | `city` | |
+| `addresses[0].region.code` | `state` | Maps ISO subdivision if possible. |
+| `addresses[0].country.code` | `country` | 2-letter ISO. |
+| `email` | `email` | Primary email. |
+| `phones[0].number` | `phone` | Formatting stripped to digits + plus. |
+| `meta.external_refs.netsuite_id` | `internalId` | Stored after creation; prevents duplicates. |
+
+### Invoice / Credit Memo Mapping
+
+| GOBL Field | NetSuite Transaction Field | Notes |
+|------------|----------------------------|-------|
+| `series` + `code` | `tranId` | Combined or placed into memo if lock reserved. |
+| `issue_date` | `tranDate` | Defaults to today's date if missing (discouraged). |
+| `currency.code` | `currency` | Must be enabled in NetSuite; else fallback. |
+| `lines[].item.code` | `item.internalId` | Requires item sync or pre-existing item. |
+| `lines[].quantity` | `item.quantity` | |
+| `lines[].pricing.total` | `item.amount` | NetSuite may recalc tax; ensure tax strategy. |
+| `tax.total` | Tax Summary | If multi-rate, uses per-line tax code mapping. |
+| `payments[]` | Applied Payments | Only in reconciliation direction (NetSuite -> Invopop). |
+| `preceding.code` | `createdFrom` / Reference | Used for credit memo linking. |
+
+### Custom Field Strategy
+
+Provide JSON mapping in App configuration:
+
+```json
+{
+  "transactionCustomFields": {
+    "custbody_channel": "meta.channel",
+    "custbody_original_uuid": "preceding.uuid"
+  },
+  "entityCustomFields": {
+    "custentity_segment": "meta.segment"
+  }
+}
+```
+
+The app will:
+1. Resolve target NetSuite field internal IDs.
+2. Traverse GOBL document via dot-path.
+3. Apply value transforms (trim, type coercion).
+4. Inject into request payload.
+
+<Info>
+  Unsupported types are logged and skipped (e.g. complex objects without serialization). Consider pre-transform workflows to flatten structures.
+</Info>
+
+</Tab>
+
+<Tab title="FAQ">
+
+<AccordionGroup>
+  <Accordion title="Does the app support both REST and SOAP (SuiteTalk)?">
+    Yes. It prefers REST if enabled in your account; falls back to SOAP for unsupported endpoints (e.g. certain PDF attachment flows).
+  </Accordion>
+  <Accordion title="How are duplicates prevented for parties?">
+    First by explicit external reference (`meta.external_refs.netsuite_id`), then by tax ID match. If conflict arises, the update path is chosen.
+  </Accordion>
+  <Accordion title="Can I push historical invoices?">
+    Yes. Provide `issue_date` within allowed NetSuite posting period. Closed periods may require an adjustment or re-open by an admin.
+  </Accordion>
+  <Accordion title="What happens if an Item does not exist?">
+    If Item Sync is enabled the app creates a Non-Inventory Item using basic code + description. Otherwise the workflow errors.
+  </Accordion>
+  <Accordion title="How are taxes mapped?">
+    Provide a tax code mapping table (e.g. `ES:STANDARD -> internalId`) in configuration. Without mapping, default tax code is applied or workflow errors.
+  </Accordion>
+  <Accordion title="Can partial payments be reconciled?">
+    Yes. The reconciliation action iterates NetSuite applied payments and writes them into the GOBL payments array with remaining balance computation.
+  </Accordion>
+  <Accordion title="Is PDF attachment mandatory?">
+    No. Disable in configuration to skip the step and reduce API calls.
+  </Accordion>
+  <Accordion title="How are errors surfaced?">
+    Each failing action emits a structured error block in the Job log (code, message, context). State is set to `Error` if configured.
+  </Accordion>
+</AccordionGroup>
+
+</Tab>
+
+</Tabs>
+
+<Card title="Join the Community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer NetSuite integration questions →
+</Card>

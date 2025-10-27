@@ -1,4 +1,247 @@
 ---
 title: "SDI Italy"
-description: Information about the SDI Italy app
+sidebarTitle: "App"
+description: "Issue and transmit Italian electronic invoices (FatturaPA) via the Sistema di Interscambio (SDI) with automated workflows."
+keywords:
+  - sdi
+  - italy
+  - fatturapa
+  - e-invoicing
+  - agenzia-entrate
+mode: wide
 ---
+
+<Tabs>
+
+<Tab title="Description">
+<div class="flex gap-8">
+  <Card
+    title="SDI Italy"
+    icon="building-columns"
+    href="https://www.agenziaentrate.gov.it/"
+    cta="Official SDI portal"
+  >
+    Transmit compliant FatturaPA XML invoices (B2B, B2G) to the Italian tax authority through SDI.
+  </Card>
+
+  <div class="flex-shrink text-sm">
+    |  |  |
+    |-------|-------|
+    | Developer | Invopop |
+    | Category | Government |
+    | Formats | FatturaPA XML |
+    | Last&nbsp;Update | 2025-10-26 |
+    | Docs | [Sending](/)<br/> [Receiving](/) |
+  </div>
+</div>
+
+The **SDI Italy app** (Sistema di Interscambio integration) enables fully digital transmission of Italian invoices in the mandated **FatturaPA XML** format.
+
+It helps you:
+1. Generate structurally valid FatturaPA XML from GOBL invoice data.
+2. Apply required Italian regime mappings (e.g. Natura codes, Cassa Previdenziale, Bollo Virtuale).
+3. Transmit documents to SDI and process asynchronous outcome notifications.
+4. Handle corrections through credit notes or replacement invoices (there is no hard "cancel" after acceptance).
+5. Produce a human-readable PDF representation with the original XML attached to the Silo Entry.
+6. Track lifecycle: Prepared → Sent → Delivered → Accepted / Rejected.
+
+<Info>
+  SDI does not provide interactive real-time status APIs; outcomes are received as notifications (accepted, rejected, impossibility of delivery) which this app ingests and maps back to the document state.
+</Info>
+
+</Tab>
+
+<Tab title="Actions">
+The following workflow actions become available after installing and enabling the SDI Italy app:
+
+<Card title="Generate FatturaPA XML" icon="code" horizontal>
+  Convert a GOBL Invoice or Credit Note into FatturaPA XML with mandatory headers, Cedente/Prestatore & Cessionario/Committente blocks, VAT summaries, and payment data.
+</Card>
+
+<Card title="Validate FatturaPA Structure" icon="check-double" horizontal>
+  Run structural checks (schema, lengths, regime mappings, mandatory fiscal fields) prior to transmission.
+</Card>
+
+<Card title="Transmit to SDI" icon="paper-plane" horizontal>
+  Queue the XML for dispatch to SDI; attaches transmission metadata to the Silo Entry.
+</Card>
+
+<Card title="Poll / Await SDI Outcome" icon="hourglass" horizontal>
+  Wait for asynchronous acceptance/rejection notifications; updates state automatically.
+</Card>
+
+<Card title="Attach PDF Rendering" icon="file" horizontal>
+  Generate a branded PDF including fiscal summary for archives & customer presentation.
+</Card>
+
+<Card title="Generate Replacement Invoice" icon="rotate" horizontal>
+  Build a corrective (sostitutiva) invoice referencing an original when structural mistakes cannot be fixed via credit note.
+</Card>
+
+<Card title="Issue Credit Note (Nota di Variazione)" icon="arrow-down" horizontal>
+  Produce a credit/debit adjustment referencing the original invoice UID and fiscal data.
+</Card>
+
+<Card title="Archive SDI Package" icon="box-archive" horizontal>
+  Store XML + outcome receipts for long-term compliance retention.
+</Card>
+
+<Card title="Mark Bollo Virtuale" icon="stamp" horizontal>
+  Automatically apply virtual stamp (imposta di bollo) when thresholds/conditions require it.
+</Card>
+
+</Tab>
+
+<Tab title="Workflows">
+
+<AccordionGroup>
+
+<Accordion title="Issue SDI Invoice">
+<Steps>
+  <Step title="Prepare GOBL Invoice">
+    Include Italian regime code `IT` and required addons (e.g. `it-sdi-v1`). Populate tax summary with nature codes (N1..N6) where exemptions apply.
+  </Step>
+  <Step title="Generate XML">
+    Action: Generate FatturaPA XML. Produces attachment `fatturapa.xml`.
+  </Step>
+  <Step title="Validate">
+    Action: Validate FatturaPA Structure (schema + semantic rules).
+  </Step>
+  <Step title="Transmit">
+    Action: Transmit to SDI. Marks state as `Sent`.
+  </Step>
+  <Step title="Await Outcome">
+    Action: Poll / Await SDI Outcome. Transitions to `Accepted` or `Rejected`.
+  </Step>
+  <Step title="Render PDF">
+    Action: Attach PDF Rendering (optional; customer-facing).
+  </Step>
+  <Step title="Archive">
+    Action: Archive SDI Package for retention.
+  </Step>
+</Steps>
+</Accordion>
+
+<Accordion title="Credit Note Workflow">
+<Steps>
+  <Step title="Create Credit Note">
+    Use GOBL Invoice object with `type: credit-note` referencing original (`preceding` block).
+  </Step>
+  <Step title="Generate XML">
+    Includes `<DatiNota` elements referencing original protocol & progressive number.
+  </Step>
+  <Step title="Transmit & Await">
+    Same path as standard invoice issuance; SDI returns a separate outcome.
+  </Step>
+  <Step title="Archive">
+    Store original + credit note pair for audit.
+  </Step>
+</Steps>
+</Accordion>
+
+<Accordion title="Replacement (Sostitutiva) Workflow">
+<Steps>
+  <Step title="Clone Original">
+    Extract taxable sections; adjust structural errors (e.g. incorrect buyer VAT ID).
+  </Step>
+  <Step title="Generate Replacement XML">
+    Flag as replacement referencing original `<IdentificativoSdI>` & `<Data>` lines.
+  </Step>
+  <Step title="Transmit & Await Outcome">
+    Replacement supersedes original for compliance chain.
+  </Step>
+</Steps>
+</Accordion>
+
+<Accordion title="Outcome Processing">
+<Steps>
+  <Step title="Receive Notification">
+    Background listener ingests acceptance/rejection or delivery impossibility.
+  </Step>
+  <Step title="Update State">
+    Map to `Accepted`, `Rejected`, or `Delivered-PecPending`.
+  </Step>
+  <Step title="Retry (If Temporary Failure)">
+    Automatic re-submit if transient transport error (configurable retry window).
+  </Step>
+</Steps>
+</Accordion>
+
+</AccordionGroup>
+
+</Tab>
+
+<Tab title="Example documents">
+
+<AccordionGroup>
+  <Accordion title="FatturaPA B2B Standard Invoice">
+    Essential sections: `DatiTrasmissione`, `CedentePrestatore`, `CessionarioCommittente`, `DatiBeniServizi`, `DatiRiepilogo`, `DatiPagamento`.
+    (Example XML placeholder – replace with real snippet)
+  </Accordion>
+  <Accordion title="FatturaPA B2G (Public Administration)">
+    Includes `CodiceDestinatario` for PA and CIG/CUP codes where required.
+  </Accordion>
+  <Accordion title="Credit Note (Nota di Variazione)">
+    Shows negative taxable line & reference block to original invoice.
+  </Accordion>
+  <Accordion title="Replacement Invoice (Sostitutiva)">
+    Demonstrates original linkage and corrected party VAT details.
+  </Accordion>
+  <Accordion title="Invoice with Bollo Virtuale">
+    Adds `<DatiBollo>` with virtual stamp indicator (`BolloVirtuale = SI`).
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  Use the GOBL builder to test Italian regime mapping before workflow execution.
+</Info>
+
+</Tab>
+
+<Tab title="FAQ">
+
+<AccordionGroup>
+
+<Accordion title="Can I cancel an SDI invoice after acceptance?">
+No. Once SDI accepts an invoice it cannot be voided. Corrections must use a credit note (value adjustments) or a replacement (structural corrections).
+</Accordion>
+
+<Accordion title="Difference between credit note and replacement?">
+A credit note adjusts amounts (vat base, totals). A replacement re-issues the document structure correcting identifiers or classification errors while superseding the original.
+</Accordion>
+
+<Accordion title="How is delivery status determined?">
+SDI emits a sequence of receipts: transmission acceptance, delivery to recipient channel (PEC / hub), or impossibility-of-delivery which still counts as valid fulfillment.
+</Accordion>
+
+<Accordion title="Do I need a recipient code?">
+For B2B: use `CodiceDestinatario` (7-char) or PEC email; for B2G: mandated 6-digit office code. If unknown, fallback code `0000000` (recipient fetches from portal).
+</Accordion>
+
+<Accordion title="How are VAT exemptions handled?">
+Provide `nature` codes (N1..N6) in GOBL tax lines. The app maps them to FatturaPA `<Natura>` plus required reason text when mandated.
+</Accordion>
+
+<Accordion title="What triggers Imposta di Bollo Virtuale?">
+Invoices without VAT and above threshold (e.g. €77.47) typically require virtual stamp. The app can auto-flag based on totals & tax emptiness.
+</Accordion>
+
+<Accordion title="How long are documents archived?">
+Regulatory retention is 10 years. The app stores XML + outcome receipts + PDF representation for compliant retention strategies.
+</Accordion>
+
+</AccordionGroup>
+
+</Tab>
+
+</Tabs>
+
+<Card
+  title="Join the community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow
+  horizontal
+>
+  Ask and answer questions about the SDI Italy integration →
+</Card>

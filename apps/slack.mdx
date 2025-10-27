@@ -1,4 +1,211 @@
 ---
 title: "Slack"
-description: Information about the Slack app
+sidebarTitle: "App"
+description: "Simple connection to Slack for sending messages."
+keywords: ["slack", "notifications", "chatops"]
 ---
+
+<Tabs>
+
+  <Tab title="Description">
+    <Columns cols="2">
+      <Card
+        title="Slack App"
+        icon="slack"
+        cta="Install in Console"
+        href="https://console.invopop.com"
+      >
+        Bring real-time workflow status updates, error alerts, invoice events and system summaries into your team's Slack workspace.
+      </Card>
+
+    |  |  |
+    |-------|-------|
+    | **Developer | Invopop |
+    | Category | Notifications |
+    | Formats | Text & Files |
+    | Last Update | 2025-10-26 |
+    </Columns>
+
+
+
+Invopop's Slack app helps you keep your team updated by sending automated messages to a Slack channel of your choice. For instance, you might want to receive a message when one of your job executions fails: 
+
+<Frame caption="Example workflow with Slack"><img src="/guides/images/slack-workflow.png" /></Frame>
+
+In this example, you will receive in your Slack channel `#random` a message like `Job fe094ad0-3e12-11ef-bfd5-15fe9005edf3 failed!` when the PDF generation fails.
+
+## Prerequisites
+
+You require Slack account with full membership or an admin role within a workspace.
+
+## How to use
+
+<Steps>
+  <Step title="Configure the Slack App">
+    To configure the Slack app in your workspace, follow these steps:
+
+    1. Navigate to **Configuration** → **Apps**.
+    2. Find the Slack App and click `Connect`.
+    3. Click `Configure` and then `Add Slack Channel`.
+    4. In the newly opened window, select the channel where you want to send messages.
+
+    After you have selected a channel, you will be redirected back to the Invopop console, where you should see a message that says “Authorized and connected to:” followed by the list of channels that you are connected to. This confirms that the connection was successful.
+
+    In case you want to connect more channels, click the "Add Slack Channel" and connect the new one.
+  </Step>
+  <Step title="Add the Slack step to your workflows">
+    To use the Slack step in your workflows, follow these steps:
+
+    1. Navigate to the Workflows section and select the workflow you want to modify.
+    2. Add the Slack step to your workflow.
+    3. Select the Slack channel where you want to send messages.
+    4. Customize the message content as needed.
+
+  </Step>
+</Steps>
+
+  </Tab>
+
+  <Tab title="Actions">
+    The Slack app exposes the following **workflow actions**:
+
+    <Card title="Send Slack Message" icon="slack" horizontal>
+      Post a rich message to a target channel (or thread) with dynamic variables.
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example workflow segments illustrating how Slack actions can be composed.
+
+    <AccordionGroup>
+
+      <Accordion title="Invoice Lifecycle Notifications">
+        <Code>
+{`steps:
+  - id: build-pdf
+    action: generate-pdf
+  - id: notify-start
+    action: slack-send
+    config:
+      channel: "#invoices-stream"
+      template: "invoice.started"
+      thread_key: "{{ entry.uuid }}"
+  - id: submit-verifactu
+    action: verifactu-send
+  - id: notify-success
+    when: "{{ previous.state == 'success' }}"
+    action: slack-append-thread
+    config:
+      channel: "#invoices-stream"
+      thread_key: "{{ entry.uuid }}"
+      template: "invoice.sent"
+  - id: notify-error
+    on_error: true
+    action: slack-error
+    config:
+      channel: "#ops-alerts"
+      severity: "error"
+      template: "workflow.error"
+`}
+        </Code>
+      </Accordion>
+
+      <Accordion title="Approval Gate">
+        <Code>
+{`steps:
+  - id: prepare-release
+    action: build-package
+  - id: request-approval
+    action: slack-approval
+    config:
+      channel: "#finance-approvals"
+      approvers: ["user:alice", "user:bob"]
+      timeout: "4h"
+      template: "approval.request"
+  - id: release
+    when: "{{ approval.result == 'approved' }}"
+    action: release-package
+  - id: notify-rejected
+    when: "{{ approval.result == 'rejected' }}"
+    action: slack-send
+    config:
+      channel: "#finance-approvals"
+      template: "approval.rejected"
+`}
+        </Code>
+      </Accordion>
+
+      <Accordion title="Daily Summary">
+        <Code>
+{`steps:
+  - id: aggregate
+    action: compute-metrics
+    schedule: "0 17 * * *"
+  - id: post-summary
+    action: slack-summary
+    config:
+      channel: "#finance-daily"
+      template: "summary.daily"
+      metrics:
+        - invoices.count
+        - invoices.total_net
+        - invoices.total_tax
+        - errors.count
+        - avg.processing_time
+`}
+        </Code>
+      </Accordion>
+
+      <Accordion title="Critical Escalation">
+        <Code>
+{`steps:
+  - id: run-job
+    action: transform
+  - id: escalate
+    on_error: true
+    action: slack-escalate
+    config:
+      user: "oncall:ops"
+      template: "critical.failure"
+      include_stack: true
+`}
+        </Code>
+      </Accordion>
+
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Can I route messages to different channels based on severity?">
+        Yes. Each Slack action can specify a static channel or derive one dynamically with an expression (e.g. `channel: "{{ severity == 'error' ? '#ops-alerts' : '#invoices-stream' }}"`).
+      </Accordion>
+      <Accordion title="Are attachments or files supported?">
+        Yes. An action can include file references (PDF, XML) already present in the Silo Entry; links show up as contextual buttons or attachments.
+      </Accordion>
+      <Accordion title="How are approvals secured?">
+        Button interactions are signed and mapped to workspace members; audit logs record approver, timestamp, and resulting state change.
+      </Accordion>
+      <Accordion title="What happens if Slack is unreachable?">
+        Messages are queued with exponential backoff. After max retries, a workflow error is raised and can trigger an alternative channel (email).
+      </Accordion>
+      <Accordion title="Can I post to user DMs?">
+        Yes. Provide `user:` identifiers (mapped via email) or use escalation action to target on-call rotations.
+      </Accordion>
+      <Accordion title="How do I prevent notification noise?">
+        Use template-level conditional fields (e.g. only include totals for invoices above a threshold) and separate success vs error channels.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+</Tabs>
+
+<Card
+  title="Ask questions about the Slack App"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Join the discussion →
+</Card>

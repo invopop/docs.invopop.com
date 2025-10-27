@@ -1,4 +1,300 @@
 ---
 title: "Smart Receipts Italy"
-description: Information about the Smart Receipts Italy app
+description: Real-time generation and transmission of Italian fiscal receipts (Corrispettivi) with automated device registration, PDF generation and cancellation workflows.
+sidebarTitle: "App"
+keywords:
+  - italy
+  - receipts
+  - corrispettivi
+  - documento commerciale
+  - fiscal device
+mode: wide
 ---
+
+<Tabs>
+
+<Tab title="Description">
+The **Smart Receipts Italy** app streamlines the creation, validation, transmission and lifecycle management of Italian fiscal receipts (also known as _Documento Commerciale_ or _Corrispettivi_) required under Italian regulations.
+
+It supports:
+- Generating compliant receipt payloads from GOBL invoices (type `receipt`).
+- Associating receipts with registered RT (Registratore Telematico) / POS devices.
+- Transmitting fiscal data to the tax authority in near real-time.
+- Handling annulments (cancellations), re-issues and archiving.
+- Maintaining chained integrity for sequential daily receipt numbering per device.
+
+<Columns cols="3">
+<Card title="Device Registration" icon="browser">
+Onboard RT devices, capture serials and readiness state.
+</Card>
+<Card title="Real-time Transmission" icon="bolt">
+Push signed receipt data to the tax authority.
+</Card>
+<Card title="Lifecycle Actions" icon="rotate-left">
+Cancel, reissue and archive receipts with traceability.
+</Card>
+</Columns>
+
+### Key Concepts
+
+| Concept | Description |
+|--------|-------------|
+| RT Device | A fiscal device (Registratore Telematico) approved for issuing receipts. |
+| Daily Counter | Sequential number per device per day (auto-managed). |
+| Transmission Window | Period during which the receipt must be sent (typically minutes). |
+| Annulment | Cancellation of a previously transmitted receipt under allowed conditions. |
+| Reissue | Generation of a corrected replacement referencing the original receipt. |
+| Archive | Logical finalization; marks receipt immutable and ready for long-term storage. |
+
+<Info>
+This app focuses on retail "corrispettivi" flows. For B2B e-invoices use the **SDI Italy** app.
+</Info>
+
+</Tab>
+
+<Tab title="Actions">
+The following workflow actions become available when the app is installed:
+
+<Card title="Register RT Device" icon="computer" horizontal>
+Register or update a fiscal device with serial, model and activation date.
+</Card>
+
+<Card title="Validate Receipt" icon="check-double" horizontal>
+Validate required Italian regime fields, perform rounding & VAT consistency checks.
+</Card>
+
+<Card title="Generate Smart Receipt" icon="receipt" horizontal>
+Produce the fiscal JSON/PDF; assign daily sequential number and timestamp.
+</Card>
+
+<Card title="Sign Receipt Payload" icon="signature" horizontal>
+Apply cryptographic signature to the receipt data block.
+</Card>
+
+<Card title="Transmit Smart Receipt" icon="arrow-up-right" horizontal>
+Send signed payload to the tax authority endpoint; persist response codes.
+</Card>
+
+<Card title="Poll Transmission Status" icon="hourglass" horizontal>
+Retry/poll until definitive acceptance or timeout is reached.
+</Card>
+
+<Card title="Cancel Smart Receipt" icon="ban" horizontal>
+Issue an annulment request referencing the original sequence & hash.
+</Card>
+
+<Card title="Reissue Smart Receipt" icon="rotate" horizontal>
+Create corrected replacement receipt linking the original (immutable chain).
+</Card>
+
+<Card title="Archive Smart Receipt" icon="box-archive" horizontal>
+Finalize receipt; lock daily numbering snapshot and mark for cold storage.
+</Card>
+
+<Card title="Generate Receipt PDF" icon="file-pdf" horizontal>
+Render customer facing PDF (Documento Commerciale) with fiscal footer & QR.
+</Card>
+
+</Tab>
+
+<Tab title="Workflows">
+
+<AccordionGroup>
+
+<Accordion title="Issue Smart Receipt">
+<Steps>
+<Step title="Validate Input">
+GOBL entry (regime `IT`) of type `invoice` with subtype `receipt`. Ensure lines include VAT codes, totals, payment method summary.
+</Step>
+<Step title="Assign Device Counter">
+Fetch RT device; increment daily counter atomically.
+</Step>
+<Step title="Generate & Sign">
+Build JSON payload + hash chain, sign and attach to entry files.
+</Step>
+<Step title="Transmit">
+POST to fiscal service; store protocol number & response.
+</Step>
+<Step title="Generate PDF">
+Attach the formatted Documento Commerciale PDF with QR code referencing hash & protocol.
+</Step>
+<Step title="Set State">
+Mark receipt entry state `Sent`.
+</Step>
+</Steps>
+</Accordion>
+
+<Accordion title="Cancel Smart Receipt">
+<Steps>
+<Step title="Locate Original">
+Fetch original receipt entry & verify cancellable window eligibility.
+</Step>
+<Step title="Generate Cancellation Payload">
+Build annulment reference (original hash, protocol, sequence).
+</Step>
+<Step title="Transmit Annulment">
+Send to authority; await acceptance.
+</Step>
+<Step title="Set State">
+Mark original entry `Void`.
+</Step>
+</Steps>
+</Accordion>
+
+<Accordion title="Register RT Device">
+<Steps>
+<Step title="Device Metadata">
+Capture serial, brand, model, activation and location.
+</Step>
+<Step title="Link Workspace">
+Associate device ID to workspace party & default VAT context.
+</Step>
+<Step title="Initial Sync">
+Optionally push zero test receipt (if regulation requires).
+</Step>
+<Step title="Set State">
+Mark device `Active`.
+</Step>
+</Steps>
+</Accordion>
+
+</AccordionGroup>
+
+</Tab>
+
+<Tab title="Example documents">
+
+Below are illustrative (simplified) GOBL snippets for Italian Smart Receipts. Copy into the GOBL builder and adapt as needed.
+
+<AccordionGroup>
+
+<Accordion title="Standard Retail Receipt (Cash)">
+```json
+{
+  "regime": "IT",
+  "invoice": {
+    "type": "receipt",
+    "issue_date": "2025-01-15",
+    "currency": "EUR",
+    "supplier": {
+      "tax_id": { "country": "IT", "code": "IT12345678901" },
+      "name": "La Bottega SRL",
+      "addresses": [{ "street": "Via Roma 10", "city": "Milano", "zip": "20100", "country": "IT" }]
+    },
+    "customer": {
+      "name": "Cliente"
+    },
+    "lines": [
+      {
+        "i": 1,
+        "description": "Espresso",
+        "quantity": "2",
+        "unit": "pcs",
+        "price": { "net": "1.50" },
+        "taxes": [{ "code": "VAT22", "rate": "0.22" }]
+      },
+      {
+        "i": 2,
+        "description": "Cornetto",
+        "quantity": "1",
+        "unit": "pcs",
+        "price": { "net": "1.20" },
+        "taxes": [{ "code": "VAT10", "rate": "0.10" }]
+      }
+    ],
+    "payment": {
+      "terms": [{ "method": "cash", "amount": "4.20" }]
+    },
+    "addons": ["it-smart-receipts-v1"]
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Card Payment Receipt">
+```json
+{
+  "regime": "IT",
+  "invoice": {
+    "type": "receipt",
+    "currency": "EUR",
+    "payment": {
+      "terms": [{ "method": "card", "provider": "VISA", "last4": "1234", "amount": "54.99" }]
+    },
+    "addons": ["it-smart-receipts-v1"]
+  }
+}
+```
+</Accordion>
+
+<Accordion title="Refund / Negative Receipt">
+```json
+{
+  "regime": "IT",
+  "invoice": {
+    "type": "receipt",
+    "currency": "EUR",
+    "lines": [
+      {
+        "i": 1,
+        "description": "Returned Headphones",
+        "quantity": "1",
+        "unit": "pcs",
+        "price": { "net": "-49.90" },
+        "taxes": [{ "code": "VAT22", "rate": "0.22" }]
+      }
+    ],
+    "payment": {
+      "terms": [{ "method": "refund", "amount": "-60.88" }]
+    },
+    "addons": ["it-smart-receipts-v1"]
+  }
+}
+```
+</Accordion>
+
+</AccordionGroup>
+
+<Info>
+Examples are illustrative; include full totals, tax breakdown and mandatory fields before transmission.
+</Info>
+
+</Tab>
+
+<Tab title="FAQ">
+
+<AccordionGroup>
+
+<Accordion title="How is sequencing handled?">
+Each RT device has a per-day counter. The app locks & increments this atomically when the Generate step runs, ensuring no gaps. Midnight rollover resets the counter automatically.
+</Accordion>
+
+<Accordion title="Can I cancel any receipt?">
+Only within the allowed regulatory window (usually same business day) and if it was not already replaced by a reissue. After archiving or end-of-day closure, cancellation may be disallowed.
+</Accordion>
+
+<Accordion title="Difference between cancel and reissue?">
+A cancel (annulment) voids the original as if it never existed (within limits). A reissue creates a corrective receipt referencing the original — both remain in the chain for audit.
+</Accordion>
+
+<Accordion title="What if transmission fails?">
+The Poll step retries transient errors. If final failure persists, the workflow can set state `Error` allowing manual retry; sequence retention ensures subsequent receipts continue correctly.
+</Accordion>
+
+<Accordion title="Does the PDF include mandatory footer?">
+Yes, the Generate Receipt PDF action renders: device code, progressive number, date/time, fiscal hash/QR and VAT summary per rate tier.
+</Accordion>
+
+<Accordion title="How are refunds represented?">
+Refunds use negative line net values and payment term with negative amount; the app normalizes totals & ensures VAT math remains consistent.
+</Accordion>
+
+</AccordionGroup>
+
+</Tab>
+
+</Tabs>
+
+<Card title="Need help?" icon="square-question" href="https://community.invopop.com" arrow horizontal>
+Discuss Smart Receipts Italy implementation in the community →
+</Card>

@@ -1,4 +1,179 @@
 ---
 title: "Peppol"
-description: Information about the Peppol app
+sidebarTitle: "App"
+description: Connect to the Peppol e-invoicing network for compliant cross-border B2G & B2B document exchange."
+keywords: ['peppol','e-invoicing','ubl','network']
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="Peppol" icon="globe" cta="View API" href="/api-ref/apps/peppol/ownership-upload">
+      Exchange standardized business documents (invoices, credit notes, orders) via the Peppol network.
+    </Card>
+
+    The **Peppol app** enables secure, standards‑based transmission of electronic business documents across borders and industries.
+    It streamlines onboarding, validates document structure (UBL / CII), manages participant identifiers (Peppol IDs), and
+    handles network submission responses.
+
+    <Frame caption="High-level Peppol flow">
+      <img width="780" src="/guides/images/peppol-flow.png" alt="Peppol document exchange logical flow" />
+    </Frame>
+
+    <strong>Key Features</strong>
+    1. Participant Onboarding & Ownership: Upload proofs of authority to activate your Peppol sending identity.
+    2. Standards Conversion: Transform internal GOBL envelopes into Peppol-compliant UBL, or UN/CEFACT CII where required.
+    3. Validation & Enrichment: Automatic schema, profile (BIS), and business rule (BR / validation artefacts) checks.
+    4. Secure Delivery: Submit invoices and credit notes to receivers through certified Access Points.
+    5. Response Handling: Capture delivery receipts, errors, and acknowledgements; attach them to the originating entry.
+    6. Multi-Regime Support: Handles variations in local Peppol BIS profiles (e.g. different country tax scenarios).
+    7. Retry & Resubmission: Built‑in workflow pattern for transient network or AP failures.
+    8. White-Label Capability: Act on behalf of multiple suppliers via distinct participant identifiers.
+
+    <Info>
+      Peppol defines business interoperability specifications (BIS). The app ensures your document matches the correct BIS profile
+      before transmitting. Mismatches are surfaced early in the workflow.
+    </Info>
+
+    <strong>Supported Document Types (typical)</strong>
+    - Invoice (BIS Billing 3.0)
+    - Credit Note (as an invoice with negative amounts / credit semantic rules)
+    - Dispatch Advice (optional future expansion)
+    - Order & Order Response (planned)
+
+    <strong>Core Identifiers</strong>
+    - Peppol Participant ID: Structured as `<scheme>:<value>` (e.g. `0088:123456789`).
+    - Document Profile ID: Specifies BIS variant (e.g. `urn:cen.eu:en16931:2017`).
+    - Process ID: Correlates business flow (e.g. `urn:fdc:peppol.eu:poacc:billing:3`).
+
+    <Tip>
+      You can store multiple Peppol Participant IDs for different subsidiaries and select one dynamically during workflow execution.
+    </Tip>
+
+  </Tab>
+
+  <Tab title="Actions">
+    These workflow actions become available once the Peppol app is installed:
+
+    <Card title="Prepare Peppol Document" icon="file-code" horizontal>
+      Normalize & enrich GOBL invoice data; compute tax totals, profile metadata and map to UBL elements.
+    </Card>
+
+    <Card title="Generate UBL" icon="code" horizontal>
+      Serialize a validated structure into Peppol-compliant UBL XML; attach it to the Silo Entry.
+    </Card>
+
+    <Card title="Generate CII" icon="code-compare" horizontal>
+      Produce UN/CEFACT CII syntax when a receiver mandates CII instead of UBL (auto-selected by profile).
+    </Card>
+
+    <Card title="Validate Peppol" icon="shield-check" horizontal>
+      Run schema (XSD), Schematron and business rule (BIS) validations; fail fast with actionable error list.
+    </Card>
+
+    <Card title="Send Peppol" icon="paper-plane" horizontal>
+      Transmit the document via the configured Access Point; capture delivery receipt or error.
+    </Card>
+
+    <Card title="Register Peppol Participant" icon="user-plus" horizontal>
+      Initiate ownership verification and participant activation (uses ownership upload API).
+    </Card>
+
+    <Card title="Upload Peppol Ownership" icon="id-card" horizontal>
+      Push legal or contractual evidence proving right to use a Participant ID.
+    </Card>
+
+    <Card title="Wait for Peppol Activation" icon="hourglass" horizontal>
+      Pause workflow until participant status becomes active; auto-retries on polling schedule.
+    </Card>
+
+    <Card title="Archive Peppol Artifacts" icon="box-archive" horizontal>
+      Move transmitted XML + receipts into long-term storage (e.g. internal retention or external drive).
+    </Card>
+
+    <Card title="Cancel Peppol Transmission" icon="ban" horizontal>
+      Mark a pending or failed transmission as void (does not retract already delivered invoices).
+    </Card>
+
+    <Card title="Retry Peppol" icon="rotate-right" horizontal>
+      Re-attempt transmission for transient network or Access Point failures with exponential backoff.
+    </Card>
+
+  </Tab>
+
+  <Tab title="Workflows">
+    Common workflow design patterns with this app:
+  </Tab>
+
+  <Tab title="Example Flow (Narrative)">
+    Below is an example end‑to‑end scenario for sending a cross‑border invoice:
+
+    <Steps>
+      <Step title="Upload Invoice">
+        Create a Silo Entry with a GOBL Invoice object including supplier & customer tax IDs,
+        currency, lines, VAT breakdown and regime hints (e.g. EU cross-border). Add the `peppol-v1`
+        addon if your configuration uses optional Peppol extensions.
+      </Step>
+      <Step title="Start Workflow">
+        Trigger the Peppol Invoice Submission workflow passing the Silo Entry ID.
+      </Step>
+      <Step title="Validation">
+        The workflow performs structural & business rule checks; if failures occur, the state is set
+        to Error and a structured list of rule IDs is attached.
+      </Step>
+      <Step title="Serialization">
+        A UBL XML (Invoice) document is generated and stored as an attachment. Namespace prefixes and
+        profile IDs are injected automatically.
+      </Step>
+      <Step title="Transmission">
+        The Access Point connection sends the document to the receiver's endpoint. A delivery receipt (signed)
+        is attached, including a network message ID for audit tracing.
+      </Step>
+      <Step title="Archival">
+        XML + receipt are moved to archival storage; a PDF (optional) is kept for internal reference.
+      </Step>
+      <Step title="Completion">
+        Entry state switches to Sent. Related entries (e.g. credit notes) can later reference this invoice's UUID.
+      </Step>
+    </Steps>
+
+    <Info>
+      If the receiver requires CII instead of UBL, the Generate CII step replaces Generate UBL seamlessly based on
+      profile negotiation.
+    </Info>
+  </Tab>
+
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Do I need a certified Access Point?">
+        No, Invopop's Peppol app integrates with a certified Access Point for you. You only need to complete ownership verification.
+      </Accordion>
+      <Accordion title="Can I send credit notes?">
+        Yes—model a credit note as a standard GOBL invoice with negative line amounts or using the credit note type; validation will map to Peppol semantics.
+      </Accordion>
+      <Accordion title="How are profiles selected?">
+        The app infers required profile (Process & Document Type IDs) from regime + tax context, with manual override via workflow input variables.
+      </Accordion>
+      <Accordion title="Is UN/CEFACT CII supported?">
+        Yes—if the receiver, jurisdiction or procurement platform mandates CII, the Generate CII action activates automatically.
+      </Accordion>
+      <Accordion title="What audit trail is stored?">
+        Every transmission stores: timestamp, network message ID, participant IDs, hash of XML payload, and receipt signature metadata.
+      </Accordion>
+      <Accordion title="How to handle VAT edge cases?">
+        Provide complete tax breakdown in the GOBL document; the app normalizes into UBL `TaxTotal` + `TaxSubtotal` structures.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Peppol App →
+</Card>

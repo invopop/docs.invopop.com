@@ -1,4 +1,217 @@
 ---
 title: "Portal"
-description: Information about the Portal app
+sidebarTitle: "App"
+description: Provide a secure, branded web portal for customers and suppliers to access invoices, quotes, credit notes, supporting documents and perform self‑service actions.
+keywords: ['portal','document portal','customer portal','supplier portal','self-service']
+mode: "wide"
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="Portal App" icon="browser" cta="Install in Console" href="https://console.invopop.com">
+      Secure read & action surface for parties linked to your documents.
+    </Card>
+
+    The **Portal app** adds a self-service experience so your customers and suppliers can:
+    - View invoices, credit notes, quotes and delivery notes
+    - Download compliant PDFs & structured source (GOBL, XML, JSON)
+    - Acknowledge, accept or dispute documents
+    - Upload supporting attachments (e.g. purchase orders)
+    - Pay an invoice (requires a payment app such as Stripe or Chargebee)
+    - Subscribe to status notifications
+
+    <Info>
+      The Portal never exposes internal workflow metadata or private series sequencing logic. Each shared session is scoped to the party and limited to permitted document states.
+    </Info>
+
+    **Typical Use Cases**
+    1. B2B invoice distribution without emailing raw attachments
+    2. Quote acceptance & automated conversion into invoice/fulfilment workflow
+    3. Supplier collaboration (upload shipping docs, update references)
+    4. Audit-safe external access to originals (hash preserved)
+
+    **Core Concepts**
+    | Concept | Description |
+    |---------|-------------|
+    | Portal Session | Ephemeral scoped access issued via workflow action or API |
+    | Share Token | Short-lived signed token embedded in the portal link |
+    | Capabilities | Granular flags: `view`, `download`, `accept`, `pay`, `upload`, `dispute`, `comment` |
+    | Expiry Policy | Default 30 days, configurable per workflow action |
+    | Theme | Logo, colors and footer are inherited from Workspace settings |
+
+    <Tip>
+      Combine Portal actions with Notification apps (Email/Slack) to send branded share links automatically at document state transitions.
+    </Tip>
+  </Tab>
+
+  <Tab title="Actions">
+    The Portal app contributes **workflow actions** you can insert into invoice, quote, credit note, or generic document workflows:
+
+    <AccordionGroup>
+      <Accordion title="Generate Portal Link">
+        Issues a signed share link for the target Silo Entry. Configuration:
+        - Capabilities selection
+        - Expiry (minutes / hours / days)
+        - Single-use or multi-use
+        Output variables:
+        - `portal.link`: URL to send externally
+        - `portal.expires_at`
+        - `portal.token`
+      </Accordion>
+
+      <Accordion title="Notify Portal Link">
+        Sends the previously generated link to the related party using installed notification apps (Email, Slack). Supports templated subject & body referencing `portal.link`.
+      </Accordion>
+
+      <Accordion title="Wait for Acceptance">
+        Suspends workflow until the external party clicks "Accept" in the Portal. Times out if expiry reached; can set fallback state.
+      </Accordion>
+
+      <Accordion title="Wait for Payment">
+        Pauses execution until payment status is updated by a payment app (Stripe/Chargebee). Useful for conditional fulfilment steps.
+      </Accordion>
+
+      <Accordion title="Capture Supporting Files">
+        Enables an upload dropzone in the Portal (e.g. purchase order PDF). Collected files are attached to the same Silo Entry and exposed in subsequent workflow steps as `attachments[]`.
+      </Accordion>
+
+      <Accordion title="Expire Portal Session">
+        Immediately invalidates previously issued link, enforcing revocation (e.g. after dispute resolution or correction).
+      </Accordion>
+
+      <Accordion title="Refresh Portal Snapshot">
+        Regenerates rendered PDF/summary after the underlying GOBL envelope is modified, ensuring the external view is current without issuing a new link.
+      </Accordion>
+    </AccordionGroup>
+
+    <Info>
+      For advanced control (bulk revocation, capability changes) use the API endpoints exposed by the Portal app (coming soon).
+    </Info>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example workflow patterns integrating Portal actions.
+
+ 
+  </Tab>
+
+  <Tab title="Example Documents">
+    <AccordionGroup>
+      <Accordion title="Portal Capability Matrix (JSON)">
+        ```json
+        {
+          "portal": {
+            "capabilities": ["view", "download", "accept", "pay"],
+            "expires_in": "7d",
+            "single_use": false,
+            "branding": {
+              "logo": "workspace",
+              "color_primary": "#169958"
+            }
+          }
+        }
+        ```
+      </Accordion>
+      <Accordion title="Portal Acceptance Event (Webhook Payload)">
+        ```json
+        {
+          "event": "portal.accepted",
+          "entry_id": "b4d2e6c4-1e2b-49a7-8b29-d6f6c9d11af1",
+          "party_id": "0a9c7f22-supplier",
+          "accepted_at": "2025-10-26T09:15:22Z",
+          "workflow_job_id": "wfjob_7821dd",
+          "state_previous": "Sent",
+          "state_next": "Accepted"
+        }
+        ```
+      </Accordion>
+      <Accordion title="Portal Upload Event (Webhook Payload)">
+        ```json
+        {
+          "event": "portal.attachment.uploaded",
+          "entry_id": "b4d2e6c4-1e2b-49a7-8b29-d6f6c9d11af1",
+          "file": {
+            "id": "file_93fd21",
+            "name": "purchase-order-4451.pdf",
+            "mime": "application/pdf",
+            "size": 184221
+          },
+          "uploaded_at": "2025-10-26T09:22:02Z"
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Configuration">
+    **Initial Setup**
+
+    1. Install the Portal app in your workspace.
+    2. Configure branding (logo, accent color) in *Configuration → Apps → Portal*.
+    3. Optionally link a payment app (Stripe, Chargebee) to enable `pay` capability.
+    4. Add workflow actions where external access is required.
+
+    **Security Controls**
+    - All links are signed and time-bound.
+    - Single-use links invalidate after first session start.
+    - Capability filtering ensures only permitted actions appear in UI.
+    - Attachments virus scan (if enabled globally) runs before persisting.
+
+    **Recommended Expiries**
+    | Document Type | Suggested Expiry | Rationale |
+    |---------------|------------------|-----------|
+    | Invoice       | 30 days          | Enough for payment window |
+    | Quote         | 14 days          | Drives timely acceptance |
+    | Credit Note   | 60 days          | Extended audit visibility |
+    | Supplier Pack | 7 days           | Encourages quick onboarding |
+
+    <Tip>
+      Use shorter expiries for sensitive or rapidly changing data; regenerate links via workflow if needed.
+    </Tip>
+  </Tab>
+
+  <Tab title="Monitoring">
+    **Metrics (coming soon)**
+    - Portal session count per day
+    - Acceptance conversion rate (quotes → accepted)
+    - Payment completion latency
+    - Attachment upload failure ratio
+
+    **Audit Log Entries**
+    Each portal action generates an immutable log entry referencing the originating Silo Entry and Party.
+
+    <Frame caption="Sample audit trail snippet">
+      <img width="640" src="/guides/images/portal-audit-example.png" alt="Portal audit entries"/>
+    </Frame>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Can I revoke a Portal link early?">
+        Yes: add the **Expire Portal Session** action to a corrective or dispute workflow, or call the Portal revoke endpoint (coming soon).
+      </Accordion>
+      <Accordion title="Does the Portal expose raw GOBL data?">
+        Only if the `download` capability is enabled. Otherwise users see rendered summaries and PDFs.
+      </Accordion>
+      <Accordion title="How are payments handled?">
+        The Portal delegates payment UI to the installed payment app; when the external provider confirms, a payment webhook updates the document state.
+      </Accordion>
+      <Accordion title="What happens after expiry?">
+        Access attempts redirect to an invalid/expired page. You may generate a new link via a workflow action and notify the party again.
+      </Accordion>
+      <Accordion title="Is multi-language supported?">
+        Portal inherits Workspace locale defaults; future releases will allow per-session language negotiation.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Portal App →
+</Card>

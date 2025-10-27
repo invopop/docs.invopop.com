@@ -1,4 +1,292 @@
 ---
-title: "Notas Fiscais Eletrônicas Brazil"
-description: Information about the Notas Fiscais Eletrônicas Brazil app
+title: "Notas Fiscais Eletrônicas (Brazil)"
+sidebarTitle: "App"
+description: Issue, transmit, correct and cancel Brazilian electronic fiscal documents (NF-e, NFC-e, NFS-e) via SEFAZ and municipal providers.
+keywords:
+  - brazil
+  - nfe
+  - nf-e
+  - nfce
+  - nfc-e
+  - nfse
+  - nfs-e
+  - sefaz
+  - fiscal
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="Brazil NF-e & NFS-e" icon="building-columns" cta="Learn more" href="/apps/notas-fiscais-eletronicas-brazil">
+      End-to-end workflows for Brazil’s electronic fiscal documents: NF-e (goods), NFC-e (consumer), NFS-e (services).
+    </Card>
+
+**What this app does**
+
+The Notas Fiscais Eletrônicas (Brazil) app streamlines creation and lifecycle management of Brazilian electronic fiscal documents:
+
+- **NF-e (Nota Fiscal Eletrônica)**: Standard B2B/B2G invoice for goods circulation.
+- **NFC-e (Nota Fiscal do Consumidor Eletrônica)**: Retail consumer invoice (point-of-sale).
+- **NFS-e (Nota Fiscal de Serviços Eletrônica)**: Service invoice (municipal tax authority, varies per city).
+- **Events & Corrections**: Cancellation, correction letter (_Carta de Correção_), number range invalidation, status queries.
+
+**Key Features**
+
+1. Automated generation of SEFAZ-compliant XML from GOBL invoice data.
+2. Digital signing using an installed A1 certificate (PKCS#12) or remote signer.
+3. Transmission to SEFAZ authorization endpoints with automatic retry & contingency flags.
+4. QR Code / DANFE PDF generation for NF-e and NFC-e.
+5. Event workflows: cancellation, correction, inutilização (number range invalidation).
+6. Status monitoring and asynchronous polling where regional SEFAZ latency applies.
+7. Municipal adapters for selected NFS-e providers (e.g., São Paulo, Rio, Curitiba) – extensible design.
+
+**Document Types Covered**
+
+| Type  | Use Case | Scope |
+|-------|----------|-------|
+| NF-e  | Goods movement / B2B | National (SEFAZ) |
+| NFC-e | Retail / B2C POS     | National (SEFAZ) |
+| NFS-e | Services             | Municipal (varying schemas) |
+
+**Regulatory Notes**
+
+- NF-e / NFC-e authorization is synchronous; you receive a protocol number (chave de acesso).
+- Cancellations must occur within the allowed legal window (varies by state; typically within 24 hours unless justification).
+- Correction letters limited: maximum number of corrections and restricted fields (cannot alter taxable base origins that require cancellation).
+- Inutilização covers unused ranges when a sequential number was skipped.
+
+</Tab>
+
+<Tab title="Actions">
+
+The app provides workflow actions you can add as steps:
+
+<Card title="Generate NF-e XML" icon="code-compare" horizontal>
+Transforms a GOBL invoice (regime BR, type goods) into SEFAZ NF-e XML.
+</Card>
+
+<Card title="Generate NFC-e XML" icon="code-compare" horizontal>
+Builds consumer NFC-e XML with QR code metadata fields.
+</Card>
+
+<Card title="Generate NFS-e XML" icon="code-compare" horizontal>
+Produces municipal service XML (provider-specific layout).
+</Card>
+
+<Card title="Sign Fiscal XML" icon="shield-check" horizontal>
+Applies X.509 digital signature (A1 certificate) to XML.
+</Card>
+
+<Card title="Transmit NF-e" icon="paper-plane" horizontal>
+Sends signed NF-e XML to SEFAZ; returns protocol & status.
+</Card>
+
+<Card title="Transmit NFC-e (POS)" icon="paper-plane" horizontal>
+Issues NFC-e with real-time authorization; includes QR code payload.
+</Card>
+
+<Card title="Transmit NFS-e" icon="paper-plane" horizontal>
+Submits service document to municipal endpoint; handles async receipts.
+</Card>
+
+<Card title="Query Fiscal Status" icon="magnifier" horizontal>
+Polls SEFAZ or municipal provider for current authorization state.
+</Card>
+
+<Card title="Generate DANFE PDF" icon="file" horizontal>
+Creates printable representation (DANFE) including access key & QR.
+</Card>
+
+<Card title="Cancel Fiscal Document" icon="x-circle" horizontal>
+Sends cancellation event referencing the original protocol.
+</Card>
+
+<Card title="Correction Letter (CC-e)" icon="pencil" horizontal>
+Submits adjustment event for permitted NF-e fields.
+</Card>
+
+<Card title="Invalidate Number Range" icon="list-x" horizontal>
+Issues inutilização event for unused sequential invoice numbers.
+</Card>
+
+<Card title="Set State (Contingency)" icon="triangle-exclamation" horizontal>
+Marks document as contingency issued; triggers later synchronization.
+</Card>
+
+<Card title="Archive XML & PDF" icon="box-archive" horizontal>
+Stores signed artifacts in Silo entry attachments for auditing.
+</Card>
+
+</Tab>
+
+<Tab title="Workflows">
+
+Below are example workflow patterns you can reproduce:
+
+### 1. NF-e Issue Workflow (Goods Invoice)
+
+Recommended steps:
+
+1. Validate GOBL structure (custom rule action).
+2. Generate NF-e XML.
+3. Sign Fiscal XML.
+4. Transmit NF-e.
+5. Generate DANFE PDF.
+6. Archive XML & PDF.
+7. Set State → `Sent` (success) / `Error` (on failure).
+
+### 2. NFC-e POS Workflow (Retail)
+
+1. Generate NFC-e XML.
+2. Sign Fiscal XML.
+3. Transmit NFC-e (POS).
+4. Generate DANFE PDF (simplified).
+5. Set State → `Sent`.
+
+If SEFAZ unavailable:
+- Branch: Set State → `Contingency`
+- Store locally, re-run "Transmit NFC-e" later (status sync workflow).
+
+### 3. NFS-e Service Workflow
+
+1. Generate NFS-e XML.
+2. Sign (if provider requires).
+3. Transmit NFS-e.
+4. Query Fiscal Status (if async).
+5. Archive XML & PDF.
+6. Set State → `Sent`.
+
+### 4. Cancellation Workflow (NF-e / NFC-e / NFS-e)
+
+1. Validate cancellation window & rules.
+2. Cancel Fiscal Document.
+3. Archive cancellation event XML.
+4. Set State → `Void`.
+
+### 5. Correction Letter Workflow (NF-e)
+
+1. Validate allowed field changes.
+2. Correction Letter (CC-e).
+3. Archive event XML.
+4. Set State → `Adjusted`.
+
+### 6. Inutilização Workflow (Number Range)
+
+1. Validate range & justification.
+2. Invalidate Number Range.
+3. Archive event XML.
+4. Set State → `Inutilized`.
+
+</Tab>
+
+<Tab title="Example documents">
+
+Below are conceptual examples (pseudo-fields) to guide structure mapping:
+
+#### Minimal NF-e GOBL Invoice (Conceptual)
+
+```json
+{
+  "regime": "BR",
+  "type": "invoice",
+  "series": "A",
+  "code": "1023",
+  "supplier": {
+    "tax_id": "12.345.678/0001-99",
+    "name": "ACME Importadora LTDA",
+    "address": { "country": "BR", "region": "SP", "city": "São Paulo" }
+  },
+  "customer": {
+    "tax_id": "98.765.432/0001-11",
+    "name": "Distribuidora Brasil SA"
+  },
+  "lines": [
+    {
+      "code": "SKU-001",
+      "description": "Produto teste",
+      "quantity": 10,
+      "unit_price": 19.90,
+      "taxes": {
+        "icms": { "code": "00", "base": 199.00, "rate": 18.0 },
+        "ipi": { "rate": 0.0 },
+        "pis": { "rate": 1.65 },
+        "cofins": { "rate": 7.6 }
+      },
+      "ncm": "85044040",
+      "cfop": "5102"
+    }
+  ],
+  "totals": {
+    "net": 199.00,
+    "tax": 199.00 * 0.18
+  },
+  "addons": ["br-nfe-v1"]
+}
+```
+
+#### Cancellation Event Payload (Conceptual)
+
+```json
+{
+  "event": "cancel",
+  "reason": "Erro de digitação na CFOP",
+  "original": {
+    "access_key": "35240912345678000199550010000010231000010230",
+    "protocol": "143220000123456"
+  }
+}
+```
+
+#### Correction Letter Payload (Conceptual)
+
+```json
+{
+  "event": "correction",
+  "changes": "Correção da descrição comercial. Sem alteração de valores.",
+  "original": {
+    "access_key": "35240912345678000199550010000010231000010230"
+  }
+}
+```
+
+> These examples illustrate field intent only. Real NF-e/NFS-e XML generation is handled internally by the app’s mapping engine based on validated GOBL entries.
+
+</Tab>
+
+<Tab title="FAQ">
+
+<AccordionGroup>
+  <Accordion title="What certificate formats are supported?">
+    A1 (software) certificates in PKCS#12 (.pfx/.p12) are supported. Remote signing providers can be integrated via custom configuration (coming soon).
+  </Accordion>
+  <Accordion title="How do I handle contingency issuance (SCAN, DPEC)?">
+    If SEFAZ is unreachable, mark the document state as Contingency using the provided action. Once connectivity resumes, run a synchronization workflow (Transmit + Status Query).
+  </Accordion>
+  <Accordion title="Can I modify an NF-e after authorization?">
+    Structural changes require cancellation and re-issuance. Minor textual adjustments may be done via a Correction Letter (CC-e) within the allowed fields and time limits.
+  </Accordion>
+  <Accordion title="When should I use inutilização?">
+    Use it for skipped or voided number ranges to maintain sequential integrity (e.g., a number reserved but never issued due to system error).
+  </Accordion>
+  <Accordion title="Does the app cover municipal NFS-e differences?">
+    Yes, adapters abstract differing XML schemas. For unsupported municipalities, a generic fallback schema can be extended.
+  </Accordion>
+  <Accordion title="How are QR codes and DANFE generated?">
+    After authorization, the app assembles the access key, SEFAZ URL parameters and embeds them into the PDF renderer output.
+  </Accordion>
+  <Accordion title="What is the access key (chave de acesso)?">
+    A 44-digit composite identifier encoding CNPJ, model, series, number, emission timestamp, and checksum. It is generated during XML assembly.
+  </Accordion>
+</AccordionGroup>
+
+</Tab>
+</Tabs>
+
+<Card title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Brazilian Fiscal App →
+</Card>

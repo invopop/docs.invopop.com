@@ -1,4 +1,292 @@
 ---
 title: "PDF Generator"
-description: Information about the PDF Generator app
+sidebarTitle: "App"
+description: Generate consistent, compliant, branded PDF documents (invoices, credit notes, receipts) from GOBL data with automation-ready workflow actions.
+keywords: ['pdf', 'invoice', 'render', 'generator', 'document']
+mode: wide
 ---
+
+import PreviewWorkflow from '/snippets/workflows/templates/pdf/pdf-preview.mdx';
+import InvoiceWorkflow from '/snippets/workflows/templates/pdf/pdf-invoice.mdx';
+import CreditNoteWorkflow from '/snippets/workflows/templates/pdf/pdf-credit-note.mdx';
+import MultiLangWorkflow from '/snippets/workflows/templates/pdf/pdf-multi-lang.mdx';
+
+<Tabs>
+  <Tab title="Description">
+    <div class="flex gap-8">
+      <Card
+        title="PDF Generator"
+        icon="file"
+        href="/api-ref/apps/pdf/preview"
+        cta="API Reference"
+      >
+        Render structured GOBL envelopes into pixel-perfect, compliant PDF documents.
+      </Card>
+      <div class="flex-shrink">
+        | Information | |
+        |-------------|-------|
+        | Developer | Invopop |
+        | Category | Format |
+        | Last&nbsp;Update | <div class="whitespace-nowrap">2025-10-01</div> |
+        | API | [/api-ref/apps/pdf/preview](/api-ref/apps/pdf/preview) |
+      </div>
+    </div>
+
+    The **PDF Generator app** transforms canonical GOBL documents (invoices, credit notes, corrective invoices, receipts, and related business documents) into professionally formatted PDFs suitable for distribution or archival.
+
+    It focuses on:
+    - **Compliance:** Regional formatting nuances (tax breakdowns, mandatory legends, currency precision).
+    - **Consistency:** All workspaces share a unified baseline style with optional branding overrides.
+    - **Automation:** Workflow actions for on-demand generation or regeneration tied to document lifecycle.
+    - **Integrity:** Hash-stamping and metadata embedding (UUID, regime, timestamps) to help with traceability.
+    - **Performance:** Rendering pipeline optimized for low latency in synchronous preview flows.
+
+    <Info>
+      All rendering is stateless: the authoritative source of truth is always the GOBL JSON in Silo. PDFs can be safely regenerated at any time.
+    </Info>
+
+    <Frame caption="Example rendered invoice PDF">
+      <img
+        width="480"
+        src="/guides/images/es-verifactu-example-pdf.png"
+        alt="Example rendered invoice PDF"
+      />
+    </Frame>
+
+    <H3>Key Features</H3>
+
+    1. Multi-regime layout adaptation (ES, IT, PT, PL, MX, CO, etc.).
+    2. Automatic language selection based on customer/supplier locale.
+    3. Dynamic table pagination with balanced column widths.
+    4. Embedded QR / barcode support (regime compliance or tracking).
+    5. Optional watermarking: Draft, Copy, Canceled.
+    6. Attachment merging (append supplemental pages such as terms).
+    7. Deterministic output (same input envelope yields identical PDF bytes).
+    8. Preview endpoint for ephemeral inspection before persistence.
+    9. Style tokens (brand colors, logo, footer text) configurable at workspace level.
+    10. Auto file attachment back into the Silo Entry (workflow action).
+
+    <Tip>
+      If you only need a quick visual check, use the <strong>Preview PDF</strong> action to avoid writing an attachment until you're ready.
+    </Tip>
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions are exposed when the PDF Generator app is installed:
+
+    <AccordionGroup>
+      <Accordion title="Render PDF">
+        <Card title="Render PDF" icon="file" horizontal>
+          Converts a finalized GOBL Envelope (e.g. invoice) into a PDF and attaches it to the Silo Entry.
+        </Card>
+        <ul>
+          <li><strong>Input:</strong> Silo Entry with a signed or ready envelope.</li>
+          <li><strong>Output:</strong> PDF file attachment + metadata (size, checksum).</li>
+          <li><strong>Failure:</strong> Validation error (missing tax lines, invalid currency format).</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Preview PDF">
+        <Card title="Preview PDF" icon="eye" horizontal>
+          Synchronously generates a transient PDF stream without persisting the file.
+        </Card>
+        <ul>
+          <li>Useful before marking a document as issued.</li>
+          <li>Can be integrated into UI pre-save flows.</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Regenerate PDF">
+        <Card title="Regenerate PDF" icon="arrow-rotate-right" horizontal>
+          Rebuilds the PDF if underlying GOBL data changed (e.g. credit adjustment).
+        </Card>
+        <ul>
+          <li>Replaces prior file while keeping historic references.</li>
+          <li>Adds regeneration count in attachment metadata.</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Stamp PDF">
+        <Card title="Stamp PDF" icon="certificate" horizontal>
+          Applies regime or workflow-specific seals (hash, approval mark, internal signature).
+        </Card>
+        <ul>
+          <li>Runs after Render PDF.</li>
+          <li>Extends embedded metadata dictionary.</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Watermark PDF">
+        <Card title="Watermark PDF" icon="droplet" horizontal>
+          Adds semantic overlay (Draft, Void, Copy) without altering underlying envelope.
+        </Card>
+        <ul>
+          <li>Configurable watermark text & opacity.</li>
+          <li>Chainable with Render PDF in same workflow.</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Merge PDF Attachments">
+        <Card title="Merge PDF Attachments" icon="layers" horizontal>
+          Concatenates previously generated PDF with legal terms or supplemental pages.
+        </Card>
+        <ul>
+          <li>Preserves original page numbering if configured.</li>
+          <li>Generates a new attachment with merged output.</li>
+        </ul>
+      </Accordion>
+
+      <Accordion title="Protect PDF">
+        <Card title="Protect PDF" icon="lock-a" horizontal>
+          Applies password protection or restricts modification & extraction.
+        </Card>
+        <ul>
+          <li>Useful for sensitive credit notes or internal drafts.</li>
+          <li>Stores policy descriptor as JSON in attachment metadata.</li>
+        </ul>
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are typical workflow patterns leveraging the PDF Generator actions:
+
+    <AccordionGroup>
+      <Accordion title="Standard Invoice PDF Flow">
+        <Steps>
+          <Step title="Validate Envelope">
+            Ensure the GOBL invoice object includes required regime addons and tax summaries.
+          </Step>
+          <Step title="Render PDF">
+            Use <em>Render PDF</em> to attach the first version to the Silo Entry.
+          </Step>
+          <Step title="Stamp PDF">
+            Add a compliance hash or registry code (if available).
+          </Step>
+          <Step title="Set State">
+            Transition the document state from <code>Empty</code> to <code>Issued</code>.
+          </Step>
+        </Steps>
+        <PreviewWorkflow />
+      </Accordion>
+
+      <Accordion title="Multi-Language Invoice">
+        <Steps>
+          <Step title="Localize Content">
+            Populate language-specific fields (customer locale, translated line labels).
+          </Step>
+          <Step title="Render PDF (Primary)">
+            Generate the main language PDF.
+          </Step>
+          <Step title="Render PDF (Secondary)">
+            Regenerate using alternate locale; attach with suffix (e.g. <code>-fr</code>).
+          </Step>
+          <Step title="Merge PDF Attachments (Optional)">
+            Consolidate both into a single bilingual PDF.
+          </Step>
+        </Steps>
+        <MultiLangWorkflow />
+      </Accordion>
+
+      <Accordion title="Credit Note PDF Lifecycle">
+        <Steps>
+          <Step title="Validate Credit Note">
+            Confirm <code>type: credit-note</code> and <code>preceding</code> reference chain correctness.
+          </Step>
+          <Step title="Render PDF">
+            Produce visual artifact with explicit negative line totals formatting.
+          </Step>
+          <Step title="Watermark PDF (Copy)">
+            If internal review needed, watermark interim draft.
+          </Step>
+          <Step title="Regenerate PDF">
+            After approval, remove watermark and finalize.
+          </Step>
+          <Step title="Set State">
+            Set to <code>Issued</code>.
+          </Step>
+        </Steps>
+        <CreditNoteWorkflow />
+      </Accordion>
+
+      <Accordion title="On-Demand Preview Flow">
+        <Steps>
+          <Step title="User Edits Draft">
+            UI collects invoice details before persistence.
+          </Step>
+          <Step title="Preview PDF">
+            Immediate synchronous preview for human validation.
+          </Step>
+          <Step title="User Confirms">
+            Commits GOBL invoice to Silo.
+          </Step>
+          <Step title="Render PDF">
+            Generates and stores official attachment.
+          </Step>
+        </Steps>
+        <InvoiceWorkflow />
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Best Practices">
+    <H3>When to Regenerate</H3>
+    Regenerate only when structural or monetary fields change. Styling or logo updates can be deferred to batch regeneration jobs.
+
+    <H3>Branding Strategy</H3>
+    - Store CSS token overrides (logo URL, primary color) in workspace configuration.
+    - Avoid embedding dynamic marketing content—PDFs should be stable artifacts.
+
+    <H3>Localization</H3>
+    - Provide explicit `language` codes in supplier or customer objects.
+    - Fallback chain: document language → workspace default → `en`.
+
+    <H3>Attachments Metadata</H3>
+    Attachments include:
+    - `checksum_sha256`
+    - `generated_at` (UTC timestamp)
+    - `template_version`
+    - `regeneration_count`
+    - `watermark` (if applied)
+
+    <H3>Security</H3>
+    Use <em>Protect PDF</em> only for documents not required to be machine readable by tax authorities (many regimes demand unrestricted PDFs).
+
+    <H3>File Naming</H3>
+    Recommended deterministic pattern:
+    <code>{series}-{code}-{type}-{language}.pdf</code> (e.g. <code>INV-104-invoice-en.pdf</code>).
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Are PDFs stored permanently?">
+        Yes. Once rendered via <strong>Render PDF</strong>, they are persisted as Silo Entry attachments and can be retrieved or regenerated.
+      </Accordion>
+      <Accordion title="Is preview output identical to final render?">
+        Pixel layout and pagination are identical; preview omits stamping and watermark post-processing steps.
+      </Accordion>
+      <Accordion title="Do I need to sign before rendering?">
+        For compliance-heavy regimes, signing first is recommended so signature fingerprints can be placed into PDF metadata.
+      </Accordion>
+      <Accordion title="Why would I regenerate a PDF?">
+        To reflect corrections (credit adjustments, currency rounding fixes) or apply newly required compliance marks.
+      </Accordion>
+      <Accordion title="Can I embed custom HTML?">
+        Not directly. The renderer consumes structured GOBL; custom free-form HTML risks layout instability. Use provided addon fields and notes sections.
+      </Accordion>
+      <Accordion title="How large can PDFs be?">
+        Typical invoice PDFs are < 250 KB. Merged or image-heavy documents may reach 1–2 MB. Oversized attachments may be truncated or rejected.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Discuss PDF strategies"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask workflow design and PDF optimization questions in the community →
+</Card>

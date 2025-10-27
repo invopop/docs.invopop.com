@@ -1,0 +1,188 @@
+---
+title: "InvoiceXpress Guide"
+sidebarTitle: "Guide"
+description: Issue invoices in Portugal using InvoiceXpress as a provider.
+---
+
+import IssueInvoice from '/snippets/workflows/templates/pt/ix-issue-invoice.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/pt/ix-register-supplier.mdx';
+import ExampleSupplier from '/snippets/suppliers/pt/ix-supplier.mdx';
+
+## Introduction
+
+Invopop partners with the local invoicing provider [InvoiceXpress](https://invoicexpress.com/) to issue invoices, invoice-receipts, and credit notes in Portugal and allow users to submit their tax reports (SAF-T) to the Portuguese tax authority (AT).
+
+This guide explains how to integrate with [InvoiceXpress](https://invoicexpress.com/), a Portuguese invoicing provider that enables you to:
+
+* Issue compliant invoices, invoice-receipts, and credit notes in Portugal.
+* Submit tax reports (SAF-T) to the Portuguese tax authority (AT).
+* Enable real-time tax reporting.
+
+For technical details and examples of Portuguese GOBL documents, see the [GOBL Portugal Tax Regime documentation](https://github.com/invopop/gobl/blob/main/regimes/pt/README.md).
+
+## Prerequisites
+To issue invoices through InvoiceXpress, you'll need the following information:
+
+* Supplier Details, including:
+  * legal business name,
+  * tax ID (_Número de Identificação Fiscal_),
+  * complete business address,
+  * contact email address.
+
+* Invoice details, including:
+  * line item descriptions,
+  * quantities and unit prices,
+  * applicable Portuguese VAT rates.
+
+## Setup
+
+The integration requires three main components:
+
+1. InvoiceXpress app connection
+2. Supplier registration workflow
+3. Invoice processing workflow
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+<Steps>
+
+<Step title="Connect InvoiceXpress App">
+
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **InvoiceXpress Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
+
+</Step>
+
+<Step title="Configure the supplier registration workflow">
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="InvoiceXpress register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-ix-register-supplier" cta="Add to my workspace">
+      Issues a registration request for a supplier to complete.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+      <RegisterSupplier />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "InvoiceXpress Register Supplier".
+
+      The new workflow will need to perform three steps:
+
+       * **Sign the Envelope** - Validates the document
+       * **Register InvoiceXpress issuer** - Creates supplier account
+       * **Set State** - Marks progress as `processing`
+
+       Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+
+    </Tab>
+  </Tabs>
+</Step>
+
+
+<Step title="Prepare Invoice Workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="InvoiceXpress issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-ix-issue-invoice" cta="Add to my workspace">
+        This workflow will issue an invoice through InvoiceXpress.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Send invoice to InvoiceXpress".
+
+        The new workflow will need to perform these steps:
+
+         * **Send to InvoiceXpress** - Transmits invoice data
+         * **Generate PDF** - Creates document (configure for your environment)
+         * **Set State** - Updates status to `Sent`
+
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Running
+
+### Sandbox Environment
+
+InvoiceXpress provides a way to configure their accounts to use the AT's sandbox environment so that you can test the issuance of invoices and credit notes end-to-end without fiscal or legal consequences. If you wish to use this environment, please contact us via Slack or support@invopop.com and we will walk you through the setup process.
+
+### Supplier Onboarding
+
+InvoiceXpress supports multiple suppliers under one integration. Each supplier receives their own account for document issuance and tax reporting.
+
+Follow these steps to onboard a supplier:
+
+<Steps>
+  <Step title="Submit Supplier Information">
+    Send a [GOBL Party](https://docs.gobl.org/draft-0/org/party) document to your supplier registration workflow. The system will automatically:
+
+    * Create an InvoiceXpress account
+    * Send login credentials to the supplier's email (first email in the `emails` list)
+
+    Example GOBL Party document:
+
+    <ExampleSupplier/>
+  </Step>
+
+  <Step title="Configure InvoiceXpress account">
+    The user invited to the new account will now have to log in to InvoiceXpress and complete the account's configuration.
+
+    An account will be ready to issue invoices once a default sequence is registered in the AT. This guide from InvoiceXpress' documentation explains how to do it:
+    - [Sequence Registration Guide (English)](https://invoicexpress.helpscoutdocs.com/article/219-step-by-step-guide-to-creating-and-registering-series)
+    - [Guia de Registro de Séries (Portuguese)](https://invoicexpress.helpscoutdocs.com/article/212-atcud-guia-passo-a-passo-para-criar-e-registar-series)
+
+    **Important Notes:**
+    * You'll find a pre-created sequence in the account pending to be registered. You can register and use that one, or create a different one, as you prefer.
+    * In any case, you must ensure the sequence you want to use is the default one in the account. Currently, only the default series can be used to issue documents.
+  </Step>
+</Steps>
+
+### Send an invoice
+Once configured, you can begin issuing documents:
+
+1. Create [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) documents following [PT regime specifications](https://github.com/invopop/gobl/blob/main/regimes/pt/README.md)
+2. Send to your invoice processing workflow
+3. Ensure the `supplier` UUID and Tax ID match the registered supplier details
+
+### Additional Features
+
+Suppliers can:
+- Export SAF-T reports through InvoiceXpress UI
+- Configure real-time tax reporting using this guide: [Portal das Finanças Integration Guide](https://invoicexpress.helpscoutdocs.com/article/92-como-crio-um-sub-utilizador-no-portal-das-financas)
+
+## Troubleshooting
+
+<AccordionGroup>
+
+<Accordion title="Error: “An account for the provided tax ID code and name already exists…”">
+When you run the supplier registration workflow for a new supplier, you may get the following KO error:
+
+> An account for the provided tax ID code and name already exists under a different supplier UUID. The same tax code ID can be used with multiple suppliers as long as they have different names.
+
+#### What does this mean?
+
+InvoiceXpress allows you to register the same tax ID (_Número de Identificação Fiscal_) for multiple suppliers. This is useful if, for example, a single invoice issuer wants to segregate invoices by branch or location. In these cases, you can create multiple suppliers with the same tax ID but different names.
+
+However, there is a limitation in InvoiceXpress: you must provide a unique name for each supplier when registering a new account with the same tax ID. If InvoiceXpress detects that both the tax ID and the name match an existing account, it assumes you want to use the existing account instead of creating a new one. To prevent confusion, our system checks for this scenario and displays the error above if it occurs.
+
+**How to resolve this issue:**
+- Make sure the `name` you provide for the new supplier is different from any existing supplier with the same tax ID in InvoiceXpress.
+- The `supplier` UUID must also be unique for each supplier you register.
+</Accordion>
+
+</AccordionGroup>

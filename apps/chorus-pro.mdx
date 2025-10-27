@@ -1,4 +1,195 @@
 ---
-title: "Chorus Pro"
-description: Information about the Chorus Pro app
+title: "Chorus Pro France"
+sidebarTitle: "App"
+description: Connect, transform and transmit invoices to the French public sector via Chorus Pro."
+keywords: ["chorus pro", "france", "public sector", "e-invoicing", "b2g"]
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="Chorus Pro France" icon="building-columns" href="https://www.chorus-pro.gouv.fr" cta="Official portal">
+      Exchange compliant electronic invoices with French public entities.
+    </Card>
+
+    **The Chorus Pro app** enables automated delivery of invoices, credit notes and related updates to French public buyers (B2G). It converts standard GOBL documents into the required Chorus Pro payload, handles routing, monitors status responses, and updates your entry states.
+
+    Key features:
+    1. Automatic structure mapping (SIRET, service code, engagement numbers if provided).
+    2. Format conversion (UBL or CII → Chorus Pro XML wrapper plus metadata).
+    3. Status polling & reconciliation (submission, acceptance, rejection, service reception, payment notices).
+    4. Support for corrective and credit notes referencing the original document.
+    5. Optional white‑label submission (intermediary / agent model).
+    6. PDF generation with mandated legal mentions (e.g. TVA, payment terms).
+    7. Chain logging for audit (every request/response preserved in Files & Activity tabs).
+
+    Typical flow:
+    1. Prepare a GOBL Invoice with France regime (FR) and required buyer references.
+    2. Run a workflow that: Validate → Generate Chorus XML → Submit → Poll → Update State → Generate PDF.
+    3. Inspect final Chorus response; proceed with further actions if rejected.
+
+    Required data hints (GOBL):
+    - `regime`: `FR`
+    - `supplier.tax_id` with FR VAT or SIRET where applicable.
+    - `customer.refs`: include `service_code`, `engagement_number`, `order_number` if provided by public buyer.
+    - `payment.terms` specifying due date.
+    - Tax lines with proper French VAT rates (e.g. 20%, 10%, 5.5%, 2.1%).
+
+    Use this app together with the **Sequences** feature to ensure proper numbering schemes across public-sector flows.
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available when the Chorus Pro app is installed:
+
+    <Card title="Validate Chorus Pro" icon="check" horizontal>
+      Ensures required French public sector references and tax structure are present before transformation.
+    </Card>
+    <Card title="Generate Chorus XML" icon="code" horizontal>
+      Converts a GOBL invoice (or credit/corrective) into a Chorus Pro-ready XML payload.
+    </Card>
+    <Card title="Submit Chorus Invoice" icon="paper-plane" horizontal>
+      Sends the generated payload to Chorus Pro and records transmission identifiers.
+    </Card>
+    <Card title="Poll Chorus Status" icon="magnifying-glass" horizontal>
+      Retrieves updated lifecycle status (Received, Accepted, Rejected, Service Performed).
+    </Card>
+    <Card title="Register Chorus Party" icon="user-plus" horizontal>
+      (Optional) Creates or updates cached metadata for supplier / intermediary identifiers.
+    </Card>
+    <Card title="Attach Chorus PDF" icon="file" horizontal>
+      Produces a PDF rendition including mandated French legal mentions & buyer references.
+    </Card>
+    <Card title="Cancel Chorus Submission" icon="ban" horizontal>
+      Issues a cancellation request (only valid pre‑acceptance).
+    </Card>
+    <Card title="Archive Chorus Artifacts" icon="box" horizontal>
+      Moves historical request/response files into a dedicated archive set & tags the entry.
+    </Card>
+    <Card title="Set State (Accepted / Rejected / Sent / Void)" icon="tag" horizontal>
+      Updates internal state based on the latest Chorus Pro status response automatically.
+    </Card>
+
+    Suggested chaining:
+    Validate → Generate Chorus XML → Submit → Poll (loop) → Attach Chorus PDF → Set State.
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are conceptual workflow blueprints you can reproduce in Console:
+
+    <AccordionGroup>
+      <Accordion title="Issue Chorus Invoice">
+        Steps (example):
+        1. Validate Chorus Pro
+        2. Generate Chorus XML
+        3. Submit Chorus Invoice
+        4. Poll Chorus Status (retry until terminal: Accepted/Rejected)
+        5. Attach Chorus PDF
+        6. Set State (Accepted or Rejected)
+
+        Error Handling: On any failure, Set State = Error and optionally notify via Slack/Email app actions.
+      </Accordion>
+
+      <Accordion title="Credit Note / Corrective">
+        Differences:
+        - Use Invoice type `credit-note` or `corrective` referencing original invoice (`preceding` section).
+        - Same steps as Issue but ensure reference integrity validated in step 1.
+        - State transitions identical (Accepted / Rejected).
+      </Accordion>
+
+      <Accordion title="Cancellation (Pre‑Acceptance)">
+        Steps:
+        1. Validate (must be in Sent state, not Accepted).
+        2. Cancel Chorus Submission.
+        3. Poll Chorus Status (expect Void or Cancelled).
+        4. Set State = Void.
+      </Accordion>
+
+      <Accordion title="Periodic Status Sync">
+        Steps:
+        1. List candidate entries (custom action or query step).
+        2. Poll Chorus Status.
+        3. Set State if changed.
+        4. Archive Chorus Artifacts (optional after final acceptance).
+      </Accordion>
+    </AccordionGroup>
+
+    Tuning:
+    - Add Slack Notification step after Set State for Accepted or Rejected outcomes.
+    - Insert a Transform step prior to Generate XML for additional buyer reference enrichment.
+  </Tab>
+
+  <Tab title="Example documents">
+    The Chorus Pro app relies on enriched GOBL payloads. Below are field guidelines (pseudo-schema):
+
+    Buyer references:
+    - `customer.refs.service_code` (e.g. "DF-7782")
+    - `customer.refs.order_number` (e.g. "BC12345")
+    - `customer.refs.engagement_number` (public contract or commitment ID)
+
+    Supplier identifiers:
+    - `supplier.tax_id.number` SIRET or VAT FR12345678901
+    - `supplier.name` Official legal entity name.
+
+    Lines:
+    - Include `tax.code` (e.g., `"VAT"`) and `tax.rate` (e.g., `0.20`)
+    - French reduced rates: 0.10, 0.055, 0.021 where applicable.
+
+    Payment:
+    - `payment.terms.due_date` required for public buyers.
+    - Bank details (IBAN/BIC) recommended for acceptance & faster payment processing.
+
+    Credit note specifics:
+    - `type: credit-note`
+    - `preceding.code`, `preceding.series`, `preceding.issue_date`, original `tax` summary.
+
+    Corrective specifics:
+    - `type: corrective`
+    - `preceding` same as above plus full original tax recap.
+
+    Minimal compliance checklist:
+    - Regime FR set.
+    - At least one taxable line with VAT breakdown.
+    - Buyer references present per contract obligations.
+    - Totals consistent (sum of lines = net, VAT sums = tax totals, gross sum match).
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Is Chorus Pro mandatory?">
+        Chorus Pro is mandatory for invoicing the French public sector (B2G). Private sector (B2B) e-invoicing mandates are separate and phased; this app focuses on B2G flows.
+      </Accordion>
+      <Accordion title="What statuses can I expect?">
+        Typical lifecycle: Submitted → Received → Accepted or Rejected (may include intermediate 'Processing'). Some buyers also send 'Service Performed' or 'Payment Advice' messages.
+      </Accordion>
+      <Accordion title="How do I correct an accepted invoice?">
+        Issue a credit-note referencing the accepted invoice, or a corrective invoice if a full replacement is required. Avoid cancellation once Accepted.
+      </Accordion>
+      <Accordion title="Can I submit PDFs only?">
+        Structured data is required; the app generates PDFs for human readability but submission relies on XML payloads.
+      </Accordion>
+      <Accordion title="How often should I poll status?">
+        Recommended: every few hours initially post-submission; back off to daily after acceptance or if awaiting payment advice.
+      </Accordion>
+      <Accordion title="What causes rejections?">
+        Common issues: missing engagement/order numbers, invalid SIRET, tax inconsistency, rounding mismatches, or unrecognized service codes.
+      </Accordion>
+      <Accordion title="Does the app support multi-entity white label?">
+        Yes, register multiple supplier parties with distinct SIRET numbers; workflows choose the correct supplier context dynamically.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Chorus Pro App →
+</Card>
+
+<Info>
+  This page is a descriptive blueprint. Exact action names, field validations and workflow templates may evolve; adjust your workflows as new French e-invoicing phases roll out.
+</Info>

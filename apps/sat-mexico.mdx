@@ -1,4 +1,283 @@
 ---
 title: "SAT Mexico"
-description: Information about the SAT Mexico app
+sidebarTitle: "App"
+description: Generate, stamp, send and cancel Mexican CFDI (Comprobante Fiscal Digital por Internet) invoices and related fiscal documents via Invopop workflows.
+keywords:
+  - sat
+  - cfdi
+  - mexico
+  - e-invoicing
+mode: "wide"
 ---
+
+import CfdiIssueWorkflow from '/snippets/workflows/templates/mx/cfdi-issue.mdx';
+import CfdiCancelWorkflow from '/snippets/workflows/templates/mx/cfdi-cancel.mdx';
+import CfdiCreditWorkflow from '/snippets/workflows/templates/mx/cfdi-credit.mdx';
+import CfdiPaymentWorkflow from '/snippets/workflows/templates/mx/cfdi-payment.mdx';
+import CfdiInvoiceExample from '/snippets/invoices/mx/cfdi-standard.mdx';
+import CfdiCreditExample from '/snippets/invoices/mx/cfdi-credit-note.mdx';
+import CfdiPaymentExample from '/snippets/invoices/mx/cfdi-payment.mdx';
+import CfdiCancelExample from '/snippets/invoices/mx/cfdi-cancel.mdx';
+import MexicoSatIcon from '/snippets/icons/mx-sat.jsx';
+
+<Tabs>
+
+  <Tab title="Description">
+    <div class="flex gap-8">
+      <Card
+        title="SAT Mexico"
+        icon={<MexicoSatIcon />}
+        href="/apps/sat-mexico"
+        cta="Learn more"
+      >
+        Issue CFDI 4.0 invoices, credit notes, payment complements and cancellations.
+      </Card>
+      <div class="flex-shrink">
+        | Information | |
+        |-------------|------|
+        | Developer | [Invopop](https://invopop.com) |
+        | Category | Government |
+        | Regime | MX |
+        | Format | CFDI 4.0 + Complements |
+        | Last&nbsp;Update | <div class="whitespace-nowrap">2025-10-26</div> |
+        | Docs | This page |
+      </div>
+    </div>
+
+    The **SAT Mexico app** enables automated generation, stamping (timbrado), delivery, and cancellation of Mexico’s electronic tax documents known as **CFDI** (Comprobante Fiscal Digital por Internet). It supports the core document types required for B2B, B2C, and payment reconciliation workflows under current SAT (Servicio de Administración Tributaria) regulations.
+
+    <Info>
+      This page describes capabilities and workflow actions conceptually. Field-level validation and PAC integration details are abstracted behind Invopop workflows.
+    </Info>
+
+    ### Key Features
+
+    1. **CFDI 4.0 Structure Generation:** Converts GOBL invoice data into compliant XML ready for stamping.
+    2. **PAC Stamping Integration:** Requests a valid digital seal (Sello CFDI) through authorized stamping providers (PAC).
+    3. **Cancellation Handling:** Issues cancellation requests with appropriate reason codes and optional substitution UUID.
+    4. **Payment Complement:** Generates Complemento de Pago documents to reconcile multi-installment invoices.
+    5. **Addenda Support (Optional):** Adds custom business addenda blocks to the CFDI XML when configured.
+    6. **Chained Integrity:** Maintains document UUID relationships for credits, cancellations and payment complements.
+    7. **Automatic QR & PDF Rendering:** Generates human-readable PDF including SAT QR and fiscal summary.
+    8. **Retry & Error Classification:** Distinguishes between transient PAC errors and definitive SAT validation failures.
+    9. **White-Label Enablement:** Supports issuing on behalf of multiple suppliers or branches via workspace parties.
+    10. **Secure Storage:** Stores original XML, stamped XML, PDF representation, and SAT response tokens in Silo Files.
+
+    ### Document Types Supported
+    - Standard Invoice (CFDI - ingreso)
+    - Credit Note (CFDI - egreso)
+    - Payment Complement (Complemento de Pago)
+    - Cancellation request (Solicitud de Cancelación)
+    - Substitution invoice (Reemplazo referencing canceled UUID)
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available when the SAT Mexico app is installed:
+
+    <Card title="Generate CFDI XML" icon={<MexicoSatIcon />} horizontal>
+      Transform a GOBL invoice (regime MX) into pre-stamp CFDI 4.0 XML, including tax breakdowns, digital certificate placeholders and complements.
+    </Card>
+
+    <Card title="Stamp CFDI (PAC)" icon={<MexicoSatIcon />} horizontal>
+      Sends unsigned CFDI XML to an authorized PAC to obtain Timbre Fiscal Digital (UUID, timestamp, seal, QR data).
+    </Card>
+
+    <Card title="Attach Stamped CFDI" icon={<MexicoSatIcon />} horizontal>
+      Persists stamped XML, updates Silo Entry metadata, stores PAC response and marks state as Issued.
+    </Card>
+
+    <Card title="Generate PDF (CFDI)" icon="file" horizontal>
+      Renders a PDF with QR code, totals, RFC data, and complement summary for customer presentation.
+    </Card>
+
+    <Card title="Validate CFDI (Pre-Stamp)" icon="shield-check" horizontal>
+      Performs structural and regime validations (RFC formats, tax codes, usage, currency, global/foreign rules).
+    </Card>
+
+    <Card title="Generate Credit Note CFDI" icon="rotate-left" horizontal>
+      Builds an egreso CFDI referencing original invoice UUID with negative adjustments.
+    </Card>
+
+    <Card title="Generate Payment Complement" icon="coins" horizontal>
+      Creates Complemento de Pago document linking partial/settled invoices with payment method specifics.
+    </Card>
+
+    <Card title="Cancel CFDI" icon="circle-x" horizontal>
+      Issues cancellation request with reason codes (01-04) and optional substitution UUID.
+    </Card>
+
+    <Card title="Check Cancellation Status" icon="question" horizontal>
+      Polls SAT status to confirm cancellation acceptance or required follow-up.
+    </Card>
+
+    <Card title="Register PAC Credentials" icon="key" horizontal>
+      Stores and encrypts PAC user/token for stamping actions.
+    </Card>
+
+    <Card title="Retry PAC Stamp" icon="arrow-rotate-right" horizontal>
+      Retries stamping on transient PAC connectivity or gateway failures.
+    </Card>
+
+    <Card title="Set State Error" icon="triangle-exclamation" horizontal>
+      Uniformly marks entry as Error with captured SAT/PAC codes for remediation.
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are conceptual workflows enabled by combining the actions above.
+
+    <AccordionGroup>
+      <Accordion title="Issue CFDI Invoice">
+        1. Validate CFDI (Pre-Stamp)
+        2. Generate CFDI XML
+        3. Stamp CFDI (PAC)
+        4. Attach Stamped CFDI
+        5. Generate PDF (CFDI)
+        6. Set State: Issued
+        <Info>On error: Set State Error + persist PAC/SAT code.</Info>
+      </Accordion>
+
+      <Accordion title="Issue Credit Note CFDI">
+        1. Generate Credit Note CFDI XML
+        2. Stamp CFDI (PAC)
+        3. Attach Stamped CFDI
+        4. Generate PDF (CFDI)
+        5. Set State: Issued
+        <Tip>Ensure original invoice UUID is referenced in CFDI related documents section.</Tip>
+      </Accordion>
+
+      <Accordion title="Register Payment Complement">
+        1. Generate Payment Complement
+        2. Stamp CFDI (PAC)
+        3. Attach Stamped CFDI
+        4. Generate PDF (CFDI)
+        5. Set State: Complemented
+        <Info>Used for reconciliation when invoice was previously issued without full payment.</Info>
+      </Accordion>
+
+      <Accordion title="Cancel CFDI">
+        1. Cancel CFDI (reason code)
+        2. Check Cancellation Status (poll)
+        3. Set State: Void (if accepted) / Pending (if requires acceptance)
+        4. Optional: Generate substitution CFDI (new Issue workflow)
+        <Warning>Reason code 01 requires substitution UUID reference.</Warning>
+      </Accordion>
+
+      <Accordion title="Resilient Stamp (with retry)">
+        1. Generate CFDI XML
+        2. Stamp CFDI (PAC)
+        3. If transient error → Retry PAC Stamp (max N attempts)
+        4. Attach Stamped CFDI
+        5. Generate PDF (CFDI)
+        <Info>PAC errors classified to transient vs structural; structural fail immediately.</Info>
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Example documents">
+    <AccordionGroup>
+      <Accordion title="Standard CFDI Invoice">
+        <CfdiInvoiceExample />
+        Copy and paste into GOBL Builder for adaptation.
+      </Accordion>
+      <Accordion title="Credit Note CFDI">
+        <CfdiCreditExample />
+        References original invoice UUID and negates tax/totals.
+      </Accordion>
+      <Accordion title="Payment Complement CFDI">
+        <CfdiPaymentExample />
+        Links partial payments with methods and balances.
+      </Accordion>
+      <Accordion title="Cancellation Request (Structure)">
+        <CfdiCancelExample />
+        Includes reason code and optional substitution UUID.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Lifecycle & States">
+    Typical CFDI entry states in Invopop:
+    <Steps>
+      <Step title="Draft">
+        Uploaded invoice data (GOBL) not yet transformed.
+      </Step>
+      <Step title="Ready">
+        Validation passed; XML generated.
+      </Step>
+      <Step title="Stamping">
+        XML submitted to PAC; awaiting response.
+      </Step>
+      <Step title="Issued">
+        Stamped XML + PDF attached; UUID assigned.
+      </Step>
+      <Step title="Complemented">
+        Payment complement successfully stamped.
+      </Step>
+      <Step title="Void / Canceled">
+        Cancellation accepted by SAT.
+      </Step>
+      <Step title="Error">
+        Structural SAT / PAC rejection requires data fix.
+      </Step>
+      <Step title="Pending-Cancel">
+        Cancellation requested but awaiting counterparty acceptance (where applicable).
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Compliance Notes">
+    ### Key CFDI Compliance Considerations
+
+    - **RFC Validation:** Supplier and customer RFC must match SAT format; generic RFC (`XAXX010101000`) only for certain cases.
+    - **UsoCFDI Codes:** Must align with buyer profile (e.g., `G01`, `P01` deprecated usage control).
+    - **Regimen Fiscal:** Supplier regime code required in CFDI 4.0 header.
+    - **Export Codes:** For export invoices, include appropriate exportacion attribute.
+    - **Payment Complement Timing:** Required when invoice is paid after issuance (credit terms, installments).
+    - **Cancellation Windows:** Some cancellations need buyer acceptance if outside issuance window or status conditions.
+    - **Reason Codes:**
+      - 01: Substitution
+      - 02: Errors unrelated to content (no replacement)
+      - 03: Not performed
+      - 04: Global invoice operation
+    - **Digital Seal:** Derived from active certificate (CSD); stamp includes UUID, timestamp, PAC signature chain.
+    - **Chain of Related Documents:** Credit notes and complements must reference original invoice UUID.
+
+    <Card title="Important" icon="exclamation" horizontal>
+      Always confirm certificate validity; expired CSD leads to PAC rejection before SAT validation.
+    </Card>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="What is stamping (timbrado)?">
+        Stamping is the process where a PAC validates the CFDI XML and appends a fiscal stamp: UUID, timestamp, SAT seal, and original string signature chain.
+      </Accordion>
+      <Accordion title="Do I need a PAC account?">
+        Yes. A PAC account is required to obtain a valid stamp. The app stores encrypted PAC credentials for workflow actions.
+      </Accordion>
+      <Accordion title="How do I correct an issued invoice?">
+        Use a credit note (egreso) referencing the original UUID. If fully replacing detail, issue a new invoice and cancel the original with reason code 01 (substitution).
+      </Accordion>
+      <Accordion title="When is a payment complement mandatory?">
+        When the invoice was issued without full payment at that time (e.g., credit terms), and payment occurs later — each payment requires a complement.
+      </Accordion>
+      <Accordion title="What if cancellation remains pending?">
+        A Pending-Cancel state indicates buyer acceptance is required. Retry status checks or notify buyer through agreed channels.
+      </Accordion>
+      <Accordion title="Are addenda supported?">
+        Yes. Custom business addenda blocks can be injected prior to stamping; they do not affect SAT validation but must be structurally valid XML.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the SAT Mexico App →
+</Card>

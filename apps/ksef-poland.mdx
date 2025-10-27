@@ -1,4 +1,320 @@
 ---
 title: "KSeF Poland"
-description: Information about the KSeF Poland app
+sidebarTitle: "App"
+description: Submit structured e-invoices (FA(2)) to the Polish KSeF platform and manage registration, delivery, status, correction and cancellation."
+keywords: ['ksef','poland','fa(2)','e-invoice','structured']
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Columns cols="2">
+      <Card
+        title="KSeF Poland"
+        icon="building-columns"
+        cta="Official portal"
+        href="https://www.podatki.gov.pl/ksef/"
+      >
+        Automate compliant Polish structured e-invoicing (KSeF) with workflow actions that generate, transmit, query and correct FA(2) invoices.
+      </Card>
+
+      <Card
+        title="Implementation Guide (coming soon)"
+        icon="book-open"
+      >
+        A step-by-step guide to install, configure, and go live with KSeF in Invopop.
+      </Card>
+    </Columns>
+
+    The **KSeF Poland app** provides integration with the Polish National e-Invoicing System (Krajowy System e-Faktur – *KSeF*).
+    It enables creation and transmission of structured FA(2) invoices and related corrective or cancellation operations directly
+    from Invopop workflows.
+
+    <Info>
+      Poland is phasing in mandatory KSeF usage. This app anticipates production and test endpoints, allowing early adaptation
+      while supporting Sandbox usage for development.
+    </Info>
+
+    <Heading level={3}>Key Features</Heading>
+    1. <strong>FA(2) XML Generation</strong>: Convert GOBL invoice envelopes into the Polish structured FA(2) schema with correct header, seller, buyer, VAT, and payment sections.
+    2. <strong>Secure Transmission</strong>: Submit generated XML to KSeF using authenticated tokens / authorisation identifiers.
+    3. <strong>Status Polling</strong>: Query acceptance, validation, and assignment of KSeF reference numbers (KSeF ID / HASH).
+    4. <strong>Corrections</strong>: Issue corrective and credit/debit notes referencing original documents with required linkage logic.
+    5. <strong>Cancellations</strong>: Void or withdraw a previously submitted invoice when still eligible.
+    6. <strong>Entity Registration Aid</strong>: Assist with pre-validating tax identifiers (NIP) and mapping seller/buyer roles.
+    7. <strong>Audit Chain</strong>: Preserve submission hashes and timestamps for full traceability in Silo Entry metadata.
+    8. <strong>White-Label Enablement</strong>: Issue on behalf of multiple Polish entities through structured party onboarding workflows.
+    9. <strong>Error Surface</strong>: Normalise KSeF validation responses and expose actionable error details or warnings.
+    10. <strong>Automatic Attachments</strong>: Store original FA(2) XML + generated PDF preview (if PDF Generator app also installed) with the entry.
+
+    <Heading level={3}>Data Mapping Highlights</Heading>
+    The app maps:
+    - GOBL party tax IDs → Polish NIP fields.
+    - GOBL invoice lines → FA(2) <code>FakturaWiersz</code> lines including VAT rates.
+    - GOBL totals and tax breakdown → FA(2) summary sections.
+    - Corrections → <code>DokumentKorygowany</code> referencing original invoice code/series/hash.
+
+    <Tip>
+      Stick to consistent series + code patterns for easier reconciliation between Invopop and KSeF.
+    </Tip>
+
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing and enabling the app:
+
+    <Card title="Generate KSeF" icon="code" horizontal>
+      Convert a GOBL invoice into FA(2) XML and attach to the Silo Entry.
+    </Card>
+    <Card title="Send KSeF" icon="paper-plane" horizontal>
+      Transmit a prepared FA(2) XML document to the KSeF API and store submission response.
+    </Card>
+    <Card title="Poll KSeF Status" icon="rotate" horizontal>
+      Periodically check processing status until accepted, rejected, or timed out.
+    </Card>
+    <Card title="Cancel KSeF" icon="ban" horizontal>
+      Request cancellation / withdrawal of a previously transmitted invoice, if allowed.
+    </Card>
+    <Card title="Correct KSeF" icon="repeat" horizontal>
+      Convert a corrective GOBL invoice referencing the original into a compliant FA(2) correction XML.
+    </Card>
+    <Card title="Register KSeF Entity" icon="id-card" horizontal>
+      Prepare and validate Polish entity details for invoicing (NIP, address, roles).
+    </Card>
+    <Card title="Wait for KSeF Authorization" icon="hourglass" horizontal>
+      Suspend workflow execution until external authorization credentials (token / session) are provided.
+    </Card>
+    <Card title="Unregister KSeF Entity" icon="unlink" horizontal>
+      Mark an entity as inactive; prevents further issuance on its behalf.
+    </Card>
+    <Card title="Fetch KSeF PDF" icon="file-pdf" horizontal>
+      (Optional) Retrieve or generate a human-readable PDF representation (requires PDF Generator).
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example high-level workflow patterns. (Replace IDs & step names with your workspace equivalents.)
+
+    <AccordionGroup>
+      <Accordion title="Issue KSeF Invoice">
+        <ol>
+          <li><strong>Generate KSeF</strong> – build FA(2) XML.</li>
+          <li><strong>Send KSeF</strong> – submit XML.</li>
+          <li><strong>Poll KSeF Status</strong> – wait for acceptance.</li>
+          <li><strong>Fetch KSeF PDF</strong> (optional).</li>
+          <li><strong>Set State: Sent</strong> – update entry state.</li>
+          <li><strong>Error Handling: Set State Error</strong> – capture failures.</li>
+        </ol>
+      </Accordion>
+
+      <Accordion title="Cancel KSeF Invoice">
+        <ol>
+          <li><strong>Cancel KSeF</strong> – request cancellation.</li>
+          <li><strong>Poll KSeF Status</strong> – ensure completion if asynchronous.</li>
+          <li><strong>Set State: Void</strong></li>
+        </ol>
+      </Accordion>
+
+      <Accordion title="Correct KSeF Invoice (Credit / Correction)">
+        <ol>
+          <li><strong>Generate KSeF</strong> – from corrective or credit-note GOBL invoice (includes preceding link).</li>
+          <li><strong>Send KSeF</strong></li>
+          <li><strong>Poll KSeF Status</strong></li>
+          <li><strong>Set State: Sent</strong></li>
+        </ol>
+      </Accordion>
+
+      <Accordion title="Register Entity">
+        <ol>
+          <li><strong>Register KSeF Entity</strong> – build internal record.</li>
+          <li><strong>Wait for KSeF Authorization</strong> – token upload or manual validation.</li>
+          <li><strong>Set State: Ready</strong></li>
+        </ol>
+      </Accordion>
+
+      <Accordion title="Unregister Entity">
+        <ol>
+          <li><strong>Unregister KSeF Entity</strong> – mark inactive.</li>
+          <li><strong>Set State: Disabled</strong></li>
+        </ol>
+      </Accordion>
+
+      <Accordion title="Retry / Recovery">
+        <p>Attach this sub-workflow when <em>Poll KSeF Status</em> returns transient errors:</p>
+        <ol>
+          <li><strong>Delay</strong> – wait n seconds.</li>
+          <li><strong>Poll KSeF Status</strong> – re-check.</li>
+          <li><strong>Branch</strong> – continue or escalate.</li>
+        </ol>
+      </Accordion>
+    </AccordionGroup>
+
+    <Tip>
+      Keep workflow steps idempotent. If a transmission step times out but returns no definitive failure, re-query status before resending to avoid duplicates.
+    </Tip>
+  </Tab>
+
+  <Tab title="Example documents">
+    These simplified JSON snippets illustrate minimal GOBL documents for KSeF. Adjust tax, totals, and lines as needed.
+
+    <AccordionGroup>
+      <Accordion title="Standard Invoice (Essential)">
+        ```json
+        {
+          "regime": "PL",
+          "type": "invoice",
+          "supplier": {
+            "tax_id": { "code": "NIP", "value": "5250012374" },
+            "name": "Example Supplier Sp. z o.o."
+          },
+            "customer": {
+              "tax_id": { "code": "NIP", "value": "9512345678" },
+              "name": "Client Polska SA"
+            },
+            "issue_date": "2025-01-15",
+            "currency": "PLN",
+            "lines": [
+              {
+                "i": 1,
+                "description": "Consulting services",
+                "quantity": 10,
+                "price": { "amount": "500.00" },
+                "tax": { "rate": "23%" }
+              }
+            ],
+            "totals": {
+              "net": "5000.00",
+              "tax": "1150.00",
+              "grand": "6150.00"
+            },
+            "addons": ["pl-ksef-v1"]
+        }
+        ```
+      </Accordion>
+
+      <Accordion title="Credit Note (Essential)">
+        ```json
+        {
+          "regime": "PL",
+          "type": "credit-note",
+          "preceding": {
+            "code": "F2025/000123",
+            "series": "F2025",
+            "issue_date": "2025-01-10"
+          },
+          "supplier": {
+            "tax_id": { "code": "NIP", "value": "5250012374" },
+            "name": "Example Supplier Sp. z o.o."
+          },
+          "customer": {
+            "tax_id": { "code": "NIP", "value": "9512345678" },
+            "name": "Client Polska SA"
+          },
+          "issue_date": "2025-01-20",
+          "currency": "PLN",
+          "lines": [
+            {
+              "i": 1,
+              "description": "Correction: consulting overcharge",
+              "quantity": 2,
+              "price": { "amount": "500.00" },
+              "tax": { "rate": "23%" }
+            }
+          ],
+          "totals": {
+            "net": "1000.00",
+            "tax": "230.00",
+            "grand": "1230.00"
+          },
+          "addons": ["pl-ksef-v1"]
+        }
+        ```
+      </Accordion>
+
+      <Accordion title="Corrective Invoice (Replacement)">
+        ```json
+        {
+          "regime": "PL",
+          "type": "corrective",
+          "preceding": {
+            "code": "F2025/000123",
+            "series": "F2025",
+            "issue_date": "2025-01-10",
+            "reason": "Rate adjustment",
+            "totals": { "net": "5200.00", "tax": "1196.00", "grand": "6396.00" }
+          },
+          "supplier": {
+            "tax_id": { "code": "NIP", "value": "5250012374" },
+            "name": "Example Supplier Sp. z o.o."
+          },
+          "customer": {
+            "tax_id": { "code": "NIP", "value": "9512345678" },
+            "name": "Client Polska SA"
+          },
+          "issue_date": "2025-01-22",
+          "currency": "PLN",
+          "lines": [
+            {
+              "i": 1,
+              "description": "Consulting services (corrected)",
+              "quantity": 10,
+              "price": { "amount": "520.00" },
+              "tax": { "rate": "23%" }
+            }
+          ],
+          "totals": {
+            "net": "5200.00",
+            "tax": "1196.00",
+            "grand": "6396.00"
+          },
+          "addons": ["pl-ksef-v1"]
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+
+    <Tip>
+      Always include the <code>pl-ksef-v1</code> addon for invoices intended for KSeF submission.
+    </Tip>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Is KSeF mandatory?">
+        Poland is transitioning to mandatory structured e-invoicing. Dates have shifted; ensure you check official announcements.
+        The app supports both voluntary usage and future mandatory flows.
+      </Accordion>
+
+      <Accordion title="What identifiers are required?">
+        Seller and buyer NIP codes are required for most domestic invoices. EU reverse-charge or export scenarios may vary.
+      </Accordion>
+
+      <Accordion title="How are corrections handled?">
+        Use a credit note (<code>type: credit-note</code>) for value adjustments, or a corrective invoice (<code>type: corrective</code>) for full replacement.
+        Reference original invoice code, series, issue date and (if available) KSeF hash.
+      </Accordion>
+
+      <Accordion title="How do I avoid duplicate submissions?">
+        Store submission IDs returned by the <em>Send KSeF</em> action. Poll for status before resending if uncertain. Idempotent hashing prevents divergence.
+      </Accordion>
+
+      <Accordion title="Can I cancel any invoice?">
+        Cancellation is limited to invoices still within permissible KSeF states (e.g., not fully processed downstream). Use corrections instead for post-acceptance changes.
+      </Accordion>
+
+      <Accordion title="Where do I see the FA(2) XML?">
+        After <em>Generate KSeF</em>, the XML is attached to the Silo Entry (Files tab). After sending, a response artifact (submission token) is also stored.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the KSeF Poland App →
+</Card>

@@ -1,4 +1,245 @@
 ---
 title: "InvoiceXpress Portugal"
-description: Information about the InvoiceXpress Portugal app
+sidebarTitle: "App"
+description: "Certified Portuguese e-invoicing and series management with automatic SAF-T and AT compliance."
+keywords: ['portugal','invoicexpress','e-invoice','saft','at']
+mode: "wide"
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card
+      title="InvoiceXpress Portugal"
+      icon="building-columns"
+      href="https://www.invopop.com"
+      cta="Learn more"
+    >
+      Issue certified Portuguese invoices, credit notes and transport documents directly through your Invopop workflows.
+    </Card>
+
+    Invopop's <strong>InvoiceXpress Portugal</strong> app provides a bridge between a universal GOBL invoice (regime <code>PT</code>) and the
+    certified issuance requirements enforced by the Portuguese tax authority (Autoridade Tributária e Aduaneira - AT).
+
+    <br /><br />
+    <strong>Highlights</strong>
+
+    1. <strong>Certified Issuance</strong> – Produce AT compliant invoices (Fatura), simplified invoices (Fatura Simplificada), credit notes (Nota de Crédito) and debit notes.
+    2. <strong>Automatic Series Synchronization</strong> – Register and track document series required by Portuguese law.
+    3. <strong>SAF‑T (PT) Support</strong> – Generate periodic SAF‑T export files for audit and archiving.
+    4. <strong>Real-Time Status</strong> – Sync document statuses (issued, canceled, void, exported).
+    5. <strong>Workflow Actions</strong> – Compose multi-step, resilient automation for invoice generation, submission and cancellation.
+    6. <strong>Add‑on Metadata</strong> – Enrich GOBL documents with InvoiceXpress-specific fields (AT codes, QR references, hash chain).
+
+    <Info>
+      This content is illustrative: names of workflow actions, steps, and behaviors are suggested based on common Portuguese e‑invoice practices.
+    </Info>
+
+    <strong>When to use this app?</strong>
+    Use it whenever you need legally valid, certified Portuguese commercial documents with automatic hash generation,
+    AT mandated QR codes and the ability to export SAF‑T regularly without building low-level integrations yourself.
+
+    <strong>Supported Document Types (suggested)</strong>
+    - Invoice (Fatura)
+    - Simplified Invoice (Fatura Simplificada)
+    - Credit Note (Nota de Crédito)
+    - Debit Note (Nota de Débito)
+    - Transport / Delivery (Guia de Transporte)
+    - Pro-forma (optional internal flow, not certified until converted)
+
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing and enabling the app:
+
+    <Card title="Prepare InvoiceXpress Payload" icon="code" horizontal>
+      Validates and transforms a GOBL PT invoice into the JSON payload expected by InvoiceXpress.
+    </Card>
+    <Card title="Issue InvoiceXpress Document" icon="paper-plane" horizontal>
+      Submits the prepared payload and obtains certified hash, AT QR and official number.
+    </Card>
+    <Card title="Register Series (PT)" icon="list" horizontal>
+      Creates or updates a Portuguese document series (e.g. <code>FT2025</code>) before first issuance.
+    </Card>
+    <Card title="Sync InvoiceXpress Status" icon="arrows-rotate" horizontal>
+      Queries current status (issued / canceled) and updates the Silo Entry state & metadata.
+    </Card>
+    <Card title="Cancel InvoiceXpress Document" icon="ban" horizontal>
+      Sends a cancellation request; marks document as <code>Void</code> and logs AT response.
+    </Card>
+    <Card title="Generate SAF-T (PT) Export" icon="file-code" horizontal>
+      Produces a SAF‑T file for a date/window and attaches it to a Silo Entry.
+    </Card>
+    <Card title="Validate Portuguese Tax Data" icon="shield-check" horizontal>
+      Performs structural and tax rule validations (NIF formats, VAT codes, totals).
+    </Card>
+    <Card title="Attach InvoiceXpress PDF" icon="file" horizontal>
+      Renders a certified PDF embedding hash, QR and legal footer.
+    </Card>
+
+    <Tip>
+      Combine "Validate Portuguese Tax Data" + "Prepare InvoiceXpress Payload" + "Issue InvoiceXpress Document"
+      for a robust issuance pipeline.
+    </Tip>
+  </Tab>
+
+  <Tab title="Workflows">
+    Suggested workflow templates you can model in Invopop:
+
+    <AccordionGroup>
+      <Accordion title="Issue Portuguese Invoice">
+        <ol>
+          <li><strong>Validate Portuguese Tax Data</strong> – Ensure invoice fields (NIF, VAT rates) are correct.</li>
+          <li><strong>Register Series (PT)</strong> (conditional) – If first document of the series.</li>
+          <li><strong>Prepare InvoiceXpress Payload</strong> – Map regime PT GOBL → InvoiceXpress shape.</li>
+          <li><strong>Issue InvoiceXpress Document</strong> – Certified issuance, retrieving hash & number.</li>
+          <li><strong>Attach InvoiceXpress PDF</strong> – Generate PDF with QR & hash chain info.</li>
+          <li><strong>Set State</strong> – Mark Silo Entry as <code>Sent</code>.</li>
+          <li><strong>Error Handling: Set State</strong> – Mark as <code>Error</code> if any step fails.</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Issue Credit Note (Nota de Crédito)">
+        <ol>
+          <li><strong>Validate Portuguese Tax Data</strong></li>
+          <li><strong>Prepare InvoiceXpress Payload</strong> – Include reference to original invoice (series/code/date).</li>
+          <li><strong>Issue InvoiceXpress Document</strong></li>
+          <li><strong>Attach InvoiceXpress PDF</strong></li>
+          <li><strong>Set State</strong> – State becomes <code>Sent</code>.</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Cancel Issued Document">
+        <ol>
+          <li><strong>Sync InvoiceXpress Status</strong> – Confirm document is cancelable.</li>
+          <li><strong>Cancel InvoiceXpress Document</strong> – Request void/cancel.</li>
+          <li><strong>Set State</strong> – Mark as <code>Void</code>.</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Monthly SAF-T Export">
+        <ol>
+          <li><strong>Generate SAF-T (PT) Export</strong> – Provide period filters (YYYY-MM).</li>
+          <li><strong>Attach InvoiceXpress PDF</strong> (optional) – Some flows produce a summary cover PDF.</li>
+          <li><strong>Set State</strong> – Mark export entry as <code>Generated</code>.</li>
+        </ol>
+      </Accordion>
+    </AccordionGroup>
+
+    <Info>
+      Hash chaining: Portuguese certified platforms often return a hash derived from prior documents. The app will
+      persist chain metadata in the Silo Entry addons so subsequent corrections preserve audit link integrity.
+    </Info>
+  </Tab>
+
+
+  <Tab title="Example Documents">
+    <AccordionGroup>
+      <Accordion title="Standard B2B Invoice (Essential)">
+        ```
+{
+  "regime": "PT",
+  "type": "invoice",
+  "series": "FT2025",
+  "code": "DRAFT",
+  "issue_date": "2025-01-15",
+  "supplier": { "name": "Example Lda", "tax_id": "501234567" },
+  "customer": { "name": "Cliente SA", "tax_id": "509876543" },
+  "lines": [
+    { "i": 1, "desc": "Consulting Services",
+      "qty": "10", "price": "100.00",
+      "tax": { "rate": "23%", "code": "NOR" } }
+  ],
+  "currency": "EUR"
+}
+        ```
+        Copy, adapt, and upload with the Create Entry endpoint, then send to the issuance workflow.
+      </Accordion>
+      <Accordion title="Credit Note Referencing Invoice">
+        ```
+{
+  "regime": "PT",
+  "type": "credit-note",
+  "series": "NC2025",
+  "preceding": {
+    "series": "FT2025",
+    "code": "000123",
+    "issue_date": "2025-01-15"
+  },
+  "supplier": { "name": "Example Lda", "tax_id": "501234567" },
+  "customer": { "name": "Cliente SA", "tax_id": "509876543" },
+  "lines": [
+    { "i": 1, "desc": "Correction: Overcharge",
+      "qty": "1", "price": "-50.00",
+      "tax": { "rate": "23%", "code": "NOR" } }
+  ],
+  "currency": "EUR"
+}
+        ```
+        Use negative line amounts to adjust totals; the platform will compute new certified hash.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Cancellation">
+    <Steps>
+      <Step title="Confirm Eligibility">
+        Not all issued documents are cancelable. First run <strong>Sync InvoiceXpress Status</strong>. If status is
+        already exported or part of a monthly closing, cancellation may be disallowed; prefer a credit note instead.
+      </Step>
+      <Step title="Execute Cancellation">
+        Send the Silo Entry ID to a workflow containing the <strong>Cancel InvoiceXpress Document</strong> action.
+        On success, state transitions to <code>Void</code> and hash chain notes are persisted.
+      </Step>
+      <Step title="Fallback Strategy">
+        If cancellation fails with a business rule error, re-run a workflow issuing a <strong>credit-note</strong>
+        referencing the original document, then leave the original unchanged.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="SAF-T Export">
+    <Steps>
+      <Step title="Schedule">
+        Create a monthly cron (external) or manual trigger that starts your SAF‑T workflow on the first day of each month
+        for the previous period.
+      </Step>
+      <Step title="Generate File">
+        The <strong>Generate SAF-T (PT) Export</strong> action collects all issued/canceled documents for the period and
+        produces the XML archive attached to a new Silo Entry (type: <code>export</code>).
+      </Step>
+      <Step title="Audit & Archive">
+        Optionally push the SAF‑T file to external storage (e.g. Google Drive app) or sign the envelope with a timestamping authority.
+      </Step>
+    </Steps>
+    <Info>
+      Regular SAF‑T generation simplifies audits and ensures retention compliance (minimum legal retention periods apply).
+    </Info>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Is a series required before issuing the first invoice?">
+        Yes. Portuguese law mandates series identification. The app's <em>Register Series (PT)</em> action ensures a series exists.
+      </Accordion>
+      <Accordion title="Should I cancel or issue a credit note?">
+        Prefer a credit note once the document has reached the customer or appears in period aggregation; cancellation is for early mistakes before distribution.
+      </Accordion>
+      <Accordion title="How are hashes handled?">
+        The issuance action stores returned hash and prior hash reference in the add-on section to preserve the chain.
+      </Accordion>
+      <Accordion title="Do I need SAF-T every month?">
+        While some businesses generate SAF‑T only on request, monthly exports reduce risk and accelerate audits.
+      </Accordion>
+      <Accordion title="What happens if VAT rates change mid-year?">
+        Validation references effective rate tables by issue date; outdated codes fail the <em>Validate Portuguese Tax Data</em> step.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Join the community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Discuss the InvoiceXpress Portugal App →
+</Card>

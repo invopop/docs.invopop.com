@@ -1,4 +1,275 @@
 ---
 title: "FacturaE Spain"
-description: Information about the FacturaE Spain app
+sidebarTitle: "App"
+description: "Generate, sign, validate and deliver Spanish FacturaE XML invoices to public administrations and large enterprises."
+keywords:
+  - facturae
+  - spain
+  - e-invoicing
+  - xml
+  - b2g
+  - b2b
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <div class="flex gap-8">
+      <Card
+        title="FacturaE Spain"
+        icon="file-code"
+        href="/apps/facturae-spain"
+        cta="Explore actions"
+      >
+        Create fully compliant FacturaE XML, apply XAdES signature,
+        validate structure and submit to target platforms (public sector portals,
+        private hubs, or storage).
+      </Card>
+      <div class="flex-shrink">
+        | Information        |                                 |
+        |--------------------|---------------------------------|
+        | Developer          | Invopop                         |
+        | Category           | Government / Format             |
+        | Standard           | FacturaE v3.2 / v3.2.2          |
+        | Signature          | XAdES-BES                       |
+        | Transport Options  | Portal Download, Email, API     |
+        | Last&nbsp;Update   | 2025-10-01                      |
+        | Docs               | (This page)                     |
+      </div>
+    </div>
+
+    The **FacturaE Spain app** enables creation of the official XML structure used for
+    electronic invoices addressed to Spanish public administrations (B2G) and, increasingly,
+    larger B2B recipients implementing structured invoice gateways.
+
+    **Key Features**
+
+    1. **XML Generation** – Converts GOBL invoice data into a normalized FacturaE XML document (3.2 / 3.2.2).
+    2. **Digital Signature (XAdES)** – Applies an XAdES-BES signature with configured certificate & private key.
+    3. **Validation Pipeline** – Performs schema (XSD) validation, structural checks (totals, taxes, parties) and digital signature integrity confirmation.
+    4. **Delivery Workflows** – Supports multiple dispatch strategies: store only, email to recipient, or forward to external integration (e.g. Chorus/Peppol bridge if enabled).
+    5. **Attachments Handling** – Embeds PDF rendition and referenced support files (purchase order, delivery note, etc.) when available.
+    6. **Rectification Support** – Handles credit notes and corrective invoices by referencing preceding invoice meta data and maintaining legal traceability.
+    7. **Retry & Tracking** – Job state transitions record submission attempts, errors and final acceptance tokens.
+
+    <Info>
+      FacturaE does not itself define a transport network; the app focuses on preparation,
+      signature and optional dispatch by configured channel steps.
+    </Info>
+
+    **Add-ons & Metadata Mapping**
+
+    - GOBL `regime`: `ES`
+    - Addon recommended: `es-facturae-v1`
+    - Series & code map to `InvoiceNumber`.
+    - Parties expanded with fiscal ID types (NIF / CIF) and address normalization.
+    - Tax breakdown aggregated into `TaxesOutputs`.
+
+    <Frame caption="Simplified FacturaE structure (conceptual)">
+      ```
+        Invoicee
+        ├─ Parties (Seller / Buyer)
+        ├─ Items (Lines with taxable bases)
+        ├─ Taxes (IVA / IRPF where applicable)
+        ├─ Totals (Gross / Tax / Payable)
+        ├─ PaymentDetails (Means, DueDates)
+        ├─ LegalReferences (Contract, Order, Delivery)
+        └─ Signature (XAdES container)
+      ```
+    </Frame>
+
+    <Tip>
+      To speed up onboarding, configure the certificate & private key once in the app settings.
+    </Tip>
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing the FacturaE app:
+
+    <Card title="Generate FacturaE" icon="file-code" horizontal>
+      Transform a GOBL invoice into structured FacturaE XML.
+    </Card>
+    <Card title="Sign FacturaE" icon="signature" horizontal>
+      Apply XAdES-BES signature using configured certificate.
+    </Card>
+    <Card title="Validate FacturaE" icon="circle-check" horizontal>
+      Run XSD and semantic validation, produce a validation report.
+    </Card>
+    <Card title="Attach PDF Rendition" icon="file-pdf" horizontal>
+      Generate or link a PDF copy and include as additional attachment.
+    </Card>
+    <Card title="Deliver FacturaE (Email)" icon="envelope" horizontal>
+      Email signed XML & PDF to recipient with tracking metadata.
+    </Card>
+    <Card title="Deliver FacturaE (Store)" icon="hard-drive" horizontal>
+      Persist signed XML in storage (Silo Entry files) without sending externally.
+    </Card>
+    <Card title="Deliver FacturaE (External API)" icon="cloud-arrow-up" horizontal>
+      Push XML to an external gateway endpoint (configured via app settings).
+    </Card>
+    <Card title="Mark Accepted" icon="badge-check" horizontal>
+      Update invoice state when external acceptance token is received.
+    </Card>
+    <Card title="Rectify via Credit Note" icon="rotate-left" horizontal>
+      Prepare a FacturaE credit note referencing original invoice.
+    </Card>
+    <Card title="Rectify via Corrective" icon="pen-line" horizontal>
+      Generate a replacement (corrective) invoice with proper preceding linkage.
+    </Card>
+    <Card title="Resend FacturaE" icon="arrow-rotate-right" horizontal>
+      Re-dispatch previously generated XML (e.g. temporary network failure).
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are sample workflow outlines. Adapt steps to your own process.
+
+    <AccordionGroup>
+      <Accordion title="FacturaE Issue Invoice">
+        <Steps>
+          <Step title="Generate XML">
+            Use the "Generate FacturaE" action on a GOBL invoice entry (state: Empty or Draft).
+          </Step>
+          <Step title="Sign XML">
+            Apply XAdES using "Sign FacturaE". A signed file replaces/augments the unsigned one.
+          </Step>
+          <Step title="Validate">
+            Run "Validate FacturaE"; stop on errors, continue if warnings only.
+          </Step>
+          <Step title="Attach PDF (optional)">
+            Add a PDF rendition for human-readable archiving.
+          </Step>
+          <Step title="Deliver">
+            Choose one of: Email, Store-only, or External API.
+          </Step>
+          <Step title="Set State">
+            On success: state => Sent. On failure: state => Error.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="FacturaE Credit Note">
+        <Steps>
+          <Step title="Reference Original">
+            Ensure the new GOBL invoice includes `preceding` metadata (series, code, issue_date).
+          </Step>
+          <Step title="Generate XML">
+            "Generate FacturaE" will tag the document type as rectificativa-diferencias.
+          </Step>
+          <Step title="Sign & Validate">
+            Same as standard invoice path.
+          </Step>
+          <Step title="Deliver">
+            Send through chosen channel; state => Sent.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="FacturaE Corrective Invoice">
+        <Steps>
+          <Step title="Upload Corrective">
+            Use invoice type `corrective` in GOBL and include full tax & preceding info.
+          </Step>
+          <Step title="Generate / Sign / Validate">
+            Standard sequence; XML includes replacement references.
+          </Step>
+          <Step title="Deliver & Archive">
+            After delivery mark original invoice state => Replaced (custom state or tag).
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="FacturaE Resend / Recovery">
+        <Steps>
+          <Step title="Locate Original Entry">
+            Fetch Silo Entry with previous XML and submission attempt metadata.
+          </Step>
+          <Step title="Resend Action">
+            Invoke "Resend FacturaE" which reuses signed XML; optionally re-sign if certificate rotated.
+          </Step>
+          <Step title="Mark Accepted">
+            On external confirmation run "Mark Accepted".
+          </Step>
+        </Steps>
+      </Accordion>
+    </AccordionGroup>
+
+    <Info>
+      Consider adding conditional branches for large invoice sets (bulk batching) or SLA-based retries.
+    </Info>
+  </Tab>
+
+  <Tab title="Example Minimal XML">
+    <Frame caption="Simplified illustrative fragment (not complete)">
+      ```
+&lt;Facturae xmlns="http://www.facturae.es/Facturae/2014/v3.2.2/Facturae"&gt;
+  &lt;FileHeader&gt;
+    &lt;SchemaVersion&gt;3.2.2&lt;/SchemaVersion&gt;
+    &lt;Modality&gt;I&lt;/Modality&gt;
+    &lt;InvoiceIssuerType&gt;EM&lt;/InvoiceIssuerType&gt;
+  &lt;/FileHeader&gt;
+  &lt;Parties&gt;
+    &lt;SellerParty&gt;...&lt;/SellerParty&gt;
+    &lt;BuyerParty&gt;...&lt;/BuyerParty&gt;
+  &lt;/Parties&gt;
+  &lt;Invoices&gt;
+    &lt;Invoice&gt;
+      &lt;InvoiceHeader&gt;
+        &lt;InvoiceNumber&gt;A-2025-00123&lt;/InvoiceNumber&gt;
+        &lt;InvoiceSeriesCode&gt;A&lt;/InvoiceSeriesCode&gt;
+        &lt;InvoiceDocumentType&gt;FC&lt;/InvoiceDocumentType&gt;
+      &lt;/InvoiceHeader&gt;
+      &lt;Items&gt;...&lt;/Items&gt;
+      &lt;TaxesOutputs&gt;...&lt;/TaxesOutputs&gt;
+      &lt;InvoiceTotals&gt;...&lt;/InvoiceTotals&gt;
+      &lt;PaymentDetails&gt;...&lt;/PaymentDetails&gt;
+    &lt;/Invoice&gt;
+  &lt;/Invoices&gt;
+  &lt;Extensions&gt;
+    &lt;InvoiceExtensions&gt;
+      &lt;AdditionalData&gt;...&lt;/AdditionalData&gt;
+    &lt;/InvoiceExtensions&gt;
+  &lt;/Extensions&gt;
+  &lt;Signature&gt;...XAdES...&lt;/Signature&gt;
+&lt;/Facturae&gt;
+      ```
+    </Frame>
+    <Tip>
+      The real XML will include many mandatory sub-elements (addresses, legal references, tax bases).
+      Always rely on the "Validate FacturaE" action before dispatch.
+    </Tip>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Which FacturaE versions are supported?">
+        The app targets 3.2 and 3.2.2. By default 3.2.2 is generated unless your configuration forces 3.2.
+      </Accordion>
+      <Accordion title="Do I need a certificate for signature?">
+        Yes. Upload a PKCS#12 (PFX) or separate PEM key & certificate pair in the app settings.
+      </Accordion>
+      <Accordion title="How are credit notes represented?">
+        As invoices with negative line or total amounts and rectification references; the app populates the proper FacturaE rectification block.
+      </Accordion>
+      <Accordion title="Can I send without signing?">
+        You may generate unsigned XML (for internal review) but B2G delivery typically requires XAdES signature.
+      </Accordion>
+      <Accordion title="How are errors surfaced?">
+        Validation and delivery actions attach a report file and set workflow job state to Error with structured codes.
+      </Accordion>
+      <Accordion title="Is Peppol transport included?">
+        Not directly; use the Peppol app after generation if you need BIS3 format or bridging. FacturaE is a different schema.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the FacturaE Spain App →
+</Card>

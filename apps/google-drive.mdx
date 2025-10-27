@@ -1,4 +1,126 @@
 ---
 title: "Google Drive"
-description: Information about the Google Drive app
+sidebarTitle: "App"
+description: "Automatically export, organize, and archive documents from Invopop to structured Google Drive folders."
+mode: wide
+keywords:
+  - storage
+  - export
+  - archive
+  - google-drive
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Columns cols="2">
+      <Card
+        title="Google Drive App"
+        icon="garage-car"
+        cta="Connect Drive"
+        href="https://console.invopop.com"
+      >
+        Automatically export invoices, credit notes, PDFs, and supporting
+        files to a structured folder tree in Google Drive. Ideal for sharing documents
+        with finance teams, auditors, or clients.
+      </Card>
+
+      <Card
+        title="Key Features"
+        icon="list"
+        iconType="duotone"
+      >
+        1. Flexible folder templating<br/>
+        2. Automatic PDF generation & upload<br/>
+        3. Multi-file bundles (PDF + source + attachments)<br/>
+        4. Permission & sharing controls<br/>
+        5. Archival & lifecycle tagging<br/>
+        6. Retry & dedup safeguards
+      </Card>
+    </Columns>
+
+    The Google Drive app provides **workflow actions** for exporting a document
+    (invoices, credit notes, corrective documents, etc.) and its related files to
+    Drive on demand or as part of a scheduled archival process.
+
+    <Frame caption="Example folder hierarchy in Google Drive">
+      <img
+        width="640"
+        src="/guides/images/google-drive-hierarchy.png"
+        alt="Hierarchical export of invoices to Google Drive"
+      />
+    </Frame>
+
+    <Info>
+      This integration is designed to be stateless: Drive becomes a *distribution*
+      & *archive* layer, while Invopop continues to be the authoritative source of truth.
+    </Info>
+
+    <h3>Typical Use Cases</h3>
+    <ul>
+      <li><b>Daily invoice exports</b> to a shared finance folder.</li>
+      <li><b>Audit packs</b>: Structured bundles per fiscal period.</li>
+      <li><b>Client access</b>: Share specific series folders externally.</li>
+      <li><b>Long-term archive</b>: Move closed period documents to read-only Drive folders.</li>
+    </ul>
+
+    <h3>Folder Path Templating</h3>
+    Define a pattern like:
+    <code>{year}/{month}/{series}/{code}</code>
+    Tokens available:
+    <ul>
+      <li><code>{year}</code> – Issue date year (YYYY)</li>
+      <li><code>{month}</code> – Issue date month (MM)</li>
+      <li><code>{day}</code> – Issue date day (DD)</li>
+      <li><code>{series}</code> – Document series</li>
+      <li><code>{code}</code> – Document code/number</li>
+      <li><code>{type}</code> – invoice | credit-note | corrective | etc.</li>
+      <li><code>{currency}</code> – Currency code (e.g. EUR)</li>
+    </ul>
+
+    <Warning>
+      Changing the folder template after many uploads can fragment exports. Prefer versioned root folders if restructuring.
+    </Warning>
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing and enabling the Google Drive app:
+
+    <Card title="Drive Authenticate" icon="key" horizontal>
+      Establish or refresh OAuth / service account credentials. Usually run once or by a maintenance workflow.
+    </Card>
+    <Card title="Drive Ensure Folder" icon="folder" horizontal>
+      Creates (if needed) and returns the target folder path derived from the template.
+    </Card>
+    <Card title="Drive Upload PDF" icon="file-pdf" horizontal>
+      Generates (if needed) and uploads the document's PDF representation.
+    </Card>
+    <Card title="Drive Upload Source" icon="file-code" horizontal>
+      Uploads the original GOBL JSON or XML envelope for the document.
+    </Card>
+    <Card title="Drive Upload Attachments" icon="paperclip" horizontal>
+      Iterates any associated attachments and uploads them preserving filenames.
+    </Card>
+    <Card title="Drive Upload Bundle" icon="layer-group" horizontal>
+      Packs PDF + source + attachments into a single folder atomically (internally uses the previous actions).
+    </Card>
+    <Card title="Drive Set Sharing" icon="share-nodes" horizontal>
+      Applies predefined permissions: internal-only, domain-wide, link-read, or explicit email list.
+    </Card>
+    <Card title="Drive Tag Archived" icon="archive-box" horizontal>
+      Adds an “Archived” label (custom property) and optionally moves the folder into an archive root.
+    </Card>
+    <Card title="Drive Cleanup Temp" icon="broom" horizontal>
+      Removes transient staging artifacts created during complex exports.
+    </Card>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Google Drive App →
+</Card>

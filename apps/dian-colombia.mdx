@@ -1,4 +1,402 @@
 ---
 title: "DIAN Colombia"
-description: Information about the DIAN Colombia app
+sidebarTitle: "App"
+description: "Issue, validate and transmit electronic invoices, credit notes, and support documents to Colombia's DIAN."
+keywords:
+  - dian
+  - colombia
+  - factura electronica
+  - e-invoicing
+  - credit note
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="DIAN Colombia" icon="building-columns" cta="Official site" href="https://www.dian.gov.co">
+      Electronic invoicing integration for Colombia's tax authority (DIAN).
+    </Card>
+
+    The **DIAN Colombia App** provides workflow actions and document transformation capabilities
+    to help your organization comply with Colombia's electronic invoicing (Factura Electrónica) requirements.
+    It focuses on automating the life-cycle of invoices, credit notes (_Notas Crédito_), debit notes (_Notas Débito_),
+    and supportive documents such as supplier registration and status queries.
+
+    <Info>
+      The contents below are illustrative and based on typical Colombian e-invoicing practices.
+      Adapt naming and sequencing to match your production workflow and evolving DIAN specifications.
+    </Info>
+
+    **Key Features**
+
+    1. **XML Construction & Signing** – Builds DIAN-compliant XML from GOBL invoice data and applies required digital signatures.
+    2. **Transmission & Response Handling** – Submits documents to DIAN and records acceptance, rejection, or pending states.
+    3. **State Queries** – Polls DIAN for processing status or validates prior submissions.
+    4. **Credit / Debit Notes** – Generates correcting documents referencing original invoices.
+    5. **UUID & CUFE Handling** – Adds or validates DIAN's unique codes (CUFE / CUDE) in returned payloads.
+    6. **Error Recovery & Resubmission** – Detects recoverable errors (e.g., transient network issues) and supports structured retry workflows.
+    7. **White-Label Enablement** – Support issuing on behalf of multiple suppliers or clients under one workspace.
+
+    **Typical Document Flow**
+
+    <Columns cols="3">
+      <Card title="Prepare" icon="file">
+        Upload a GOBL invoice entry with regime <code>CO</code>.
+      </Card>
+      <Card title="Transform & Sign" icon="signature">
+        Generate DIAN XML and apply digital signature.
+      </Card>
+      <Card title="Transmit" icon="paper-plane">
+        Submit to DIAN and store response envelope.
+      </Card>
+      <Card title="Monitor" icon="eye">
+        Query status until accepted or corrective action needed.
+      </Card>
+      <Card title="Correct" icon="rotate-left">
+        Issue credit/debit notes referencing the original UUID.
+      </Card>
+      <Card title="Archive" icon="vault">
+        Persist XML, PDF, and response metadata in the Silo entry.
+      </Card>
+    </Columns>
+
+    **Supported Document Types (Illustrative)**
+
+    - Standard invoice (Venta / Factura)
+    - Export invoice
+    - Credit note (Nota Crédito)
+    - Debit note (Nota Débito)
+    - Cancellation workflow (void before acceptance)
+    - Supporting documents (registration / test ping)
+
+    <Tip>
+      Always keep the original GOBL entry immutable after DIAN acceptance. Issue adjustments with credit or debit notes.
+    </Tip>
+
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions (names are examples) become available after installing and enabling the app:
+
+    <Card title="Generate DIAN XML" icon="code" horizontal>
+      Converts GOBL invoice/credit/debit data into DIAN-compliant XML structure.
+    </Card>
+    <Card title="Sign DIAN Document" icon="signature" horizontal>
+      Applies digital certificate, canonicalization, and signature to the XML.
+    </Card>
+    <Card title="Transmit to DIAN" icon="paper-plane" horizontal>
+      Sends the signed XML to DIAN, capturing raw response & status.
+    </Card>
+    <Card title="Query DIAN Status" icon="magnifying-glass" horizontal>
+      Retrieves current processing state (accepted, rejected, pending).
+    </Card>
+    <Card title="Register DIAN Issuer" icon="id-card" horizontal>
+      Onboards a supplier/issuer entity (stores certificate metadata).
+    </Card>
+    <Card title="Validate DIAN Response" icon="check-double" horizontal>
+      Confirms integrity of returned CUFE/CUDE, signature chains, timestamps.
+    </Card>
+    <Card title="Generate DIAN PDF" icon="file-pdf" horizontal>
+      Renders a human-readable PDF with mandated legends, QR (if applicable), and CUFE.
+    </Card>
+    <Card title="Send DIAN Email" icon="envelope" horizontal>
+      Distributes accepted invoice PDF & XML to buyer contacts.
+    </Card>
+    <Card title="Issue Credit Note (DIAN)" icon="arrow-rotate-left" horizontal>
+      Builds correcting credit note referencing original invoice keys.
+    </Card>
+    <Card title="Issue Debit Note (DIAN)" icon="arrow-rotate-right" horizontal>
+      Issues a debit note increasing or adjusting prior amounts.
+    </Card>
+    <Card title="Cancel Pending DIAN" icon="ban" horizontal>
+      Attempts cancellation if original has not yet been fully accepted.
+    </Card>
+    <Card title="Retry DIAN Transmission" icon="rotate" horizontal>
+      Handles resubmissions after transient failure scenarios.
+    </Card>
+    <Card title="Set DIAN State" icon="list-check" horizontal>
+      Updates local state (Accepted, Rejected, Voided, Error) based on rules.
+    </Card>
+
+    <Info>
+      Action availability can depend on workspace configuration (certificates, credentials) and DIAN sandbox/live activation.
+    </Info>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example workflow outlines demonstrating how these actions can be chained.
+    Replace identifiers with your internal workflow builder syntax.
+
+    <AccordionGroup>
+
+      <Accordion title="Issue DIAN Invoice">
+        <Steps>
+          <Step title="Prepare Entry">
+            Upload a GOBL invoice with <code>regime: CO</code>. Include tax, supplier, and buyer details.
+          </Step>
+          <Step title="Generate XML">
+            Run <strong>Generate DIAN XML</strong> to produce the structured payload.
+          </Step>
+            <Step title="Sign Document">
+            Execute <strong>Sign DIAN Document</strong> using workspace certificate.
+          </Step>
+          <Step title="Transmit">
+            Invoke <strong>Transmit to DIAN</strong>. Store CUFE/CUDE if returned.
+          </Step>
+          <Step title="Poll Status">
+            Loop with <strong>Query DIAN Status</strong> until accepted or permanently rejected.
+          </Step>
+          <Step title="Finalize">
+            If accepted: <strong>Generate DIAN PDF</strong>, then <strong>Send DIAN Email</strong>.
+            If rejected: mark state Error and optionally branch to corrective workflow.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Credit Note (Nota Crédito)">
+        <Steps>
+          <Step title="Reference Original">
+            Ensure original invoice UUID / CUFE is present in <code>preceding</code> metadata.
+          </Step>
+          <Step title="Generate & Sign">
+            Run XML generation and signature steps reusing issuer certificate.
+          </Step>
+          <Step title="Transmit & Validate">
+            Submit and wait for acceptance; link credit note entry to its original for traceability.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Debit Note (Nota Débito)">
+        <Steps>
+          <Step title="Prepare Adjustment">
+            Provide reason codes and additional value segments referencing source invoice.
+          </Step>
+          <Step title="Standard Flow">
+            Follow the same sequence as credit notes (Generate → Sign → Transmit → Query).
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Re-send Failed Transmission">
+        <Steps>
+          <Step title="Identify Retry">
+            Filter entries with last state <code>Error</code> and DIAN error category transient (timeout, network).
+          </Step>
+          <Step title="Retry">
+            Use <strong>Retry DIAN Transmission</strong> (ensures no duplicate CUFE; DIAN generally ignores exact duplicates).
+          </Step>
+          <Step title="Escalate">
+            After N attempts, escalate to manual review or mark permanently failed.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Issuer Registration">
+        <Steps>
+          <Step title="Collect Certificates">
+            Upload issuer certificate & private key metadata securely (never inline in workflow code).
+          </Step>
+          <Step title="Register Issuer">
+            Run <strong>Register DIAN Issuer</strong> which validates certificate validity period & fingerprint.
+          </Step>
+          <Step title="Test Ping">
+            Optionally do a minimal test transmission (empty support doc) to validate connectivity.
+          </Step>
+        </Steps>
+      </Accordion>
+
+      <Accordion title="Cancellation (Pre-Acceptance)">
+        <Steps>
+          <Step title="Eligibility">
+            Confirm document has status Pending (not Accepted).
+          </Step>
+          <Step title="Cancel Request">
+            Run <strong>Cancel Pending DIAN</strong>, preserving audit trail.
+          </Step>
+          <Step title="State Update">
+            On success set local state to Void; on failure branch to credit note issuance path.
+          </Step>
+        </Steps>
+      </Accordion>
+
+    </AccordionGroup>
+
+    <Tip>
+      Use Set State actions at error branches to keep downstream processes consistent (e.g., blocking PDF generation for rejected invoices).
+    </Tip>
+  </Tab>
+
+  <Tab title="Example documents">
+    Below are illustrative GOBL fragments (simplified) you can adapt.
+
+    <AccordionGroup>
+      <Accordion title="Standard Invoice (Essential)">
+        <CodeBlock>
+{`{
+  "regime": "CO",
+  "type": "invoice",
+  "series": "A",
+  "code": "000123",
+  "issue_date": "2025-01-16",
+  "supplier": {
+    "tax_id": {"code": "900123456", "country": "CO"},
+    "name": "ACME Colombia SAS",
+    "addresses": [{ "street": "Cra 10 #25-50", "city": "Bogotá", "country": "CO" }]
+  },
+  "customer": {
+    "tax_id": {"code": "107654321", "country": "CO"},
+    "name": "Cliente Ejemplo",
+    "addresses": [{ "street": "Calle 123 #45-67", "city": "Medellín", "country": "CO" }]
+  },
+  "lines": [
+    {
+      "description": "Servicio Profesional",
+      "quantity": 1,
+      "unit_price": {"currency": "COP", "precision": 2, "amount": "150000.00"},
+      "taxes": [{ "code": "IVA", "rate": "19.00" }]
+    }
+  ],
+  "totals": {
+    "currency": "COP",
+    "sum": "150000.00",
+    "tax": "28500.00",
+    "total": "178500.00"
+  },
+  "addons": ["co-dian-v1"]
+}`}
+        </CodeBlock>
+      </Accordion>
+
+      <Accordion title="Credit Note (Adjust)">
+        <CodeBlock>
+{`{
+  "regime": "CO",
+  "type": "credit-note",
+  "series": "NC",
+  "code": "000045",
+  "issue_date": "2025-01-17",
+  "preceding": {
+    "series": "A",
+    "code": "000123",
+    "issue_date": "2025-01-16",
+    "uuid": "4af0cda2-7a8c-42f1-b911-2c7c8e123456"
+  },
+  "reason": "Adjustment for overcharge",
+  "lines": [
+    {
+      "description": "Overcharge correction",
+      "quantity": 1,
+      "unit_price": {"currency": "COP", "precision": 2, "amount": "-20000.00"},
+      "taxes": [{ "code": "IVA", "rate": "19.00" }]
+    }
+  ],
+  "totals": {
+    "currency": "COP",
+    "sum": "-20000.00",
+    "tax": "-3800.00",
+    "total": "-23800.00"
+  },
+  "addons": ["co-dian-v1"]
+}`}
+        </CodeBlock>
+      </Accordion>
+
+      <Accordion title="Debit Note (Increase)">
+        <CodeBlock>
+{`{
+  "regime": "CO",
+  "type": "debit-note",
+  "series": "ND",
+  "code": "000012",
+  "issue_date": "2025-01-18",
+  "preceding": {
+    "series": "A",
+    "code": "000123",
+    "issue_date": "2025-01-16",
+    "uuid": "4af0cda2-7a8c-42f1-b911-2c7c8e123456"
+  },
+  "reason": "Additional service hours",
+  "lines": [
+    {
+      "description": "Extra Service Hours",
+      "quantity": 2,
+      "unit_price": {"currency": "COP", "precision": 2, "amount": "50000.00"},
+      "taxes": [{ "code": "IVA", "rate": "19.00" }]
+    }
+  ],
+  "totals": {
+    "currency": "COP",
+    "sum": "100000.00",
+    "tax": "19000.00",
+    "total": "119000.00"
+  },
+  "addons": ["co-dian-v1"]
+}`}
+        </CodeBlock>
+      </Accordion>
+
+      <Accordion title="Minimal Supplier Registration">
+        <CodeBlock>
+{`{
+  "party": {
+    "tax_id": {"code": "900123456", "country": "CO"},
+    "name": "ACME Colombia SAS",
+    "certificates": [
+      {
+        "alias": "prod-signing",
+        "serial": "01AF34BC56D7",
+        "valid_from": "2024-12-01",
+        "valid_to": "2026-12-01",
+        "algorithm": "RSA2048"
+      }
+    ]
+  },
+  "addons": ["co-dian-v1"]
+}`}
+        </CodeBlock>
+      </Accordion>
+    </AccordionGroup>
+
+    <Tip>
+      Add missing mandatory attributes (e.g., payment means, municipality codes) before production use.
+    </Tip>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="What is CUFE / CUDE?">
+        CUFE (Código Único de Factura Electrónica) or CUDE for notes is a unique hash assigned by DIAN used
+        to identify the document in official systems. The app captures and stores this after acceptance.
+      </Accordion>
+      <Accordion title="How do I correct an accepted invoice?">
+        Use a credit note or debit note referencing the original invoice's keys. Do not alter accepted invoices directly.
+      </Accordion>
+      <Accordion title="Can I cancel after acceptance?">
+        DIAN generally requires corrective notes post-acceptance; cancellation workflows are limited to pending states.
+      </Accordion>
+      <Accordion title="What certificates are needed?">
+        A valid digital signing certificate issued by an authorized Colombian provider. Keep its private key secure.
+      </Accordion>
+      <Accordion title="How are time-zone issues handled?">
+        Timestamps are normalized to Colombia's official time; ensure your system clock syncs (e.g., via NTP) to avoid signature rejections.
+      </Accordion>
+      <Accordion title="What happens if transmission fails?">
+        The Retry action can be invoked; a new attempt with identical XML is usually accepted if previous attempt never reached DIAN.
+      </Accordion>
+    </AccordionGroup>
+
+    <Card title="Participate in our community"
+      icon="square-question"
+      href="https://community.invopop.com"
+      arrow="true"
+      horizontal
+    >
+      Ask and answer questions about the DIAN Colombia App →
+    </Card>
+  </Tab>
+</Tabs>
+
+<Info>
+  Always validate your workflow logic in DIAN's Sandbox before switching to production.
+</Info>

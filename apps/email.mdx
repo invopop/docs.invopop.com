@@ -1,4 +1,269 @@
 ---
 title: "Email"
-description: Information about the Email app
+sidebarTitle: "App"
+description: "Send automated, templated and localized email notifications triggered by workflow events."
+keywords:
+  - notifications
+  - email
+  - workflows
+  - delivery
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="Email App" icon="envelope" cta="Configure in Console" href="https://console.invopop.com">
+      Deliver branded, compliant notifications for invoices, credit notes, workflow outcomes and user events.
+    </Card>
+
+    The Email App enables reliable outbound email delivery driven by Invopop workflows. It focuses on:
+    1. Structured notifications for business documents (invoices, credit notes, corrective docs, statements).
+    2. Event-driven operational messages (workflow success/failure, enrollment status changes, billing notices).
+    3. Secure sharing of generated files (PDF, XML, CSV) and GOBL metadata via managed attachments.
+    4. Centralized templating with merge variables sourced from Silo Entries, Workflow Jobs and Party data.
+    5. Internationalization (i18n) for subject and body content based on recipient locale.
+    6. Observability (delivery status, bounce tracking, retry logic and audit history).
+
+    <Info>
+    Use the Email App whenever human recipients need to be informed about automated workflow outcomes or when regulated documents must be delivered in a traceable manner.
+    </Info>
+
+    <AccordionGroup>
+      <Accordion title="Typical Use Cases">
+        - Send invoice PDFs to customers automatically after the "Issue Invoice" workflow step.
+        - Notify internal finance team when a corrective / credit process completes.
+        - Deliver supplier enrollment approval or rejection status.
+        - Escalate failed transformation jobs with diagnostic context.
+        - Push recurring subscription billing statements to accounts payable contacts.
+      </Accordion>
+      <Accordion title="Delivery Guarantees">
+        - Automatic retries on transient SMTP or API provider errors (exponential backoff).
+        - Idempotent generation: duplicate workflow triggers will not resend unless explicitly forced.
+        - DKIM/SPF alignment (once domain is validated) to improve inbox placement.
+      </Accordion>
+      <Accordion title="Security">
+        - Attachments fetched server-side; URLs never expose temporary raw storage buckets.
+        - Optional PGP encryption (per recipient) and password-protected PDF packaging (configurable).
+        - Redaction layer for sensitive fields before template rendering.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing the Email App:
+
+    <Card title="Prepare Email" icon="envelope-open" horizontal>
+      Build email context (recipients, subject, body, attachments) without sending yet.
+    </Card>
+    <Card title="Send Email" icon="paper-plane" horizontal>
+      Immediately send a prepared email and record delivery attempt + message ID.
+    </Card>
+    <Card title="Queue Email" icon="clock" horizontal>
+      Schedule send for a future time or defer until a dependency job completes.
+    </Card>
+    <Card title="Email Invoice PDF" icon="file-invoice" horizontal>
+      Render and deliver the invoice PDF + optional XML enveloped attachments.
+    </Card>
+    <Card title="Email Credit Note" icon="file-circle-minus" horizontal>
+      Notify customer of credit issuance with embedded or attached document pack.
+    </Card>
+    <Card title="Notify Workflow Failure" icon="triangle-alert" horizontal>
+      Send diagnostic summary when a workflow transitions to error state.
+    </Card>
+    <Card title="Notify Enrollment Status" icon="id-card" horizontal>
+      Inform a user or supplier when their enrollment is approved, rejected, or needs more data.
+    </Card>
+    <Card title="Wait For Reply" icon="inbox" horizontal>
+      Pause workflow until a reply is received at a tracked alias or webhook.
+    </Card>
+    <Card title="Extract Reply Attachments" icon="paperclip" horizontal>
+      Parse inbound reply, store attachments as Silo files, link back to original entry.
+    </Card>
+    <Card title="Resend Last Email" icon="rotate-right" horizontal>
+      Force a resend (for lost/delayed deliveries) with new correlation ID.
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    <AccordionGroup>
+      <Accordion title="Issue Invoice & Email Customer">
+        A common pattern:
+        1. Generate document (Build GOBL).
+        2. Sign Envelope.
+        3. Produce PDF.
+        4. Prepare Email (template: invoice_customer).
+        5. Send Email.
+        6. Set State: Sent.
+      </Accordion>
+      <Accordion title="Credit Note Notification">
+        1. Validate credit note referencing original invoice.
+        2. Generate PDF pack (credit + original summary).
+        3. Prepare Email (template: credit_note_customer).
+        4. Send Email.
+        5. Update both entries with cross-links.
+      </Accordion>
+      <Accordion title="Workflow Failure Escalation">
+        1. Detect error state.
+        2. Aggregate last N step logs.
+        3. Prepare Email (template: workflow_error_internal).
+        4. Send Email to ops team.
+        5. Tag job for review.
+      </Accordion>
+      <Accordion title="Supplier Enrollment Approval">
+        1. Verify documents.
+        2. Update supplier party state: Approved.
+        3. Prepare Email (template: supplier_approved).
+        4. Send Email + next steps checklist PDF.
+      </Accordion>
+      <Accordion title="Deferred Batch Statements">
+        1. Iterate monthly billing entries.
+        2. Compile summary CSV.
+        3. Queue Email (send at 08:00 local time).
+        4. Exit with scheduled job reference.
+      </Accordion>
+      <Accordion title="Inbound Reply Attachment Capture">
+        1. Wait For Reply (alias: replies@yourdomain).
+        2. Extract Reply Attachments.
+        3. Link attachments to original entry.
+        4. Notify internal owner.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Configuration">
+    <AccordionGroup>
+      <Accordion title="Sender Identity">
+        Define From name and address (e.g. invoices@yourdomain). Optionally enable per-regime sender mapping (ES invoices vs. generic).
+      </Accordion>
+      <Accordion title="Domain Authentication">
+        Add DNS records for SPF, DKIM, DMARC. System validates priority and propagation; DMARC aggregate reports optional.
+      </Accordion>
+      <Accordion title="Templates">
+        Each template has:
+        - Identifier (slug, e.g. invoice_customer).
+        - Localized subject map (en, es, fr, de).
+        - Body format: Markdown + merge variables.
+        - Attach rules: dynamic (invoice.pdf) and conditional (xml if regime requires).
+      </Accordion>
+      <Accordion title="Merge Variables">
+        Supported sources:
+        - Entry data (invoice totals, codes, supplier name).
+        - Workflow job meta (job id, timestamps).
+        - Account / workspace info (branding, links).
+        - Derived fields (formatted monetary, tax breakdown).
+      </Accordion>
+      <Accordion title="Attachment Policies">
+        - Max total size (default 8MB).
+        - Compression strategy (none, zip).
+        - Encryption (PGP per recipient key fingerprint).
+        - Redaction rules for personal data in PDFs.
+      </Accordion>
+      <Accordion title="Retry & Backoff">
+        Configure attempt count and intervals. Default: 3 attempts (1m, 5m, 30m). Hard failures produce a DeliveryFailed event.
+      </Accordion>
+      <Accordion title="Logging & Audit">
+        For every send:
+        - Timestamp.
+        - Recipient list.
+        - Template ID.
+        - Render checksum.
+        - Provider response (message-id).
+        - Post-delivery events: bounce, open, complaint.
+      </Accordion>
+      <Accordion title="Inbound Processing">
+        Optional tracked alias (e.g. replies@). System correlates message-id In-Reply-To headers back to original job for Wait For Reply action.
+      </Accordion>
+      <Accordion title="Rate Limiting">
+        Workspace-level throttle to avoid flooding recipients: define max X emails per Y minutes per recipient domain.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Examples">
+    <AccordionGroup>
+      <Accordion title="Invoice Customer Template (English)">
+        ```
+        Subject: Supplier Enrollment Approved
+        Body:
+        Your supplier account for {{workspace.display_name}} is approved.
+        Next steps:
+        - Configure tax settings
+        - Begin invoice submission
+        Support: {{links.support}}
+        ```
+      </Accordion>
+      <Accordion title="Workflow Failure Internal">
+        ```
+        Subject: Supplier Enrollment Approved
+        Body:
+        Your supplier account for {{workspace.display_name}} is approved.
+        Next steps:
+        - Configure tax settings
+        - Begin invoice submission
+        Support: {{links.support}}
+        ```
+      </Accordion>
+      <Accordion title="Credit Note Notification (Spanish)">
+        ```
+        Subject: Supplier Enrollment Approved
+        Body:
+        Your supplier account for {{workspace.display_name}} is approved.
+        Next steps:
+        - Configure tax settings
+        - Begin invoice submission
+        Support: {{links.support}}
+        ```
+      </Accordion>
+      <Accordion title="Supplier Approved">
+        ```
+        Subject: Supplier Enrollment Approved
+        Body:
+        Your supplier account for {{workspace.display_name}} is approved.
+        Next steps:
+        - Configure tax settings
+        - Begin invoice submission
+        Support: {{links.support}}
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Can I resend an email?">
+        Yes. Use Resend Last Email or trigger Prepare Email + Send Email again. Idempotency keys prevent accidental duplicates unless forced.
+      </Accordion>
+      <Accordion title="How are bounces handled?">
+        Hard bounces mark recipient as suppressed. Soft bounces trigger retry. Suppression can be overridden per workflow action (not recommended).
+      </Accordion>
+      <Accordion title="Do you support attachments larger than 8MB?">
+        You can increase the limit, but consider linking to a portal view instead of embedding very large files. Oversized attachments degrade deliverability.
+      </Accordion>
+      <Accordion title="Is HTML supported for templates?">
+        Yes. Provide both Markdown (auto-rendered) and optional raw HTML override. Plain-text fallback is automatically generated for inbox compatibility.
+      </Accordion>
+      <Accordion title="Can I localize currency formatting?">
+        Currency formatting respects recipient locale (thousand separators, decimal marks). Override with explicit pattern variables if required.
+      </Accordion>
+      <Accordion title="Can emails trigger downstream workflows?">
+        Inbound replies or link click events can be converted into Jobs via webhook subscriptions, enabling multi-step human-in-the-loop processes.
+      </Accordion>
+      <Accordion title="Are PGP keys rotated automatically?">
+        Rotation is manual; upload new public key and mark active-from date. Old key used for decrypting legacy inbound attachments until expiry threshold.
+      </Accordion>
+      <Accordion title="Deliverability best practices?">
+        Authenticate domain (SPF/DKIM), maintain low complaint rates, limit large attachment frequency, and avoid spam trigger phrases in subjects.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow
+  horizontal
+>
+  Ask and answer questions about the Email App →
+</Card>

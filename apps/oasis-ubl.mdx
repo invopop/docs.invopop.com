@@ -1,4 +1,293 @@
 ---
 title: "OASIS UBL"
-description: Information about the OASIS UBL app
+sidebarTitle: "App"
+description: Generate, validate, transform and consume Universal Business Language (UBL) documents from GOBL data.
+keywords: ['ubl', 'oasis', 'format', 'e-invoicing', 'xml']
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <Card title="OASIS UBL" icon="code-compare" cta="Install in Console" href="https://console.invopop.com">
+      Turn GOBL structured business documents into standards‑compliant UBL XML and back again.
+    </Card>
+
+    The **OASIS UBL app** adds standardized invoice, credit note and related document formatting to your workspace.
+    It focuses on reliable XML generation, schema validation and attachments management so you can exchange
+    documents through interoperability networks (e.g. Peppol) or with partners requiring raw UBL.
+
+    ### What is UBL?
+    UBL (Universal Business Language) is an XML vocabulary maintained by OASIS for electronic business documents.
+    It defines canonical structures for invoices, credit notes, orders, despatch advice and more, reducing bespoke
+    mappings between trading partners.
+
+    ### Key Capabilities
+    1. **Schema-Compliant XML Generation** – Produces UBL 2.1/2.3 variants from GOBL documents.
+    2. **XML Validation** – Validates generated XML against official XSDs before attachment or transmission.
+    3. **Round-Trip Transformation** – Converts received UBL back into a normalized GOBL envelope.
+    4. **Metadata Augmentation** – Automatically derives tax totals, payment means and party identifiers.
+    5. **Channel Agnostic** – Output can be consumed by Peppol, email, SFTP, API partners or archival systems.
+    6. **Pluggable Extensions** – Optional enrichment (e.g. custom additional item attributes, localized payment terms).
+
+    ### Supported Document Types (Initial Set)
+    - Invoice
+    - Credit Note
+    - Debit Note
+    - Order (preview)
+    - Order Response (planned)
+    - Despatch Advice (planned)
+
+    <Info>
+      The planned types will appear gradually; generation endpoints will gracefully reject unsupported types with a structured error.
+    </Info>
+
+    ### Typical Flow
+    1. Upload a GOBL invoice (Silo Entry).
+    2. Run a workflow containing "Generate UBL" and "Validate UBL".
+    3. Attach the resulting XML & (optionally) render a PDF.
+    4. Transmit via your chosen network (e.g. Peppol workflow step).
+    5. Persist and audit using Invopop's chain and state flags.
+
+    ### When to Use UBL vs Native GOBL
+    - Use **UBL** when you must interoperate with external ERPs or networks expecting standardized XML.
+    - Use **GOBL only** when interacting purely inside Invopop or with JSON-first systems.
+  </Tab>
+
+  <Tab title="Actions">
+    The app exposes workflow actions you can add to invoice- or order-centric workflows:
+
+    <Card title="Generate UBL" icon="file-code" horizontal>
+      Converts a GOBL Invoice/Credit Note/Debit Note into canonical UBL XML (2.1/2.3 selectable).
+    </Card>
+
+    <Card title="Validate UBL" icon="shield-check" horizontal>
+      Performs XSD schema validation and structural sanity checks; sets failure state on errors.
+    </Card>
+
+    <Card title="Attach UBL" icon="paperclip" horizontal>
+      Attaches the validated UBL XML as a file to the Silo Entry (metadata: mime type, hash, size).
+    </Card>
+
+    <Card title="Sign UBL" icon="signature" horizontal>
+      Applies XMLDSig / XAdES baseline signature (optional configuration for certificate & key).
+    </Card>
+
+    <Card title="Generate UBL PDF" icon="file" horizontal>
+      Renders a human-readable PDF from the UBL content (mapping lines, taxes, totals).
+    </Card>
+
+    <Card title="Send UBL (Peppol)" icon="send" horizontal>
+      Hands off the generated UBL to the Peppol app for network delivery (requires Peppol app installed).
+    </Card>
+
+    <Card title="Parse UBL" icon="rotate-left" horizontal>
+      Ingests a raw UBL XML file and converts it into a GOBL envelope with normalized tax and party data.
+    </Card>
+
+    <Card title="Enrich UBL" icon="sparkles" horizontal>
+      Adds optional extensions (payment hints, internal codes) as AdditionalDocumentReferences or UBLExtensions.
+    </Card>
+
+    <Card title="Reject UBL" icon="ban" horizontal>
+      Marks a UBL document as invalid and annotates reasons in a structured rejection object.
+    </Card>
+
+    <Tip>
+      Combine Generate → Validate → Sign → Attach → Send in a single workflow for end‑to‑end automation.
+    </Tip>
+  </Tab>
+
+  <Tab title="Workflows">
+    Below are example minimal workflow step sequences you might define:
+
+    #### 1. Outbound Invoice (Basic)
+    1. Generate UBL
+    2. Validate UBL
+    3. Attach UBL
+    4. Generate UBL PDF
+    5. Set State: Sent
+
+    #### 2. Outbound Invoice (Peppol Signed)
+    1. Generate UBL (version: 2.1)
+    2. Validate UBL
+    3. Sign UBL (XMLDSig)
+    4. Attach UBL
+    5. Send UBL (Peppol)
+    6. Set State: Sent
+
+    #### 3. Inbound Invoice (Parsing)
+    1. Parse UBL (source file)
+    2. Validate UBL
+    3. Attach UBL
+    4. Generate UBL PDF
+    5. Normalize Parties (optional enrichment step)
+    6. Set State: Received
+
+    #### 4. Credit Note Issue
+    1. Generate UBL (document type: CreditNote)
+    2. Validate UBL
+    3. Attach UBL
+    4. Send UBL (Peppol)
+    5. Set State: Sent
+
+    #### 5. Rejection & Correction Loop
+    1. Generate UBL
+    2. Validate UBL
+       - On error: Set State: Error; exit.
+    3. Send UBL (Peppol)
+       - On transport error: Set State: Error; exit.
+    4. Await Acknowledgment (Peppol async)
+    5. If rejected: Set State: NeedsCorrection; notify owner.
+    6. If accepted: Set State: Sent
+
+    <Info>
+      You can keep versions of workflows to adjust mapping rules without breaking historical audit chains.
+    </Info>
+  </Tab>
+
+  <Tab title="Data Mapping">
+    This section outlines how GOBL fields map into UBL structures (abbreviated):
+
+    | GOBL Path | UBL Element | Notes |
+    |-----------|-------------|-------|
+    | `invoice.supplier.party.identifiers[]` | `AccountingSupplierParty/Party/PartyIdentification` | Multiple allowed; schemeID inferred from identifier type. |
+    | `invoice.customer.party.name` | `AccountingCustomerParty/Party/PartyName/Name` | UTF-8 normalized. |
+    | `invoice.lines[].quantity` | `InvoiceLine/InvoicedQuantity` | UnitCode from line unit; defaults to `EA`. |
+    | `invoice.lines[].price.unit` | `InvoiceLine/Price/PriceAmount` | Currency from invoice currency. |
+    | `invoice.tax.totals[]` | `TaxTotal/TaxSubtotal` | Each rate bucket becomes a separate TaxSubtotal. |
+    | `invoice.totals.payable` | `LegalMonetaryTotal/PayableAmount` | Final amount due. |
+    | `payment.terms` | `PaymentTerms/Note` | Plain text fallback if structured. |
+
+    <Tip>
+      Advanced mappings (e.g. Project references, cost centers, buyer accounting codes) can be added via the Enrich UBL action.
+    </Tip>
+  </Tab>
+
+  <Tab title="Configuration">
+    **App Settings (suggested):**
+    - UBL Version: `2.1` or `2.3` (default: 2.1)
+    - Default Currency Precision: `2`
+    - Signature Enabled: `true|false`
+    - Certificate Alias: friendly name referencing a managed credential
+    - Enrichment Extensions: array of enabled extension modules
+    - Peppol Channel Fallback: `true|false`
+
+    **Validation Modes:**
+    - `strict` – must pass XSD + business rules
+    - `schema-only` – only XSD validation
+    - `lenient` – attach even with non-critical warnings
+
+    **Error Handling Options:**
+    - Auto Retry (transport only)
+    - Auto Mark NeedsCorrection (on business rule rejection)
+    - Halt & Notify Owner (on schema violation)
+
+    <Info>
+      Selecting UBL 2.3 enables newer elements (e.g. energy attributes); if recipients only support 2.1 keep default.
+    </Info>
+  </Tab>
+
+  <Tab title="Example XML">
+    Below is a trimmed illustrative Invoice fragment (namespaces shortened):
+
+```xml
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>GOBL-UBL-2.1</cbc:CustomizationID>
+  <cbc:ProfileID>BasicInvoice</cbc:ProfileID>
+  <cbc:ID>INV-2025-00421</cbc:ID>
+  <cbc:IssueDate>2025-10-26</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>Example Supplies SL</cbc:Name></cac:PartyName>
+      <cac:PartyIdentification><cbc:ID schemeID="VAT">ESB12345678</cbc:ID></cac:PartyIdentification>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>Client Corp GmbH</cbc:Name></cac:PartyName>
+      <cac:PartyIdentification><cbc:ID schemeID="VAT">DE123456789</cbc:ID></cac:PartyIdentification>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">5</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="EUR">500.00</cbc:LineExtensionAmount>
+    <cac:Price><cbc:PriceAmount currencyID="EUR">100.00</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>
+
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="EUR">105.00</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="EUR">500.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="EUR">105.00</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:Percent>21</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="EUR">500.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="EUR">500.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="EUR">605.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="EUR">605.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+</Invoice>
+```
+
+    <Info>
+      Real output will include additional references (PaymentMeans, MonetaryTotals, etc.) depending on GOBL source data.
+    </Info>
+  </Tab>
+
+  <Tab title="Troubleshooting">
+    **Common Issues**
+    - Missing Party Identifier → Ensure supplier/customer identification includes a scheme supported by recipient.
+    - Currency Mismatch → All line amounts must share the same currency; multi-currency lines not supported in base UBL.
+    - Tax Category Errors → Provide explicit rate percentages; zero-rated vs exempt requires correct category code.
+    - Signature Failures → Check certificate validity and algorithm settings (RSA-SHA256 recommended).
+    - Peppol Rejection → Verify correct ProfileID/CustomizationID values expected by the recipient’s capabilities.
+
+    **Recommended Debug Steps**
+    1. Re-run workflow with "Validation Mode: schema-only" to isolate structural vs rule issues.
+    2. Inspect attached XML file and search for empty required elements.
+    3. Use external UBL validator (where available) to compare differences.
+    4. Adjust mapping enrichment to include missing classification codes.
+
+    <Tip>
+      Add an intermediate "Dump Context" custom step in workflows to log transformed field sets before XML generation.
+    </Tip>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="Which UBL version should I choose?">
+        If unsure, pick 2.1. Use 2.3 only when a trading partner explicitly requires newer constructs (e.g. advanced freight).
+      </Accordion>
+      <Accordion title="Does the app support custom extensions?">
+        Yes. You can enable enrichment modules that produce UBLExtensions blocks—maintain a whitelist to avoid rejection.
+      </Accordion>
+      <Accordion title="Can I sign after sending through Peppol?">
+        No. Signature must be embedded before transmission; sending action expects final signed payload.
+      </Accordion>
+      <Accordion title="How do I handle multi-line tax rounding?">
+        The generator applies deterministic rounding (bankers or half-up based on configuration) to maintain total consistency.
+      </Accordion>
+      <Accordion title="Is parsing lossless?">
+        Mostly—unsupported proprietary extensions are preserved as opaque annotations to reduce data loss.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+<Card title="Join the community" icon="square-question" href="https://community.invopop.com" arrow horizontal>
+  Ask and answer questions about the OASIS UBL App →
+</Card>

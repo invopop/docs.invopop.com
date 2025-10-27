@@ -1,4 +1,307 @@
 ---
 title: "ILYDA Greece"
-description: Information about the ILYDA Greece app
+sidebarTitle: "App"
+description: "Issue, classify and transmit Greek e-invoices to AADE (myDATA) using the ILYDA integration."
+keywords: ['ilyda','greece','mydata','aade','e-invoicing']
+mode: wide
 ---
+
+<Tabs>
+  <Tab title="Description">
+    <div class="flex gap-8">
+      <Card
+        title="ILYDA Greece"
+        icon="building-columns"
+        href="https://www.aade.gr/"
+        cta="AADE Portal"
+      >
+        Transmit invoices and revenue documents to AADE (myDATA) through the ILYDA certified intermediary,
+        classify income/expense lines and retrieve acceptance statuses.
+      </Card>
+      <div class="flex-shrink">
+        | Information      |                             |
+        |------------------|-----------------------------|
+        | Developer        | Invopop                     |
+        | Category         | Government / Regime         |
+        | Jurisdiction     | Greece (GR)                 |
+        | Protocol         | myDATA (AADE)               |
+        | Last&nbsp;Update | <div class="whitespace-nowrap">2025-10-26</div> |
+        | Docs             | (This page)                 |
+      </div>
+    </div>
+
+    The **ILYDA Greece app** provides workflow actions and document transformations required for compliance
+    with Greek e-invoicing and bookkeeping reporting (myDATA) to AADE. It focuses on:
+
+    1. Generating the necessary myDATA payload from a GOBL Invoice or Credit Note.
+    2. Classifying revenue, VAT and withholding taxes into AADE (myDATA) types.
+    3. Transmitting documents via the ILYDA intermediary and persisting response metadata.
+    4. Handling cancellations and corrections (e.g. credit notes).
+    5. Optional white-label operation if you issue on behalf of multiple Greek entities.
+
+    <Info>
+      This content is based on reasonable assumptions from public Greek e-invoicing practices. Adjust to your
+      production needs once you install the app.
+    </Info>
+
+    <Tip>
+      Add the addon <code>gr-mydata-v1</code> in your GOBL invoice envelope to trigger Greek-specific validations.
+    </Tip>
+
+    <Frame caption="Example myDATA workflow chain">
+      <img
+        width="500"
+        src="/guides/images/example-chain.png"
+        alt="Illustration of a chain of myDATA transmissions"
+      />
+    </Frame>
+
+    <AccordionGroup>
+      <Accordion title="When to use this app">
+        Use it whenever you need to submit sales invoices, credit notes or cancellations to AADE and ensure they
+        receive a MARK (unique acceptance code). The app also helps map your product/service lines to required
+        AADE income classifications.
+      </Accordion>
+      <Accordion title="White-label operation">
+        If you operate for multiple Greek suppliers, first register each supplier entity (party) and run a
+        registration workflow action so future transmissions carry the correct VAT and establishment data.
+      </Accordion>
+      <Accordion title="Data retention">
+        Transmission responses, MARK codes, and classification summaries are stored as attachments or metadata
+        on the Silo Entry for auditing and reconciliation.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Actions">
+    The following workflow actions become available after installing and enabling the app:
+
+    <Card title="Generate myDATA" icon="code-compare" horizontal>
+      Produce a myDATA-compliant JSON/XML payload from a GOBL invoice, including classification segments.
+    </Card>
+    <Card title="Send myDATA" icon="paper-plane" horizontal>
+      Transmit the generated document to AADE via ILYDA and record the MARK (acceptance code).
+    </Card>
+    <Card title="Cancel myDATA" icon="ban" horizontal>
+      Issue a cancellation request for a previously accepted MARK document (before downstream settlement).
+    </Card>
+    <Card title="Register Greek Entity" icon="id-badge" horizontal>
+      Register or verify a party's VAT number (AFM) and establishment details for future transmissions.
+    </Card>
+    <Card title="Wait for Entity Approval" icon="hourglass" horizontal>
+      Pause workflow execution until manual or automated verification completes.
+    </Card>
+    <Card title="Classify Lines" icon="list-check" horizontal>
+      Assign income / expense classification codes (e.g. E3, E2 categories) to invoice line items.
+    </Card>
+    <Card title="Generate PDF (GR)" icon="file" horizontal>
+      Render a Greek-compliant PDF with required summary, VAT breakdown and optional QR signature block.
+    </Card>
+    <Card title="Attach MARK Metadata" icon="tag" horizontal>
+      Store AADE MARK and timestamps into entry meta for audit & reconciliation.
+    </Card>
+  </Tab>
+
+  <Tab title="Workflows">
+    Common workflow templates you might build with this app:
+
+    <AccordionGroup>
+      <Accordion title="Issue Greek Invoice (Standard)">
+        <ol>
+          <li>Classify Lines</li>
+          <li>Generate myDATA</li>
+          <li>Send myDATA</li>
+          <li>Attach MARK Metadata</li>
+          <li>Generate PDF (GR)</li>
+          <li>Set State: Sent</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Register Greek Entity">
+        <ol>
+          <li>Register Greek Entity</li>
+          <li>Wait for Entity Approval</li>
+          <li>Set State: Active</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Credit Note Workflow">
+        <ol>
+          <li>Classify Lines</li>
+          <li>Generate myDATA (credit)</li>
+          <li>Send myDATA</li>
+          <li>Attach MARK Metadata</li>
+          <li>Generate PDF (GR)</li>
+          <li>Set State: Sent</li>
+        </ol>
+      </Accordion>
+      <Accordion title="Cancel Previously Sent Invoice">
+        <ol>
+          <li>Cancel myDATA</li>
+          <li>Attach MARK Metadata (cancellation)</li>
+          <li>Set State: Void</li>
+        </ol>
+      </Accordion>
+    </AccordionGroup>
+
+    <Tip>
+      Add error handling branches (Set State: Error) after transmission or classification steps to improve
+      monitoring.
+    </Tip>
+  </Tab>
+
+  <Tab title="Example documents">
+    Below are illustrative (simplified) GOBL invoice envelopes adapted for Greece.
+
+    <AccordionGroup>
+      <Accordion title="Standard B2B Invoice">
+        ```json
+        {
+          "envelope": {
+            "uuid": "11111111-2222-3333-4444-555555555555",
+            "doc": {
+              "type": "invoice",
+              "regime": "GR",
+              "addons": ["gr-mydata-v1"],
+              "supplier": {
+                "tax_id": "GR123456789",
+                "name": "Demo Supplier SA",
+                "addresses": [{
+                  "country": "GR",
+                  "city": "Athens",
+                  "zip": "10551",
+                  "street": "Example 10"
+                }]
+              },
+              "customer": {
+                "tax_id": "GR987654321",
+                "name": "Client LTD"
+              },
+              "issue_date": "2025-10-26",
+              "currency": "EUR",
+              "lines": [
+                {
+                  "description": "Consulting services",
+                  "quantity": 8,
+                  "unit_price": "120.00",
+                  "taxes": [{"code": "VAT", "rate": "24"}],
+                  "meta": {
+                    "gr:classification:income": "E3_561_010" // Example classification
+                  }
+                }
+              ],
+              "totals": {
+                "sum": "960.00",
+                "tax": "230.40",
+                "payable": "1190.40"
+              }
+            }
+          }
+        }
+        ```
+      </Accordion>
+
+      <Accordion title="Credit Note Referencing Prior MARK">
+        ```json
+        {
+          "envelope": {
+            "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            "doc": {
+              "type": "invoice",
+              "subtype": "credit-note",
+              "regime": "GR",
+              "addons": ["gr-mydata-v1"],
+              "preceding": {
+                "issue_date": "2025-10-20",
+                "series": "A",
+                "code": "1520",
+                "meta": {
+                  "gr:mark": "MARK-1234567890" // Prior AADE MARK for linkage
+                }
+              },
+              "supplier": { "tax_id": "GR123456789", "name": "Demo Supplier SA" },
+              "customer": { "tax_id": "GR987654321", "name": "Client LTD" },
+              "issue_date": "2025-10-26",
+              "currency": "EUR",
+              "lines": [
+                {
+                  "description": "Credit adjustment",
+                  "quantity": 1,
+                  "unit_price": "-100.00",
+                  "taxes": [{"code": "VAT", "rate": "24"}],
+                  "meta": {
+                    "gr:classification:income": "E3_561_010"
+                  }
+                }
+              ],
+              "totals": {
+                "sum": "-100.00",
+                "tax": "-24.00",
+                "payable": "-124.00"
+              }
+            }
+          }
+        }
+        ```
+      </Accordion>
+
+      <Accordion title="Cancellation Request (Minimal)">
+        ```json
+        {
+          "envelope": {
+            "uuid": "99999999-8888-7777-6666-555555555555",
+            "doc": {
+              "type": "invoice",
+              "regime": "GR",
+              "addons": ["gr-mydata-v1"],
+              "meta": {
+                "gr:cancel:mark": "MARK-1234567890",
+                "gr:cancel:reason": "Mistaken customer details"
+              }
+            }
+          }
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+
+    <Info>
+      Classification codes (<code>E3_561_010</code>, etc.) are placeholders. Replace with correct AADE taxonomy values
+      matching your goods/services categories.
+    </Info>
+  </Tab>
+
+  <Tab title="FAQ">
+    <AccordionGroup>
+      <Accordion title="What is myDATA?">
+        myDATA is the Greek digital accounting and tax reporting system operated by AADE. Invoices and
+        revenue data are transmitted electronically and assigned a unique MARK.
+      </Accordion>
+      <Accordion title="Do I need to classify lines?">
+        Yes. Each revenue line must be associated with an AADE income classification; without it, transmission
+        may fail or return warnings.
+      </Accordion>
+      <Accordion title="What is a MARK?">
+        A MARK is the unique acceptance identifier returned by AADE upon successful document registration.
+        Store it for audit and cancellation operations.
+      </Accordion>
+      <Accordion title="When should I cancel vs credit note?">
+        Use cancellation if the original invoice was invalid before delivery/acceptance.
+        Use a credit note when adjusting economic value after the invoice is recognized by the customer.
+      </Accordion>
+      <Accordion title="Are PDFs mandatory?">
+        AADE focuses on the electronic submission; PDFs are still useful for human-readable distribution and
+        archiving, especially with summary and VAT breakdown.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+</Tabs>
+
+<Card
+  title="Participate in our community"
+  icon="square-question"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the ILYDA Greece App →
+</Card>
