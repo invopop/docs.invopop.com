@@ -1,0 +1,47 @@
+---
+title: "Peppol unregister party"
+description: "Revoke participant permissions to issue and receive documents"
+appId: "peppol"
+schema: "bill/invoice"
+---
+
+```json Example Peppol unregister party workflow expandable
+{
+    "name": "Empty party workflow",
+    "description": "",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "77b7c460-adc5-11f0-abd8-03a58bc40d2a",
+            "name": "Register Peppol Party",
+            "provider": "peppol.register",
+            "summary": "Disable Party",
+            "config": {
+                "disable": true,
+                "visibility": "smp+sml+peppol",
+                "doc_groups": []
+            }
+        },
+        {
+            "id": "7e79f610-adc5-11f0-abd8-03a58bc40d2a",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "9141b350-adc5-11f0-abd8-03a58bc40d2a",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
