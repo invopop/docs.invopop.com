@@ -1,0 +1,355 @@
+---
+title: "CFDI & SAT Guide"
+sidebarTitle: "Guide"
+description: Issue CFDI documents in Mexico using the SAT Mexico provider.
+---
+
+import PostRegistration from '/snippets/workflows/templates/mx/sat-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supplier.mdx';
+import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
+import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
+import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
+import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
+import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
+
+## Introduction
+
+The CFDI (_Comprobante Fiscal Digital por Internet_) is the standardized electronic invoicing format in Mexico, managed by the country's tax authority, the SAT (_Servicio de Administración Tributaria_). This system ensures that all fiscal documents are digitally generated, validated, and reported to SAT in compliance with national tax laws.
+
+In this guide we'll walk you through the steps required to first register a supplier and then issue invoices in their name.
+
+## Prerequisites
+
+To issue invoices in Mexico via the SAT, you will need:
+
+- **Supplier Information**: 
+  - Name
+  - Taxpayer ID (RFC - _Registro Federal de Contribuyentes_)
+  - Address 
+  - Fiscal regime code (as defined by SAT)
+- **Customer Information** (same as supplier, plus):
+  - CFDI use code (_Código de uso CFDI_)
+- **Line items**: 
+  - Quantity, unit price, and applicable tax rates
+  - SAT product/service code (_Clave Producto-Servicio_)
+- **Additional requirements** 
+  - Selected invoice series
+  - Place of issue code (_Lugar de expedición_)
+- **Two certificates** required by the SAT: 
+  1.	**e.firma (FIEL)**: Confirms your identity before SAT. Required to obtain the CSD below and to authorize the PAC to issue on your behalf as explained in step 3 of the [Register a Supplier](#register-a-supplier) section below.
+  2.	**CSD (Certificado de Sello Digital)**:  Required to sign electronic invoices and prove they were issued by you.
+
+## Setup
+
+Configure your Invopop workspace for CFDI invoicing by following these steps in the [Invopop Console](https://console.invopop.com):
+
+<Info>
+  These instructions apply to both the sandbox and live environments, with a few exceptions related to supplier data and registration details when real information is not available.
+</Info>
+
+<Steps>
+
+<Step title="Set up the Supplier Post-Registration Workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" cta="Add to my workspace">
+    This workflow marks Suppliers as `Registered`. You will select this workflow in the SAT (Mexico) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Post-registration flow".
+
+      This workflow is composed by a single step:
+
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Set up the Supplier Registration Workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" cta="Add to my workspace">
+    Issues a registration request for a supplier to complete in order to issue invoices through SAT.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Register Supplier".
+
+    The new workflow will need to perform these steps:
+
+      - **Sign the Envelope**
+      - **Register SAT Issuer**
+      - **Set State** - with configuration set to `Processing`.
+
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Connect the SAT Mexico App">
+  In the left sidebar, under the **Configuration** section, click **Apps**. This will display all available apps.
+  
+  Search for SAT Mexico and click **Connect**. The app will move to the “Enabled Apps” section.
+
+  Next, click **Configure**. This will open a dialog on the right with two fields:
+	  - **Environment**: Sandbox / Live
+	  - **Post-registration workflow**: SAT supplier post-registration
+</Step>
+<Step title="Set up the SAT Issue Invoice Workflow">
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="SAT issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-issue-invoice" cta="Add to my workspace">
+        Issue a CFDI invoice through SAT.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Issue SAT Invoices".
+
+        The new workflow will need to perform these steps:
+
+        - **Add Sequential Code:**  with dynamic sequences, and name like "SAT Invoices".
+        - **Sign Envelope:** - no configuration needed
+        - **Send to SAT (Mexico):** no configuration needed.
+        - **Generate PDF** - Set according to your needs. Layout "Letter" and locale "es - Spanish" are recommended.
+        - **Set State** - to "sent".
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Running
+
+Learn how to register a business entity (supplier) and issue CFDI invoices:
+
+<info>
+  You can complete this process through the Invopop Console or the API. We'll walk through it using the Console, but don't worry, the steps are nearly identical for the API. We'll add notes along the way to clarify any differences.
+</info>
+
+### Register a Supplier
+
+Registering a business entity requires uploading the CSD to our local provider, SW Sapiens, via a form (see Step 2: Complete Supplier Registration). This upload goes to either the sandbox or live environment, depending on your SAT Mexico App configuration.
+
+Each CSD is tied to an RFC. When you submit an e-invoice, including the supplier's RFC, SW Sapiens checks for a valid CSD linked to it, as SAT requires a valid certificate to issue invoices.
+
+<Note>
+  To speed things up, we've pre-registered all the test CSDs listed on the [SW Sapien test page](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/) in the sandbox. 
+
+  If you're working in **sandbox**, you can either:
+  - Skip this section and go straight to [Send an Invoice](#send-an-invoice) using a test RFC, or
+  - Register your own certificate by following the steps below.
+</Note>
+
+<Steps>
+  <Step title="Run the Supplier Registration Workflow">
+    In the left sidebar, go to the **Contacts** section and click **Suppliers**. 
+
+    Then click **+New Supplier** and enter the supplier's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly.
+
+    Here is an example supplier for reference:
+
+    <Supplier />
+
+    Click **Build**, make sure there are no errors, then click **Save**.
+
+    Next, click **Select Workflow** and execute the **Supplier Registration Workflow**.
+  </Step>
+
+  <Step title="Complete Supplier Registration">
+    After it completes, open the **Details** window and click on **Meta**. You should see a section called **Registration Link** with a URL:
+
+    <Frame>
+      <img
+        src="/guides/images/mx-sat-reg-link.png"
+        width="450px"
+        alt="Supplier Registration Link"
+      />
+    </Frame>
+
+    <Info>
+      You can access the registration link via the API by [fetching the silo entry](/api-ref/silo/entries/fetch-an-entry) and locating the meta entry where the key is`registration-link`.
+    </Info>
+
+    Visit that URL to access the form for registering the supplier. 
+
+    <Note>
+      Note that this form can be shared directly with the supplier if required.
+    </Note>
+
+    <Frame>
+      <img src="/guides/images/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
+    </Frame>
+
+    Fill out the form with the following information: Issuer RFC, CSD certificate file (`.crt`), private key (`.key`), and the private key password.
+    
+    Follow this [guide](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan) to generate the CSD certificate and key.
+
+    When you click **Save**, the form details are securely sent to the PAC (*Proveedor Autorizado de Certificación*), who will handle invoice signing and submission to the SAT.
+
+    <Note>
+      You can fill the form via API by sending a PUT request to the registration link. The payload should be a JSON object with the following fields:
+
+      - `csd_file` (string): The CSD certificate file (`.crt`).
+      - `key_file` (string): The private key (`.key`).
+      - `password` (string): The private key password.
+
+      The response will be a JSON object with the following fields:
+
+      - `rfc` (string): The RFC of the supplier.
+      - `active_cert` (boolean): Whether the certificate is active.
+    </Note>
+  </Step>
+
+  <Step title="Authorize PAC to Issue Invoices">
+    Since we are using a local PAC, you must authorize the PAC to sign, stamp, and send CFDIs to the SAT on your behalf. 
+    
+    To do this, visit the following [page]( https://firmamanifiesto.lunasoft.net/) and **sign the manifesto using your e.firma (FIEL)**.
+  </Step>
+
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the supplier.
+
+
+### Send an Invoice
+
+The following examples are of partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+GOBL Invoices sent to the SAT require the following properties in order to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before upload:
+
+- `$regime` to be set to [`MX`](https://docs.gobl.org/regimes/mx)
+- `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
+
+<AccordionGroup>
+<Accordion title="B2B Invoice (Personas Morales)">
+
+This main type of invoice is a standard B2B invoice from a Mexican supplier to another Mexican customer.
+
+Notice:
+
+- we've added the `mx-cfdi-v4` addon, this ensures the document will be validated using the CFDI v4 rules built into the GOBL library,
+- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
+- VAT will be applied at the standard rate, the percentage will be set automatically, and,
+- there are no totals nor calculations, all of these will be made automatically when uploading.
+
+<B2BInvoice />
+
+</Accordion>
+
+<Accordion title="B2C Invoice (Personas Físicas)">
+
+This is a standard B2C invoice from a Mexican supplier to a Mexican physical person with tax details, but no specific tax declaration requirements. This would be for a larger sale when the "Simplified" and "Global Invoice" do not apply.
+
+In addition to the observations for regular B2B invoices, note in the customer:
+
+- the presence of an RFC in the same format as for companies, and,
+- the `mx-cfdi-fiscal-regime` and `mx-cfdi-use` extensions have been set to `616` and `S01` respectively reflecting that the customer is not subject to tax.
+
+It is important in Mexico to ensure the correct Fiscal Regime and CFDI Use codes are set correctly as the SAT will check these details and reject documents with unexpected combinations.
+
+<B2CInvoice />
+
+</Accordion>
+
+<Accordion title="Simplified Invoice (Factura al público en general)">
+
+In Mexico, a General Public Invoice (Factura al Público en General) is a type of tax document issued to record sales made to customers who do not request an invoice with a specific Federal Taxpayer Registry (RFC) number. Instead, a generic RFC is used to identify the recipient:
+
+- XAXX010101000 for domestic transactions
+
+- XEXX010101000 for foreign transactions
+
+This type of invoice is mandatory for businesses that sell to the general public and do not issue individual invoices for each transaction.
+
+To create this type of invoice in Invopop:
+
+- the `customer` field is not required
+- the `$tags` field is used to identify this as a simplified invoice.
+
+<SimplifiedInvoice />
+
+</Accordion>
+
+<Accordion title="Global Invoice">
+
+The Global Invoice is used to group a set of invoices into a single CFDI document.
+
+Notice:
+
+- the `$tags` field has been used to identify this as a global invoice,
+- each `line` has a `ref` which is used to identify the invoice that it belongs to,
+- the `tax.ext.mx-cfdi-global-month`, `mx-cfdi-global-period`, and `mx-cfdi-global-year` fields have been used to identify the global invoice period.
+<GlobalInvoice />
+
+</Accordion>
+
+<Accordion title="Credit Note">
+
+The Credit Note is used to cancel an invoice.
+
+Notice:
+
+- the `$type` field has been set to `credit-note`,
+- the `preceding` field has been used to identify the invoice that is being cancelled.
+
+<CreditNote />
+
+</Accordion>
+
+</AccordionGroup>
+
+## FAQ
+
+Please contact the [Invopop support team](email:support@invopop.com) if you have any questions that are not listed here.
+
+<AccordionGroup>
+
+<Accordion title="Which PAC (Proveedor Autorizado de Certificación) does Invopop use?">
+  Invopop uses [SW Sapien](https://sw.com.mx), an Authorised Certification
+  Provider (PAC), to sign and stamp CFDI documents for the Mexican tax
+  authority.
+</Accordion>
+
+<Accordion title="Where can I find the mapping of GOBL fields to CFDI?">
+The library that transforms GOBL into CFDI documents is publicly available as an open-source project and can be found at [github.com/invopop/gobl.cfdi](https://github.com/invopop/gobl.cfdi).
+
+For further details on how GOBL prepares data for conversion, see the [Mexico Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/mx/README.md).
+
+</Accordion>
+
+</AccordionGroup>

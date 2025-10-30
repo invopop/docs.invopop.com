@@ -1,0 +1,156 @@
+---
+title: "Document Contents"
+description: "Files, Activity, Meta and GOBL Envelope"
+sidebarTitle: Contents
+---
+
+## Introduction
+Every document stored in the Invopop Console is represented internally by a signed GOBL Envelope plus companion data (files, activity logs, relationships, metadata, and signatures). The Document Content view lets you inspect the full lifecycle and structure of a document so you can:
+- Verify integrity (signatures, hashes, states)
+- Understand changes over time (activity timeline)
+- Access generated artifacts (PDF, XML, JSON, regulatory payloads)
+- Explore related documents (credit notes, corrections, substitutions)
+- See enriched metadata (regime addons, workflow states, custom keys)
+
+Use this page whenever you need to audit a document, debug a workflow result, or prepare regulatory / customer inquiries.
+
+## Envelope
+Envelope wraps around a document adding headers and digital signatures.
+
+### JSON Schema ID
+Schema identifies the schema that should be used to understand this document
+
+### Header
+Details on what the contents are.
+
+### Document
+The data inside the envelope.
+
+### Signatures
+JSON Web Signatures of the header.
+
+#### Files
+The Files tab lists generated or attached artifacts:
+Common File Types:
+- PDF: Human-readable rendition (may include mandatory QR, stamp, legends).
+- XML / Structured: Regulatory submission payloads (FacturaE, FatturaPA, KSeF FA(2), CFDI, UBL, CII).
+- JSON: Original or transformed GOBL snapshot.
+- Auxiliary: Attachments (agreement, identity docs, shipping notes, images).
+- Signature logs or hash chains.
+
+Metadata shown often includes size, checksum (SHA256), creation timestamps, and MIME type. Use checksums to verify external copies match stored originals.
+
+Workflow Interactions:
+- Generation steps (e.g. “Generate PDF”, “Generate VERI*FACTU XML”) append files.
+- Cancellation / correction workflows may add new XML replacing or referencing prior versions.
+- Archival workflows create summarized CSV/SAF-T exports and attach them.
+
+Retention:
+- Files are immutable once attached; regeneration creates a new file or updates version counters (depending on workflow design).
+- Never delete compliance artifacts—retain for audit lifetimes (often 5–10 years).
+
+#### Activity
+A chronological log of significant actions affecting the document:
+Common Events:
+- Creation (entry uploaded)
+- Workflow job started / completed / errored
+- State transitions (Draft → Sent → Paid / Void / Error)
+- Signature applied or verified
+- Attachment added
+- External submission (e.g. SDI, AEAT, PAC, KSeF)
+- Cancellation or correction accepted
+- Reconciliation (payment posted)
+
+Use Activity to debug failed workflows:
+- Inspect failed step name and error code.
+- Identify if a retry subsequently succeeded.
+- Confirm ordering for chained regimes (e.g. hash chain continuity, sequence increments).
+
+Audit Integrity:
+- Each event is timestamped (UTC) and references the job/workflow ID.
+- Non-destructive: Past events remain even after corrections.
+
+#### Related
+Lists documents logically connected to the current envelope:
+Typical Relations:
+- Credit note referencing an invoice.
+- Corrective invoice replacing an original.
+- Payment complement tying to issued invoice (CFDI).
+- Replacement sequence (substitution under specific regimes).
+- Cancellation or void record linked to original document.
+
+Best Practices:
+- Always navigate to related documents to confirm both halves of a correction or refund are consistent.
+- Use related view to bulk export a chain (original + adjustments + replacements) for external audits.
+
+#### Meta
+Structured metadata and key-value pairs attached to the envelope that provide enhanced context:
+Examples:
+- Regime Addons: `es-verifactu-v1`, `pt-invoicexpress-v1`.
+- Submission Protocols: `submission.protocol`, `ksef.hash`, `cfdi.uuid`.
+- Signature Fingerprints: `signature.sha256`, `chain.previous_hash`.
+- Workflow Tracking: `workflow.id`, `job.id`, `attempt`.
+- Payment Resolution: `payment.status`, `payment.last_checked`.
+- Custom Business Fields: department code, cost center, channel.
+
+Usage:
+- Workflows read/write meta fields to govern conditional logic (e.g. skip generation if `pdf.generated == true`).
+- API clients can filter entries by meta values for reporting.
+
+Guidelines:
+- Keep keys namespaced to avoid collisions (`verifactu.*`, `ksef.*`, `cfdi.*`, `custom.*`).
+- Avoid overwriting critical regulatory fields—append new versions or maintain snapshots.
+
+### Signatures
+Signature blocks attest to document integrity and authenticity. Depending on regime and workflow:
+Contents:
+- Signer identity (certificate thumbprint, key ID).
+- Timestamp at signing.
+- Hash or digest algorithm (e.g. SHA256).
+- Envelope canonicalization details.
+- Previous hash (for chaining sequences or regulatory chain requirements).
+- Optional signature version or compliance profile.
+
+Verification:
+- Console may display a validity indicator (✔ Valid / ⚠ Warning / ✖ Invalid).
+- Invalid signatures often result from post-sign modification of core fields or mismatched hashing algorithm settings.
+
+Chain Integrity:
+- For regimes requiring chained documents (Portugal hash chain, VERI*FACTU request chain, Brazilian NF-e sequences), each signature references the preceding hash to prevent tampering.
+- Cancellations and corrections may generate new signature entries, preserving prior ones.
+
+Best Practices:
+- Sign after finalizing monetary and tax details.
+- Regenerate PDF only after signature (so signature metadata can appear in the rendered document footer/header if required).
+- For multi-sign flows (organization + intermediary) ensure ordering is consistent; verify both before submission.
+
+---
+
+### Quick Troubleshooting Guide
+| Symptom | Likely Cause | Resolution |
+|---------|--------------|-----------|
+| Totals mismatch | Line rounding vs tax calculation inconsistency | Recompute sums; ensure currency precision matches regime defaults. |
+| Missing PDF | Workflow skipped Render step | Trigger a regeneration workflow; check if a condition prevented generation. |
+| Signature invalid | Envelope mutated post-sign | Re-sign with updated envelope; avoid editing signed fields directly. |
+| Missing related credit note | Credit workflow failed | Inspect Activity for failed job; re-run correction workflow. |
+| Protocol absent | Submission workflow incomplete | Confirm external API connectivity; retry transmission step. |
+
+### Recommended Review Flow
+1. Open Header: confirm type, regime, series/code, state.
+2. Inspect Signatures: validate all present and valid.
+3. Review Meta: ensure protocol/UUID and tax chain metadata.
+4. Check Files: required artifacts (PDF + submission XML) present.
+5. Scan Activity: look for errors or retries.
+6. Inspect Related: confirm corrections or cancellations linked.
+7. Export or archive if the document reached terminal state (Sent, Paid, Void, Corrected, Archived).
+
+### Glossary
+- Envelope: Structured wrapper for the business document and signatures.
+- Addon: Extension enabling regime-specific transformations.
+- Protocol / UUID / Hash: External authority identifier proving successful submission.
+- Preceding: Reference block pointing to an original or prior document.
+- Chain: Sequential cryptographic linkage between documents for integrity.
+
+---
+
+If you need deeper technical detail, consult API references for Silo Entries and Workflow Jobs; this page focuses on Console interpretation and manual audit steps.
