@@ -121,7 +121,65 @@ To create a new workflow click on **Create New Workflow** in the sidebar menu. Y
 
 </Step>
 
+<Step title="Show your tax ID on invoices">
+By default, Stripe does not display your tax ID on invoices. To enable it, go to Settings > Billing > Invoices. In the `Invoice Tax Information` section, enter your tax ID, set it as the default, and click **Save**.
+
+<Frame caption="Show your tax ID on invoices">
+  ![stripe tax id](/guides/images/stripe-tax-id.png)
+</Frame>
+
+</Step>
+
 </Steps>
+
+## Monitor invoice processing
+
+After setup, finalized Stripe invoices are imported into Invopop automatically and saved to the `Sales` folder. Use the steps below to verify status, review details, retry processing, and import historical invoices.
+
+<Steps>
+
+<Step title="Check invoice status in Stripe">
+Open the invoice in Stripe and check the Invopop panel in the right sidebar to confirm whether processing succeeded.
+
+<Frame caption="Invoice processed successfully in Stripe">
+  ![stripe invoice status](/guides/images/stripe-invoice-success.png)
+</Frame>
+
+</Step>
+
+<Step title="Check invoice status in Invopop">
+In the Invopop console, go to `Sales` and open the invoice to view its status. To review the underlying processing job, go to `Workflows` > `History` and open the job details.
+
+<Frame caption="Job details in Invopop">
+  ![stripe job details](/guides/images/stripe-invopop-job.png)
+</Frame>
+
+</Step>
+
+<Step title="Troubleshoot import errors">
+If an invoice fails, it is usually one of two cases:
+
+1. The invoice was not imported into Invopop because converting from Stripe to Invopop failed. Update the data in Stripe and click **Retry** in the Invopop panel.
+
+<Frame caption="Retry invoice">
+  ![stripe retry invoice](/guides/images/stripe-retry-import.png)
+</Frame>
+
+2. The invoice was imported into Invopop but submission to the tax authority failed. Correct the invoice in Invopop and re-run a workflow that omits the **Import data from Stripe** step to avoid reimporting the original data. Typical causes include missing required fields or invalid field formats.
+
+<Frame caption="Incorrect invoice details">
+  ![stripe retry invoice](/guides/images/stripe-invoice-wrong-details.png)
+</Frame>
+</Step>
+
+<Step title="Get notified of failures">
+Add a notification action in your workflow's Error Handling section—Slack, email, or webhook—so you're alerted when an import fails.
+
+</Step>
+
+</Steps>
+
+If you need help tailoring a workflow to your use case, contact us at support@invopop.com.
 
 ## FAQ
 
@@ -139,7 +197,7 @@ To create a new workflow click on **Create New Workflow** in the sidebar menu. Y
   </Frame>
 
   Option 2: Through Invopop
-  1. Navigate to the **Apps** section in your (Invopop console)[https://console.invopop.com/]
+  1. Navigate to the **Apps** section in your [Invopop console](https://console.invopop.com/)
   2. Locate the Stripe app settings
   3. Select your new workflow
 
@@ -154,6 +212,27 @@ To create a new workflow click on **Create New Workflow** in the sidebar menu. Y
   1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
   2. Click the **Disconnect** button
   3. Reconnect the app and select your new workspace
+
+  </Accordion>
+
+  <Accordion title="How can I add a Purchase Order number to the invoice?">
+  Stripe does not include a dedicated Purchase Order field on invoices. Add it as a custom field named `PO Number`.
+
+  You can add the custom field in any of these places:
+  - The specific invoice
+  - The subscription
+  - An invoice template
+
+  </Accordion>
+
+  <Accordion title="Can I import historical invoices (issued before I connected Invopop)?">
+  Yes. Open the invoice in Stripe and click **Process this invoice** in the Invopop panel (right sidebar).
+
+  Note: The invoice issue date will be set to the sync date (today), as required by tax agencies. The operation date remains the original date of the transaction.
+
+  <Frame caption="Import historic invoices">
+    ![stripe import historic invoices](/guides/images/stripe-import-historic-invoices.png)
+  </Frame>
 
   </Accordion>
 

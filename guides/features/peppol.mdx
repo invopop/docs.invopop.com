@@ -8,6 +8,7 @@ description: "How to issue and receive electronic invoices through the global Pe
 import PeppolSendWorkflow from '/snippets/workflows/templates/peppol/peppol-send.mdx';
 import PeppolReceiveWorkflow from '/snippets/workflows/templates/peppol/peppol-receive.mdx';
 import PeppolRegisterWorkflow from '/snippets/workflows/templates/peppol/peppol-register.mdx';
+import PeppolUnregisterWorkflow from '/snippets/workflows/templates/peppol/peppol-unregister.mdx';
 import PeppolSupplier from '/snippets/suppliers/peppol/peppol-supplier.mdx';
 import PeppolInvoice from '/snippets/invoices/peppol/peppol-b2b.mdx';
 
@@ -179,7 +180,7 @@ The mandatory fields for Peppol registration are:
 - Contact information
 - Peppol participant ID
 
-If no Peppol participant ID is provided, Invopop will assign one during registration based on the VAT number and the country.
+[Participant IDs](http://localhost:3003/guides/features/peppol#what-are-participant-ids) are unique identifiers for entities in the Peppol network. If no Peppol participant ID is provided, Invopop will assign one during registration based on the VAT number and the country.
 
 All fields are required for identity validation and proof of ownership verification.
 
@@ -201,29 +202,41 @@ The execution should succeed, and the silo entry's state will change to "Process
 <img width="100%" src="/guides/images/peppol-supplier.png" alt="Sending party to the registration workflow" />
 </Frame>
 
-This link leads to a webform where you can upload proof of ownership documents and confirm your company details:
+This link leads to a web form where you can upload proof of ownership documents and confirm your company details:
 
 <Frame>
 <img width="100%" src="/guides/images/peppol-wizard.png" alt="Peppol registration wizard" />
 </Frame>
 
-After submitting the webform, Invopop will be notified and will validate your information within up to 72 hours. The approval status will be shown in the Meta tab of the entry.
+After submitting the web form, Invopop will be notified and will validate your information within up to 72 hours. The approval status will be shown in the Meta tab of the entry.
 
 #### Programmatic registration (white-label)
 
-For programmatic integration, you can use our API instead of the webform. This is particularly useful for white-label implementations where you want to integrate the registration process into your own application.
+For programmatic integration, you can use our API instead of the web form. This is particularly useful for white-label implementations where you want to integrate the registration process into your own application.
 
 You can achieve this by uploading the proof of ownership document using the [API](/api-ref/apps/peppol/ownership-upload). This launches the validation process automatically.
 
 #### Completion
 
-When Invopop approves your registration, we will automatically register your party with the Peppol network as before. You'll see the Peppol Participant ID in the Meta tab of the entry and the supplier's entry will contain an `inboxes` array. This information should be included in each invoice issued by this supplier.
+When Invopop approves your registration, we will automatically register your party with the Peppol network as before. You'll see the Peppol Participant ID in the Meta tab of the entry, and the GOBL document will contain an `inboxes` array.
 
 <Frame caption="Peppol participant inboxes">
   <img src="/guides/images/peppol-inboxes.png" width="500" alt="Peppol inboxes" />
 </Frame>
 
+Participant IDs are represented as inboxes within a Party record because they function as network addresses—the location where invoices are sent to and received from. 
+
+To set a primary inbox when multiple are configured, add "key: peppol" to your preferred inbox. This inbox will take precedence for all Peppol transactions.
+
 The party can now send and/or receive invoices in Peppol via Invopop.
+
+#### Unregistering a participant
+
+If you need to unregister an entity (because the supplier is no longer your client, for example), use the following workflow template:
+
+<PeppolUnregisterWorkflow />
+
+
 
 ### Sending invoices
 
@@ -237,6 +250,11 @@ You can perform these steps manually via the Console or programmatically via the
 When creating your invoice, ensure you add the `eu-en16931-v2017` addon to enable validations and extensions needed for Peppol
 
 <PeppolInvoice />
+
+<Note>
+  The `payment: { "terms": {"detail": "..."}}` field is required for [EN16931](https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108950/EN+16931+compliance) (EU) invoices and should be filled in with due dates or payment terms.
+</Note>
+
 
 ### Receiving invoices
 
@@ -261,8 +279,27 @@ In general, you should use the highest visibility available.
 
 </Accordion>
 
-<Accordion title="How can I disable Peppol for a Party?">
-You can disable Peppol for a Party by running a workflow with the _Register Peppol Party_ step and setting the Status to `Disabled`.
+<Accordion title="Can I remove UBL or CII from the 'Peppol receive invoice' workflow if I only use one format?">
+Yes, you can remove either format based on your needs. Our template includes both UBL and CII imports for comprehensiveness, but if you're certain you'll only receive invoices in one format, you can safely remove the unused format. This simplifies your workflow and reduces the number of apps you need to activate.
 </Accordion>
+
+<Accordion title="What are Participant IDs?">
+
+Participant IDs are unique identifiers for entities in the Peppol network. They consist of two parts:
+
+- **Scheme**: Identifies the type of identifier being used (e.g., `9920` for Spanish VAT numbers, `0208` for Belgian BCE numbers)
+- **Code**: The actual identification number
+
+In most cases, Participant IDs are based on VAT numbers or local business identifiers. Since most countries have a default scheme, we can typically derive the Participant ID automatically from a Tax ID.
+</Accordion>
+
+<Accordion title="When registering a supplier we get an error: 'XXXX:XXXXXXXXX is already registered' on the Register Peppol Party step">
+This is because because a supplier with the stated participant ID has already been registered in your workspace.
+</Accordion>
+
+<Accordion title="Should I set the $regime in Peppol?">
+  By default, the regime is automatically determined from each supplier's settings, which is recommended in Peppol.
+</Accordion>
+
 
 </AccordionGroup>
