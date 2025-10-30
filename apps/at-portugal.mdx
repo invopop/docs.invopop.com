@@ -6,315 +6,111 @@ keywords: ['portugal','at','saft','atcud','e-invoicing']
 mode: wide
 ---
 
-<Tip>
-  This content is a best-effort functional specification derived from the app name and common Portuguese e-invoicing + SAF-T requirements.
-</Tip>
-
-## Overview
-
-The **AT Portugal** app enables compliance with Portuguese invoicing regulations enforced by the *Autoridade Tributária e Aduaneira (AT)*.
-It streamlines generation and transmission of certified invoices (with **ATCUD** + **hash chain** + **QR Code**) and supports **SAF-T (PT)** extraction and periodic submissions.
-
-<Columns cols="3">
-  <Card title="Invoice Compliance" icon="file-check">
-    Generate AT-compliant invoices including ATCUD codes, hash chain and QR.
-  </Card>
-  <Card title="SAF-T (PT)" icon="file-code">
-    Build and transmit monthly/annual SAF-T datasets directly from stored entries.
-  </Card>
-  <Card title="Series Management" icon="list">
-    Register and manage certified document series required for ATCUD composition.
-  </Card>
-  <Card title="Certification Chain" icon="link">
-    Apply cryptographic chaining to invoice headers to assure integrity.
-  </Card>
-  <Card title="Cancellation Handling" icon="ban">
-    Void or cancel invoices under permitted legal circumstances with audit trail.
-  </Card>
-  <Card title="Audit & Traceability" icon="fingerprint">
-    Preserve a traceable history of all transformations and submissions.
-  </Card>
-</Columns>
-
----
-
-## Key Concepts
-
-**ATCUD**
-A unique code printed on each invoice combining the registered *Series Code* (obtained from AT) and an incremental document number.
-
-**Hash Chain**
-Portuguese law requires a cryptographic hash field linking each certified invoice to the previous one for tamper detection.
-
-**QR Code**
-Invoices must display a QR that encodes core invoice data (supplier TIN, document number, ATCUD, taxable amounts, VAT, etc).
-
-**SAF-T (PT)**
-Standard Audit File for Tax – an XML extract of accounting and invoicing records submitted periodically (usually monthly, plus annual).
-
-**Series Registration**
-Before issuing invoices, each series must be declared and authorized. The series identifier is part of ATCUD.
-
----
-
 <Tabs>
+	<Tab title="Description">
+		<div class="flex gap-8">
+			<Card title="AT Portugal" icon="https://assets.invopop.com/apps/at-pt/icon.svg"
+			  href="/apps/at-portugal-guide" cta="View implementation guide">
+					Issue AT invoices, payments, and onboard suppliers.
+			</Card>
+			<div class="flex-shrink">
+	|               |       |
+	|---------------|-------|
+	| Developer | [Invopop](https://invopop.com) |
+	| Category | Government |
+	| Last&nbsp;Update | <div class="whitespace-nowrap">2025-09-24</div> |
+	| Docs | [Implementation&nbsp;guide](/apps/at-portugal-guide) |
+		</div>
+	</div>
 
-<Tab title="Description">
-The **AT Portugal app** introduces workflow actions and data generation utilities to simplify lifecycle operations:
+		Invopop is an officially certified invoice provider in Portugal. Our **AT Portugal app** is designed to support full compliance with Portugal’s AT e-invoicing regulation. Automate supplier onboarding, SAF-T report generation, invoice generation with ATCUD, and more. This app enables businesses (and their suppliers) to issue e-invoices in accordance with Portuguese law.
 
-1. **Series Registration & Update** – Register or adjust invoice series needed to construct ATCUD values.
-2. **Invoice Preparation** – Add required Portuguese regime addon, compute hash, ATCUD, and QR.
-3. **Submission & Acknowledgement** – Transmit invoices or batches to AT (when applicable) and persist acknowledgements.
-4. **Cancellation / Annulment** – Issue legally compliant cancellation events when allowed.
-5. **SAF-T Extraction & Transmission** – Compile a SAF-T XML from existing entries (invoices, credit notes) for the selected period.
-6. **Validation Utilities** – Pre-flight checks for missing fiscal IDs, incorrect tax codes, or invalid series states.
+	#### Key Features
 
-</Tab>
+	* **Workflow Automation:** This app provides automated workflows for issuing invoices, onboarding suppliers, and managing fiscal submissions to the Autoridade Tributária e Aduaneira (AT).
+	* **Legally Compliant PDF Invoices:** Invoices are generated with all mandatory fields and a certified ATCUD code, as required by the Portuguese invoicing legislation.
+	* **SAF-T (PT) File Generation:** The app makes workflow steps available to manage SAF-T (PT) entries for each supplier.
+	* **SAF-T supplier portal:** Suppliers can generate SAF-T PT reports via the [Supplier Portal](https://at-pt.invopop.com/portal).
+	* **Supplier Registration:** Automatic registration (no onboarding process) with a single workflow step.  
+	* **White-Label Support:** Invoicing can be performed either under a client’s brand (white-label) or directly by the issuing organization, according to operational needs.
 
-<Tab title="Actions">
-Below is a proposed catalog of workflow actions exposed when the app is enabled:
+	Make sure to check out our [AT Portugal Guide](at-portugal-guide) for instructions on how to issue invoices and onboard suppliers.
 
-<AccordionGroup>
-  <Accordion title="Register AT Series">
-    Registers a new invoice series with the AT and stores returned authorization data (Series Code, validity window).
-  </Accordion>
-  <Accordion title="Update AT Series">
-    Refreshes or amends an existing series metadata (e.g. description, closure date) before further issuance.
-  </Accordion>
-  <Accordion title="Generate AT Invoice Data">
-    Computes ATCUD, hash chain value, and attaches legal metadata & QR payload to a GOBL invoice envelope.
-  </Accordion>
-  <Accordion title="Sign & Seal AT Invoice">
-    Performs digital signature of the invoice envelope ensuring integrity (optional if signature already applied upstream).
-  </Accordion>
-  <Accordion title="Transmit AT Invoice">
-    Sends the prepared invoice (or batch) to the AT endpoint; records protocol number & timestamp.
-  </Accordion>
-  <Accordion title="Cancel AT Invoice">
-    Issues a cancellation request for an invoice not yet delivered to client or under permissible conditions; sets state to Void.
-  </Accordion>
-  <Accordion title="Generate SAF-T Period">
-    Builds a SAF-T (PT) XML for a defined date range aggregating invoices, credit notes, taxes, and series data.
-  </Accordion>
-  <Accordion title="Transmit SAF-T Period">
-    Uploads the generated SAF-T file to AT and stores the acceptance receipt.
-  </Accordion>
-  <Accordion title="Validate AT Invoice">
-    Runs pre-flight validations (fiscal IDs, tax regime codes, series continuity, hash chain expectation).
-  </Accordion>
-  <Accordion title="Set State (Error)">
-    Standard error handler step setting invoice or job state to `Error` with diagnostic context.
-  </Accordion>
-</AccordionGroup>
-</Tab>
+	</Tab>
+	<Tab title="Configuration">
+		#### Post registration workflow
 
-<Tab title="Workflows">
-Suggested workflow blueprints:
+		To configure this setting, you need to have the [AT Supplier post-registration workflow](/) created. Once created, select it in this dropdown.
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
 
-<AccordionGroup>
 
-  <Accordion title="AT Issue Invoice Workflow">
-    <Steps>
-      <Step title="Validate">
-        Ensure invoice has Portuguese regime, supplier/customer NIF, tax lines correct.
-      </Step>
-      <Step title="Generate AT Invoice Data">
-        Adds ATCUD, QR, hash chain; persists augmented envelope.
-      </Step>
-      <Step title="Sign & Seal AT Invoice">
-        Applies signature if not present.
-      </Step>
-      <Step title="Transmit AT Invoice">
-        Sends to AT; stores protocol number.
-      </Step>
-      <Step title="Set State (Sent)">
-        Marks invoice as Sent.
-      </Step>
-      <Step title="Error Handling">
-        Add Set State (Error).
-      </Step>
-    </Steps>
-  </Accordion>
+		<Card title="Cancel SAF-T record (Portugal)" icon="https://assets.invopop.com/apps/at-pt/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="/pops.svg" /> 1</div>
+		 Cancel a previously recorded GOBL document for SAF-T PT reporting.
+		</Card>
+		<Card title="Record for SAF-T reporting (Portugal)" icon="https://assets.invopop.com/apps/at-pt/icon.svg"  horizontal>
+		 <div class="pop-count"><Icon icon="/pops.svg" /> 1</div> 
+		 Record a GOBL document for SAF-T PT reporting.
+		</Card>
+		<Card title="Seal for the AT (Portugal)" icon="https://assets.invopop.com/apps/at-pt/icon.svg"  horizontal>
+		  Generate the signature and related artifacts (ATCUD, QR) of a GOBL document for the AT.
+		</Card>
+		
+		<Card title="Register AT Issuer" icon="https://assets.invopop.com/apps/at-pt/icon.svg"  horizontal>
+		  Register a GOBL party to report taxes to the AT in their name.
+		</Card>
+	</Tab>
 
-  <Accordion title="AT Cancel Invoice Workflow">
-    <Steps>
-      <Step title="Validate Cancellable">
-        Confirms legal conditions for cancellation (status not finalized with customer, within allowed time).
-      </Step>
-      <Step title="Cancel AT Invoice">
-        Submits cancellation to AT; obtains confirmation.
-      </Step>
-      <Step title="Set State (Void)">
-        Marks document voided.
-      </Step>
-      <Step title="Error Handling">
-        Set State (Error).
-      </Step>
-    </Steps>
-  </Accordion>
+	<Tab title="Workflows">
 
-  <Accordion title="AT Series Registration Workflow">
-    <Steps>
-      <Step title="Register AT Series">
-        Requests authorization for given series prefix.
-      </Step>
-      <Step title="Persist Series Metadata">
-        Updates configuration entry with returned series code.
-      </Step>
-      <Step title="Notify">
-        Optional Slack/Email notification of new series activation.
-      </Step>
-    </Steps>
-  </Accordion>
+	The following workflows are available to make your integration easier. Use them as templates to build upon. 
 
-  <Accordion title="AT SAF-T Period Submission Workflow">
-    <Steps>
-      <Step title="Generate SAF-T Period">
-        Compiles XML for selected period (e.g. previous month).
-      </Step>
-      <Step title="Transmit SAF-T Period">
-        Sends file to AT; records receipt.
-      </Step>
-      <Step title="Archive">
-        Stores SAF-T XML + receipt in Files.
-      </Step>
-      <Step title="Notify">
-        Sends summary metrics (invoice count, total tax) to channel.
-      </Step>
-      <Step title="Error Handling">
-        Set State (Error).
-      </Step>
-    </Steps>
-  </Accordion>
+import PostRegistration from '/snippets/workflows/templates/pt/at-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/pt/at-register-supplier.mdx';
+import IssueInvoice from '/snippets/workflows/templates/pt/at-issue-invoice.mdx';
 
-</AccordionGroup>
-</Tab>
+	<AccordionGroup>
+		<Accordion title="AT Portugal issue invoice">
+			<IssueInvoice />
+		</Accordion>
+		<Accordion title="AT Portugal register supplier">
+			<RegisterSupplier />
+		</Accordion>
+		<Accordion title="AT Portugal post-registration workflow">
+			<PostRegistration />
+		</Accordion>
+	</AccordionGroup>
 
-<Tab title="Data Elements">
-Core invoice enhancements produced by the app:
 
-| Field | Description |
-|-------|-------------|
-| `addon.at-portugal-v1` | Regime addon marker enabling Portuguese transformations. |
-| `meta.at.atcud` | The ATCUD code (SeriesCode-DocumentNumber). |
-| `meta.at.hash` | Cryptographic hash linking to previous invoice in the series. |
-| `meta.at.series_code` | Code returned by AT on series registration. |
-| `meta.at.qr` | Raw QR payload string encoded into final PDF. |
-| `files.qr.pdf` | Generated PDF including QR + ATCUD + mandatory footer notes. |
-| `submission.protocol` | AT receipt/protocol identifier after transmission. |
+	</Tab>
 
-</Tab>
+	<Tab title="Example documents">
 
-<Tab title="Example States">
-Typical state transitions for a single invoice:
-
-| Step | State Before | Action | State After |
-|------|--------------|--------|------------|
-| Upload | Empty | Validate | Ready |
-| Generate AT Data | Ready | Generate AT Invoice Data | Prepared |
-| Sign | Prepared | Sign & Seal AT Invoice | Signed |
-| Transmit | Signed | Transmit AT Invoice | Sent |
-| Cancel (if needed) | Sent | Cancel AT Invoice | Void |
-| Error | Any | (Error Handling) | Error |
-
-</Tab>
-
-<Tab title="Operational Guidance">
-<AccordionGroup>
-  <Accordion title="Series Strategy">
-    Maintain separate series per channel or business unit for clearer audit segmentation. Ensure non-overlapping numbering.
-  </Accordion>
-  <Accordion title="Retry Logic">
-    Transmission failures (network or temporary AT unavailability) should auto-retry with exponential backoff; avoid altering hash sequence.
-  </Accordion>
-  <Accordion title="Hash Chain Integrity">
-    Never regenerate historical hashes. If an issuance fails after hash assignment but before AT acknowledgement, mark the invoice as Error and re-attempt transmission using the same hash.
-  </Accordion>
-  <Accordion title="Period Closing">
-    SAF-T generation should lock included invoices. Subsequent corrections appear in next period with references to prior entries.
-  </Accordion>
-  <Accordion title="Cancellation vs Credit Note">
-    Prefer credit notes for commercial adjustments. Use cancellation only for administrative mistakes prior to customer delivery.
-  </Accordion>
-</AccordionGroup>
-</Tab>
-
-<Tab title="Troubleshooting">
-Common issues & mitigations:
-
-| Symptom | Possible Cause | Suggested Resolution |
-|---------|----------------|----------------------|
-| Missing ATCUD on PDF | Series not registered / metadata absent | Run Series Registration workflow first. |
-| Hash mismatch rejection | Out-of-order issuance or skipped document | Check last successful invoice hash; reissue ensuring monotonic sequence. |
-| SAF-T validation error | Unsupported tax code or missing customer TIN | Run Validate step pre-generation; correct entry data. |
-| Cancellation denied | Legal window exceeded | Issue credit note instead; maintain proper audit link. |
-| Duplicate protocol | Job retried after success | Implement idempotency key: use invoice UUID on transmission requests. |
-
-</Tab>
-
+import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
+import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
+		
+		<AccordionGroup>
+			<Accordion title="AT Portugal supplier">
+				<Supplier />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
+			</Accordion>
+			<Accordion title="AT Portugal B2BInvoice">
+				<B2BInvoice />
+				Copy and paste into [GOBL builder](https://build.gobl.org)
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
 </Tabs>
 
----
-
-## Minimal Workflow Example (YAML)
-
-```/dev/null/example-workflow.yaml#L1-24
-id: at-pt-issue-invoice
-label: "AT PT Issue Invoice"
-trigger: manual
-steps:
-  - id: validate
-    action: validate-at-invoice
-    on_error: set-error
-  - id: generate
-    action: generate-at-invoice-data
-  - id: sign
-    action: sign-envelope
-    when: meta.signature == null
-  - id: transmit
-    action: transmit-at-invoice
-    retry:
-      attempts: 3
-      backoff_seconds: 10
-  - id: set-sent
-    action: set-state
-    params:
-      state: Sent
-  - id: set-error
-    action: set-state
-    params:
-      state: Error
-```
-
----
-
-## FAQs
-
-<AccordionGroup>
-  <Accordion title="Is ATCUD mandatory for all invoices?">
-    Yes. As per recent Portuguese regulations, every invoice must include a valid ATCUD composed of the registered Series Code and document number.
-  </Accordion>
-  <Accordion title="Do I need to submit invoices individually?">
-    Depending on integration mode: real-time submission for certified software or periodic SAF-T file. The app can support either or both.
-  </Accordion>
-  <Accordion title="How is the hash chain stored?">
-    Added to invoice metadata and persisted in sequence. Each new invoice references the hash of the previous one in the same series.
-  </Accordion>
-  <Accordion title="Can I modify an invoice after generating the hash?">
-    Only before customer delivery and transmission; any structural change requires re-generation which breaks the chain—prefer cancellation + reissue.
-  </Accordion>
-  <Accordion title="What periods are supported for SAF-T?">
-    Monthly and annual extracts; ad-hoc custom date ranges possible for internal audit.
-  </Accordion>
-</AccordionGroup>
-
----
+---	
 
 <Card title="Participate in our community"
   icon="square-question"
   href="https://community.invopop.com"
-  arrow
+  arrow="true"
   horizontal
 >
-  Ask and answer questions about the AT Portugal App →
+  Ask and answer questions about AT Portugal App →
 </Card>
