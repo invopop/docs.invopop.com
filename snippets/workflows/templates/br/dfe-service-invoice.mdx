@@ -1,0 +1,67 @@
+---
+title: "DF-e issue service invoice (NFS-e)"
+description: "Issue a NFS-e invoice in Brazil"
+countryCode: "br"
+appId: "nfe-br"
+schema: "bill/invoice"
+---
+
+```json Example DF-e issue service invoice (NFS-e) workflow with states expandable
+{
+    "name": "DF-e issue service invoice (NFS-e)",
+    "description": "Issue a NFS-e invoice in Brazil",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "d1c7bde0-b651-11f0-b6c3-efa5610a4723",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dbcb8600-b651-11f0-b6c3-efa5610a4723",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NFS-e · 1",
+            "config": {
+                "name": "NFS-e",
+                "padding": 1,
+                "start": 1
+            }
+        },
+        {
+            "id": "e8eba950-b651-11f0-b6c3-efa5610a4723",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "ec64f190-b651-11f0-b6c3-efa5610a4723",
+            "name": "Send NFS-e (Brazil)",
+            "provider": "nfe-br.send"
+        },
+        {
+            "id": "eecc7bb0-b651-11f0-b6c3-efa5610a4723",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "f9195ac0-b651-11f0-b6c3-efa5610a4723",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

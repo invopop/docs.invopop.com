@@ -1,0 +1,47 @@
+---
+title: "DF-e register supplier"
+description: "Starts the registration of a DF-e supplier"
+countryCode: "br"
+appId: "nfe-br"
+schema: "org/party"
+---
+
+```json Example DF-e supplier registration workflow with states expandable
+{
+    "name": "DF-e register supplier",
+    "description": "Starts the registration of a DF-e supplier",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "68e5abd0-b64b-11f0-8ddf-b9fd6fa99d97",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "6f0a6500-b64b-11f0-8ddf-b9fd6fa99d97",
+            "name": "Register DF-e supplier (Brazil)",
+            "provider": "nfe-br.register"
+        },
+        {
+            "id": "71918510-b64b-11f0-8ddf-b9fd6fa99d97",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "7d127750-b64b-11f0-8ddf-b9fd6fa99d97",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
