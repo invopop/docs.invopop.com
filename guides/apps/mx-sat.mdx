@@ -23,67 +23,49 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
     | ----------- | -------------------------------------------------- |
     | Developer   | [Invopop](https://invopop.com)                     |
     | Category    | Government                                         |
-    | Last Update | <div class="whitespace-nowrap">   2025-10-31</div> |
-    | Docs        | [Implementation guide](/apps/sat-mexico-guide)     |
+    | Last Update | <div class="whitespace-nowrap">   2025-10-31</div> |
+    | Docs        | [Implementation guide](/apps/sat-mexico-guide)     |
 
     </div>
 
     </div>
 
-    Invopop's **SAT Mexico app** enables full compliance with Mexico's CFDI e-invociing framework. Use ready-made workflows to register suppliers, authorize the local PAC, and issue CFDI v4 invoices directly from Invopop. The app integrates with out local provider (SW Sapiens) to sign and stamp documents and deliver them to SAT.
+    Invopop's **SAT Mexico app** enables full compliance with Mexico's CFDI e-invoicing framework. Use ready-made workflows to register suppliers, authorize the local PAC, and issue CFDI v4 invoices directly from Invopop. The app integrates with our local provider (SW Sapiens) to sign and stamp documents and deliver them to SAT.
 
     #### Key Features
 
     - **Workflow Automation:** The app makes workflow steps available for post-registration, supplier registration, and issuing invoices through SAT.
     - **PDF Generation:** Optional PDF creation with configurable layout, locale, and formatting.
     - **PAC authorization:** One-time e.firma (FIEL) sign-off to allow the PAC to stamp and submit CFDIs on your behalf.
-    - **CFDI v4 compliance:** Validations and transformations powered by the GOBL library and the mx-cfdi-v4 addon.
-    - Supplier onboarding: Collect RFC and fiscal regime code; upload CSD (certificate & key) and activate via a secure registration link.
-    - **White-Label Support:** Invoicing can be performed either under a client’s brand (white-label) or directly by the issuing organization, according to operational needs. Make sure to check out our [SAT Mexico Guide](sat-mexico-guide) for instructions on how to issue invoices and onboard suppliers.
+    - **CFDI v4 compliance:** Validations and transformations powered by the GOBL library and the `mx-cfdi-v4` addon.
+    - **Supplier onboarding:** Collect RFC and fiscal regime code; upload CSD (certificate & key) and activate via a secure registration link.
+    - **White-Label Support:** Invoicing can be performed either under a client’s brand (white-label) or directly by the issuing organization, according to operational needs. Make sure to check out our [SAT Mexico Guide](/apps/sat-mexico-guide) for instructions on how to issue invoices and onboard suppliers.
   </Tab>
   <Tab title="Configuration">
     #### Post registration workflow
 
-    Create a simple post registration that marks suppliers as **Registered**. Select it in the SAT (Mexico) app configuration so suppliers move to the correct state after onboarding.
+    Create a simple post-registration workflow that marks suppliers as **Registered**. Select it in the SAT (Mexico) app configuration so suppliers move to the correct state after onboarding.
 
-    **Connect the SAT Mexico app** in **Configuration**
+    Connect the SAT Mexico app in **Configuration** → **Apps**, connect **SAT Mexico** and then **Configure**:
 
-    go to Apps, connect SAT Mexico and then Configure:
-
-    - **Environment:** Sandbox/Live
+    - **Environment:** Sandbox / Live
     - **Post-registration workflow:** Choose the one you created above
 
     <Note>
       **Notes**
 
-      - Instructions apply to both and CSDs are already pre-registered (you can also upload your own).
-      - You'll authorize the local PAC later with your **e.firma (FIEL).**
+      - Instructions apply to both sandbox and live; in sandbox, CSDs are already pre-registered (you can also upload your own).
+      - You'll authorize the local PAC later with your **e.firma (FIEL)**.
     </Note>
   </Tab>
   <Tab title="Actions">
     The following workflow actions will be available once you install and enable this app:
 
-    <Card title="Cancel SAF-T record (Portugal)" icon="https://assets.invopop.com/apps/sat-mx/icon.svg" horizontal>
-      <div class="pop-count">
-      <Icon icon="/pops.svg" /> 1
-
-      </div>
-
-      Cancel a previously recorded GOBL document for SAF-T PT reporting.
+    <Card title="Register SAT Issuer (Mexico)" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" horizontal>
+      Generate a secure registration link so the supplier can upload their CSD certificate (`.cer/.crt`), private key (`.key`), and password.
     </Card>
-    <Card title="Record for SAF-T reporting (Portugal)" icon="https://assets.invopop.com/apps/at-pt/icon.svg" horizontal>
-      <div class="pop-count">
-      <Icon icon="/pops.svg" /> 1
-
-      </div>
-
-      Record a GOBL document for SAF-T PT reporting.
-    </Card>
-    <Card title="Seal for the AT (Portugal)" icon="https://assets.invopop.com/apps/at-pt/icon.svg" horizontal>
-      Generate the signature and related artifacts (ATCUD, QR) of a GOBL document for the AT.
-    </Card>
-    <Card title="Register AT Issuer" icon="https://assets.invopop.com/apps/at-pt/icon.svg" horizontal>
-      Register a GOBL party to report taxes to the AT in their name.
+    <Card title="Send to SAT (Mexico)" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" horizontal>
+      Sign, stamp, and submit the invoice via the PAC (SW Sapiens) to SAT. Optionally generate a PDF.
     </Card>
   </Tab>
   <Tab title="Workflows">
@@ -94,10 +76,10 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
         - **Purpose:** Move suppliers to the `registered` state after successful onboarding.
         - **What it does:** Sets the supplier state to **Registered** (you can extend it with webhooks or notifications).
 
-          <IssueInvoice />
+        <PostRegistration />
       </Accordion>
       <Accordion title="SAT Mexico register supplier">
-        - **Purpose:** Register a supplier to issue CFDI compliant e-invoices on their behalf.
+        - **Purpose:** Register a supplier to issue CFDI-compliant e-invoices on their behalf.
         - **What it does:** Closes the envelope, **registers the SAT issuer (Mexico)** to create a secure registration link, and sets the supplier state to **Processing**.
         - **Outcome:** The supplier (or your ops team) uses the generated link to upload the CSD (`.crt` & `.key`) and password. Once saved, details are securely sent to the PAC.
 
@@ -108,7 +90,7 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
         - **What it does:** Adds a sequential code, **signs**, **sends to SAT (Mexico)** (prepaid toggle if needed), optionally **generates PDF**, and sets the invoice state to **Sent**.
         - **Recommendation:** Use layout **Letter** and locale **es** for PDFs; handle **Error** states by setting the state to **Error** in the rescue path.
 
-        <PostRegistration />
+        <IssueInvoice />
       </Accordion>
       <Accordion title="PAC authorization (one-time step)">
         - **Why:** Since a local PAC is used, you must authorize it to stamp and submit on your behalf.
@@ -117,9 +99,10 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
     </AccordionGroup>
   </Tab>
   <Tab title="Example documents">
-   Use these example GOBL documents when building and testing your flows. Paste into the Invopop Console (developer mode) or GOBL Builder.
+    Use these example GOBL documents when building and testing your flows. Paste into the Invopop Console (developer mode) or GOBL Builder.
 
     **Ensure:**
+
     - `"$regime": "MX"`
     - `"$addons": ["mx-cfdi-v4"]`
 
@@ -135,14 +118,20 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
         Copy and paste into [GOBL builder](https://build.gobl.org)
       </Accordion>
       <Accordion title="B2C invoice (Personas Físicas)">
+        Add a consumer example here. Customer includes RFC; set `mx-cfdi-fiscal-regime` and `mx-cfdi-use` (e.g., `616`, `S01`).
       </Accordion>
-      </Accordion title="Simplified invoice (Factura al público en general)">
+      <Accordion title="Simplified invoice (Factura al público en general)">
+        For sales without a customer RFC. Use generic RFCs **XAXX010101000** (domestic) / **XEXX010101000** (foreign), omit `customer`, and tag with `simplified`.
       </Accordion>
       <Accordion title="Global invoice">
+        Group multiple sales into one CFDI. Tag with `global`, set period fields (`mx-cfdi-global-month`, `mx-cfdi-global-period`, `mx-cfdi-global-year`), and reference each sale via `ref`.
       </Accordion>
       <Accordion title="Credit note">
+        Set `type` to `credit-note` and reference the original using `preceding` (series, code, date/time, and SAT UUID stamp).
       </Accordion>
-      <Accordion title="FAQ">
+      <Accordion title="Links">
+        - **PAC:** [SW Sapiens](https://smarterweb.com.mx) is the authorized PAC that Invopop uses to stamp and submit CFDIs to be locally compliant in Mexico.
+        - For more information on GOBL→CFDI mapping: See [`gobl.cfdi`](https://github.com/invopop/gobl.cfdi) and the Mexican Tax Regime reference.
       </Accordion>
     </AccordionGroup>
   </Tab>
@@ -151,5 +140,5 @@ import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
 ---
 
 <Card title="Participate in our community" icon="square-question" horizontal href="https://community.invopop.com">
-  Ask and answer questions about AT Portugal App →
+  Ask and answer questions about SAT Mexico App →
 </Card>
