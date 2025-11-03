@@ -86,7 +86,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
       <Supplier />
 
-    You should see the supplier in the **Contacts** section with status `Empty` after creating the entry.
+    You should see the supplier in the **Parties** section with status `Empty` after creating the entry.
 
     <Frame caption="Upload supplier to Invopop">
       <img
@@ -125,7 +125,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
       We will set up your company as a supplier within Invopop so that we can register it for issuing VERI\*FACTU invoices. First, click on **Suppliers** on the left sidebar and click on the **New Supplier** button at the top right corner of the screen:
 
-      We suggest that you copy and modify our example supplier to your own information, then you can paste it into the editor in **Code View**. Then switch to **Form view** as indicated in the screenshot, this will build and validate the silo entry and, if there are no errors, you'll be able to save your company's information as a Silo Entry. 
+      We suggest that you copy and modify our example supplier to your own information, then you can paste it into the editor in **Code View**. Then switch to **Form view** as indicated in the screenshot, this will build and validate the silo entry and, if there are no errors, you'll be able to save your company's information as a Silo Entry.
 
       <Supplier />
 
@@ -169,13 +169,13 @@ The process is best explained looking at the workflow steps:
     </Frame>
 
     1. **Register supplier** will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
-    2. **Set State to Processing** labels the silo entry so you know it's in process of registration.  
+    2. **Set State to Processing** labels the silo entry so you know it's in process of registration.
     3. **Wait for supplier registration** waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through VERI\*FACTU immediately after the documents are uploaded.
     4. **Set State to Registered** labels the silo entry so you know registration is complete.
     5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
 
     <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers. Re-running the workflow will not change the approval outcome, the supplier must be unregistered first.</Note>
-    
+
 
 ## Register a Supplier
 
@@ -291,30 +291,30 @@ If you have special needs regarding the onboarding of suppliers for VERI\*FACTU 
   <Step title="Upload supplier">
     [Create entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put)<br />
     `/silo/v1/entries/{id}`<br />
-    Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.  
+    Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
   </Step>
   <Step title="Create a job with the supplier registration workflow">
-    [Create a job](/api-ref/transform/jobs/create-a-job-put)<br /> 
+    [Create a job](/api-ref/transform/jobs/create-a-job-put)<br />
     `https://api.invopop.com/transform/v1/jobs/{id}`<br />
-    The same workflow is used for API onboarding 
+    The same workflow is used for API onboarding
   </Step>
   <Step title="Generate the agreement PDF">
-    [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch)<br /> 
+    [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch)<br />
     `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
-    The agreement file will be created with the supplier's data. 
+    The agreement file will be created with the supplier's data.
   </Step>
   <Step title="Upload documents">
-    [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload)<br /> 
+    [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload)<br />
     `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
     Upload the agreement into the supplier's silo entry.
 
     [Upload identity images](/api-ref/apps/verifactu/identity-upload)<br />
     `apps/verifactu/v1/entry/:silo_entry_id/identity`<br />
-    Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport). 
+    Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
   </Step>
   <Step title="Confirm upload">
     [Confirm](/api-ref/apps/verifactu/confirm) `https://api.invopop.com/apps/verifactu/v1/entry/:silo_entry_id/confirm`<br />
-    Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating. 
+    Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
   </Step>
 </Steps>
 
@@ -370,7 +370,7 @@ Unregistering a supplier is essentially revoking their invoice issuing priviledg
     If the uploaded agreement documents were rejected, a KO will be triggered and the supplier will be labelled with the `Error` state. We currently recommend sending a notification to the supplier through a webhook within the **Error Handling** section.
 
     Afterwards, if you wish to re-register the supplier with new documents, you must:
-     
+
     1. Unregister the supplier using the [Unregister Supplier workflow](/guides/countries/es-verifactu#template-3).
     2. Re-run the Register supplier workflow.
 

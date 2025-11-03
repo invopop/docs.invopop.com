@@ -1,0 +1,67 @@
+---
+title: "DF-e issue consumer invoice (NFC-e)"
+description: "Issue NFC-e invoices in Brazil"
+countryCode: "br"
+appId: "nfe-br"
+schema: "bill/invoice"
+---
+
+```json Example DF-e issue consumer invoice (NFC-e) workflow with states expandable
+{
+    "name": "DF-e issue consumer invoice (NFC-e)",
+    "description": "Issue a NFC-e invoice in Brazil",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "93769100-b652-11f0-a7d9-bfad358c6464",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "971c6780-b652-11f0-a7d9-bfad358c6464",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NFC-e · 1",
+            "config": {
+                "name": "NFC-e",
+                "padding": 1,
+                "start": 1
+            }
+        },
+        {
+            "id": "9f965b50-b652-11f0-a7d9-bfad358c6464",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "8693f670-b653-11f0-a7d9-bfad358c6464",
+            "name": "Send NFC-e (Brazil)",
+            "provider": "nfe-br.send.nfce"
+        },
+        {
+            "id": "a9dc0e70-b652-11f0-a7d9-bfad358c6464",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "b0f7f8e0-b652-11f0-a7d9-bfad358c6464",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
