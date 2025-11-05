@@ -301,15 +301,25 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
   <Accordion title="Once a VERI*FACTU invoice is issued, can I get the QR code image url?">
     We do not provide the QR code image itself. The QR code is a visual representation of a URL that you need to generate on your own if you're creating custom PDFs or need it for any other purpose.
 
-    **How to generate the QR code:**
-    - You can see how we generate it in our [gobl.html open source repository](https://github.com/invopop/gobl.html/blob/main/components/images/images.go)
-    - The QR code should encode the VERI\*FACTU URL
+    The full requirements are in the AEAT [VERI*FACTU QR specification](https://www.agenciatributaria.es/static_files/AEAT_Desarrolladores/EEDD/IVA/VERI-FACTU/DetalleEspecificacTecnCodigoQRfactura.pdf) PDF document in Spanish. Here you can read that:
 
-    **How to find the VERI*FACTU URL:**
-    You can view the VERI*FACTU URL from the console by:
-    1. Clicking on the **...** menu at the top right of the invoice
-    2. Selecting **"View headers"**
+    > The "QR" code must have a size between 30x30 and 40x40 millimeters and follow the specifications of the ISO/IEC 18004:2015 standard. For the generation of the "QR" code, the M (medium) error correction level shall be used.
 
-    Note: This gives you the URL that should be encoded in the QR code, not the QR image itself.
+    Generate your own QR code image as follows:
+
+    <Steps>
+      <Step title="Obtain the VERI*FACTU URL">
+         * **API**: fetch the entry and get `data -> head -> stamps -> verifactu-qr`. 
+         * **Console**: in the invoice entry click on the kebab `···` menu and select **View Headers**.
+      </Step>
+      <Step title="Generate the QR image">
+        Use the VERI\*FACTU URL in a library capable of generating ISO/IEC 18004:2015 QR images (Invopop uses [go-qr](https://github.com/piglig/go-qr))
+      </Step>
+      <Step title="Store or use the image">
+        Store or embed the image in your PDF. You can [see how we do generate QR images](https://github.com/invopop/gobl.html/blob/main/components/images/images.go) in our open source gobl.html library.
+      </Step>
+    </Steps>
+
+    
   </Accordion>
 </AccordionGroup>
