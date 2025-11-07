@@ -1,0 +1,183 @@
+---
+title: "TicketBAI Guide"
+sidebarTitle: "TicketBAI"
+description: Issue invoices in the Basque Country with TicketBAI.
+---
+
+import WorkflowExample from '/snippets/workflows/templates/es/ticketbai-invoice.mdx'
+import B2BInvoice from '/snippets/invoices/es/ticketbai-b2b.mdx'
+import B2CInvoice from '/snippets/invoices/es/ticketbai-b2c.mdx'
+
+## Introduction
+
+TicketBAI is a fiscal initiative developed collaboratively by the Basque Government and the provincial tax authorities of Álava, Gipuzkoa, and Bizkaia. Its primary objective is to combat tax fraud by ensuring that all invoices issued by individuals and entities conducting economic activities in the Basque Country are reported to the corresponding tax authorities.
+
+Under this system, businesses are required to use certified invoicing software that generates a unique TicketBAI QR code for each invoice. These codes facilitate the traceability of transactions and prevent the manipulation or deletion of invoices. The invoicing software must also create an XML file for each transaction, which is electronically signed and sent to the relevant provincial tax authority.
+
+The implementation timeline for TicketBAI varies across the three provinces:
+
+- **Alava**: Mandatory adoption began in phases starting in 2022, with full compliance required by December 1, 2022.
+- **Gipuzkoa**: A phased implementation commenced in 2022, with different sectors required to comply by specific dates, concluding on May 1, 2023.
+- **Bizkaia**: The province has integrated TicketBAI into a broader tax control system known as Batuz. Mandatory adoption for large companies began on January 1, 2024, with a staggered implementation for other entities extending until January 1, 2026.
+
+Invopop will automatically convert GOBL Invoices into the TicketBAI format, including the required "chaining", and will send them to the correct tax authority.
+
+## Prerequisites
+
+In order to register a supplier and issue invoices, you will need:
+
+- Supplier details, including:
+  - company name,
+  - a tax ID (NIF) from a company in one of the three Tax Agencies, and,
+  - an address which includes the Region name; "Alaba", "Bizkaia", or "Gipuzkoa".
+- Customer details for B2B sales, including the tax ID if selling to a Spanish or EU entity.
+- Quantity, name, price, and VAT rates of items being sold, including differenciating between physical goods and services.
+- An invoicing series.
+
+<Info>
+  TicketBAI requires all suppliers to sign an agreement with their invoicing
+  provider explicitly granting permission to represent them. This is currently a
+  manual process performed outside of Invopop. For more details, contact
+  [support](email:support@invopop.com).
+</Info>
+
+## Setup
+
+To correctly issue TicketBAI invoices, you will need to prepare your Invopop Workspace by following these steps:
+<Steps>
+<Step title="Connect the TicketBAI app">
+
+Head over to **Configuration** > **Apps**, and find **TicketBAI** from the list of apps to discover. Tap the **Connect** button to enable.
+
+No further configuration is required.
+
+</Step>
+
+<Step title="Create invoice workflow">
+
+
+    <Tabs>
+      <Tab title="Template">
+
+        <Card iconType="duotone" title="TicketBAI issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-invoice" cta="Add to my workspace">
+        This workflow will issue an invoice through TicketBAI.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view. This example adds support for setting states on silo entries which we strongly recommend.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "TicketBAI issue invoice".
+
+        The new workflow will need to perform these steps:
+
+        - **Add Sequential Code** - chose the "dynamic" sequence option and set a name.
+        - **Set State** - to "Processing".
+        - **Sign Envelope** - this step signs the TicketBAI document, preventing further modifications.
+        - **Generate TicketBAI (Spain)** - this step generates the TicketBAI XML document.
+        - **Send TicketBAI (Spain)** - will take the previously generate XML document, and send to the appropriate gateway.
+        - **Generate PDF** - configure as required, the PDF will use the QR code generated in the previous step. After this step, you may want to add a webhook or similar.
+        - **Set State** - to "Sent".
+        
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+        <Tip>
+          Invoices must be signed before processing with TicketBAI, be sure to add the _Sign Envelope_ step.
+        </Tip>
+
+      </Tab>
+    </Tabs>
+
+    <Warning>
+      If in the unlikely scenario a document is rejected, you will need to try and
+      correct the error inside a new document and resend. As documents are all
+      chained together in the _Generate TicketBAI_ step, modifications are not
+      permitted.
+    </Warning>
+
+</Step>
+
+</Steps>
+
+## Running
+
+Invopop uses the [GOBL](https://docs.gobl.org) framework for sending and storing invoices to be sent to TicketBAI. In this section we provide example GOBL documents that you can copy and customize.
+
+We also recommend using the [GOBL Builder](https://build.gobl.org) to test building invoices and generating PDFs in real-time to see what the framework is capable of.
+
+All of the following examples assume you will be performing two key steps:
+
+1. Upload the example either via the [Invopop Console](https://console.invopop.com) or using the Invopop Silo [Create an Entry](/api-ref/silo/entries/create-an-entry-put) API endpoint.
+2. Create a job to process the Silo Entry with your TicketBAI workflow either manually via the console, or using the Invopop Transform [Create a Job](/api-ref/transform/jobs/create-a-job-put) endpoint.
+
+The Invopop API will automatically prepare the uploaded documents from the minimal data provided, this allows us to keep the examples short and concise.
+
+GOBL Invoices sent to TicketBAI require the following properties in order to perform the correct normalization and validation steps:
+
+- `$region` to be set to [`ES`](https://docs.gobl.org/regimes/es)
+- `$addons` to include [`es-tbai-v1`](https://docs.gobl.org/addons/es-tbai-v1)
+
+Invopop will try to assign these automatically if not explicitly provided.
+<Tip>
+  If you do not already have a tax ID from a company in the Basque Country, you
+  will need to use test data. In the examples, we use the name
+  `HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr` and tax ID code `A99805194`, which were
+  issued by the TicketBAI tax authorities for testing.
+</Tip>
+<AccordionGroup>
+<Accordion title="B2B Invoice">
+Scenario details:
+
+- The supplier is based out of Bilbao in Bizkaia, using the sandbox data provided by TicketBAI.
+- The customer is in Madrid.
+- They're selling software development services with standard VAT.
+- The series for the invoice is "F1".
+
+<B2BInvoice />
+
+Key details to take away from this example:
+
+- We're applying the `es-tbai-v1` addon to ensure GOBL's TicketBAI validation checks are applied.
+- There is no `currency` nor `issue_date`, as these will be assigned automatically.
+- There is no invoice `code` as this will be assigned by the workflow.
+- TicketBAI **requires** a general note, so we've added one at the bottom.
+
+</Accordion>
+<Accordion title="B2C Simplified Invoice">
+In this example:
+
+- The supplier is based out of Bilbao in Bizkaia, using the sandbox data provided by TicketBAI.
+- There is no cusomter
+- Physical goods are being sold with a standard VAT rate.
+- The series for the invoice is "FS1".
+
+<B2CInvoice />
+
+Observations:
+
+- There is no `customer` object.
+- The `tax` object contains the `prices_include` value set to `VAT`, which will ensure all totals will be calculated assuming that prices include VAT.
+- The line item includes a `es-tbai-product` extension with the value `goods`.
+- TicketBAI **requires** a general note, in this case we've added a generic message.
+
+</Accordion>
+</AccordionGroup>
+
+
+## FAQ
+<AccordionGroup>
+<Accordion title="Do I need a digital certificate or any registration with TicketBAI?">
+No, you don't need to register with TicketBAI, or upload any digital certificates to Invopop. As a certified billing provider, Invopop will sign all invoices with our own digital certificate.
+
+TicketBAI allows three types of certificates; Invopop uses the *certificado sello de empresa* which allows us to sign e-invoices on behalf of our customers, saving you the burden of registering and uploading certificates yourself.
+</Accordion>
+<Accordion title="What is the deadline for uploading invoices from the time the sale is made?">
+- Bizkaia: by the end of each quarter, except for companies under SII (turnover above 6 million euros), which must report within 4 days.
+- Gipuzkoa and Álava: The submission must be done immediately after generating the invoice.
+</Accordion>
+</AccordionGroup>

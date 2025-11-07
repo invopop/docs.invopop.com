@@ -1,0 +1,55 @@
+---
+title: "Workflow Conditions"
+sidebarTitle: "Conditions"
+description: Configure a workflow in Invopop to process documents.
+---
+
+Conditions create blocks that execute when a given _status_ and _code_ (optional) match the response of a workflow step. There are two status signals (`OK` and `KO`) plus `Any`, which matches regardless of the status.
+
+* **OK**: when a workflow step completes as expected.
+* **KO**: when there was an error in the step's execution.
+* **Any**: will match both `OK` and `KO`.
+
+Codes are generally text or numbers returned by providers. Only some steps will return codes along with their status signals. For example, the _Send VERI*FACTU (Spain)_ step will return the error code as [specified by the AEAT](https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties) along with the `KO` status signal. Since GOBL already handles many of the validations in tax authorities lists, we recommend only implementing conditions which happen in your workflow with certain regularity and which should be handled automatically.
+
+As an example, we will handle the case where a supplier is not registered in the taxpayer census by the AEAT:
+
+<Steps>
+  <Step title="Add a condition on the step">
+    On the desired step, click on the menu button `...` and select **Add condition**.
+    <Frame>
+      <img
+        src="/assets/guides/workflow-add-condition.png"
+        width="100%"
+        alt="Add condition"
+        noZoom
+      />
+    </Frame>
+  </Step>
+  <Step title="Configure the condition">
+    <Frame>
+      <img
+        src="/assets/guides/workflow-add-condition-match.png"
+        width="100%"
+        alt="Add match conditions"
+        noZoom
+      />
+    </Frame>
+    Configure the matching conditions in the popover:
+
+    1. **Status**: `KO`.
+    2. **Code**: `4107` (Tax ID not identified in the taxpayer census).
+    2. **End workflow here**: `✔` (the workflow will stop executing after this block).
+  </Step>
+  <Step title="Add an action to the condition block">
+    <Frame>
+      <img
+        src="/assets/guides/workflow-add-condition-action.png"
+        width="100%"
+        alt="Add condition action"
+        noZoom
+      />
+    </Frame>
+    Click on "Select an action" and handle the condition as you wish. In this case, we are choosing to send a Slack message (e.g. for manual intervention).
+  </Step>
+</Steps>
