@@ -8,8 +8,15 @@ tag: "NEW"
 import PostRegistration from '/snippets/workflows/templates/pt/at-postregistration.mdx';
 import RegisterSupplier from '/snippets/workflows/templates/pt/at-register-supplier.mdx';
 import IssueInvoice from '/snippets/workflows/templates/pt/at-issue-invoice.mdx';
+import CancelInvoice from '/snippets/workflows/templates/pt/at-cancel-invoice.mdx';
+import IssuePayment from '/snippets/workflows/templates/pt/at-issue-payment.mdx';
+import CancelPayment from '/snippets/workflows/templates/pt/at-cancel-payment.mdx';
+import IssueDelivery from '/snippets/workflows/templates/pt/at-issue-delivery.mdx';
+import CancelDelivery from '/snippets/workflows/templates/pt/at-cancel-delivery.mdx';
 import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
 import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
+import Delivery from '/snippets/deliveries/pt/delivery.mdx';
+import Payment from '/snippets/payments/pt/payment.mdx';
 
 ## Introduction
 
@@ -140,19 +147,20 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
           In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "AT issue invoice".
 
-        The new workflow will need to perform these steps:
+          The new workflow will need to perform these steps:
 
-        - **Set State** - to `Processing`.
-        - **Add Sequential Code** - with dynamic sequences, and name like "AT Documents".
-        - **Seal for the AT (Portugal)**.
-        - **Record for SAF-T reporting (Portugal)**.
-        - **Generate PDF** - configured for your environment.
-        - **Set State** - to `Sent`.
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Generate PDF (Original)** - Portuguese - A4.
+          5. **Generate PDF (Duplicate)** - Portuguese - A4.
+          6. **Set State** to `Sent` .
 
-        Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
-        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-        Add any additional steps you may need, and save the new workflow.
+          Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          Add any additional steps you may need, and save the new workflow.
       </Tab>
     </Tabs>
   </Step>
@@ -215,30 +223,70 @@ Once the series are registered, the supplier will be able to issue documents usi
 
 </Steps>
 
-### Send an invoice
+### Send a document
 
 The following examples show partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the "Issue AT document" workflow created during setup.
 
-<Tip>
-  GOBL Invoices reported to the AT require the following properties to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading:
-  - `$region` to be set to [`PT`](https://docs.gobl.org/regimes/pt)
-  - `$addons` to include [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1)
-</Tip>
+    <Tip>
+      GOBL Documents reported to the AT require the following properties to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading:
+      - `$regime` to be set to [`PT`](https://docs.gobl.org/regimes/pt)
+      - `$addons` to include [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1)
+    </Tip>
 
-In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
+<Tabs>
+  <Tab title="Invoice">
 
-<B2BInvoice />
 
-Notice:
+    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
 
-- we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the GOBL library,
-- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections,
-- this is a `standard` invoice and the advance payments don't cover the total amount of the invoice; so, GOBL will automatically assign the `pt-saft-invoice-type` extension to `FT` (Fatura),
-- the `card` payment method will cause the addon to set the `pt-saft-payment-means` extension to `CC` (Cartão crédito),
-- the `h` item unit will cause the `pt-saft-product-type` extension to be set to `S` (Serviço),
-- the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
-- the `pt-region` extension will automatically be set to the default value of `PT`, and
-- there are no totals or calculations; all these will be made automatically when uploading.
+    <B2BInvoice />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the GOBL library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections,
+    - this is a `standard` invoice and the advance payments don't cover the total amount of the invoice; so, GOBL will automatically assign the `pt-saft-invoice-type` extension to `FT` (Fatura),
+    - the `card` payment method will cause the addon to set the `pt-saft-payment-means` extension to `CC` (Cartão crédito),
+    - the `h` item unit will cause the `pt-saft-product-type` extension to be set to `S` (Serviço),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+  <Tab title="Delivery">
+
+    In this example, we're issuing a delivery note from a Portuguese supplier to another Portuguese receiver.
+
+    <Delivery />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the GOBL library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections,
+    - this is an `advice` document type and the advance payments don't cover the total amount of the invoice; so, GOBL will automatically assign the `pt-saft-invoice-type` extension to `FT` (Fatura),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+  <Tab title="Payment">
+
+    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
+
+    <Payment />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the GOBL library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections,
+    - this is a `receipt` payment and the method is set to key `cash`; so, GOBL will automatically assign the `pt-saft-payment-means` extension to `NU` (Numerário),
+    - the `card` payment method will cause the addon to set the `pt-saft-payment-means` extension to `CC` (Cartão crédito),
+    - the `h` item unit will cause the `pt-saft-product-type` extension to be set to `S` (Serviço),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+</Tabs>
+
+
 
 
 
