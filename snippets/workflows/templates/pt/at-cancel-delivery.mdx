@@ -1,16 +1,16 @@
 ---
-title: "AT issue invoice"
-description: "Issue an invoice in Portugal and generate PDF"
+title: "AT cancel delivery"
+description: "Cancel a delivery document in Portugal and generate PDF"
 countryCode: "pt"
 appId: "pt-at"
-schema: "bill/invoice"
+schema: "bill/delivery"
 ---
 
-```json Example AT issue invoice workflow with states
+```json Example AT cancel delivery workflow with states
 {
-  "name": "Issue AT invoice",
-  "description": "Issue an invoice in Portugal and generate PDF",
-  "schema": "bill/invoice",
+  "name": "Cancel AT delivery",
+  "description": "Cancel a delivery document in Portugal and generate PDF",
+  "schema": "bill/delivery",
   "steps": [
     {
       "id": "6f884d90-f2b9-11ef-acb2-cd64e858247e",
@@ -21,14 +21,17 @@ schema: "bill/invoice"
       }
     },
     {
-      "id": "750b2170-f2b9-11ef-acb2-cd64e858247e",
-      "name": "Seal for the AT (Portugal)",
-      "provider": "at-pt.seal"
+      "id": "cc0002a0-927f-11f0-8cd1-bd9f2c371090",
+      "name": "Cancel SAF-T record (Portugal)",
+      "provider": "at-pt.cancel"
     },
     {
-      "id": "76f194b0-f2b9-11ef-acb2-cd64e858247e",
-      "name": "Record for SAF-T reporting (Portugal)",
-      "provider": "at-pt.record"
+      "id": "7a708240-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "config": {
+        "state": "void"
+      }
     },
     {
       "id": "93795a50-f2b9-11ef-acb2-cd64e858247e",
@@ -57,14 +60,6 @@ schema: "bill/invoice"
         "locale": "pt",
         "logo_height": 40,
         "watermark": ""
-      }
-    },
-    {
-      "id": "7a708240-f2b9-11ef-acb2-cd64e858247e",
-      "name": "Set State",
-      "provider": "silo.state",
-      "config": {
-        "state": "sent"
       }
     }
   ],
