@@ -65,7 +65,63 @@ Keep the `Workflow ID` at hand, you'll use it later.
 </Info>
 
 
-## Issue an Invoice
+## Running
+
+Learn how to register a business entity (supplier) and issue VERI*FACTU invoices:
+
+### Register a Supplier
+
+Invopop has a collaboration agreement with the Spanish tax agency (AEAT) that lets us issue invoices on behalf of any entity using our certificate. This eliminates the need for you to request the entity's certificate. 
+
+However, we need the supplier to provide the following documents:
+1. An agreement from the entity
+2. The signatory's fiscal ID
+3. Documentation proving the signatory's authorization
+
+This is handled by the supplier registration workflow we created during setup. Let's see how.
+
+<Steps>
+  <Step title="Upload a Supplier">
+  Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) (you can copy the example below) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. The following fields are required:
+    
+  - `name`
+  - `tax_id`
+  - `address`
+  - `email`
+
+    <AccordionGroup>
+    <Accordion title="Example supplier">
+      <Supplier />
+    </Accordion>
+    </AccordionGroup>
+
+  After successful upload, you'll see the supplier in the **Contacts** section with status `Empty`.
+
+  <Frame>
+  <img width="450" src="/guides/images/es-verifactu-supplier-1.png" alt="Upload supplier to Invopop" />
+  </Frame>
+
+  </Step>
+
+  <Step title="Send the Supplier to the registration workflow">
+  Send the supplier to the registration workflow using the [Create a job](/api-ref/silo/jobs/create-a-job-post) endpoint. Use:
+  - The supplier's UUID from the previous step
+  - The Supplier Registration workflow ID from the [Setup](##setup) section
+
+  The supplier's status will change to `Registered` when the workflow completes successfully.
+
+  <Frame>
+  <img width="450" src="/guides/images/es-verifactu-supplier-2.png" alt="Supplier registered" />
+  </Frame>
+  </Step>
+</Steps>
+
+<Warning>
+This feature is currently in beta. The Registration Workflow assumes the agreement and necessary documents have been provided outside the system and simply marks the supplier as registered. 
+We'll soon provide a new workflow to manage signatures and documentation. Contact us at [support@invopop.com](mailto:support@invopop.com) if you're interested in using this feature.
+</Warning>
+
+### Issue an Invoice
 
 <Steps>
   <Step title="Upload an Invoice">
@@ -174,11 +230,14 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
       - `series`: the series of the original invoice
       - `code`: the code of the original invoice
 
-    You can copy the example credit notes below as a reference.
+You can copy one of the example credit notes below as a reference.
+<AccordionGroup>
+<Accordion title="Credit Note">
+	<CreditNote />
+</Accordion>
+</AccordionGroup>
 
-    <CreditNote />
-
-    After successful upload, you'll see the credit note in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the credit note we've just created in the _Related_ tab of the invoice.
+After successful upload, you'll see the credit note in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the credit note we've just created in the *Related* tab of the invoice.
 
     <Frame caption="Link to the credit note">
       <img
@@ -216,11 +275,14 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
       - `code`: the code of the original invoice
       - `tax`: the tax section of the original invoice, you can copy it from the original invoice
 
-    You can copy one of the example corrective invoices below as a reference.
+You can copy one of the example corrective invoices below as a reference.
+<AccordionGroup>
+<Accordion title="Corrective Invoice">
+	<CorrectiveInvoice />
+</Accordion>
+</AccordionGroup>
 
-    <CorrectiveInvoice />
-
-    After successful upload, you'll see the corrective invoice in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the corrective invoice we've just created in the _Related_ tab of the invoice.
+After successful upload, you'll see the corrective invoice in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in preceding, you'll see a link to the corrective invoice we've just created in the *Related* tab of the invoice.
 
     <Frame caption="Link to the corrective invoice">
       <img
