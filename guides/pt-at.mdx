@@ -125,12 +125,14 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
     </Tab>
   </Tabs>
-
-
-
 </Step>
 
-<Step title="Prepare the document processing workflow">
+<Step title="Prepare the invoice processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue invoices.
+</Info>
+
     <Tabs>
       <Tab title="Template">
         <Card iconType="duotone" title="AT issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-invoice" cta="Add to my workspace">
@@ -151,12 +153,87 @@ All of the following steps must be carried out from the [Invopop Console](https:
           1. **Set State** - to `Processing`.
           2. **Seal for the AT (Portugal)** - No configuration required.
           3. **Record for SAF-T reporting (Portugal)** - No configuration required.
-          4. **Generate PDF (Original)** - Portuguese - A4.
-          5. **Generate PDF (Duplicate)** - Portuguese - A4.
-          6. **Set State** to `Sent` .
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
 
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-          Optionally, if you want to submit each document individually to the AT in real-time, you can add a "Send to the AT (Portugal)" step right after recording the document for SAF-T.
+          Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+
+<Step title="Prepare the delivery processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue delivery documents.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue delivery workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-delivery" cta="Add to my workspace">
+        This workflow will issue a delivery document through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Delivery workflow](https://console.invopop.com/redirect/workflows/new?template=empty-delivery) code view.
+        <IssueDelivery />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Delivery workflow](https://console.invopop.com/redirect/workflows/new?template=empty-delivery) as the base. Then name the workflow with a descriptive label such as "AT issue delivery".
+
+          The new workflow will need to perform these steps:
+
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
+
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+
+<Step title="Prepare the payment processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue payments.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue payment workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-payment" cta="Add to my workspace">
+        This workflow will issue a payment through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) code view.
+        <IssuePayment />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) as the base. Then name the workflow with a descriptive label such as "AT issue payment".
+
+          The new workflow will need to perform these steps:
+
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
+
           Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
           Add any additional steps you may need, and save the new workflow.
@@ -224,7 +301,7 @@ Once the series are registered, the supplier will be able to issue documents usi
 
 ### Send a document
 
-The following examples show partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the "Issue AT document" workflow created during setup.
+The following examples show partial GOBL documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the corresponding processing workflow (invoice, delivery, or payment) created during setup.
 
     <Tip>
       GOBL Documents reported to the AT require the following properties to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading:
@@ -285,14 +362,37 @@ The following examples show partial GOBL documents you can copy and paste direct
   </Tab>
 </Tabs>
 
+### Reporting documents to the AT
 
+The AT Portugal app supports two methods for reporting documents to the _Autoridade Tributária e Aduaneira_:
 
+1. **Real-time reporting** - Documents are submitted individually to the AT immediately upon issuance via webservice
+2. **SAF-T PT reporting** - Documents are reported in batch format through periodic SAF-T PT reports
 
+The workflow templates provided in this guide enable both reporting mechanisms.
 
-### Generate a SAF-T report
+#### Real-time Reporting
 
-Once documents have been issued, Suppliers can generate SAF-T PT reports via the Supplier Portal:
+The **Send to the AT (Portugal)** step uses the AT's webservice to submit each document to the tax authority immediately after it is sealed and recorded.
+
+This step is optional. If you prefer to report documents only via SAF-T PT reports, you can remove it from your workflows.
+
+<Info>
+  The **Send to the AT (Portugal)** step requires the supplier to have the appropriate AT user permissions (`WSA` for invoices, `WDT` for transport documents) as described in the "Obtain the Supplier's AT Credentials" section above.
+</Info>
+
+#### SAF-T PT Reporting
+
+SAF-T PT reports allow you to submit documents to the AT in batch format. The **Record for SAF-T reporting (Portugal)** step takes care of recording the documents for this purpose.
+
+<Info>
+  The **Record for SAF-T reporting (Portugal)** step is required in all workflows, regardless of whether you also use real-time reporting. The AT may request SAF-T PT reports for audit purposes at any time, so all documents must be properly recorded.
+</Info>
+
+To generate a SAF-T PT report, a supplier can follow these steps:
 
 1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
 2. Log in using the email address provided with the supplier's information
 3. Go to the **SAF-T PT** section, enter a date range and click **Generate**
+
+The system will generate a SAF-T PT file containing all documents issued within the specified date range that have been recorded for SAF-T reporting. This file can then be submitted to the AT through [their portal](https://faturas.portaldasfinancas.gov.pt/faturas/comerciante/enviar-saft.action) or via [command line](https://faturas.portaldasfinancas.gov.pt/envioBatchInfoNovo.action).
