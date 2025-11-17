@@ -21,7 +21,7 @@ import CancelInvoice from '/snippets/workflows/templates/es/verifactu-cancel.mdx
 
 <Warning>The Spanish Tax Agency (AEAT) is still finalizing VERI\*FACTU’s technical and legal requirements. Invopop’s implementation may change accordingly.</Warning>
 
-VERI\*FACTU is is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities. 
+VERI\*FACTU is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities. 
 
 <Note>VERI\*FACTU will be mandatory for companies from January 1st, 2026. The rest of tax payers from 1 July 2026. Companies reporting with SII or TicketBAI are exempt from reporting with VERI\*FACTU.</Note>
 
@@ -64,62 +64,6 @@ Keep the `Workflow ID` at hand, you'll use it later.
   VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
 </Info>
 
-
-## Running
-
-Learn how to register a business entity (supplier) and issue VERI*FACTU invoices:
-
-### Register a Supplier
-
-Invopop has a collaboration agreement with the Spanish tax agency (AEAT) that lets us issue invoices on behalf of any entity using our certificate. This eliminates the need for you to request the entity's certificate. 
-
-However, we need the supplier to provide the following documents:
-1. An agreement from the entity
-2. The signatory's fiscal ID
-3. Documentation proving the signatory's authorization
-
-This is handled by the supplier registration workflow we created during setup. Let's see how.
-
-<Steps>
-  <Step title="Upload a Supplier">
-  Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) (you can copy the example below) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. The following fields are required:
-    
-  - `name`
-  - `tax_id`
-  - `address`
-  - `email`
-
-    <AccordionGroup>
-    <Accordion title="Example supplier">
-      <Supplier />
-    </Accordion>
-    </AccordionGroup>
-
-  After successful upload, you'll see the supplier in the **Contacts** section with status `Empty`.
-
-  <Frame>
-  <img width="450" src="/guides/images/es-verifactu-supplier-1.png" alt="Upload supplier to Invopop" />
-  </Frame>
-
-  </Step>
-
-  <Step title="Send the Supplier to the registration workflow">
-  Send the supplier to the registration workflow using the [Create a job](/api-ref/silo/jobs/create-a-job-post) endpoint. Use:
-  - The supplier's UUID from the previous step
-  - The Supplier Registration workflow ID from the [Setup](##setup) section
-
-  The supplier's status will change to `Registered` when the workflow completes successfully.
-
-  <Frame>
-  <img width="450" src="/guides/images/es-verifactu-supplier-2.png" alt="Supplier registered" />
-  </Frame>
-  </Step>
-</Steps>
-
-<Warning>
-This feature is currently in beta. The Registration Workflow assumes the agreement and necessary documents have been provided outside the system and simply marks the supplier as registered. 
-We'll soon provide a new workflow to manage signatures and documentation. Contact us at [support@invopop.com](mailto:support@invopop.com) if you're interested in using this feature.
-</Warning>
 
 ### Issue an Invoice
 
