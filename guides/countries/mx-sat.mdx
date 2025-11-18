@@ -333,6 +333,98 @@ Notice:
 
 </AccordionGroup>
 
+## Border Zones (Zonas Fronterizas)
+
+Mexico applies a reduced VAT rate of **8%** (instead of the standard 16%) in designated border zones. These zones include:
+
+- **Northern Border Region**: States and municipalities along the U.S.-Mexico border
+- **Southern Border Region**: States and municipalities along the borders with Guatemala and Belize
+
+This reduced rate applies to the sale of goods, provision of services, and temporary use or enjoyment of goods in these regions.
+
+### Requirements
+
+To apply the reduced 8% VAT rate in your invoices:
+
+1. **Location**: The transaction must occur within a designated border zone
+2. **Registration**: The supplier must be registered in SAT for operations in border zones
+3. **Tax Rate**: Use the `reduced` rate instead of `standard` when specifying VAT
+
+### Example: Border Zone Invoice
+
+To create an invoice with the reduced border zone VAT rate, specify `rate: "reduced"` in the tax configuration:
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "MX",
+  "$addons": ["mx-cfdi-v4"],
+  "series": "XXMX",
+  "tax": {
+    "ext": {
+      "mx-cfdi-issue-place": "21000"
+    }
+  },
+  "supplier": {
+    "name": "Border Zone Business",
+    "tax_id": {
+      "country": "MX",
+      "code": "EKU9003173C9"
+    },
+    "addresses": [
+      {
+        "street": "Av. Tecnológico 100",
+        "locality": "Tijuana",
+        "region": "Baja California",
+        "code": "21000",
+        "country": "MX"
+      }
+    ],
+    "ext": {
+      "mx-cfdi-fiscal-regime": "601"
+    }
+  },
+  "customer": {
+    "name": "Customer Name",
+    "tax_id": {
+      "country": "MX",
+      "code": "URE180429TM6"
+    },
+    "ext": {
+      "mx-cfdi-fiscal-regime": "601",
+      "mx-cfdi-post-code": "21000",
+      "mx-cfdi-use": "G01"
+    }
+  },
+  "lines": [
+    {
+      "quantity": "1",
+      "item": {
+        "name": "Product or Service",
+        "price": "1000.00",
+        "ext": {
+          "mx-cfdi-prod-serv": "81112002"
+        }
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "rate": "reduced"
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Note>
+  When you specify `rate: "reduced"`, GOBL automatically applies the 8% VAT rate for the border zone. The final invoice will show a tax amount of $80.00 (8% of $1,000.00) instead of $160.00 (16% of $1,000.00).
+</Note>
+
+<Warning>
+  Ensure that both the supplier's location and the place of issue are within designated border zones when using the reduced rate. Incorrect application of this rate may result in invoice rejection by SAT.
+</Warning>
+
 ## FAQ
 
 Please contact the [Invopop support team](email:support@invopop.com) if you have any questions that are not listed here.
@@ -350,6 +442,10 @@ The library that transforms GOBL into CFDI documents is publicly available as an
 
 For further details on how GOBL prepares data for conversion, see the [Mexico Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/mx/README.md).
 
+</Accordion>
+
+<Accordion title="How do I know if a location qualifies for the reduced border zone VAT rate?">
+The reduced 8% VAT rate applies in designated municipalities along Mexico's northern border (with the United States) and southern border (with Guatemala and Belize). For a complete list of qualifying municipalities, consult the [SAT official documentation](http://omawww.sat.gob.mx/) or verify with your tax advisor. The supplier must be properly registered in SAT for border zone operations to apply this rate.
 </Accordion>
 
 </AccordionGroup>
