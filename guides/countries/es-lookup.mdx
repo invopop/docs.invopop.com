@@ -1,0 +1,88 @@
+---
+title: "Spanish Tax ID Lookup (AEAT)"
+sidebarTitle: "AEAT Lookup"
+description: "Verify Spanish tax IDs (NIF/CIF) and normalize names in workflows using AEAT."
+---
+
+## Introduction
+
+Validating a party’s Spanish tax ID before registering a supplier or issuing an invoice reduces rejections and data-entry errors. This guide shows how to add AEAT (Spanish Tax Agency) checks to your [workflows](/guides/features/workflows) so you can:
+
+- Verify that a NIF/CIF exists in the AEAT census.
+- Ensure an individual’s name matches the tax ID on record.
+- Optionally normalize names to the official AEAT format.
+
+## Setup
+
+Enable the Spain app to use AEAT verification:
+
+1. Go to **Configuration** > **Apps** in the [Console](https://console.invopop.com).
+2. Find **Spain** in the app list.
+3. Click **Connect** to activate the app.
+
+After connecting, you’ll see Spain listed under Enabled Apps. Two workflow steps will become available:
+
+* [Verify Tax IDs (NIF/CIF)](#verify-tax-ids-nif%2Fcif)
+* [Verify & Correct Tax Details](#verify-%26-correct-tax-details)
+
+## Verify Tax IDs (NIF/CIF)
+
+You can add the **Verify Spanish Tax ID (NIF/CIF)** step to your `invoice` or `party` workflows.
+
+In invoice workflows, it evaluates supplier and customer by default. You can configure this in the step:
+
+<Frame caption="Configure the Verify Spanish Tax ID (NIF/CIF) step for invoices">
+  <img
+    width="600"
+    src="/guides/images/es-lookup-config.png"
+    alt="Configure the Verify Spanish Tax ID (NIF/CIF) step for invoices"
+  />
+</Frame>
+
+For companies, the "Verify Spanish Tax ID (NIF/CIF)" step confirms the tax ID exists in the AEAT census. For individuals, the step additionally confirms that the tax id matches the person’s full name.
+
+The following outcomes are possible:
+
+- **Validation passes**: returns `OK`.
+- **Validation fails**: returns `KO`.
+- **Skips validation when:** 
+    1. The party is empty, 
+    2. No tax ID is provided, 
+    3. The tax ID is not Spanish.
+
+<Tabs>
+  <Tab title="Invoice workflow example">
+    <Frame>
+      <img
+        width="600"
+        src="/guides/images/es-lookup-verify-invoice-wf.png"
+        alt="Example of an invoice workflow using Verify Spanish Tax ID (NIF/CIF)"
+      />
+    </Frame>
+  </Tab>
+  <Tab title="Party workflow example">
+    <Frame>
+      <img
+        width="600"
+        src="/guides/images/es-lookup-verify-party-wf.png"
+        alt="Example of a party workflow using Verify Spanish Tax ID (NIF/CIF)"
+      />
+    </Frame>
+  </Tab>
+</Tabs>
+
+
+
+## Verify & Correct Tax Details
+
+This step both verifies the tax ID and normalizes names with AEAT data. If the party is a company, the entry will be updated with the official company name in the AEAT census. In the case of individuals, a name is still required for matching, but the step updates the name to the AEAT-returned format. Example: for “Pablo Martínez Gutiérrez,” AEAT may return `MARTINEZ GUTIERREZ PABLO`.
+
+Use this when you want the system to automatically update the `invoice` or `party` entry with the normalized name. The workflow usage is identical to the verification-only step; the difference is that this step also writes the corrected values.
+
+<Frame caption="Verify & Correct step">
+  <img
+    width="600"
+    src="/guides/images/es-lookup-verify-correct.png"
+    alt="Verify & Correct step"
+  />
+</Frame>
