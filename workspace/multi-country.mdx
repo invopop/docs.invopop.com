@@ -1,6 +1,83 @@
 ---
-title: "Organize your workspace for multiple countries"
-icon: "transporter-empty"
+title: "Set up your account for multiple countries"
+icon: "globe"
 sidebarTitle: "Multi-country"
 description: "How to organize your workspaces for multiple countries"
 ---
+
+## Introduction
+
+[GOBL](https://gobl.org) (Go Business Language) normalizes data across different tax regimes, making it easier to work with invoices and documents from multiple countries. However, organizing your workspaces effectively is key to managing complexity and maintaining compliance.
+
+A [regime](/api-ref/glossary#regime) represents the tax jurisdiction where a company is fiscally registered—typically a country, though it can also be a state or region. The regime determines which rules apply to your documents and which providers and tasks are available.
+
+## One workspace per regime
+
+Use one workspace per regime unless you have a specific need to issue invoices for different regimes from a single workspace.
+
+There is no limit or extra charge for creating additional workspaces. This approach helps you manage the complexity of supporting each regime effectively.
+
+### Benefits of separate workspaces
+
+Separating workspaces by regime provides several advantages:
+
+**Simplified app management**
+
+Enable only the apps required to support each specific regime. For example, a Portuguese workspace might use the [AT Portugal](/apps/at-portugal) app, while an Italian workspace uses the [SDI Italy](/apps/sdi-italy) app. This keeps your configuration focused and reduces unnecessary complexity.
+
+**Easier workflow configuration**
+
+Configure workflow steps directly without managing conditions that depend on the regime. Each workspace can have straightforward, regime-specific workflows that are easier to understand, test, and maintain.
+
+**Independent settings and series**
+
+Each workspace can have its own invoice series, settings, and compliance boundaries. This is particularly useful in strict regulatory environments where you need clear separation between different jurisdictions.
+
+**Better data organization**
+
+Keep your console clean with suppliers and invoices from only one country per workspace. This makes it easier to:
+- Test and debug issues specific to a regime
+- Aggregate regime-specific data for reporting
+- Maintain clear boundaries between different compliance requirements
+
+<Tip>
+Separate workspaces help you maintain clear boundaries between different tax regimes, making compliance and auditing simpler.
+</Tip>
+
+## When to use multiple regimes in a single workspace
+
+While one workspace per regime is the recommended approach, there are specific scenarios where using multiple regimes in a single workspace makes sense.
+
+**Legacy integration constraints**
+
+Some clients, especially those migrating from existing integrations that provide little control over data routing, may require sending everything to a single workspace. In these cases, setting up your workspace to handle multiple regimes is necessary.
+
+**Peppol network operations**
+
+Clients who want to onboard [Peppol](/apps/peppol) issuers from multiple countries might prefer a single workspace. Since Peppol is a global network that supports multiple countries, managing all Peppol participants in one workspace can simplify operations.
+
+<Warning>
+When using multiple regimes in a single workspace, you'll need to add conditional logic to your workflows to handle regime-specific requirements. This increases complexity compared to using separate workspaces.
+</Warning>
+
+## Considerations
+
+Before setting up multiple workspaces, consider the following operational aspects.
+
+### API key management
+
+Each workspace has its own [API keys](/console/api-keys). If you use multiple workspaces, you'll need to manage one API key per workspace in your application. This means:
+
+- Storing and managing multiple authentication tokens
+- Routing API requests to the correct workspace based on the regime
+- Implementing logic to select the appropriate API key for each request
+
+### User access
+
+We currently manage user access at the organization level, not at the workspace level. This means users with access to your organization can access all workspaces within that organization.
+
+We are planning to implement workspace-level access control in the future. This will help you divide operations more effectively, as finance team members rarely need access to all countries simultaneously.
+
+<Tip>
+For now, if you need to restrict access to specific workspaces, consider creating separate organizations for different business units or regions.
+</Tip>
