@@ -19,8 +19,6 @@ import CancelInvoice from '/snippets/workflows/templates/es/verifactu-cancel.mdx
 
 ## Introduction
 
-<Warning>The Spanish Tax Agency (AEAT) is still finalizing VERI\*FACTU’s technical and legal requirements. Invopop’s implementation may change accordingly.</Warning>
-
 VERI\*FACTU is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities. 
 
 <Note>VERI\*FACTU will be mandatory for companies from January 1st, 2026. The rest of tax payers from 1 July 2026. Companies reporting with SII or TicketBAI are exempt from reporting with VERI\*FACTU.</Note>
@@ -72,37 +70,107 @@ Keep the `Workflow ID` at hand, you'll use it later.
     Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the invoice details. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field with these required fields:
 
     - `regime`: `ES`
-    - Add the `es-verifactu-v1` addon
+    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
     - `supplier`: Use the details of the supplier you've registered before.
 
     You can copy one of the example invoices below as a reference.
 
+
     <AccordionGroup>
       <Accordion title="B2C Standard Invoice">
+        Simplified invoices are used for B2C transactions when the customer is not a business. The transaction amount should be under €400 (VAT included) with some [exceptions](https://sede.agenciatributaria.gob.es/Sede/iva/facturacion-registro/facturacion-iva/tipos-factura.html) in which this threshold is increased to €3,000.
+
+        To create a simplified VERI*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon.
+
+        <Note>
+          We recommend issuing simplified invoices without a `customer` field. Any data in this object will trigger validations by the tax authority so a valid NIF and name will be required.
+        </Note>
         <B2CInvoice />
       </Accordion>
       <Accordion title="B2B Standard Invoice">
+        Regular invoices are used for B2B transactions. Regular invoices must be issued when:
+
+        - The customer is a registered business (has a tax identification number).
+        - The transaction amount is €400 VAT included or above, or the customer requires a full invoice.
+        - The customer needs a complete invoice with all tax details for accounting or tax purposes.
+
+        To create a regular VERI*FACTU invoice, include the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `F1` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
+
+        <Note>
+          The `supplier` must be previsouly registered with the tax authority and the `customer` NIF or VAT ID must be valid.
+        </Note>
         <B2BInvoice />
       </Accordion>
       <Accordion title="B2B Services EU Client (Reverse Charge)">
+        Reverse charge invoices are used for B2B services provided to customers in other EU member states. Reverse charge must be applied when:
+
+        - The customer is a registered business in another EU member state (has a valid EU VAT ID).
+        - The service is provided to a business customer (B2B), not a consumer.
+        - The service is subject to VAT but the customer accounts for the VAT in their own country.
+
+        To create a reverse charge VERI*FACTU invoice, use the tax key `reverse-charge` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `S2` (Subject and Not Exempt - With reverse charge) when the silo entry is built.
+
+        <Note>
+          With reverse charge, no VAT is charged by the supplier. The customer accounts for VAT in their own country. The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+        </Note>
         <B2BServicesEUClient />
       </Accordion>
       <Accordion title="B2B Goods EU Client (Intra-Community)">
+        Intra-community supply invoices are used for B2B goods delivered to customers in other EU member states. Intra-community supplies must be applied when:
+
+        - The customer is a registered business in another EU member state (has a valid EU VAT ID).
+        - Goods are physically delivered to another EU member state.
+        - The supply is exempt from VAT in the origin country (Spain) and subject to VAT in the destination country.
+
+        To create an intra-community supply VERI*FACTU invoice, use the tax key `intra-community` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E5` ([Artículo 25 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a25)) when the silo entry is built.
+
+        <Note>
+          With intra-community supplies, no VAT is charged in Spain. The customer accounts for VAT in their destination country. The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+        </Note>
         <B2BGoodsEUClient />
       </Accordion>
       <Accordion title="B2B Services No EU Client (Outside Scope)">
+        Outside scope invoices are used for B2B services provided to customers outside the EU.
+        
+        To create an outside scope VERI*FACTU invoice, use the tax key `outside-scope` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `N2` (Not Subject - Due to location rules) when the silo entry is built.
+
+        <Note>
+          Services provided to non-EU customers are generally outside the scope of Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
+        </Note>
         <B2BServicesNoEUClient />
       </Accordion>
       <Accordion title="B2B Goods No EU Client (Export)">
+        Export invoices are used for B2B goods delivered to customers outside the EU.
+
+        To create an export VERI*FACTU invoice, use the tax key `export` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E2` ([Artículo 21 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a21)) and regime code to `02` (Export) when the silo entry is built.
+
+        <Note>
+          Exported goods are exempt from Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
+        </Note>
         <B2BGoodsNoEUClient />
       </Accordion>
       <Accordion title="B2B Exempt E1 Invoice">
+        Exempt `E1` invoices are used for B2B transactions that are exempt from VAT pursuant ([Artículo 20 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a20)), which covers exemptions in internal operations.
+
+        To create an exempt E1 VERI*FACTU invoice, use the tax key `exempt` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E1` when the silo entry is built.
+
+        <Note>
+          Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` NIF must be valid.
+        </Note>
         <B2BExemptE1Invoice />
       </Accordion>
       <Accordion title="B2C One-Stop-Shop Invoice">
+        One-Stop-Shop (OSS) invoices are used for B2C distance sales of goods and services to consumers in other EU member states when the supplier is registered under the OSS scheme.
+
+        To create an OSS VERI*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon. The invoice will be treated as a simplified invoice (document type `F2`) and VAT is accounted for through the OSS scheme in the destination country.
+
+        <Note>
+          OSS allows suppliers to register for VAT in one EU member state and account for VAT on all EU distance sales through that single registration. The `supplier` must be previously registered with the tax authority and enrolled in the OSS scheme.
+        </Note>
         <B2COneStopShopInvoice />
       </Accordion>
     </AccordionGroup>
+    
     After uploading you'll see the document in the **Invoices** section with status `Empty`.
 
     <Frame caption="Empty invoice">
@@ -164,7 +232,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     A credit note in Invopop is an invoice of the type credit note. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a credit note. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
 
     - `regime`: `ES`
-    - Add the `es-verifactu-v1` addon
+    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
     - `supplier`: use the same supplier details as in the original invoice
     - `type`: `credit-note`
     - `preceding`: references the original invoice, within it, you must include:
@@ -205,7 +273,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     A corrective invoice in Invopop is an invoice of the type `corrective`. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a corrective invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
 
     - `regime`: `ES`
-    - Add the `es-verifactu-v1` addon
+    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
     - `supplier_id`: use the same supplier details as in the original invoice
     - `type`: `corrective`
     - `preceding`: references the original invoice, within it, you must include:
@@ -292,7 +360,7 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
   <Accordion title="How can I correct an invoice?">
     There are three ways to correct an invoice:
 
-    1. The recommended approach is to issue a GOBL Invoice with the type `credit-note` or `debit-note`, which in VERI\*FACTU translates to a "Factura Rectificativa por Diferencias".
+    1. The recommended approach is to issue a [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) with the type `credit-note` or `debit-note`, which in VERI\*FACTU translates to a "Factura Rectificativa por Diferencias".
     2. If the above approach does not apply, you can issue an invoice of type `corrective`, which in VERI\*FACTU translates to a "Factura Rectificativa por Sustitución".
     3. Lastly, you can use the `Cancel VERI\*FACTU (Spain)` step, which will void the invoice in the tax authority. This should only be used under special circumstances and not as part of a regular workflow.
   </Accordion>
@@ -312,7 +380,7 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
     Yes, VERI\*FACTU allows issue dates to be in the past, as long as they are after October 28, 2024. Note that the issue date can't be set with a date in the future.
   </Accordion>
   <Accordion title="What are the most common errors when submitting invoices to VERI*FACTU?">
-    The most common errors are related to format issues or invalid extensions, which are already handled in Invopop through the `es-verifactu-v1` addon validations. These prevent most of the typical problems before they reach the submission stage.
+    The most common errors are related to format issues or invalid extensions, which are already handled in Invopop through the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon validations. These prevent most of the typical problems before they reach the submission stage.
 
     Among the errors that aren’t yet validated on our side, the five most frequent ones are:
 
