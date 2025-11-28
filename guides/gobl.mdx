@@ -1,0 +1,127 @@
+---
+title: "What is GOBL?"
+sidebarTitle: "Overview"
+description: "Learn about GOBL (Go Business Language), the universal format for structured business documents used by Invopop"
+---
+
+GOBL, the Go Business Language, is an open-source library and toolkit designed to help developers build electronic business documents anywhere in the world. Created by [Invopop](https://invopop.com), GOBL simplifies the complex landscape of international invoicing and business document standards by providing a single, modern format that works globally.
+
+## Understanding the problem
+
+If you've ever had to build an invoice or other business document in XML, EDI, or PDF, you've likely experienced the frustration. Traditional specifications are usually very hard to read and interpret, and even harder to implement correctly. Building business documents internationally is even more challenging. While standards bodies aim for global consensus, most countries customize standards for their local market, making it practically impossible to build a single implementation that works everywhere.
+
+Most standards are also just definitions of data structures—they don't define local taxes, let alone validation rules or calculations. This means developers must research tax rates, implement validation logic, and write calculation algorithms for each country they support. The result is duplicated effort, inconsistent implementations, and ongoing maintenance headaches.
+
+GOBL seeks to solve this problem by providing a single source of truth in code. Instead of depending on slow-moving standards bodies and mediocre implementations, GOBL brings the agility of open-source software development to the world of business documents.
+
+## What GOBL provides
+
+GOBL is an open-source SDK that combines several essential components into one unified solution. At its foundation, GOBL defines a set of open [JSON Schema](https://json-schema.org/) specifications that describe the structure of business documents. These schemas are automatically generated from Go code, ensuring consistency between the reference implementation and the schema definitions.
+
+Beyond just defining structures, GOBL builds a global collection of local tax categories and, whenever practical, provides current and historical tax rates in code. Each tax regime in GOBL is defined as structured data that includes tax types, rates, and rules for different countries. This means when you create an invoice, you don't need to manually look up tax rates—GOBL handles it automatically based on the country and date.
+
+GOBL also validates business documents according to local requirements, including tax ID validation. The library defines the algorithms used to make tax calculations while avoiding rounding errors, ensuring compliance with local tax authority requirements.
+
+For security and authenticity, GOBL provides built-in support for signing documents using [JSON Web Signatures](https://en.wikipedia.org/wiki/JSON_Web_Signature). This allows you to prove document authenticity and detect tampering.
+
+Finally, GOBL outputs simple and easy-to-read JSON documents that emphasize the use of keys instead of abstract codes. For example, instead of using the UNTDID4461 code `30` for a bank transfer, GOBL uses the readable key `credit-transfer`. This makes documents human-readable while remaining machine-processable.
+
+## The GOBL envelope
+
+Every GOBL document is wrapped in an envelope. The envelope acts as a container that holds the document itself along with metadata and signatures. This structure ensures that documents can be verified, signed, and processed reliably.
+
+An envelope contains three main parts: a header, the document, and optional signatures. The header includes a unique identifier (UUID), a digest (hash) of the document content, and metadata about when and how the document was created. The document property contains the actual business document—an invoice, credit note, or other business document type. The signatures array holds cryptographic signatures that prove the document's authenticity.
+
+Here's what a simple GOBL envelope looks like:
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/envelope",
+  "head": {
+    "uuid": "c7eac0a3-2ad2-11ed-964a-3e7e00ce5635",
+    "dig": {
+      "alg": "sha256",
+      "val": "45ac3115c8569a1789e58af8d0dc91ef3baa1fb71daaf38f5aef94f82b4d0033"
+    }
+  },
+  "doc": {
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "code": "INV-001",
+    "issue_date": "2024-01-15",
+    "supplier": { ... },
+    "customer": { ... },
+    "lines": [ ... ]
+  },
+  "sigs": [ ... ]
+}
+```
+
+The `$schema` property in both the envelope and the document tells software which GOBL schema to use for validation and processing. This ensures that documents are interpreted correctly and validated against the right specification.
+
+## How GOBL works
+
+When you create a business document with GOBL, you start with a partial document containing just the essential data: supplier information, customer details, line items with quantities and prices, and dates. You don't need to calculate totals, look up tax rates, or worry about compliance rules—GOBL handles all of that automatically.
+
+The process begins when you insert your partial document into a GOBL envelope. The GOBL library then runs a series of operations to complete the document. First, it validates the data you've provided, checking that required fields are present and that values are in the correct format. Next, it calculates line totals by multiplying quantities by prices, applies any discounts you've specified, and computes tax amounts based on the tax categories and rates defined in the tax regime for the document's country.
+
+GOBL automatically determines which tax regime to use based on the supplier's tax ID country code. It then looks up the appropriate tax rates for the invoice date, applies them according to country-specific calculation rules, and handles rounding in a way that complies with local requirements.
+
+The result is a complete, validated document with all totals calculated, taxes applied, and compliance rules satisfied. You can then sign the document using digital signatures to prove its authenticity and prevent tampering.
+
+## Tax regimes and calculations
+
+One of GOBL's most powerful features is its tax regime system. Instead of requiring you to research and implement tax rules for each country, GOBL includes structured tax data for multiple countries. Each tax regime defines the tax categories used in that country (like VAT, GST, or sales tax), the tax rates that apply, and the rules for when and how taxes should be calculated.
+
+Tax regimes in GOBL are defined as structured data in code, not as a separate database. This means the tax information is version-controlled, testable, and always in sync with the GOBL library version you're using. When you create an invoice, GOBL automatically selects the correct tax regime based on the supplier's country, looks up the tax rates that were valid on the invoice date, and applies them according to the country's calculation rules.
+
+This approach ensures consistency and accuracy. All GOBL implementations use the same tax data and calculation algorithms, so you can be confident that your documents will be processed correctly by any system that understands GOBL.
+
+## Building your first GOBL document
+
+To understand how GOBL works in practice, let's walk through creating a simple invoice. You start by defining the basic information: a supplier with their tax ID and address, a customer, and some line items with quantities and prices.
+
+You specify tax categories using simple keys like "VAT" and rates using descriptive terms like "standard" rather than numeric codes. GOBL will look up what "standard" means for your supplier's country and the invoice date, then apply the correct rate automatically.
+
+Once you have your partial document, you insert it into a GOBL envelope. The GOBL library then calculates all the totals, applies taxes, and validates the document. The result is a complete invoice ready to be signed and sent.
+
+If you're using the GOBL CLI, you can build a document from a YAML or JSON file. The CLI automatically runs the calculation and validation steps, outputting a complete GOBL envelope. You can also use the [GOBL Builder](https://build.gobl.org) web tool to experiment with building documents in your browser.
+
+## Converting to local formats
+
+While GOBL provides a universal format, you often need to convert documents to local formats required by tax authorities or business networks. GOBL companion projects handle these conversions, transforming GOBL documents into formats like UBL for Peppol, FacturaE for Spain, CFDI for Mexico, or FatturaPA for Italy.
+
+These conversion tools understand both the GOBL format and the target format, ensuring that all required fields are populated correctly and that the output meets local compliance requirements. This means you can work entirely in GOBL format and let the conversion tools handle the complexity of local formats.
+
+## GOBL and Invopop
+
+Invopop uses GOBL as its universal document format. When you send a document to Invopop via the API, you send it as a GOBL envelope. Invopop stores and processes all documents as GOBL internally, which means you get consistent behavior and calculations regardless of which country or format you're working with.
+
+Invopop handles the conversion from GOBL to local formats automatically. When you need to submit an invoice to a tax authority or send it through a network like Peppol, Invopop converts the GOBL document to the required format behind the scenes. You never need to worry about format differences—just work with GOBL and let Invopop handle the rest.
+
+This approach provides several benefits. First, you only need to integrate with one format (GOBL) rather than learning multiple country-specific formats. Second, Invopop uses GOBL's calculation algorithms, so you can verify your calculations using the open-source GOBL library. Third, all your documents are stored in a consistent format, making it easier to search, process, and archive them.
+
+## Getting started with GOBL
+
+If you're new to GOBL, the best place to start is the [official GOBL documentation](https://docs.gobl.org). The documentation includes detailed guides on creating invoices, understanding the schema structure, and using the GOBL CLI tool.
+
+You can also experiment with GOBL using the [GOBL Builder](https://build.gobl.org), a web-based tool that lets you build and validate GOBL documents directly in your browser. The builder uses the GOBL WebAssembly binary, so you can run validation and calculation processes without installing anything.
+
+For programmatic use, GOBL is primarily a Go library. You can install it with `go get github.com/invopop/gobl` and start building documents in your Go applications. The library includes examples and comprehensive documentation to help you get started.
+
+If you're working with Invopop, you can create GOBL documents and send them to the Invopop API. Invopop will handle validation, calculation, and conversion to local formats automatically. See the [Invopop API reference](/api-ref/introduction) for details on how to send GOBL documents to Invopop.
+
+## Community and resources
+
+GOBL is an open-source project that welcomes contributions. The complexity around invoicing, particularly electronic invoicing, can quickly become overwhelming, so the GOBL community provides several resources to help.
+
+The [GOBL documentation site](https://docs.gobl.org) contains details on how to use GOBL and the schema specifications. The [GitHub repository](https://github.com/invopop/gobl) hosts the source code, and you can find examples of GOBL documents in the [examples directory](https://github.com/invopop/gobl/tree/main/examples).
+
+If you have questions or encounter issues, you can open an [issue on GitHub](https://github.com/invopop/gobl/issues) or start a [discussion](https://github.com/invopop/gobl/discussions) for open-ended questions about GOBL's future or country-specific complications. Pull requests are very welcome, especially if you'd like to see support for a new country or additional features.
+
+## Why GOBL matters
+
+GOBL represents a fundamental shift in how we think about business documents. Instead of accepting the complexity and fragmentation of traditional standards, GOBL provides a modern, developer-friendly approach that works globally while respecting local requirements.
+
+By using GOBL, you can focus on your business logic rather than researching tax rates, implementing validation rules, or learning country-specific formats. GOBL handles the complexity of international compliance, tax calculations, and format conversion, leaving you free to build the features that matter to your business.
+
+When combined with Invopop, GOBL provides a complete solution for international invoicing. You work with one format, and Invopop handles submission to tax authorities, delivery through business networks, and compliance with local regulations. This combination makes it practical to build truly international invoicing systems without the traditional complexity and maintenance burden.
