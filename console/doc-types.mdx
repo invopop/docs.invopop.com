@@ -1,0 +1,187 @@
+---
+title: "Document types"
+description: "Schemas supported by Invopop"
+sidebarTitle: Types
+---
+
+## Overview
+
+Invopop supports a comprehensive set of business document types based on the [GOBL (Go Business Language)](https://docs.gobl.org) schema. All documents are stored as GOBL Envelopes, which wrap the document data with headers and digital signatures for integrity and authenticity.
+
+## Core Document Types
+
+### Invoices
+
+`bill/invoice` [GOBL Schema](https://docs.gobl.org/draft-0/bill/invoice)
+
+An invoice represents a payment claim for goods or services supplied under conditions agreed between the supplier and the customer. Invoices are the most commonly used document type and form the foundation of most billing workflows.
+
+#### Invoice Types
+
+Invoices can be categorized by their `type` field:
+
+- **`standard`**: A regular invoice issued for goods or services. This is the default type for most invoices.
+
+- **`credit-note`**: A document issued by the supplier to the buyer to indicate the intent to credit a specified amount. Credit notes are used to cancel, refund, or adjust a validated invoice. They reference the original invoice through a `preceding` block and are the most widely accepted method for making corrections. See [Correcting an Invoice](/console/doc-correct) for details.
+
+- **`debit-note`**: A document issued by the supplier to request additional funds related to a previously issued invoice (e.g., to account for omitted shipping costs). While valid, debit notes are rarely used in practice—issuing a new invoice is generally recommended instead.
+
+- **`corrective`**: A corrective invoice (also known as a rectifying invoice) is a new document that references and replaces the original one. It's typically used when there are significant errors in fields such as the buyer's name, tax ID, or invoice date, and it fully replaces the original invoice for legal and accounting purposes. Countries that support corrective invoices include Spain and Poland. In some countries where the tax regime supports it, such as Spain, GOBL may attempt to map credit and debit notes into the appropriate corrective format.
+
+### Orders
+
+`bill/order` [GOBL Schema](https://docs.gobl.org/draft-0/bill/order)
+
+Order documents are used for the initial part of an order-to-invoice process where the buyer requests goods or services from the seller. Orders represent purchase orders or sales orders and are typically the first step in a procurement workflow.
+
+You can use orders for the following use cases:
+
+- Purchase order processing
+- Sales order management
+- Order-to-invoice workflows
+- Portugal AT (Autoridade Tributária) compliance
+
+### Deliveries
+
+`bill/delivery` [GOBL Schema](https://docs.gobl.org/draft-0/bill/delivery)
+
+A delivery document is used to describe the delivery of goods or potentially also services. Delivery notes track the physical or digital transfer of items and are often required for logistics and inventory management.
+
+You can use deliveries for the following use cases:
+
+- Shipping documentation
+- Goods receipt confirmation
+- Portugal AT (Autoridade Tributária) compliance
+- Inventory management workflows
+
+### Payments
+
+`bill/payment` [GOBL Schema](https://docs.gobl.org/draft-0/bill/payment)
+
+A payment document is used to link an invoice or invoices with a payment transaction. Payments record the settlement of outstanding invoices and are essential for accounting reconciliation.
+
+You can use payments for the following use cases:
+
+- Invoice payment recording
+- Payment reconciliation
+- Portugal AT (Autoridade Tributária) compliance
+- Accounting workflows
+
+### Parties
+
+`org/party` [GOBL Schema](https://docs.gobl.org/draft-0/org/party)
+
+A Party represents a legal entity or individual involved in a business transaction. Parties can be suppliers, customers, or other business contacts. They are stored as separate documents and referenced by UUID in invoices and other documents.
+
+You can use parties for the following use cases:
+
+- Some regimes (Spain) and networks (Peppol) require supplier registration.
+- Customer and supplier data management.
+
+#### Party Types
+
+- **Suppliers**: Legal entities or persons on behalf of whom invoices should be issued
+- **Customers**: Recipients of invoices and other business documents
+- **Business contacts**: Any other party involved in transactions
+
+
+### Items
+
+`org/item` [GOBL Schema](https://docs.gobl.org/draft-0/org/item)
+
+An Item represents a product or service offered for sale. Items can be stored as separate documents and referenced in invoices, orders, and deliveries to maintain consistent product catalogs.
+
+You can use items for the following use cases:
+
+- Product catalog management
+- Service definition and pricing
+- Consistent product information across documents
+
+## Document Relationships
+
+Documents can be linked together using UUID references. Common relationships include:
+
+- **Credit notes → Invoices**: Credit notes reference the original invoice through a `preceding` block
+- **Corrective invoices → Original invoices**: Corrective invoices replace original invoices
+- **Payments → Invoices**: Payments link to one or more invoices being settled
+- **Invoices → Parties**: Invoices reference supplier and customer parties by UUID
+- **Invoices → Items**: Invoice lines can reference item documents by UUID
+
+See [Related Documents](/guides/related-docs) for more information on linking documents.
+
+## Document Lifecycle
+
+Documents progress through various states during their lifecycle:
+
+- **Draft**: Initial creation state before processing
+- **Processing**: Document is being processed by a workflow
+- **Sent**: Document has been successfully transmitted (e.g., to tax authority or customer)
+- **Paid**: Invoice has been marked as paid
+- **Void**: Document has been cancelled or voided
+- **Error**: Processing failed with an error
+- **Corrected**: Document has been corrected by a credit note or corrective invoice
+
+The Activity tab in the Console shows a chronological log of all state transitions and significant events affecting the document.
+
+## Workflows and Document Types
+
+Workflows are configured to process specific document types. When creating a workflow, you'll select a template based on the document type:
+
+- **Invoice workflows**: Process `bill/invoice` documents (standard, credit-note, debit-note, corrective)
+- **Party workflows**: Process `org/party` documents (suppliers, customers)
+- **Order workflows**: Process `bill/order` documents
+- **Delivery workflows**: Process `bill/delivery` documents
+- **Payment workflows**: Process `bill/payment` documents
+
+Each workflow template is designed for a specific document schema. The workflow steps available may vary depending on the document type and the configured regime.
+
+## Series and Document Types
+
+[Series](/console/series) are used to generate sequential codes for documents that require unique identifiers. Different document types typically use different series:
+
+- **Invoices**: Usually require sequential numbering (e.g., `INV-001`, `INV-002`)
+- **Credit notes**: Often use a separate series (e.g., `CN-001`, `CN-002`)
+- **Orders**: May use order-specific series
+- **Deliveries**: May use delivery-specific series
+
+In some countries, such as Portugal, series names must follow specific formats with document type prefixes (e.g., `FT` for invoices, `NC` for credit notes).
+
+## Country-Specific Considerations
+
+Different countries and tax regimes have specific requirements for document types:
+
+- **Spain**: Supports corrective invoices for VERI*FACTU and TicketBAI compliance
+- **Italy**: Uses credit notes (Nota di Credito - TD04) and debit notes (Nota di Debito - TD05) for SDI corrections
+- **Poland**: Supports corrective invoices for KSeF compliance
+- **Portugal**: Requires specific document type prefixes in series names (FT, FS, FR, NC, etc.)
+- **Mexico**: Uses credit notes (Nota de Crédito) for SAT CFDI corrections
+- **Colombia**: Requires CUFE codes in credit notes referencing original invoices
+
+
+## Document Envelope Structure
+
+All documents are stored as [GOBL Envelopes](https://docs.gobl.org/draft-0/envelope), which include:
+
+- **Header**: Metadata about the document (type, regime, series, code, state)
+- **Document**: The actual business document (invoice, order, party, etc.)
+- **Signatures**: JSON Web Signatures for integrity and authenticity
+
+See [Document Contents](/console/doc-content) for detailed information about the envelope structure and how to inspect documents in the Console.
+
+## Read more
+
+- [Creating Documents](/console/doc-create)
+- [Editing Documents](/console/doc-edit)
+- [Correcting Invoices](/console/doc-correct)
+- [Document Contents](/console/doc-content)
+- [Replicating Documents](/console/doc-replicate)
+- [Related Documents Guide](/guides/related-docs)
+- [Workflows Overview](/console/workflow-intro)
+- [Series Management](/console/series)
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  API Reference | <Icon icon="code" /> [Create an entry (POST)](/api-ref/silo/entries/create-an-entry-post)<br /> <Icon icon="code" /> [Create an entry (PUT)](/api-ref/silo/entries/create-an-entry-put)<br /> <Icon icon="link" /> [Fetch all entries](/api-ref/silo/entries/fetch-all-entries)|
+|  GOBL | <Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [GOBL Schema](https://docs.gobl.org/draft-0/envelope) |

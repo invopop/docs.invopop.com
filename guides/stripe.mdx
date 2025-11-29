@@ -1,0 +1,273 @@
+---
+title: "Stripe"
+icon: "plug"
+description: Import and process invoices and credit notes from Stripe
+---
+
+import WorkflowExample from '/snippets/workflows/templates/stripe/stripe-invoice.mdx'
+import VerifactuExample from '/snippets/workflows/templates/stripe/stripe-verifactu.mdx'
+
+## Introduction
+
+In this guide, you'll learn how to connect [Stripe](https://stripe.com/) with Invopop to automatically generate tax-compliant invoices and credit notes, from your Stripe dashboard.
+
+The Stripe integration consists of two components:
+1. An Invopop app within your Stripe dashboard
+2. An app in your Invopop console
+
+When a Stripe invoice or credit note reaches the [finalized status](https://support.stripe.com/questions/invoice-states), our integration will automatically create a new job in your selected Invopop workflow.
+<Frame caption="Track invoice status directly in your Stripe dashboard">
+  ![stripe details](/assets/guides/stripe-details.png)
+</Frame>
+
+The job will extract the invoice data from Stripe and execute the actions, such as converting it to any e-invoice format and submitting it to your local tax authority.
+
+<Frame caption="View the job information">
+  ![stripe job](/assets/guides/stripe-job-details.png)
+</Frame>
+
+## Setup
+
+Before you begin, ensure you have an active Stripe account.
+
+<Steps>
+
+<Step title="Install Invopop in Stripe">
+Navigate to the [Invopop app](https://marketplace.stripe.com/apps/invopop) in Stripe's App Marketplace and click **Install**.
+Next, Stripe will prompt you to select the Stripe environment you'd like to connect to, you can start with test mode or sandbox and switch to live later.
+
+<Frame caption="Install Invopop in Stripe">
+  ![stripe install](/assets/guides/stripe-install.png)
+</Frame>
+
+</Step>
+
+<Step title="Connect Stripe to Invopop">
+After installation, you should be  redirected to your Stripe dashboard and see the Invopop app in the right sidebar. Alternatively, just open the Invopop app in your [Stripe dashboard](https://dashboard.stripe.com/apps/invopop).
+
+Click **Connect Invopop**. The next page will ask you to login to your Invopop account. If you're new to Invopop, the connection process will guide you through creating your Invopop account and setting up your first workspace.
+
+<Note>
+When connecting a test or sandbox environment in Stripe, select a sandbox workspace in Invopop. For live environments, select a live workspace.
+</Note>
+
+<Frame caption="Connect your Invopop account">
+  ![stripe connect](/assets/guides/stripe-connect.png)
+</Frame>
+
+</Step>
+
+<Step title="Select a workspace">
+After connecting your Invopop account to Stripe, you'll be redirected back to Stripe to choose the workspace where you want to process your invoices.
+
+<Frame caption="Choose your workspace">
+  ![stripe select workspace](/assets/guides/stripe-select-workspace.png)
+</Frame>
+
+</Step>
+
+<Step title="Configure your workflow">
+Select or create a workflow to process your invoices and credit notes.
+
+To use an existing workflow select it from the Stripe's sidebar menu and click **Save Workflow**
+
+To create a new workflow click on **Create New Workflow** in the sidebar menu. You'll be redirected to Invopop.
+
+<Tabs>
+<Tab title="Template">
+    Select one of the following workflow templates:
+    <CardGroup cols="1">
+      <Card iconType="duotone" title="Stripe - VERI*FACTU invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
+      This workflow will sync with Stripe to issue a VERI*\FACTU invoice on finalized sales.
+      </Card>
+      <Card iconType="duotone" title="Stripe - Basic PDF invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
+      This workflow will sync with Stripe to generate a PDF invoice on finalized sales.
+      </Card>
+    </CardGroup>
+</Tab>
+<Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <AccordionGroup>
+        <Accordion title="Example Workflow - Stripe VERI*FACTU">
+          This workflow demonstrates the Stripe integration with a basic PDF workflow.
+          <VerifactuExample />
+        </Accordion>
+        <Accordion title="Example Workflow - Basic PDF">
+          This workflow demonstrates the Stripe integration with country-specific functionality.
+          <WorkflowExample />
+        </Accordion>
+    </AccordionGroup>
+</Tab>
+<Tab title="Build from scratch">
+  In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
+  <Frame>
+    ![stripe import](/assets/guides/stripe-import.png)
+  </Frame>
+  1. Add the **Import data from Stripe** step as the first step of the workflow.
+  2. Configure the workflow according to your local regulations. You can copy _the Basic PDF workflow_ example below and modify it later for your local needs.
+
+  Finally, in the Error Handling area, add the **Set State** action and select "Error" in the State dropdown.
+</Tab>
+</Tabs>
+</Step>
+
+<Step title="Show your tax ID on invoices">
+By default, Stripe does not display your tax ID on invoices. To enable it, go to Settings > Billing > Invoices. In the `Invoice Tax Information` section, enter your tax ID, set it as the default, and click **Save**.
+
+<Frame caption="Show your tax ID on invoices">
+  ![stripe tax id](/assets/guides/stripe-tax-id.png)
+</Frame>
+
+</Step>
+
+<Step title="Verify your setup">
+1. Navigate to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+2. Confirm your workflow configuration is correct
+
+<Frame caption="Review your configuration">
+  ![stripe settings](/assets/guides/stripe-settings.png)
+</Frame>
+
+</Step>
+
+</Steps>
+
+## Monitor invoice processing
+
+After setup, finalized Stripe invoices are imported into Invopop automatically and saved to the `Sales` folder. Use the steps below to verify status, review details, retry processing, and import historical invoices.
+
+<Steps>
+
+<Step title="Check invoice status in Stripe">
+Open the invoice in Stripe and check the Invopop panel in the right sidebar to confirm whether processing succeeded.
+
+<Frame caption="Invoice processed successfully in Stripe">
+  ![stripe invoice status](/assets/guides/stripe-invoice-success.png)
+</Frame>
+
+</Step>
+
+<Step title="Check invoice status in Invopop">
+In the Invopop console, go to `Sales` and open the invoice to view its status. To review the underlying processing job, go to `Workflows` > `History` and open the job details.
+
+<Frame caption="Job details in Invopop">
+  ![stripe job details](/assets/guides/stripe-invopop-job.png)
+</Frame>
+
+</Step>
+
+<Step title="Troubleshoot import errors">
+If an invoice fails, it is usually one of two cases:
+
+1. The invoice was not imported into Invopop because converting from Stripe to Invopop failed. Update the data in Stripe and click **Retry** in the Invopop panel.
+
+<Frame caption="Retry invoice">
+  ![stripe retry invoice](/assets/guides/stripe-retry-import.png)
+</Frame>
+
+2. The invoice was imported into Invopop but submission to the tax authority failed. Correct the invoice in Invopop and re-run a workflow that omits the **Import data from Stripe** step to avoid reimporting the original data. Typical causes include missing required fields or invalid field formats.
+
+<Frame caption="Incorrect invoice details">
+  ![stripe retry invoice](/assets/guides/stripe-invoice-wrong-details.png)
+</Frame>
+</Step>
+
+<Step title="Get notified of failures">
+Add a notification action in your workflow's Error Handling section—Slack, email, or webhook—so you're alerted when an import fails.
+
+</Step>
+
+</Steps>
+
+If you need help tailoring a workflow to your use case, contact us at support@invopop.com.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can I change the workflow that processes my invoices to a different one?">
+  Yes, you can, at any time select a different workflow to sync your Stripe invoices. You can do this both from Stripe or Invopop.
+
+  Option 1: From Stripe
+  1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+  2. Select a different workflow
+  3. Click **Save changes**
+
+  <Frame caption="Select a different workflow in Stripe">
+    ![stripe change workflow](/assets/guides/stripe-settings.png)
+  </Frame>
+
+  Option 2: Through Invopop
+  1. Navigate to the **Apps** section in your [Invopop console](https://console.invopop.com/)
+  2. Locate the Stripe app settings
+  3. Select your new workflow
+
+  <Frame caption="Select a different workflow in Invopop">
+    ![stripe change workflow](/assets/guides/stripe-invopop-settings.png)
+  </Frame>
+
+  </Accordion>
+
+  <Accordion title="How can I switch to a different Invopop workspace?">
+  You can switch to the Stripe connection to a different workspace by disconnecting and reconnecting the app.
+  1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+  2. Click the **Disconnect** button
+  3. Reconnect the app and select your new workspace
+
+  </Accordion>
+
+  <Accordion title="How can I add a Purchase Order number to the invoice?">
+  Stripe does not include a dedicated Purchase Order field on invoices. Add it as a custom field named `PO Number`.
+
+  You can add the custom field in any of these places:
+  - The specific invoice
+  - The subscription
+  - An invoice template
+
+  </Accordion>
+
+  <Accordion title="Can I import historical invoices (issued before I connected Invopop)?">
+  Yes. Open the invoice in Stripe and click **Process this invoice** in the Invopop panel (right sidebar).
+
+  Note: The invoice issue date will be set to the sync date (today), as required by tax agencies. The operation date remains the original date of the transaction.
+
+  <Frame caption="Import historic invoices">
+    ![stripe import historic invoices](/assets/guides/stripe-import-historic-invoices.png)
+  </Frame>
+
+  </Accordion>
+  <Accordion title="Can I import invoices when paid instead of when finalized?">
+  Yes. You can import on payment instead of on finalization. Update the invoice import trigger in either Stripe or Invopop:
+
+  Option 1: In Stripe
+  1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
+  2. In "Invoice Import Trigger", select "When Paid" (instead of "When Finalized").
+  3. Click **Save Changes**.
+
+  <Frame caption="Update invoice import trigger in Stripe">
+    ![stripe import trigger](/assets/guides/stripe-import-trigger.png)
+  </Frame>
+
+  Option 2: In Invopop
+  1. Go to **Configuration** > **Apps** > **Stripe** > **Configure**.
+  2. Click **Update Settings**.
+  3. In "Invoice import trigger", select "When Paid" (instead of "When Finalized").
+  4. Click **Save**.
+
+  <Frame caption="Update invoice import trigger">
+    ![stripe import trigger](/assets/guides/stripe-when-paid.png)
+  </Frame>
+
+  Note: This applies to invoices from now on; it does not change past imports.
+
+  </Accordion>
+
+</AccordionGroup>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Stripe integration →
+</Card>

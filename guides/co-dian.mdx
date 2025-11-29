@@ -1,0 +1,149 @@
+---
+title: "DIAN Guide"
+sidebarTitle: "🇨🇴 Colombia"
+description: Issue invoices and credit notes in Colombia through the DIAN.
+---
+
+import WorkflowExample from '/snippets/workflows/templates/co/dian-invoice.mdx'
+
+## Introduction
+
+The [DIAN](https://www.dian.gov.co/) in Colombia stands for _Dirección de Impuestos y Aduanas Nacionales_ (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+
+Electronic invoicing in Colombia is mandatory and operates on a real-time clearance model whereby every invoice must receive a unique identifier called a CUFE (_Código Único de Factura Electrónica_) issued by the DIAN.
+
+Businesses in Colombia must be registered with the DIAN and have an active RUT (_Registro Único Tributario_) to issue electronic invoices.
+
+Invopop has partnered with [Plemsi](https://plemsi.com) to issue invoices in Colombia (DIAN). You have the option of either using Invopop's Plemsi billing account or create your own and provide your own credentials.
+
+This guide will walk you through the steps necessary to set up the workflows that will allow you to issue [GOBL](https://docs.gobl.org) documents in Colombia using Plemsi as a provider.
+
+Please refer to the docs of the [GOBL's Colombia Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) to learn about the specifics of Colombian GOBL documents and to obtain examples.
+
+## Prerequisites
+
+In order to complete this guide in a live Invopop environment, you will need:
+
+- Supplier details, including company name, RUT, address, and municipality code issued by the DIAN.
+- Customer details for B2B transactions, including name, RUT or international ID, address, and municipality code national transactions.
+- Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
+- Have authorized "Plemsi", the provider used by Invopop, to issue invoices on the supplier's behalf in the DIAN, and followed the specific onboarding process for each supplier (details below).
+
+## Sandbox Setup
+
+Plemsi provides a sandbox environment that you can use to test the issuance of invoices and credit notes end-to-end without fiscal or legal consequences. If you wish to use this environment, please contact us via Slack or [support@invopop.com](mailto:support@invopop.com) so that we enable your Invopop workspace to use it.
+
+Once enabled, you'll need to setup a workflow like the one described [in the section below](#step-5-create-a-workflow).
+
+There are a few limitations of this environment to bear in mind:
+
+- There's only one supplier enabled. Its tax code is `9015852843`.
+- There's only one series enabled for invoices (`SETT`) and another one for credit notes (`NCTT`). Moreover, those series are shared and, to avoid collisions, we'll provide you with a specific range for you to use (e.g. `SETT-123xxxx`)
+
+Your test invoices will need to use the supplier's tax ID code and series above.
+
+## Production Setup
+
+You can invoice using the Plemsi provider on behalf of multiple suppliers. For each supplier, these are the steps you'll need to follow:
+
+<Steps>
+
+  <Step title="Authorise Plemsi to issue invoices on your behalf">
+    First, the supplier's legal representative must authorize the Plemsi technology provider to issue invoices on your behalf in the DIAN.
+
+    The following guide explains how to do it, but note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later in this guide:
+
+    📘 [Habilitar documentos electrónicos DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/habilitar-documentos-electronicos-dian/)
+  </Step>
+  <Step title="Get a billing numbering range authorisation">
+    Next, the supplier's legal representative must get a DIAN authorization for the billing numbering range you wish to use in your invoices. This guide explains how to do it:
+
+    📘 [Solicitud de Autorización de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf)
+
+    Please note that these authorizations have a limit and an expiration date. If you need to renew an existing one, this other guide explains how to do it:
+
+    📘 [Solicitud de Habilitación de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf)
+
+    The DIAN will provide you with an 1876 form at the end of the process. Keep it at hand; you'll need it in the following steps.
+  </Step>
+  <Step title="Authorise Plemsi to use the numbering range">
+    Now, the supplier representative must give the Plemsi technology provider permission to use the numbering range when issuing their invoices.
+
+    The following guide explains how to do it, but again, note that **you'll have to skip the last few steps in the Plemsi user interface**. We'll take care of them for you later on:
+
+    📘 [Asociar una resolución o numeración DIAN](https://ayuda.plemsi.com/docs/tutoriales/configuracion/registrar-resolucion-dian/)
+  </Step>
+  <Step title="Create and configure your Plemsi account">
+    Now you need a Plemsi account created and configured. We have to do this for you, so please contact us via Slack or [support@invopop.com](mailto:support@invopop.com).
+
+    You'll need to provide us with this information about the supplier company:
+
+    - NIT with verification digit
+    - Name
+    - Phone number
+    - E-mail address
+    - Address
+    - City
+    - Region (_Departamento_)
+    - Postal code
+    - Country
+    - Tax Obligations (whether any of the following apply):
+      - _Responsable de IVA_
+      - _Gran contribuyente_
+      - _Autoretenedor_
+      - _Agente de retención en el impuesto sobre las ventas_
+      - _Régimen Simple de Tributación - SIMPLE_
+    - Business registration number (_Número de Registro Mercantil_)
+    - Legal representative data:
+      - Full Name
+      - Identification number (_Cédula de ciudadanía_)
+      - Phone number
+      - E-mail address
+
+    Also, from the previous steps, you'll need to provide us with the following:
+
+    - The `TestID` code resulting from Plemsi authorisation in the DIAN
+    - The numbering range registration document (_Resolución DIAN_)
+  </Step>
+  <Step title="Create a workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="DIAN-Colombia Invoice Workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=co-dian-invoice" cta="Add to my workspace">
+        This workflow will issue an invoice through DIAN.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
+
+          1. **Set State** - Select `Processing`. This initial state marks the document as being processed.
+          2. **Add Sequential Code** - Use a `Dynamic` series which will allow you to use the same workflow for both invoices and credit notes. Make sure to configure it according to the parameters of the authorised numbering range. Generally, you'll want to set the padding to 1 (so no zeros are prepended) and put no prefix or suffix.
+          3. **Sign Envelope** - The envelope must be signed before processing.
+          4. **Send to DIAN via Plemsi (Colombia)** - No configuration required.
+          5. **Generate PDF** - Select `es-Spanish` as the Locale and layout `Letter`.
+          6. **Set State** - Select `Sent`.
+
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          This is the minimal workflow you can use to issue invoices in Colombia. You can now add other optional integrations to, for example, send an email with the invoice, notify another system with a webhook or upload the invoices to a Dropbox account.
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+### And you're done!
+
+Congrats, the setup is complete! You can now use each of the two workflows you created to issue invoices and credit notes in Colombia.
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Colombia →
+</Card>

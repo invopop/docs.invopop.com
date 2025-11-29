@@ -1,0 +1,316 @@
+---
+title: "Documentos fiscais eletrônicos guide"
+sidebarTitle: "🇧🇷 Brazil"
+description: Issue Documentos Fiscais Eletrônicos in Brazil
+---
+
+import ServiceWorkflow from '/snippets/workflows/templates/br/dfe-service-invoice.mdx'
+import ConsumerWorkflow from '/snippets/workflows/templates/br/dfe-consumer-invoice.mdx'
+import PostRegistrationFlow from '/snippets/workflows/templates/br/dfe-postregistration.mdx'
+import RegisterSupplier from '/snippets/workflows/templates/br/dfe-register-supplier.mdx'
+import Supplier from '/snippets/suppliers/br/dfe-supplier.mdx'
+import ServiceInvoice from '/snippets/invoices/br/dfe-service-invoice.mdx'
+import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx'
+
+## Introduction
+
+Brazil has a variety of electronic tax documents that must be issued in different cases for various tax purposes. These include service invoices (NFS-e), product invoices (NF-e), and consumer invoices (NFC-e). Each document type is subject to variations from state to state and municipality to municipality, with each jurisdiction applying its own rules, formats, and APIs for issuing fiscal documents.
+
+Invopop's **Documentos Fiscais Eletrônicos** app provides a unified way to issue fiscal documents across all Brazilian states and over 2000 municipalities using GOBL. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
+
+This guide will walk you through the steps required first to register a supplier and then issue electronic fiscal documents in their name.
+
+## Prerequisites
+
+To issue electronic fiscal documents in Brazil, you will need:
+
+- Supplier details, including:
+  - name,
+  - CNPJ (_Cadastro Nacional da Pessoa Jurídica_),
+  - address,
+  - municipality code (IBGE),
+  - municipal registration number (for NFS-e),
+  - state registration number (for NF-e and NFC-e),
+  - whether the supplier opts into the _Simples Nacional_ tax regime,
+  - whether the supplier benefits from a fiscal incentive, and,
+  - optionally, any special tax regime (MEI, estimated, coop…) the supplier is subject to.
+- Customer details (except for NFC-e where the customer is optional).
+- Details of the goods or services provided:
+  - quantity,
+  - price,
+  - applicable tax rates (ISS, ICMS, PIS, COFINS, etc.), and,
+  - (only for services) service code (_Código Item Lista Serviço_) as defined by the municipality.
+- To have chosen an invoice series
+- A certificate and password accepted by the municipality (for NFS-e) or the state (for NF-e and NFC-e) to send electronic fiscal documents in the name of the supplier.
+
+## Setup
+
+There are four key processes to prepare:
+
+- connect the **Documentos Fiscais Eletrônicos Brazil** app,
+- create the supplier registration workflow,
+- configure the supplier post-registration workflow,
+- prepare the invoicing workflows.
+
+<Info>
+ These instructions apply to both the sandbox and live environments. Please note that the sandbox environment is simulated, and most responses are mocked. You'll still need to register suppliers in the sandbox, but the company details, certificates or passwords don't need to be valid or real.
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+
+<Step title="Connect the Documentos Fiscais Eletrônicos Brazil app">
+Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **Documentos Fiscais Eletrônicos Brazil** app.
+
+<Frame>
+  <img src="/assets/guides/br-dfe-app.png" alt="DF-e Brazil App" width="400" noZoom />
+</Frame>
+
+</Step>
+
+<Step title="Create the supplier registration workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="DF-e register supplier" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-register-supplier" cta="Add to my workspace">
+    This workflow will start the registration of a supplier to issue electronic tax documents.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "NFS-e register supplier workflow".
+
+    The new workflow will need to perform three steps:
+
+    - **Sign the Envelope**
+    - **Register DF-e issuer (Brazil)**
+    - **Set State** - with configuration set to `Processing`.
+
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the supplier post-registration workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="DF-e process supplier post-registration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-postregistration" cta="Add to my workspace">
+    This workflow should contain any processing that needs to happen after a supplier completes the registration process.
+    </Card>
+
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistrationFlow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "DF-e process supplier post-registration".
+
+      This worfkow is composed by a single step:
+
+      1. **Set State** - To `Registered`.
+  </Tab>
+</Tabs>
+
+<Info>
+  This workflow will automatically be executed once a supplier completes the registration process. You can customize it to suit your needs (_e.g._, adding a webhook, or an email notification after a supplier has been registered.)
+</Info>
+
+Now you need to go back to **Configuration** > **Apps**, tap the **Configure** button on the **Documentos Fiscais Eletrônicos Brazil** app, choose the "Post-registration workflow" we just created and **Save** the changes.
+
+</Step>
+
+<Step title="Prepare NFS-e Workflow">
+
+<Info>
+  You can skip this step if you're not interested in issuing NFS-e documents.
+</Info>
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="DF-e issue service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-service-invoice" cta="Add to my workspace">
+      This workflow will issue a service invoice (NFS-e) in Brazil.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <ServiceWorkflow />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Issue NFS-e invoice".
+
+      The new workflow will need to perform these steps:
+
+      - **Set State** - to `Processing`.
+      - **Add Sequential Code** - with dynamic sequences and a name like "NFS-e".
+      - **Send NFS-e (Brazil)**.
+      - **Set State** - to `Sent`.
+
+      Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+    </Tab>
+  </Tabs>
+</Step>
+
+<Step title="Prepare NFC-e Workflow">
+
+<Info>
+  You can skip this step if you're not interested in issuing NFC-e documents.
+</Info>
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="DF-e issue customer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-consumer-invoice" cta="Add to my workspace">
+      This workflow will issue a customer invoice (NFC-e) in Brazil.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <ConsumerWorkflow />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Issue NFC-e invoice".
+
+      The new workflow will need to perform these steps:
+
+      - **Set State** - to `Processing`.
+      - **Add Sequential Code** - with dynamic sequences and a name like "NFC-e".
+      - **Send NFC-e (Brazil)**.
+      - **Set State** - to `Sent`.
+
+      Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+    </Tab>
+  </Tabs>
+</Step>
+
+</Steps>
+
+## Running
+
+In this section, we'll provide details on how to first persist and register a supplier, followed by issuing invoices on their behalf.
+
+As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
+
+All operations described in the following sections can be performed manually via the Invopop Console, or programmatically via the API. The process is essentially the same in both cases, so we'll demonstrate the manual method for this guide.
+
+### Register a Supplier
+
+Find the **Parties** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the example provided below (for testing purposes only, in production you'll need the details of an actual company). The example includes all the fields required to register a supplier for both NF-e/NFC-e and NFS-e issuance.
+
+<Supplier />
+
+Tap **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run workflow**.
+
+The execution should be successful, and the silo entry will now be in the `Processing` state. Tap the **Meta** tab to see the registration link:
+
+<Frame>
+  <img src="/assets/guides/br-dfe-reg-link.png" width="420" alt= "Supplier Registration Link" noZoom/>
+</Frame>
+
+<Info>
+ You can access the registration link via the API by [fetching the silo
+ entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
+ the `key` is set to `registration-link`.
+</Info>
+
+Tap the registration link. A new browser window will open with a form to upload the supplier's credentials. Note that this form can be shared directly with the supplier, if necessary.
+
+<Frame>
+  <img src="/assets/guides/br-dfe-reg-cer.png" width="500" alt="Supplier Registration Form"/>
+</Frame>
+
+The details from this form are sent securely to Invopop's local partner, PlugNotas, who will use them to authenticate the supplier in the corresponding tax authority.
+
+The supplier must ensure that the certificate and password are valid and accepted by the municipality or state where they operate.
+
+Once the form is submitted, the supplier will be registered, and the post-registration workflow will be executed, changing the supplier's state to `Registered`.
+
+From this point on, you can send service invoices on behalf of the supplier.
+
+### Send Invoices
+
+The following examples are of example [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the "Issue NFS-e" or the "Issue NFC-e" workflow created during setup over them.
+
+<Info>
+In the sandbox environment, you'll notice that executing the workflow will always result in the same PDF and XML being attached to the silo entry. These are mock-up files returned by the sandbox environment for testing purposes.
+
+In production, the actual XML file sent to the tax authority and the actual PDF generated will be attached to the silo entry.
+</Info>
+
+#### B2B Service Invoice (NFS-e)
+
+In this example, we're issuing a simple service invoice (NFS-e) from a Brazilian supplier to another Brazilian business customer.
+
+Please note:
+
+- We've added the `br-nfse-v1` addon; this ensures the document will be validated using the NFS-e rules built into the [GOBL](https://docs.gobl.org) library.
+- Extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way.
+- ISS percentage is provided explicitly as it varies depending on the municipality and type of service.
+- There are no totals or calculations; all these will be made automatically when uploading.
+- Make sure to process it with the "Issue NFS-e" workflow created during setup.
+
+<ServiceInvoice />
+
+#### B2C Consumer Invoice (NFC-e)
+
+In this example, we're issuing a simple consumer invoice (NFC-e) from a Brazilian supplier.
+
+Please note:
+
+- We've added the `br-nfe-v1` addon; this ensures the document will be validated using the NF-e/NFC-e rules built into the [GOBL](https://docs.gobl.org) library.
+- The customer is optional and in this example we've omitted it.
+- Extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way.
+- Tax percentages are provided explicitly as they vary depending on the state and type of goods.
+- There are no totals or calculations; all these will be made automatically when uploading.
+- Make sure to process it with the "Issue NFC-e" workflow created during setup.
+
+<ConsumerInvoice />
+
+<Card title="Brazil FAQ"
+  icon="forumbee"
+  href="/faq/brazil"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Brazil →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Brazil →
+</Card>

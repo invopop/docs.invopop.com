@@ -1,0 +1,339 @@
+---
+title: "Series guide"
+sidebarTitle: "Series"
+icon: "arrow-down-wide-short"
+description: Learn how to create and use series to generate sequential codes for your documents.
+---
+
+## Introduction
+
+**Series** are numbering templates that generate unique, sequential identifiers for your documents. Most countries require sequential numbering for business documents like invoices to ensure traceability and compliance with tax regulations.
+
+Invopop's Sequence service provides a reliable, scalable solution for generating sequential codes. Behind the scenes, we use a global transaction database to ensure that even under high-volume, distributed workloads, your series will generate numbers without skips or duplications.
+
+## What is a Series?
+
+A series defines how sequential codes are formatted and generated. Each series includes:
+
+- **Prefix**: Text placed before the numeric portion (e.g., `ES-`, `FR-`)
+- **Padding**: Number of digits in the sequence (zeros are added to the left when necessary)
+- **Start Number**: The first number in the sequence
+- **Suffix**: Text appended after the numeric part (optional)
+- **Code**: Internal identifier for the series (optional)
+
+For example, a series configured with:
+- Prefix: `ES-`
+- Padding: `5`
+- Start number: `1`
+- Code: `INV`
+
+Will generate codes like:
+```
+INV-ES-00001
+INV-ES-00002
+INV-ES-00003
+```
+
+## Creating a Series
+
+You can create series through the Invopop Console or via the API. The Console provides a visual interface with a live preview of the generated codes.
+
+### Using the Console
+
+1. Navigate to the **Series** section in the [Invopop Console](https://console.invopop.com).
+2. Click **+ Create Series** or **New Series**.
+3. Fill in the series configuration fields.
+4. Review the live preview on the right side of the form.
+5. Click **Save** to create the series.
+
+<Frame>
+  <img
+    src="/assets/console/series-create.png"
+    alt="Create a new series in the Console"
+  />
+</Frame>
+
+### Series Properties
+
+| **Field**                  | **Description**                                                                                                | **API Property**                        | 
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------| --------------------------------------- | 
+| **Name**                   | Human-readable label identifying the series.                                                                   | `name`                                  | 
+| **Code** (Optional)        | Internal or business code used to categorize series.                                                           | `code`                                  | 
+| **Prefix** (Optional)      | Text placed before the numeric portion of the generated code.                                                  | `prefix`                                | 
+| **Padding**                | Total number of digits in the numeric sequence. Zeros are added to the left when necessary.                    | `padding`                               | 
+| **Start Number**           | The first number to be issued in the sequence.                                                                 | `last_index`                            | 
+| **Suffix** (Optional)      | Text appended after the numeric part.                                                                          | `suffix`                                | 
+| **Description** (Optional) | Free text for internal documentation or identification.                                                        | `description`                           |
+
+### Preview Panel
+
+The Console displays a **live preview** of the resulting code based on your current field values. Use this to verify the format before saving.
+
+```
+INV-ES-00001
+```
+
+### Using the API
+
+Create a series via the API using a `PUT` request:
+
+<RequestExample>
+```bash
+curl -X PUT "https://api.invopop.com/sequence/v1/series/{id}" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Spanish Invoices",
+    "code": "INV",
+    "prefix": "ES-",
+    "padding": 5,
+    "last_index": 1,
+    "suffix": "",
+    "description": "Series for Spanish invoice numbering"
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json
+{
+  "id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
+  "name": "Spanish Invoices",
+  "code": "INV",
+  "prefix": "ES-",
+  "padding": 5,
+  "last_index": 1,
+  "suffix": "",
+  "description": "Series for Spanish invoice numbering",
+  "created_at": "2022-03-03T22:18:50Z",
+  "updated_at": "2022-03-03T22:18:50Z"
+}
+```
+</ResponseExample>
+
+## Using Series in Workflows
+
+The most common way to use series is through the **Add Sequential Code** step in your workflows. This step automatically generates the next number in the sequence and adds it to your document.
+
+### Dynamic vs. Static Series
+
+When configuring the **Add Sequential Code** step, you can choose between:
+
+- **Dynamic Series**: Creates a new series automatically if one doesn't exist with the specified name. This is useful when you want the workflow to handle series creation automatically.
+- **Static Series**: Uses an existing series that you've already created. Select the series from a dropdown of available series.
+
+### Adding a Sequential Code Step
+
+1. In your workflow, click **+ Add step**.
+2. Search for or select **Add Sequential Code**.
+3. Choose either **Dynamic** or **Static** series mode.
+4. If using **Dynamic**, enter a name for the series (e.g., "Invoice").
+5. If using **Static**, select an existing series from the dropdown.
+6. Configure additional options if needed (such as signing the document).
+
+<Note>
+The **Add Sequential Code** step uses the `sequence.enumerate` provider. When using dynamic series, the step will create a new series with default settings (padding: 6, start: 1) if one doesn't exist.
+</Note>
+
+## Using Series via API
+
+You can also generate sequential codes directly via the API by creating entries in a series.
+
+### Creating a Series Entry
+
+To generate the next code in a series, create an entry:
+
+<RequestExample>
+```bash
+curl -X PUT "https://api.invopop.com/sequence/v1/series/{series_id}/entries/{entry_id}" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "meta": {
+      "invoice_id": "abc123",
+      "customer": "Customer Name"
+    }
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "series_id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
+  "code": "INV-ES-00001",
+  "meta": {
+    "invoice_id": "abc123",
+    "customer": "Customer Name"
+  },
+  "previous_id": null,
+  "sigs": [],
+  "created_at": "2023-01-25T08:04:14.245Z",
+  "updated_at": "2023-01-25T08:04:14.245Z"
+}
+```
+</ResponseExample>
+
+The `code` field in the response contains the generated sequential code. You can then use this code in your document's `series` field.
+
+### Fetching Series Information
+
+Retrieve all series in your workspace:
+
+<RequestExample>
+```bash
+curl -X GET "https://api.invopop.com/sequence/v1/series" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN"
+```
+</RequestExample>
+
+Fetch a specific series by ID:
+
+<RequestExample>
+```bash
+curl -X GET "https://api.invopop.com/sequence/v1/series/{series_id}" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN"
+```
+</RequestExample>
+
+## Best Practices
+
+### Naming Conventions
+
+- Use descriptive names that indicate the purpose (e.g., "Spanish Invoices", "Credit Notes", "Orders").
+- Consider including country codes or business unit identifiers in the name for multi-country or multi-entity setups.
+
+### Prefixes and Suffixes
+
+- Use **prefixes** for country codes (e.g., `ES-`, `FR-`, `US-`) or business unit identifiers.
+- Use **suffixes** for year codes (e.g., `-2024`) when you need to reset numbering annually.
+- Keep prefixes and suffixes short to maintain readable codes.
+
+### Padding Considerations
+
+- Choose padding that accommodates your expected volume. For example:
+  - Padding of `3` supports up to 999 documents (`001` to `999`).
+  - Padding of `6` supports up to 999,999 documents (`000001` to `999999`).
+- Ensure padding is adequate for your invoicing volume to avoid running out of numbers.
+
+### Start Numbers
+
+- **Start Number** is typically `1` for new series.
+- If you're continuing an existing series (e.g., migrating from another system), set the start number to the next number in your sequence.
+
+### Multiple Series
+
+Create separate series for different document types or use cases:
+
+- **Invoices**: One series for standard invoices
+- **Credit Notes**: A separate series for credit notes
+- **Orders**: A series for purchase orders
+- **Deliveries**: A series for delivery notes
+
+Some countries require specific series formats. For example, Portugal requires series names to follow specific formats with document type prefixes (e.g., `FT` for invoices, `NC` for credit notes).
+
+### Code and Description Fields
+
+- **Code**: Use for internal categorization or business logic. This field is optional and doesn't appear in the generated sequential code.
+- **Description**: Use for internal documentation or notes about the series purpose. This field is optional and doesn't affect code generation.
+
+## Examples
+
+### Example 1: Simple Invoice Series
+
+A basic series for invoices with no prefix or suffix:
+
+- Name: "Standard Invoices"
+- Code: `INV`
+- Prefix: (empty)
+- Padding: `6`
+- Start Number: `1`
+- Suffix: (empty)
+
+Generated codes: `000001`, `000002`, `000003`, ...
+
+### Example 2: Country-Specific Series
+
+A series for Spanish invoices with country prefix:
+
+- Name: "Spanish Invoices"
+- Code: `INV`
+- Prefix: `ES-`
+- Padding: `5`
+- Start Number: `1`
+- Suffix: (empty)
+
+Generated codes: `INV-ES-00001`, `INV-ES-00002`, `INV-ES-00003`, ...
+
+### Example 3: Year-Based Series
+
+A series that resets each year with a year suffix:
+
+- Name: "Annual Invoices"
+- Code: `INV`
+- Prefix: (empty)
+- Padding: `4`
+- Start Number: `1`
+- Suffix: `-2024`
+
+Generated codes: `0001-2024`, `0002-2024`, `0003-2024`, ...
+
+<Info>
+When using year-based suffixes, you'll need to create a new series each year or manually update the suffix and reset the start number.
+</Info>
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Can I reuse a series for different document types?">
+While technically possible, it's recommended to use separate series for different document types (invoices, credit notes, orders, etc.) to maintain clear separation and comply with country-specific requirements.
+</Accordion>
+
+<Accordion title="What happens if I reach the maximum number in a series?">
+If you reach the maximum number (e.g., `999999` with padding of `6`), you'll need to create a new series or increase the padding. Plan your padding based on expected volume to avoid this issue.
+</Accordion>
+
+<Accordion title="Can I skip numbers in a series?">
+No. The Sequence service guarantees sequential numbering without skips or duplications. Each entry receives the next number in sequence. If you need to skip numbers (e.g., for voided invoices), handle this in your application logic rather than in the series itself.
+</Accordion>
+
+<Accordion title="How do I continue an existing series from another system?">
+When creating a new series, set the **Start Number** to the next number in your existing sequence. For example, if your last invoice was `INV-00100`, create a new series with start number `101`.
+</Accordion>
+
+<Accordion title="What's the difference between Code and the generated code?">
+The **Code** field is an optional internal identifier for the series (stored in the `code` property). The generated sequential code (returned in the `code` field of an entry) is the formatted string that includes prefix, padded number, and suffix (e.g., `INV-ES-00001`).
+</Accordion>
+
+<Accordion title="Can I modify a series after creating it?">
+You can update some series properties via the API, but be cautious as changes may affect existing entries. The `last_index` property tracks the current position in the sequence and should generally not be modified manually.
+</Accordion>
+</AccordionGroup>
+
+## API Reference
+
+- [Sequences - Introduction](/api-ref/sequences/introduction)
+- [Series - Overview](/api-ref/sequences/series/overview)
+- [Series - Fetch all series](/api-ref/sequences/series/fetch-all-series)
+- [Series - Create a series](/api-ref/sequences/series/create-a-series)
+- [Series - Fetch a series](/api-ref/sequences/series/fetch-a-series)
+- [Entries - Overview](/api-ref/sequences/entries/overview)
+- [Entries - Fetch all series entries](/api-ref/sequences/entries/fetch-all-series-entries)
+- [Entries - Create a series entry](/api-ref/sequences/entries/create-a-series-entry)
+- [Entries - Fetch a series entry](/api-ref/sequences/entries/fetch-a-series-entry)
+
+## Related Guides
+
+- [Workflows Guide](/guides/workflows) - Learn how to use series in workflow steps
+- [PDF Invoice Guide](/guides/pdf-invoice) - See series in action with PDF invoice generation
+- [Series (Console)](/console/series) - Console-specific series documentation
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about series →
+</Card>

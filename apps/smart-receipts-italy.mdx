@@ -1,0 +1,129 @@
+---
+title: "Smart receipts Italy"
+description: "Issue documento commerciale in Italy"
+keywords: ['italy','ticket','ade','it']
+---
+
+import TicketIssueReceipt from '/snippets/workflows/templates/it/ticket-send.mdx';
+import TicketVoidReceipt from '/snippets/workflows/templates/it/ticket-void-receipt.mdx';
+import TicketRegisterSupplier from '/snippets/workflows/templates/it/ticket-register-supplier.mdx';
+import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<div class="flex gap-8">
+			<Card title="Smart Receipts Italy" icon="https://assets.invopop.com/apps/agenzia-entrate/icon.svg"
+			  href="/guides/it-ticket" cta="View implementation guide">
+					Issue electronic tickets (documento commerciale) in Italy.
+			</Card>
+			<div class="flex-shrink">
+				|               |       |
+				|---------------|-------|
+				| Developer | [Invopop](https://invopop.com) |
+				| Category | Government |
+				| Country | [Italy](/compliance/italy) |
+				| Docs | [Implementation&nbsp;guide](/guides/it-ticket) |
+		</div>
+	</div>
+
+		The [AdE](https://www.agenziaentrate.gov.it) (_Agenzia delle Entrate_) is Italy's tax authority responsible for managing tax collection and fiscal compliance. The _documento commerciale_ (also known as _scontrino elettronico_) is a digital fiscal document that records sales transactions and transmits them to the AdE.
+
+		Italian law requires businesses to transmit sales data digitally through either a certified _Registratore Telematico_ (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Smart Receipts streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
+
+		Important distinctions for the _Documento Commerciale_:
+		- It is not an invoice (_fattura_) - invoices require detailed buyer information and follow different tax rules.
+		- It does not replace transport documents (_documento di trasporto_).
+		- It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission.
+		- It must include VAT at the time of sale - deferred VAT payment is not permitted.
+
+		The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
+
+		<Warning>
+		Smart Receipts (AdE CF) is **not** a substitute for [SDI](/guides/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
+		</Warning>
+
+	#### Key Features
+
+	* **Workflow Automation:** This app provides automated workflows for issuing receipts, voiding receipts, and processing refunds through the AdE system.
+	* **Real-Time Transmission:** Receipts are transmitted to the AdE in real-time, ensuring compliance with Italian e-receipt regulations.
+	* **Legally Compliant PDF Receipts:** Receipts are generated with all mandatory fields and AdE document numbers, as required by Italian fiscal legislation.
+	* **Supplier Registration:** Register suppliers with AdE credentials to enable receipt issuance on their behalf.
+	* **Item-Level Refunds:** Process refunds at the item level using corrective invoices.
+	* **GOBL Integration:** Uses the open-source [GOBL](https://gobl.org) format with the `it-ticket-v1` addon for validation and compliance.
+
+	Make sure to check out our [Smart Receipts Guide](/guides/it-ticket) for instructions on how to issue receipts and set up your workflows.
+
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		<Card title="Send a receipt to AdE" icon="https://assets.invopop.com/apps/agenzia-entrate/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 3</div>
+		 Issue GOBL invoices to the Italian AdE using their receipt (documento commerciale) format.
+		</Card>
+
+		<Card title="Void a receipt in AdE" icon="https://assets.invopop.com/apps/agenzia-entrate/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 3</div>
+		 Void a receipt previously sent to the Italian AdE.
+		</Card>
+
+		<Card title="Register Issuer in AdE" icon="https://assets.invopop.com/apps/agenzia-entrate/icon.svg" horizontal>
+		 Register a GOBL party to issue receipts in the Italian AdE.
+		</Card>
+	</Tab>
+	<Tab title="Workflows">
+		The following workflows are available to make your integration easier. Use them as templates to build upon.
+
+		<AccordionGroup>
+			<Accordion title="Smart Receipts issue receipt workflow">
+			This workflow automates Italian documento commerciale processing and transmission to AdE.
+				<TicketIssueReceipt />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=it-ticket-send)
+			</Accordion>
+			<Accordion title="Smart Receipts void receipt workflow">
+			This workflow voids receipts that were issued in error through the AdE system.
+				<TicketVoidReceipt />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=ticket-void-receipt)
+			</Accordion>
+			<Accordion title="Smart Receipts register supplier workflow">
+			This workflow registers a supplier with AdE credentials to enable receipt issuance.
+				<TicketRegisterSupplier />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=ticket-register-supplier)
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
+	<Tab title="Documents">
+		<AccordionGroup>
+			<Accordion title="Smart Receipts Italy B2C Receipt">
+				<TicketB2CInvoice />
+			</Accordion>
+			<Accordion title="Smart Receipts Italy Corrective Receipt">
+				<TicketB2CInvoiceCorrective />
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
+</Tabs>
+
+---
+
+<ItalyResources />
+
+<Card title="Italy FAQ"
+  icon="question"
+  href="/faq/italy"
+  arrow="true"
+  horizontal
+>
+  Frequently asked questions about invoicing compliance in Italy →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Smart Receipts Italy App →
+</Card>

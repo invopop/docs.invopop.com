@@ -1,0 +1,96 @@
+---
+title: "Build with LLMs"
+sidebarTitle: "LLMs"
+description: "Build with Large Language Models (LLMs)"
+icon: "computer"
+---
+
+You can use large language models (LLMs) to assist in the building of Invopop integrations. We provide a set of tools and best practices if you use LLMs during development.
+
+## Plain Text Docs
+
+You can access all of our documentation as plain text markdown files by adding `.md` to the end of any url. For example, you can find the plain text version of this page itself at [https://docs.invopop.com/building-with-llms.md](https://docs.invopop.com/building-with-llms.md).
+
+This helps AI tools and agents consume our content and allows you to copy and paste the entire contents of a doc into an LLM. This format is preferable to scraping or copying from our HTML and JavaScript-rendered pages because:
+
+- Plain text contains fewer formatting tokens.
+- Content that isn't rendered in the default view (for example, it's hidden in a tab) of a given page is rendered in the plain text version.
+- LLMs can parse and understand markdown hierarchy.
+
+We also host an [`/llms.txt` file](https://docs.invopop.com/llms.txt) which instructs AI tools and agents how to retrieve the plain text versions of our pages. The `/llms.txt` file is an [emerging standard](https://llmstxt.org/) for making websites and content more accessible to LLMs.
+
+# Model Context Protocol (MCP) Server
+
+Here are some ways you can connect to our docs MCP server:
+
+<Tabs>
+  <Tab title="Claude">
+
+        1. Navigate to the [Connectors](https://claude.ai/settings/connectors) page in the Claude settings.
+        2. Select **Add custom connector**.
+        3. Add the Invopop Docs MCP server name (such as `invopop-docs`) and URL (https://docs.invopop.com/mcp).
+        4. Add the GOBL Docs MCP server name (such as `gobl-docs`) and URL (https://docs.gobl.org/mcp).
+        5. Select **Add**.
+        6. When using Claude, select the attachments button (the <kbd>+</kbd> icon).
+        7. Select your MCP server.
+
+    See the [Model Context Protocol documentation](https://modelcontextprotocol.io/docs/tutorials/use-remote-mcp-server#connecting-to-a-remote-mcp-server) for more details.
+</Tab>
+<Tab title="Claude Code">
+Run the following commands to add the Invopop and GOBL Docs MCP servers to Claude Code:
+
+        ```bash  theme={null}
+        claude mcp add --transport http invopop-docs https://docs.invopop.com/mcp
+        claude mcp add --transport http gobl-docs https://docs.gobl.org/mcp
+        ```
+    See the [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/mcp#installing-mcp-servers) for more details.
+  </Tab>
+
+  <Tab title="Cursor">
+
+        1. Use <kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> on Windows) to open the command palette.
+        2. Search for "Open MCP settings".
+        3. Select **Add custom MCP**. This will open the `mcp.json` file.
+        4. In `mcp.json`, configure your server:
+
+        ```json  theme={null}
+        {
+          "mcpServers": {
+            "invopop-docs": {
+              "url": "https://docs.invopop.com/mcp"
+            },
+            "gobl-docs": {
+              "url": "https://docs.gobl.org/mcp"
+            }
+          }
+        }
+        ```
+
+    See the [Cursor documentation](https://docs.cursor.com/en/context/mcp#installing-mcp-servers) for more details.
+  </Tab>
+
+  <Tab title="VS Code">
+    Run the following commands to add the Invopop and GOBL Docs MCP servers to VS Code:
+
+        1. Create a `.vscode/mcp.json` file.
+        2. In `mcp.json`, configure your server:
+
+        ```json  theme={null}
+        {
+          "servers": {
+            "invopop-docs": {
+              "type": "http",
+              "url": "https://docs.invopop.com/mcp"
+            },
+            "gobl-docs": {
+              "type": "http",
+              "url": "https://docs.gobl.org/mcp"
+            }
+          }
+        }
+        ```
+
+    See the [VS Code documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) for more details.
+  </Tab>
+</Tabs>
+

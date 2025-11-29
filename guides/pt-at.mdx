@@ -1,0 +1,434 @@
+---
+title: "AT Portugal guide"
+sidebarTitle: "AT Portugal"
+description: Issue documents in Portugal using Invopop's certified implementation.
+---
+
+import PostRegistration from '/snippets/workflows/templates/pt/at-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/templates/pt/at-register-supplier.mdx';
+import IssueInvoice from '/snippets/workflows/templates/pt/at-issue-invoice.mdx';
+import CancelInvoice from '/snippets/workflows/templates/pt/at-cancel-invoice.mdx';
+import IssuePayment from '/snippets/workflows/templates/pt/at-issue-payment.mdx';
+import CancelPayment from '/snippets/workflows/templates/pt/at-cancel-payment.mdx';
+import IssueDelivery from '/snippets/workflows/templates/pt/at-issue-delivery.mdx';
+import CancelDelivery from '/snippets/workflows/templates/pt/at-cancel-delivery.mdx';
+import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
+import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
+import Delivery from '/snippets/deliveries/pt/delivery.mdx';
+import Payment from '/snippets/payments/pt/payment.mdx';
+
+## Introduction
+
+Invopop, as a certified provider in Portugal, allows you to issue fully-compliant tax documents and report them to the _Autoridade Tributária e Aduaneira_ (AT). Using the AT Portugal app, you can generate PDFs with the correct signatures, ATCUD and QR codes for all your documents (invoices, transport documents, payments, etc.). Also, you can report them to the AT either in batch, via periodic SAF-T PT reports, or in real-time, using the AT web services.
+
+This guide will walk you through the process of registering a supplier, issuing invoices in their name, and generating a SAF-T PT report.
+
+## Prerequisites
+
+To issue invoices and other documents in Portugal, you will need:
+
+- Supplier details, including:
+  - Legal business name
+  - Tax ID
+  - Business address
+- An email address for the supplier to access the Supplier Portal
+- The supplier's credentials to access the AT's web services for registering series and report documents in real-time
+- Document details:
+  - Line items with quantity, price, description
+  - Applicable VAT rates
+  - Any other details required for the specific document type
+
+## Setup
+
+There are four key processes to prepare:
+
+- create a supplier post-registration workflow,
+- connect the AT Portugal app,
+- configure a supplier registration workflow, and,
+- prepare a document processing workflow.
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Connect the AT Portugal App">
+
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **AT Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
+
+</Step>
+
+<Step title="Create Supplier post-registration workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="AT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-postregistration" cta="Add to my workspace">
+    Marks Suppliers as "Registered". You will select this workflow in the AT (Portugal) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "PT-AT Post-registration workflow".
+
+      This worfkow is composed by a single step:
+
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+  <Step title="Configure the AT Portugal App">
+
+      1. Navigate to **Configuration** →  **Apps**.
+      2. Find **AT Portugal** in the connected apps list.
+      3. Click **Configure** and choose the "Post-registration workflow" we created in the previous step.
+      4. Click the **Save** button.
+
+
+  </Step>
+<Step title="Configure the supplier registration workflow">
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="AT supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-register-supplier" cta="Add to my workspace">
+      Issues a registration request for a supplier to complete.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+      <RegisterSupplier />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "AT supplier registration".
+
+      The new workflow will need to perform three steps:
+
+      - **Set State** - with configuration set to `Processing`.
+      - **Sign the Envelope**
+      - **Register AT Issuer (Portugal)**
+
+       Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+
+    </Tab>
+  </Tabs>
+</Step>
+
+<Step title="Prepare the invoice processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue invoices.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-invoice" cta="Add to my workspace">
+        This workflow will issue an invoice through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <IssueInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "AT issue invoice".
+
+          The new workflow will need to perform these steps:
+
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
+
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+
+<Step title="Prepare the delivery processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue delivery documents.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue delivery workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-delivery" cta="Add to my workspace">
+        This workflow will issue a delivery document through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Delivery workflow](https://console.invopop.com/redirect/workflows/new?template=empty-delivery) code view.
+        <IssueDelivery />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Delivery workflow](https://console.invopop.com/redirect/workflows/new?template=empty-delivery) as the base. Then name the workflow with a descriptive label such as "AT issue delivery".
+
+          The new workflow will need to perform these steps:
+
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
+
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+
+<Step title="Prepare the payment processing workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue payments.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="AT issue payment workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=at-issue-payment" cta="Add to my workspace">
+        This workflow will issue a payment through the AT (Portugal).
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) code view.
+        <IssuePayment />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) as the base. Then name the workflow with a descriptive label such as "AT issue payment".
+
+          The new workflow will need to perform these steps:
+
+          1. **Set State** - to `Processing`.
+          2. **Seal for the AT (Portugal)** - No configuration required.
+          3. **Record for SAF-T reporting (Portugal)** - No configuration required.
+          4. **Send to the AT (Portugal)** - No configuration required.
+          5. **Generate PDF (Original)** - Portuguese - A4.
+          6. **Generate PDF (Duplicate)** - Portuguese - A4.
+          7. **Set State** to `Sent`.
+
+          Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+          Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Running
+
+In this section, we'll provide details on how to first persist and register a supplier, followed by issuing AT invoices and other documents on their behalf.
+
+<Info>
+  The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-put).
+</Info>
+
+### Register a Supplier
+
+<Steps>
+
+<Step title="Submit the Supplier Information">
+This can be done either manually via the Invopop Console or programmatically via the API. The process is essentially the same; here we'll do it manually.
+
+Find the **Parties** section of the sidebar and click **Suppliers**. Click the **+ New Supplier** button to be presented with a new editor. You can use the following example as a template, and replace it with the details of your company. Note that you'll need the details of a real company both in the sandbox and production environments:
+
+  <Supplier />
+
+Click **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
+
+The execution should be successful, and the silo entry will now be in the "Processing" state.
+
+</Step>
+
+<Step title="Obtain the Supplier's AT Credentials">
+To complete the registration process, the supplier will need to obtain the credentials of a user with the necessary permissions in the AT's Portal das Finanças. To create a new user, the supplier can follow these steps:
+
+1. Go to the AT's [Portal das Finanças](https://www.portaldasfinancas.gov.pt) and click on the **Iniciar Sessão** button.
+2. Authenticate by any of the available methods.
+3. Go to **Todos os Serviços** > **Autenticação de Contribuintes** > **Gestão de Utilizadores**.
+4. Click on the **Criar Novo Utilizador** button.
+5. Fill in the form with the required information. We recommend setting a name that identifies the purpose of the user, for example "Invopop User".
+6. Select the user permissions, depending on the supplier needs:
+    - `WSE` – Always required. It allows to register series for any document type.
+    - `WSA` – Required if the supplier wants to submit invoices to the AT in real-time, rather than using SAF-T.
+    - `WDT` – Required if the supplier wants to submit transport documents (e.g. "Guia de Remessa", "Guia de Transporte", etc.) to the AT in real-time, rather than using SAF-T.
+7. Click on the **Submeter** button to create the user.
+8. Store the username and password in a secure location, as they will be needed in the next step.
+</Step>
+
+<Step title="Provide the Supplier's AT Credentials and Register Series">
+Now, the supplier will need to complete the registration process in the Invopop's Supplier Portal:
+
+1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
+2. Enter the email address provided in the supplier's information. The system will send to the provided address a code to complete the authentication process.
+3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press <kbd>Save</kbd>.
+4. Go to the **Series** section, click **+ Register** and register at least a series for each document type that the supplier will issue.
+
+Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration workflow" if one was configured.
+
+<Info>
+  For detailed information about series management in Portugal, including naming conventions and automatic sequence assignment, see the [Series Management](#series-management) section below.
+</Info>
+
+</Step>
+
+</Steps>
+
+### Series Management
+
+Series management in Portugal has specific requirements that differ from other countries. Understanding these particularities is essential for proper document issuance.
+
+#### Naming
+
+All series names in Portugal must follow a specific format:
+
+- **Document type prefix**: The name must start with a code indicating the document type (e.g., `FT`, `FS`, `FR`, `NC`...), followed by a space.
+- **Base name**: After the space, you can add any custom name you prefer. The custom name can contain letters, numbers, and most special characters, but not spaces, forward slashes (`/`), or carets (`^`).
+
+**Examples**: `FT A001`, `NC 2024-01`, `FR INV-2024`
+
+When you register series through the Supplier Portal, you're asked to provide a base name (without the document prefix) and select the document types you plan to issue. The portal combines each selected prefix with the base name, registers every resulting series with the AT, and retrieves the corresponding validation code required for generating ATCUD codes.
+
+#### Sequence Assignment
+
+Unlike other countries, Portugal regulations do not allow pre-assigning sequence numbers to documents. The sequence number (_i.e._, the document's `code` property) is automatically assigned during the **Seal for the AT (Portugal)** step in your workflow, following AT regulations. This is why you'll find no `sequence` step in Portugal workflow templates and you should not add one.
+
+### Send a document
+
+The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the corresponding processing workflow (invoice, delivery, or payment) created during setup.
+
+    <Tip>
+      [GOBL](https://docs.gobl.org) Documents reported to the AT require the following properties to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading:
+      - `$regime` to be set to [`PT`](https://docs.gobl.org/regimes/pt)
+      - `$addons` to include [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1)
+    </Tip>
+
+<Tabs>
+  <Tab title="Invoice">
+
+
+    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
+
+    <B2BInvoice />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
+    - this is a `standard` invoice and the advance payments don't cover the total amount of the invoice; so, [GOBL](https://docs.gobl.org) will automatically assign the `pt-saft-invoice-type` extension to `FT` (Fatura),
+    - the `card` payment method will cause the addon to set the `pt-saft-payment-means` extension to `CC` (Cartão crédito),
+    - the `h` item unit will cause the `pt-saft-product-type` extension to be set to `S` (Serviço),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+  <Tab title="Delivery">
+
+    In this example, we're issuing a delivery note from a Portuguese supplier to another Portuguese receiver.
+
+    <Delivery />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
+    - this is an `advice` document type and the advance payments don't cover the total amount of the invoice; so, [GOBL](https://docs.gobl.org) will automatically assign the `pt-saft-invoice-type` extension to `FT` (Fatura),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+  <Tab title="Payment">
+
+    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
+
+    <Payment />
+
+    Notice:
+
+    - we've added the `pt-saft-v1` addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
+    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
+    - this is a `receipt` payment and the method is set to key `cash`; so, GOBL will automatically assign the `pt-saft-payment-means` extension to `NU` (Numerário),
+    - the `card` payment method will cause the addon to set the `pt-saft-payment-means` extension to `CC` (Cartão crédito),
+    - the `h` item unit will cause the `pt-saft-product-type` extension to be set to `S` (Serviço),
+    - the `standard` VAT rate will cause the `pt-saft-tax-rate` extension to be set to `NOR` (Normal),
+    - the `pt-region` extension will automatically be set to the default value of `PT`, and
+    - there are no totals or calculations; all these will be made automatically when uploading.
+  </Tab>
+</Tabs>
+
+### Reporting documents to the AT
+
+The AT Portugal app supports two methods for reporting documents to the _Autoridade Tributária e Aduaneira_:
+
+1. **Real-time reporting** - Documents are submitted individually to the AT immediately upon issuance via webservice
+2. **SAF-T PT reporting** - Documents are reported in batch format through periodic SAF-T PT reports
+
+The workflow templates provided in this guide enable both reporting mechanisms.
+
+#### Real-time Reporting
+
+The **Send to the AT (Portugal)** step uses the AT's webservice to submit each document to the tax authority immediately after it is sealed and recorded.
+
+This step is optional. If you prefer to report documents only via SAF-T PT reports, you can remove it from your workflows.
+
+<Info>
+  The **Send to the AT (Portugal)** step requires the supplier to have the appropriate AT user permissions (`WSA` for invoices, `WDT` for transport documents) as described in the "Obtain the Supplier's AT Credentials" section above.
+</Info>
+
+#### SAF-T PT Reporting
+
+SAF-T PT reports allow you to submit documents to the AT in batch format. The **Record for SAF-T reporting (Portugal)** step takes care of recording the documents for this purpose.
+
+<Info>
+  The **Record for SAF-T reporting (Portugal)** step is required in all workflows, regardless of whether you also use real-time reporting. The AT may request SAF-T PT reports for audit purposes at any time, so all documents must be properly recorded.
+</Info>
+
+To generate a SAF-T PT report, a supplier can follow these steps:
+
+1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
+2. Log in using the email address provided with the supplier's information
+3. Go to the **SAF-T PT** section, enter a date range and click **Generate**
+
+The system will generate a SAF-T PT file containing all documents issued within the specified date range that have been recorded for SAF-T reporting. This file can then be submitted to the AT through [their portal](https://faturas.portaldasfinancas.gov.pt/faturas/comerciante/enviar-saft.action) or via [command line](https://faturas.portaldasfinancas.gov.pt/envioBatchInfoNovo.action).
+
+---
+
+<PortugalResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Portugal's regulation →
+</Card>

@@ -1,0 +1,99 @@
+---
+title: "Workflow history"
+description: "Monitor and inspect jobs, the execution steps of workflow runs."
+sidebarTitle: "History"
+---
+
+The **Workflow History** provides a complete log of all workflow executions in your workspace. Use it to audit activity, trace issues, and verify that automated processes ran as expected. By consolidating all workflow executions in one place, the Workflow History provides a clear operational trace of your document-processing activity.
+
+
+
+## Job history list
+
+<Frame>
+<img src="/assets/console/job-history.png" width="100%" alt="Job history view showing workflow executions" />
+</Frame>
+
+At the top of the page, use **filters** to narrow the list of executions:
+
+- **Job ID** — Search for a specific job ID
+- **Workflow** — Filter by workflow name
+- **Status** — Display jobs that are running, completed or completed with errors
+
+These controls help you locate specific jobs or focus on executions relevant to your debugging session.
+
+The **main table** displays each workflow execution with the following information:
+
+- **Started at** — UTC timestamp when the job began.
+- **Job ID** — Unique identifier for the run. Use the copy button to share when reporting issues or cross-referencing logs.
+- **Workflow** — Name and version of the workflow that was executed. This helps distinguish between different automation paths or schema versions.
+- **Duration** — Total time the job took to complete. Short values indicate normal behavior, while longer durations usually indicate long running processes such as waiting for a supplier to register. Our workflow steps have expected durations, and if a step takes longer than expected it will `KO` and the job will fail.
+- **Status** — Visual indicator showing whether a job is running (yellow), completed successfully (green) or ended with an error (red).
+
+<Info>
+Each job shows the specific workflow version that processed it. This helps you correlate workflow changes with job outcomes. For more information, see [Workflow versions](/console/workflow-versions).
+</Info>
+
+
+## Job detail
+
+Click any job in the history table to view its execution details. This view provides a step-by-step trace of the workflow run, showing how the workflow progressed, which actions were taken, and where any failures occurred.
+
+<Frame>
+<img src="/assets/console/job-detail.png" width="508" alt="Job execution details view" />
+</Frame>
+
+### Summary information
+
+At the top of the details view, a summary panel displays key metadata:
+
+- **Status** — Final outcome of the run (completed, completed with errors, or failed)
+- **Started at** — UTC timestamp when execution began
+- **Duration** — Total processing time
+- **Job ID** — Unique identifier with a copy button for sharing
+- **Workflow ID** — Identifier of the workflow definition used, with a link to view the workflow configuration
+- **Silo Entry ID** — Reference to the underlying data record processed by the workflow
+
+Use the **Run again** button to re-execute the same job, useful for iterative debugging after fixing issues.
+
+### Reading the execution trace
+
+Below the summary, each workflow step is listed in execution order. Every step shows:
+
+- **Status** — Whether the step completed successfully or failed
+- **Intent ID** — Unique identifier for the step execution
+- **Log output** — Detailed execution logs (expandable for failed steps)
+
+### Identifying failures
+
+When a step fails, expand its log output to see:
+
+- **RUN** timestamp — When the step started executing
+- **KO** timestamp — When the step failed
+- **Error message** — Specific validation errors, API responses, or other failure details
+
+Use this information to understand what went wrong. Common issues include:
+
+- Missing required fields in the document data
+- Validation errors from tax authorities or service providers
+- Network or API connectivity problems
+- Configuration errors in workflow steps
+
+### Fixing issues
+
+After identifying the failure:
+
+1. Review the error message to understand what's missing or incorrect
+2. Check the document data or workflow configuration
+3. Make the necessary corrections
+4. Use **Run again** to test the fix
+5. Verify the job completes successfully
+
+This view is essential for diagnosing validation errors, signature issues, or logic faults in your workflows. The step-by-step trace and detailed logs make it straightforward to identify exactly where and why a workflow failed.
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  API Reference | <Icon icon="code" /> [Fetch a job](/api-ref/transform/jobs/fetch-a-job)<br /><Icon icon="code" /> [Fetch a job by key](/api-ref/transform/jobs/fetch-a-job-by-key)|
+|  Related Guides | <Icon icon="book" /> [Workflows Guide](/guides/workflows) |

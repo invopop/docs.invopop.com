@@ -1,0 +1,380 @@
+---
+title: "Smart receipts guide"
+sidebarTitle: "Smart receipts"
+description: Issue e-receipts in Italy
+---
+
+import PostRegistrationFlow from '/snippets/workflows/templates/it/sdi-post-registration-flow.mdx';
+import TicketRegisterSupplier from '/snippets/workflows/templates/it/ticket-register-supplier.mdx';
+import TicketIssueReceipt from '/snippets/workflows/templates/it/ticket-send.mdx';
+import TicketVoidReceipt from '/snippets/workflows/templates/it/ticket-void-receipt.mdx';
+import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+import TicketB2CInvoiceComplete from '/snippets/invoices/it/ticket-b2c-complete.mdx';
+import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
+
+## Introduction
+
+Invopop's Smart Receipts provider allows you to generate and issue electronic tickets (_documento commerciale/scontrino elettronico_) in Italy.
+
+The _documento commerciale_ is a digital fiscal document that records sales transactions and transmits them to the _Agenzia delle Entrate_ (AdE). This digital receipt replaces traditional paper receipts while maintaining full fiscal compliance and serves as official proof of purchase for your customers.
+
+Italian law requires businesses to transmit sales data digitally through either a certified _Registratore Telematico_ (RT) or the [AdE's online portal](https://www.agenziaentrate.gov.it/portale/aree-tematiche/fatturazione-elettronica). Smart Receipts streamlines this process by providing a secure interface to relay your sales data to the AdE through a local provider.
+
+Important distinctions for the _Documento Commerciale_:
+- It is not an invoice (_fattura_) - invoices require detailed buyer information and follow different tax rules.
+- It does not replace transport documents (_documento di trasporto_).
+- It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission.
+- It must include VAT at the time of sale - deferred VAT payment is not permitted.
+
+The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
+
+The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An Italian tax ID (Partita IVA) for the supplier.
+- Invoice line items that include:
+  - quantity,
+  - name ,
+  - price (including VAT),
+  - VAT rate,
+  - item type (specified in extension).
+
+## Setup
+
+There are five key processes to prepare:
+
+1. Create a supplier post-registration workflow.
+2. Connect the Italian Smart Receipts app.
+3. Configure a supplier registration workflow.
+4. Prepare an invoicing workflow.
+5. Prepare a voiding workflow.
+
+<Info>
+These instructions work in both sandbox and live environments. The only differences are in supplier data and registration details when using test environments.
+</Info>
+
+Follow these steps in the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Create Supplier post-registration workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="Smart Receipts supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-post-registration" cta="Add to my workspace">
+    This workflow marks suppliers as `Registered`. You will select this workflow in the Italian Smart Receipts app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistrationFlow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "Smart Receipt Post-registration".
+
+      This worfkow is composed by a single step:
+
+      1. **Set State** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Connect the Italian Smart Receipts app">
+
+1. Navigate to **Configuration** → **Apps**.
+2. Find **Italian Smart Receipts** in the app discovery list.
+3. Click **Connect** to activate.
+
+<Frame>
+  <img src="/assets/guides/it-ticket-app.png" width="360px" alt="Smart Receipts App" />
+</Frame>
+
+Click the **Configure** button on the app, and choose the "Post-registration workflow" we created in the previous step.
+
+Click the **Save** button.
+
+</Step>
+
+<Step title="Configure the supplier registration workflow">
+
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="Smart receipts supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-register-supplier" cta="Add to my workspace">
+    This workflow will issue a registration request for a supplier to complete in order to issue receipts through SDI.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <TicketRegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SDI Register Supplier".
+
+    The new workflow will need to perform three steps:
+
+    - **Sign the Envelope**
+    - **Register the Issuer**
+    - **Set State** - select `Processing`.
+
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Prepare Invoice Workflow">
+    <Tabs>
+      <Tab title="Template">
+
+        <Card iconType="duotone" title="Smart Receipts issue receipt workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-ticket-send" cta="Add to my workspace">
+        This workflow will issue a Smart Receipt through Italy's AdE.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <TicketIssueReceipt />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Issue Italian Smart Receipts".
+
+        The new workflow will need to perform three steps:
+
+        - **Add Sequential Code** - with dynamic sequences, and name like "Italian Smart Receipts".
+        - **Send a receipt to AdE**.
+        - **Generate PDF** - configured for your environment.
+        - **Set State** - to `Sent`.
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+        <Frame>
+          <img src="/assets/guides/it-ticket-invoice.png" alt="Issue Italian Smart Receipts" />
+        </Frame>
+
+      </Tab>
+    </Tabs>
+
+</Step>
+
+<Step title="Prepare Void Workflow">
+
+
+<Tabs>
+      <Tab title="Template">
+
+        <Card iconType="duotone" title="Smart Receipts void receipt workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-void-receipt" cta="Add to my workspace">
+        This workflow will void Smart Receipts from the AdE.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <TicketVoidReceipt />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Void Italian Smart Receipts".
+
+        The new workflow will need to perform three steps:
+
+        - **Void a receipt in AdE**.
+        - **Set State** - to `Sent`.
+
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+        <Frame>
+          <img src="/assets/guides/it-ticket-void.png" alt="Void Italian Smart Receipts" />
+        </Frame>
+
+      </Tab>
+    </Tabs>
+
+</Step>
+
+</Steps>
+
+## Running
+
+Each company who will issue e-receipts must first register as a supplier in Invopop. In this section we'll first explain how to register a supplier using the registration workflow we setup, and then how to issue and void invoices on behalf of that supplier, with the corresponding workflows.
+
+As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
+
+### Register a Supplier
+
+You can register suppliers either manually via the Invopop Console or programmatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
+
+<Warning>
+  Suppliers in Italy using this system must generate and provide their [AdE](https://ivaservizi.agenziaentrate.gov.it/portale/)
+  credentials so that invoices can be processed on their behalf. This is not an automated service and can only be
+  performed manually by a representative of the supplier.
+</Warning>
+
+1. Navigate to **Parties** → **Suppliers** in the sidebar
+2. Click **+ New Supplier**
+3. In the editor, enter the supplier details
+
+Here's an example using test data (only valid for sandbox environments):
+
+<AccordionGroup>
+
+<Accordion title="View supplier Data for sandbox">
+```json
+{
+    "$schema": "https://gobl.org/draft-0/org/party",
+    "uuid": "018fbeda-bc61-7000-b66d-398ce3e21c43",
+    "name": "Milano Pizza",
+    "tax_id": {
+        "country": "IT",
+        "code": "48220010093"
+    },
+    "identities": [
+        {
+            "key": "it-fiscal-code",
+            "code": "MRTMTT91D08F205J"
+        }
+    ]
+}
+```
+<Info>
+  You may notice that we included the Italian fiscal code in the supplier, this is not necessary at the moment but will be asked for, if not provided, during the registration process.
+</Info>
+</Accordion>
+
+</AccordionGroup>
+
+
+Tap **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
+
+The execution should be successful, and the silo entry will now be in the `Processing` state. Tap the **Meta** tab to see the registration link:
+
+<Frame>
+  <img
+    src="/assets/guides/it-ticket-reg-link.png"
+    width="450px"
+    alt="Supplier Registration Link"
+  />
+</Frame>
+
+<Info>
+  You can access the registration link via the API by [fetching the silo
+  entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
+  the `key` is set to `registration-link`.
+</Info>
+
+Tap the registration link and a new browser window will be presented with a form to upload the credentials for the supplier. Note that this form can be shared directly with the supplier if required.
+
+<Frame>
+  <img src="/assets/guides/it-ticket-reg-sp.png" alt="Issuer Registration Form" />
+</Frame>
+
+The details from this form are sent securely to local partner who will be responsible for sending them to the AdE.
+We will update the supplier with the provided _codice fiscale_ for future use but will not store any type of credentials.
+
+<Warning>
+  These credentials will expire every 90 days. You must first update your credentials on the official AdE web portal, then enter these new credentials in our registration form. You can use the same registration link to update your credentials.
+</Warning>
+
+### Send an Invoice
+
+Use these [GOBL](https://docs.gobl.org) document examples as templates in the [Invopop Console](https://console.invopop.com) or when creating silo entries via the API.
+
+For proper validation and normalization, set these properties in your [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice):
+
+- Set `$region` to [`IT`](https://docs.gobl.org/regimes/it)
+- Include [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1) in `$addons`
+
+While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
+
+The example below shows a simple B2C invoice from an Italian supplier. Key points to note:
+
+- The `it-ticket-v1` addon ensures validation using AdE CF v1 rules
+- Extensions (`ext`) fields specify values that cannot be determined otherwise:
+  - Items have an extension identifying them as goods or services
+  - VAT exemptions require an Italian exemption code
+- The `prices_include` field indicates that item prices include VAT
+- VAT for "Cleaning Products" automatically sets to the standard rate
+- Totals and calculations are generated automatically
+
+<Accordion title="B2C Invoice">
+<TicketB2CInvoice />
+</Accordion>
+
+The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
+
+<Frame>
+  <img src="/assets/guides/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
+</Frame>
+
+After the AdE accepts the invoice, they add a reference to each line item. This reference, stored in the `it-ticket-line-ref` extension, is essential for processing refunds. The example below shows a complete invoice with these references.
+
+<Accordion title="B2C Invoice Complete">
+<TicketB2CInvoiceComplete/>
+</Accordion>
+
+### Refund an Invoice
+
+When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
+
+To create a corrective invoice take a original [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) and:
+
+1. Set the `type` field to `corrective`
+2. Add a reference to the original invoice using the `preceding` object
+3. Include the original document number stamp from the first invoice
+4. Keep the lines and quantities you want to refund
+
+The example below shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. The corrective invoice:
+- Preserves the `it-ticket-line-ref` extension from the original invoice
+- References the original invoice using the `preceding` object
+- Maintains the same line item references for accurate tracking
+
+<Accordion title="Corrective Invoice">
+<TicketB2CInvoiceCorrective/>
+</Accordion>
+
+### Void an Invoice
+
+You can void an invoice if it was issued in error, such as when a receipt is accidentally sent twice. To void an invoice:
+
+1. Locate the [silo entry uuid](/api-ref/silo/entries/fetch-an-entry) of the invoice
+2. Run the "Void AdE CF Invoices" workflow with this uuid
+
+<Warning>
+You can only void invoices that were originally sent through this app during the same business day.
+</Warning>
+
+<Card title="Italy FAQ"
+  icon="forumbee"
+  href="/faq/italy"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Italy →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Italy →
+</Card>
