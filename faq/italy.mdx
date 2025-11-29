@@ -1,0 +1,117 @@
+---
+title: "Italy FAQ"
+description: "Frequently asked questions about invoicing compliance in Italy"
+sidebarTitle: "FAQ"
+---
+
+<AccordionGroup>
+  <Accordion title="Is electronic invoicing mandatory in Italy?">
+    Yes, electronic invoicing through SDI is mandatory in Italy for B2G, B2B, and B2C transactions.
+
+    All invoices must be issued in FatturaPA format and transmitted through the SDI (_Sistema di Interscambio_) platform.
+  </Accordion>
+  <Accordion title="How can I correct an invoice?">
+    There are two main ways to correct an invoice in the Italian SDI system:
+
+    1. Issue a credit note (Nota di Credito - TD04) to fully or partially cancel the original invoice.
+    2. Issue a debit note (Nota di Debito - TD05) to integrate/correct the original invoice with additional charges.
+
+    The corrective document must reference the original invoice number and date.
+  </Accordion>
+  <Accordion title="Why is my invoice processing taking so long?">
+    The SDI system can take up to 24 hours to process invoices, especially during peak periods. While waiting, the "Send to SDI" step will remain in the `QUEUED` state. The system will automatically check for updates, and the status will change once SDI has processed the invoice.
+  </Accordion>
+  <Accordion title="How do I know if my invoice was delivered successfully?">
+    Once the SDI process is complete, the workflow will show one of several status codes:
+    - `delivered` - The invoice was successfully delivered to a B2B recipient
+    - `accepted-pa` - The invoice was accepted by a Public Administration
+    - `not-delivered` - The invoice couldn't be delivered, but was processed correctly by SDI
+
+    Check the workflow history to see the exact status.
+  </Accordion>
+  <Accordion title="Can I use the same workflow for both sending and receiving invoices?">
+    No, sending and receiving invoices require different workflows:
+    - For sending invoices, a workflow with the Generate FatturaPA and Send to SDI steps is needed
+    - For receiving invoices, two workflows are required:
+      1. A Customer Registration workflow (run once for each company that needs to receive invoices)
+      2. An Import Invoices workflow (configured to run automatically)
+
+    For more information on receiving invoices, see our [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving) guide.
+  </Accordion>
+  <Accordion title="How do I add codice fiscale and Partita IVA">
+    Invopop handles both Italian tax identification numbers in the supplier and customer sections of invoices:
+
+    - **Partita IVA** (VAT number): Automatically extracted from the `tax_id/code` field.
+    - **Codice Fiscale** (fiscal code): Must be specified as an identity with the key `it-fiscal-code`.
+
+    Here's an example showing both identifiers in a supplier object:
+    ```json Supplier with Partita IVA and Codice Fiscale
+    {
+        "supplier": {
+            "name": "MªF. Services",
+            "tax_id": {
+                "country": "IT",
+                "code": "12345678903"
+            },
+            "identities": [
+                {
+                    "key": "it-fiscal-code",
+                    "code": "MRTMTT91D08F205J"
+                }
+            ],
+        }
+    }
+    ```
+
+    For more information on receiving invoices, see our [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving) guide.
+  </Accordion>
+  <Accordion title="What happens if a received invoice contains errors?">
+    If an invoice received through SDI contains errors:
+
+    1. The import process will still attempt to convert it to [GOBL](https://docs.gobl.org) format
+    2. Any validation errors will be logged, and the rescue steps in your workflow will be triggered
+    3. You can review the errors and decide how to handle the invoice
+
+    If the invoice has significant structural issues that prevent conversion, you may need to contact the sender to request a corrected invoice.
+  </Accordion>
+  <Accordion title="How quickly are invoices received after being sent by suppliers?">
+    Invoices are typically received within minutes after being sent by suppliers through SDI. The automatic import process in Invopop processes them as soon as they are received by our system.
+  </Accordion>
+  <Accordion title="Can I register multiple companies to receive invoices?">
+    Yes, multiple companies can be registered to receive invoices through a single Invopop workspace. For each company, you must:
+    1. Register the Recipient Code `JKKZDGR` with the Italian tax authority for that specific company
+    2. Have its tax ID registered using the Customer Registration workflow in Invopop
+    3. Use the same Import Invoices workflow configured in the app settings
+
+    This two-step registration process (with the tax authority and with Invopop) must be completed for each company you want to register. This is particularly useful for white-labeling scenarios where a user manages multiple entities.
+  </Accordion>
+  <Accordion title="What is the difference between registering with the tax authority and registering with Invopop?">
+    The two-step registration process serves different purposes:
+
+    1. **Registering with the Italian tax authority** - Tells SDI to route invoices addressed to your company to Invopop's system using the _Codice Destinatario_ `JKKZDGR`.
+
+    2. **Registering with Invopop** (Customer Registration workflow) - Tells Invopop's system which invoices to accept and process for your workspace.
+
+    Both steps are necessary: the first routes the invoices to Invopop, and the second ensures Invopop knows which workspace should receive those invoices.
+  </Accordion>
+  <Accordion title="Is this a substitute for SDI?">
+    AdE CF is **not** a substitute for [SDI](/guides/it-sdi-sending). Invopop works with SDI to issue electronic invoices using the FatturaPA and is the main tool available to issue electronic invoices in Italy. AdE CF should only be used when customer information is not available, like in online B2C scenarios.
+  </Accordion>
+  <Accordion title="How do I correct mistakes in an issued AdE CF invoice?">
+    You cannot modify an AdE CF invoice after issuing it. Instead you must:
+    1. Void the incorrect invoice using the "Void AdE CF Invoices" workflow
+    2. Issue a new invoice with the correct information
+  </Accordion>
+  <Accordion title="Do I still need to add a series and code to the invoice?">
+    We recommend adding a series and code to the invoice so that you can keep track internally even though the AdE will generate a document number.
+  </Accordion>
+</AccordionGroup>
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Italy's regulation →
+</Card>
+
