@@ -47,20 +47,32 @@ Click any job in the history table to view its execution details. This view prov
 
 At the top of the details view, a summary panel displays key metadata:
 
-- **Status** — Final outcome of the run (completed, completed with errors, or failed)
-- **Started at** — UTC timestamp when execution began
-- **Duration** — Total processing time
-- **Job ID** — Unique identifier with a copy button for sharing
-- **Workflow ID** — Identifier of the workflow definition used, with a link to view the workflow configuration
-- **Silo Entry ID** — Reference to the underlying data record processed by the workflow
 
-Use the **Run again** button to re-execute the same job, useful for iterative debugging after fixing issues.
+| Field | Description |
+|-------|-------------|
+| **Status** | Final outcome of the job run (completed, completed with errors, or failed) |
+| **Started at** | UTC timestamp when execution began |
+| **Duration** | Total processing time |
+| **Job ID** | Unique identifier with a copy button for sharing |
+| **Workflow ID** | Identifier of the workflow definition used. Clicking <kbd>↗</kbd> will take you to the specific [workflow version](/console/workflow-history) used to execute this job. |
+| **Silo Entry ID** | Reference to the underlying data record processed by the workflow. Clicking <kbd>↗</kbd> will take you entry processed with this job. |
+
+Use the <kbd>Run again</kbd> button to re-execute the same job, useful for iterative reprocessing after fixing issues.
 
 ### Reading the execution trace
 
 Below the summary, each workflow step is listed in execution order. Every step shows:
 
-- **Status** — Whether the step completed successfully or failed
+- **Status** — Last known status text for this job. Can be one of the following:
+
+	|        |             |
+	|--------|-------------|
+	| `RUN` | attempting to execute the task. |
+	| `QUEUED` | processor requested more time, job is queued. |
+	| `ERR` | recoverable error, can try again. |
+	| `OK` | job completed successfully. |
+	| `SKIP` | not executed, reason will be stated. |
+	| `KO` | unrecoverable failure ("knocked out"). |
 - **Intent ID** — Unique identifier for the step execution
 - **Log output** — Detailed execution logs (expandable for failed steps)
 
@@ -68,8 +80,8 @@ Below the summary, each workflow step is listed in execution order. Every step s
 
 When a step fails, expand its log output to see:
 
-- **RUN** timestamp — When the step started executing
-- **KO** timestamp — When the step failed
+- **RUN** — When the step started executing
+- **KO** — When the step failed
 - **Error message** — Specific validation errors, API responses, or other failure details
 
 Use this information to understand what went wrong. Common issues include:
@@ -86,7 +98,7 @@ After identifying the failure:
 1. Review the error message to understand what's missing or incorrect
 2. Check the document data or workflow configuration
 3. Make the necessary corrections
-4. Use **Run again** to test the fix
+4. Use <kbd>Run again</kbd> to test the fix
 5. Verify the job completes successfully
 
 This view is essential for diagnosing validation errors, signature issues, or logic faults in your workflows. The step-by-step trace and detailed logs make it straightforward to identify exactly where and why a workflow failed.
