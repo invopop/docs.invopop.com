@@ -13,6 +13,10 @@ The objective of this guide is to walk you through the process of generating a s
 
 Once completed, the workflow will work with any GOBL invoice produced for any country in the world.
 
+<Frame>
+<img src="/assets/console/generate-pdf-example.png" width="300" alt="Example of a PDF invoice" />
+</Frame>
+
 ## Prerequisites
 
 You'll need the following data to issue basic PDF invoices:
@@ -58,6 +62,64 @@ Finally, in the Error Handling area, add the **Set State** action and select sta
   </Tab>
 
 </Tabs>
+
+
+
+### Configuration options
+
+Once you have connected the "PDF Generator" app, you can configure the "Generate PDF" workflow step. The following  options are available.
+
+<Frame>
+<img src="/assets/console/generate-pdf-logo.png" width="400" alt="Generate PDF logo" />
+</Frame>
+
+|  |  |
+|-------|-------------|
+| **Upload logo** | Upload an image which will be used as a logo in the document. A square or horizontal logo layout in PNG format is recommended. If you need to upload a different logo for each supplier, include the `logos` field in the party entry [as detailed in the FAQ](/guides/pdf-invoice#how-can-i-add-a-different-logo-for-each-supplier). |
+| **Logo height** | Height for the logo in pixels. There's 72 pixels in an inch and 37 pixels in a centimeter. The default height is 40 pixels (a little over 1cm) |
+
+<Frame>
+<img src="/assets/console/generate-pdf-locale.png" width="400" alt="Generate PDF locale" />
+</Frame>
+
+|  |  |
+|-------|-------------|
+| **Locale** | Sets the language and formatting conventions used in the PDF. We add new locales based on the demand of our customers. |
+| **Date format** | Controls how dates are displayed. Options include: `YYYY-MM-DD`, `DD-MM-YYYY`, `MM-DD-YYYY`, `DD.MM.YYYY`, `MM.DD.YYYY` |
+| **Layout** | Defines the physical page size for regional printing standards. Options include: <ul><li>`A4`: used in Europe and various other countries.</li><li>`Letter`: used in United States, Canada, Mexico, Philippines, and other countries in Latin America.</li><li>`DIN5008`: used in Germany as the standard for documents that will present information within an envelope window. If you select this option, the customer's information (name and address) will be placed within this window.</li></ul> |
+
+<Frame>
+<img src="/assets/console/generate-pdf-visuals.png" width="400" alt="Generate PDF visual markers" />
+</Frame>
+
+|  |  |
+|-------|-------------|
+| **Title badge** | Contextual labels such as "original", "copy", "draft", or "internal" |
+| **Background watermark** | Text that will be displayed in the background of the document such as "draft", "review", "internal", "confidential", etc. |
+
+<Frame>
+<img src="/assets/console/generate-pdf-formatting.png" width="400" alt="Generate PDF formatting" />
+</Frame>
+
+**Currency formatting** is a dedicated section allows overriding the default currency formatting normally dictated by the document's own currency.
+
+|  |  |
+|-------|-------------|
+| **Currency template** | Whether the currency symbol should be before or after the number, e.g. `€100` or `100€`. |
+| **Format for negative values** | Whether the negative sign should be before or after the number, e.g. `€-100` or `-€100`. Parenthesis `- €(100)` can also be used according to some accounting standards. |
+| **Thousands separator** | Separator to improve the readability of the number, e.g. `1,000`, `1.000`, `1 000` or `1_000`. |
+| **Decimal mark** | Separator for the decimal part of the number, e.g. `1.00` or `1,00`. |
+
+<Frame>
+<img src="/assets/console/generate-pdf-checkboxes.png" width="400" alt="Generate PDF checkboxes" />
+</Frame>
+
+|  |  |
+|-------|-------------|
+| **Adjustment invoices** | Toggle to generate "adjustment invoices" using negative values instead of traditional credit and debit notes. Useful for countries that don't officially recognise the concept of credit or debit notes such as Spain and Poland [as detailed in the FAQ](/guides/pdf-invoice#why-would-i-want-to-use-adjustment-invoices). |
+| **Hide "Powered by Invopop"** | Toggle to hide the "Powered by Invopop" attribution. This setting does not remove the GOBL logo from the PDF. |
+| **Disable public download URLs** | Security control to disable the creation of public download URLs for generated PDFs, preventing external sharing via link.
+
 
 ## Running
 
@@ -199,16 +261,43 @@ Use the following example [GOBL Invoices](https://docs.gobl.org/draft-0/bill/inv
 ## FAQ
 
 <AccordionGroup>
-<Accordion title="Can I customize the format of PDF?">
 
-<Frame>
-<img src="/assets/guides/pdf-config.png" width="360px" alt="Generate PDF configuration" />
-</Frame>
-You can view all available customizations for the PDF in the configuration of the Generate PDF step.
+<Accordion title="How can I add a different logo for each supplier?">
+Add them within the supplier object within a logos array, here is an example:
 
-To add a logo to the invoice, you can either upload it directly in the Generate PDF step or include a URL for the logo in the invoice payload by adding the "logos" field to the supplier.
+```json
+    "supplier": {
+        "name": "Invopop SL",
+        "tax_id": {
+            "country": "ES",
+            "code": "B85905495"
+        },
+        "logos": [
+            {
+                "url": "https://ams3.digitaloceanspaces.com/invopop-console-files-dev/9acccd03a8258818cadbfce3e32e67af1e7ff826deb2e6ec66c9cdc6fc8f24a1$0",
+                "height": 100,
+                "width": 100
+            }
+        ]
+    }
+```
+
+Make sure your image is publicly accessible. Sometimes server restrictions prevent our services from accessing the image. An easy way to verify this is by asking ChatGPT “is this URL https://… publicly accesible?”
 </Accordion>
+<Accordion title="Why would I want to use adjustment invoices?">
+  Spain, along with a very small selection of other countries like Poland, doesn’t officially recognise the concept of credit or debit notes. Instead they use the concept of corrective or adjustment invoices whereby the amounts are displayed as differences from the original document. The two main types are:
+
+  - Replacement Invoice (Factura Rectificativa por Sustitución)  known in GOBL with the invoice type `corrective` and completely replaces any previous documents.
+  - Adjustment Invoice (Factura Rectificativa por Diferencias) reflected in GOBL as either a `credit-note` or `debit-note` invoice type that appends to the previous documents.
+
+  GOBL is a designed to be an international format, so when deciding the types we try to take the most common business concepts and map them to local requirements. A credit note by definition implies a deduction from the preceding invoice, so all totals and values must be positive. This can cause confusion in Spain, where most companies are accustomed to the local way of issuing invoices with negative totals.
+
+  When converting GOBL to the local tax agency format (like VERI*FACTU XML in Spain), Invopop will automatically inverts the values in a credit-note to ensure that the agency receives what they are expecting, while at the same time maintaining global compatibility in the actual document. With these  changes, PDF can now apply the same logic to invert the totals and change the text translations while maintaining the same underlying information.
+</Accordion>
+
 </AccordionGroup>
+
+---
 
 <Card title="Participate in our community"
   icon="forumbee"
