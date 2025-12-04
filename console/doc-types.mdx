@@ -119,22 +119,28 @@ See [Related Documents](/guides/related-docs) for more information on linking do
 <img src="/assets/console/states.png" width="282" alt="States" />
 </Frame>
 
-States are labels that do not reflect the internal state of the document—this is a crucial distinction between **syntax** and **semantics**. The state labels are purely syntactic markers: tags without any inherent connection to the actual content or condition of the document itself. Instead, they help you track the *history* of what happened to your document through a job run. For example, if a job encounters an error but doesn't explicitly set a state label, the document's state won't be marked as `error`, even though the document may actually be affected. The state label only changes if something in your workflow explicitly updates it—it doesn't automatically reflect the document's true status. This decoupling means the state system provides metadata about workflow events, not assertions about the document's validity or integrity.
+States are labels that do not reflect the internal state of the document. They are labels that don't represent the condition of the document itself. This decoupling means the state system provides metadata about workflow events, not assertions about the document's validity or integrity.
+
+
+Instead, states help you track the history of what happened to your document through a job run. For example, if a job encounters an error but doesn't explicitly set a state label, the document's state won't be marked as `error`, even though the document may actually be affected. The state label only changes when you explicitly change it through the "Set State" workflow step or through the API (though `Empty` and `Invalid` are exceptions to this rule). 
+
 
 We provide the following states to label the document throughout its lifecycle. They are described in order to assist you in choosing good states for your documents when creating new workflows:
 
-- **Invalid**: this state cannot be selected. It is set by the system when a GOBL document is uploaded through the API with the `allow_invalid` option, or is received through a network such as Peppol or SDI which allow receiving invoices. 
-- **Empty**: initial creation state before processing
-- **Draft**: mainly used to mark documents that will require further changes.
-- **Processing**: mainly used to indicate the document is being processed.
-- **Registered**: when a party has been granted invoice issuing entitlements, or a document has been registered for reporting. 
-- **Completed**: generic label for completion of a process.
-- **Sent**: document has been successfully transmitted (e.g., to tax authority or customer)
-- **Received**: document has been successfully received (e.g., receiving a document in your Peppol inbox).
-- **Error**: processing failed with an error
-- **Rejected**: rejected by the tax authority or by a third party (e.g., Peppol participant)
-- **Paid**: Invoice has been marked as paid
-- **Void**: Document has been cancelled or voided
+|  |  |
+|-------|-------------|
+| **Invalid** | This state cannot be selected. It is set by the system when a GOBL document is uploaded through the API with the `allow_invalid` option, or is received through a network such as Peppol or SDI which allow receiving invoices. |
+| **Empty** | Initial creation state before processing |
+| **Draft** | Mainly used to mark documents that will require further changes. |
+| **Processing** | Mainly used to indicate the document is being processed. |
+| **Registered** | When a party has been granted invoice issuing entitlements, or a document has been registered for reporting. |
+| **Completed** | Generic label for completion of a process. |
+| **Sent** | Document has been successfully transmitted (e.g., to tax authority or customer) |
+| **Received** | Document has been successfully received (e.g., receiving a document in your Peppol inbox). |
+| **Error** | Processing failed with an error |
+| **Rejected** | Rejected by the tax authority or by a third party (e.g., Peppol participant) |
+| **Paid** | Invoice has been marked as paid |
+| **Void** | Document has been cancelled or voided |
 
 The Activity tab in the Console shows a chronological log of all state transitions and significant events affecting the document.
 
