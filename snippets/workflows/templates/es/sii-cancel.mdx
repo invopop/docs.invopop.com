@@ -1,0 +1,44 @@
+---
+title: "SII cancel document"
+description: "Cancel a SII document and report it to AEAT"
+countryCode: "es"
+appId: "sii"
+schema: "bill/invoice"
+---
+
+```json Example SII cancel workflow with states expandable
+{
+    "name": "SII cancel document",
+    "description": "Cancel a SII document and report it to AEAT",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "2f897e30-3c9c-11f0-8690-a921c0418914",
+            "name": "Cancel invoice",
+            "provider": "sii.cancel"
+        },
+        {
+            "id": "334ffc10-3c9c-11f0-8690-a921c0418914",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "384cfe20-3c9c-11f0-8690-a921c0418914",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+
+```
+

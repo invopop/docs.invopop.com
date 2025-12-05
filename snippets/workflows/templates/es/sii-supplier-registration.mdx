@@ -1,0 +1,63 @@
+---
+title: "SII supplier registration"
+description: "Enables suppliers to register for SII invoice generation"
+countryCode: "es"
+appId: "sii"
+schema: "org/party"
+---
+
+```json Example SII supplier registration expandable
+{
+    "name": "SII supplier registration",
+    "description": "Enables suppliers to register for SII invoice generation",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "52f5d190-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Register supplier",
+            "provider": "gov-es.register"
+        },
+        {
+            "id": "5bfc9c10-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "627c94a0-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Wait for supplier registration",
+            "provider": "gov-es.wait.upload"
+        },
+        {
+            "id": "6f84ea30-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "78dabf10-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Wait for supplier approval",
+            "provider": "gov-es.wait.approval"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "846415c0-831c-11f0-9ba3-7d4deb7b9d0e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+
+```
+

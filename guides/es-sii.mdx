@@ -1,33 +1,33 @@
 ---
-title: "VERI*FACTU invoicing guide"
-sidebarTitle: "VERI*FACTU invoicing"
-description: "Issue invoices in Spain with VERI*FACTU."
-keywords: ['verifactu']
+title: "SII invoicing guide"
+sidebarTitle: "SII invoicing"
+description: "Issue invoices in Spain with SII."
+keywords: ['sii']
 ---
 
-import WorkflowExample from '/snippets/workflows/templates/es/verifactu-invoice.mdx';
-import B2CInvoice from '/snippets/invoices/es/verifactu-b2c.mdx';
-import B2BInvoice from '/snippets/invoices/es/verifactu-b2b.mdx';
-import B2BServicesEUClient from '/snippets/invoices/es/verifactu-b2b-services-eu.mdx';
-import B2BGoodsEUClient from '/snippets/invoices/es/verifactu-b2b-goods-eu.mdx';
-import B2BServicesNoEUClient from '/snippets/invoices/es/verifactu-b2b-services-no-eu.mdx';
-import B2BGoodsNoEUClient from '/snippets/invoices/es/verifactu-b2b-goods-no-eu.mdx';
-import B2BExemptE1Invoice from '/snippets/invoices/es/verifactu-exempt-E1.mdx';
-import B2COneStopShopInvoice from '/snippets/invoices/es/verifactu-b2c-oss.mdx';
-import CreditNote from '/snippets/invoices/es/verifactu-credit-note.mdx';
-import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
-import CancelInvoice from '/snippets/workflows/templates/es/verifactu-cancel.mdx';
+import WorkflowExample from '/snippets/workflows/templates/es/sii-invoice.mdx';
+import B2CInvoice from '/snippets/invoices/es/sii-b2c.mdx';
+import B2BInvoice from '/snippets/invoices/es/sii-b2b.mdx';
+import B2BServicesEUClient from '/snippets/invoices/es/sii-b2b-services-eu.mdx';
+import B2BGoodsEUClient from '/snippets/invoices/es/sii-b2b-goods-eu.mdx';
+import B2BServicesNoEUClient from '/snippets/invoices/es/sii-b2b-services-no-eu.mdx';
+import B2BGoodsNoEUClient from '/snippets/invoices/es/sii-b2b-goods-no-eu.mdx';
+import B2BExemptE1Invoice from '/snippets/invoices/es/sii-exempt-E1.mdx';
+import B2COneStopShopInvoice from '/snippets/invoices/es/sii-b2c-oss.mdx';
+import CreditNote from '/snippets/invoices/es/sii-credit-note.mdx';
+import CorrectiveInvoice from '/snippets/invoices/es/sii-corrective.mdx';
+import CancelInvoice from '/snippets/workflows/templates/es/sii-cancel.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
 ## Introduction
 
-VERI\*FACTU is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires businesses to report invoices through certified software. The system generates unique identifiers for each invoice and creates digitally signed XML files that are submitted to the tax authorities.
+SII (Suministro Inmediato de Información) is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires large businesses to report invoices through certified software. The system submits invoices in the SII format to the tax authorities.
 
-<Note>VERI\*FACTU will be mandatory for companies from January 1st, 2027. The rest of tax payers from 1 July 2027. Companies reporting with SII or TicketBAI are exempt from reporting with VERI\*FACTU.</Note>
+<Note>SII is mandatory for companies that meet certain requirements. Companies reporting with VERI*FACTU or TicketBAI are exempt from reporting with SII.</Note>
 
 ## Prerequisites
 
-To issue your first VERI\*FACTU invoice, you must have had registered at least one supplier. Make sure you read and implemented the [VERI*FACTU supplier registration guide](/guides/countries/es-verifactu-supplier) before continuing with this guide.
+To issue your first SII invoice, you must have had registered at least one supplier. Make sure you read and implemented the [SII supplier registration guide](/guides/es-sii-supplier) before continuing with this guide.
 
 
 ## Setup
@@ -36,8 +36,8 @@ Add a new workflow to your workspace for issuing invoices. You can start with th
 
 <Tabs>
   <Tab title="Template">
-    <Card title="VERI*FACTU invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
-      This workflow will issue an invoice through VERI\*FACTU.
+    <Card title="SII invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-invoice" cta="Add to my workspace">
+      This workflow will issue an invoice through SII.
     </Card>
   </Tab>
   <Tab title="Code">
@@ -48,9 +48,8 @@ Add a new workflow to your workspace for issuing invoices. You can start with th
   <Tab title="Build from scratch">
     In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-    1. **Sign Envelope** - Signs the VERI\*FACTU document.
-    2. **Generate XML** - Creates the XML document and adds it to the chain. View it in the `Files` section.
-    3. **Issue invoice** - Submits the XML to AEAT and returns the response.
+    1. **Sign Envelope** - Signs the SII document.
+    3. **Record invoice in SII** - Records the invoice in SII.
     4. **Generate PDF** - Creates the PDF invoice with the required QR code.
 
     In the Error Handling section, add the **Set State** action and select `Error`.
@@ -61,7 +60,7 @@ Add a new workflow to your workspace for issuing invoices. You can start with th
 Keep the `Workflow ID` at hand, you'll use it later.
 
 <Info>
-  VERI\*FACTU allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
+  SII allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
 </Info>
 
 
@@ -72,23 +71,23 @@ Keep the `Workflow ID` at hand, you'll use it later.
     Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the invoice details. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field with these required fields:
 
     - `regime`: `ES`
-    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
+    - Add the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon
     - `supplier`: Use the details of the supplier you've registered before.
 
     You can copy one of the example invoices below as a reference.
 
 
     <AccordionGroup>
-      <Accordion title="B2C Standard Invoice">
+      {/*<Accordion title="B2C Standard Invoice">
         Simplified invoices are used for B2C transactions when the customer is not a business. The transaction amount should be under €400 (VAT included) with some [exceptions](https://sede.agenciatributaria.gob.es/Sede/iva/facturacion-registro/facturacion-iva/tipos-factura.html) in which this threshold is increased to €3,000.
 
-        To create a simplified VERI*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon.
+        To create a simplified SII invoice, include the `simplified` tag in your GOBL document with the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon.
 
         <Note>
           We recommend issuing simplified invoices without a `customer` field. Any data in this object will trigger validations by the tax authority so a valid NIF and name will be required.
         </Note>
         <B2CInvoice />
-      </Accordion>
+      </Accordion>*/}
       <Accordion title="B2B Standard Invoice">
         Regular invoices are used for B2B transactions. Regular invoices must be issued when:
 
@@ -96,21 +95,21 @@ Keep the `Workflow ID` at hand, you'll use it later.
         - The transaction amount is €400 VAT included or above, or the customer requires a full invoice.
         - The customer needs a complete invoice with all tax details for accounting or tax purposes.
 
-        To create a regular VERI*FACTU invoice, include the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `F1` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
+        To create a regular SII invoice, include the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `F1` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
 
         <Note>
           The `supplier` must be previsouly registered with the tax authority and the `customer` NIF or VAT ID must be valid.
         </Note>
         <B2BInvoice />
       </Accordion>
-      <Accordion title="B2B Services EU Client (Reverse Charge)">
+      {/*<Accordion title="B2B Services EU Client (Reverse Charge)">
         Reverse charge invoices are used for B2B services provided to customers in other EU member states. Reverse charge must be applied when:
 
         - The customer is a registered business in another EU member state (has a valid EU VAT ID).
         - The service is provided to a business customer (B2B), not a consumer.
         - The service is subject to VAT but the customer accounts for the VAT in their own country.
 
-        To create a reverse charge VERI*FACTU invoice, use the tax key `reverse-charge` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `S2` (Subject and Not Exempt - With reverse charge) when the silo entry is built.
+        To create a reverse charge SII invoice, use the tax key `reverse-charge` in your invoice lines. The [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon will automatically set the operation class to `S2` (Subject and Not Exempt - With reverse charge) when the silo entry is built.
 
         <Note>
           With reverse charge, no VAT is charged by the supplier. The customer accounts for VAT in their own country. The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
@@ -124,7 +123,7 @@ Keep the `Workflow ID` at hand, you'll use it later.
         - Goods are physically delivered to another EU member state.
         - The supply is exempt from VAT in the origin country (Spain) and subject to VAT in the destination country.
 
-        To create an intra-community supply VERI*FACTU invoice, use the tax key `intra-community` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E5` ([Artículo 25 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a25)) when the silo entry is built.
+        To create an intra-community supply SII invoice, use the tax key `intra-community` in your invoice lines. The [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon will automatically set the exemption code to `E5` ([Artículo 25 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a25)) when the silo entry is built.
 
         <Note>
           With intra-community supplies, no VAT is charged in Spain. The customer accounts for VAT in their destination country. The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
@@ -134,7 +133,7 @@ Keep the `Workflow ID` at hand, you'll use it later.
       <Accordion title="B2B Services No EU Client (Outside Scope)">
         Outside scope invoices are used for B2B services provided to customers outside the EU.
 
-        To create an outside scope VERI*FACTU invoice, use the tax key `outside-scope` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `N2` (Not Subject - Due to location rules) when the silo entry is built.
+        To create an outside scope SII invoice, use the tax key `outside-scope` in your invoice lines. The [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon will automatically set the operation class to `N2` (Not Subject - Due to location rules) when the silo entry is built.
 
         <Note>
           Services provided to non-EU customers are generally outside the scope of Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
@@ -144,7 +143,7 @@ Keep the `Workflow ID` at hand, you'll use it later.
       <Accordion title="B2B Goods No EU Client (Export)">
         Export invoices are used for B2B goods delivered to customers outside the EU.
 
-        To create an export VERI*FACTU invoice, use the tax key `export` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E2` ([Artículo 21 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a21)) and regime code to `02` (Export) when the silo entry is built.
+        To create an export SII invoice, use the tax key `export` in your invoice lines. The [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon will automatically set the exemption code to `E2` ([Artículo 21 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a21)) and regime code to `02` (Export) when the silo entry is built.
 
         <Note>
           Exported goods are exempt from Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
@@ -154,7 +153,7 @@ Keep the `Workflow ID` at hand, you'll use it later.
       <Accordion title="B2B Exempt E1 Invoice">
         Exempt `E1` invoices are used for B2B transactions that are exempt from VAT pursuant ([Artículo 20 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a20)), which covers exemptions in internal operations.
 
-        To create an exempt E1 VERI*FACTU invoice, use the tax key `exempt` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E1` when the silo entry is built.
+        To create an exempt E1 SII invoice, use the tax key `exempt` in your invoice lines. The [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon will automatically set the exemption code to `E1` when the silo entry is built.
 
         <Note>
           Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` NIF must be valid.
@@ -164,13 +163,13 @@ Keep the `Workflow ID` at hand, you'll use it later.
       <Accordion title="B2C One-Stop-Shop Invoice">
         One-Stop-Shop (OSS) invoices are used for B2C distance sales of goods and services to consumers in other EU member states when the supplier is registered under the OSS scheme.
 
-        To create an OSS VERI*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon. The invoice will be treated as a simplified invoice (document type `F2`) and VAT is accounted for through the OSS scheme in the destination country.
+        To create an OSS SII invoice, include the `simplified` tag in your GOBL document with the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon. The invoice will be treated as a simplified invoice (document type `F2`) and VAT is accounted for through the OSS scheme in the destination country.
 
         <Note>
           OSS allows suppliers to register for VAT in one EU member state and account for VAT on all EU distance sales through that single registration. The `supplier` must be previously registered with the tax authority and enrolled in the OSS scheme.
         </Note>
         <B2COneStopShopInvoice />
-      </Accordion>
+      </Accordion>*/}
     </AccordionGroup>
 
     After uploading you'll see the document in the **Invoices** section with status `Empty`.
@@ -178,15 +177,15 @@ Keep the `Workflow ID` at hand, you'll use it later.
     <Frame caption="Empty invoice">
       <img
         width="600"
-        src="/assets/guides/es-verifactu-invoice-1.png"
+        src="/assets/guides/es-sii-invoice-1.png"
         alt="Empty invoice"
       />
     </Frame>
   </Step>
-  <Step title="Send the Invoice to the VERI*FACTU invoice workflow">
-    Send the invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+  <Step title="Send the Invoice to the SII invoice workflow">
+    Send the invoice to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice_ workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the _SII invoice_ workflow created on setup.
     - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
 
     The invoice's status will change to `Sent` when the workflow completes successfully.
@@ -194,25 +193,26 @@ Keep the `Workflow ID` at hand, you'll use it later.
     <Frame caption="Sent invoice">
       <img
         width="600"
-        src="/assets/guides/es-verifactu-invoice-2.png"
+        src="/assets/guides/es-sii-invoice-2.png"
         alt="Sent invoice"
       />
     </Frame>
 
     You can verify that the PDF was generated by clicking on the invoice and selecting the PDF from the "Files" tab.
 
-    <Frame caption="Example VERI*FACTU invoice with QR">
+    {/*
+    <Frame caption="Example SII invoice with QR">
       <img
         width="420"
-        src="/assets/guides/es-verifactu-example-pdf.png"
-        alt="Example VERI*FACTU invoice with QR"
+        src="/assets/guides/es-sii-example-pdf.png"
+        alt="Example SII invoice with QR"
       />
     </Frame>
-
+    */}
   </Step>
 </Steps>
 
-## Issue a Credit Note (Rectificativa por Diferencias)
+{/*## Issue a Credit Note (Rectificativa por Diferencias)
 
 In Spain, one way to correct an invoice is by issuing a credit note, known as a _Rectificativa por Diferencias_.
 An alternative method is to issue a _Rectificativa por Sustitución_, which involves creating a new invoice with the type corrective.
@@ -234,7 +234,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     A credit note in Invopop is an invoice of the type credit note. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a credit note. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
 
     - `regime`: `ES`
-    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
+    - Add the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon
     - `supplier`: use the same supplier details as in the original invoice
     - `type`: `credit-note`
     - `preceding`: references the original invoice, within it, you must include:
@@ -253,15 +253,15 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     <Frame caption="Link to the credit note">
       <img
         width="100%"
-        src="/assets/guides/es-verifactu-invoice-cn.png"
+        src="/assets/guides/es-sii-invoice-cn.png"
         alt="Invoice related to a credit note"
       />
     </Frame>
   </Step>
-  <Step title="Send the Credit Note to the VERI*FACTU invoice workflow">
-    Send the credit note to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+  <Step title="Send the Credit Note to the SII invoice workflow">
+    Send the credit note to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice _workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the _SII invoice _workflow we created during setup
     - `silo_entry_id`: use the The Silo Entry ID of the credit note you've just uploaded.
 
     The credit note's status will change to `Sent` when the workflow completes successfully.
@@ -275,7 +275,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     A corrective invoice in Invopop is an invoice of the type `corrective`. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a corrective invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
 
     - `regime`: `ES`
-    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
+    - Add the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon
     - `supplier_id`: use the same supplier details as in the original invoice
     - `type`: `corrective`
     - `preceding`: references the original invoice, within it, you must include:
@@ -295,15 +295,15 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     <Frame caption="Link to the corrective invoice">
       <img
         width="600"
-        src="/assets/guides/es-verifactu-invoice-corrective.png"
+        src="/assets/guides/es-sii-invoice-corrective.png"
         alt="Invoice related to a corrective invoice"
       />
     </Frame>
   </Step>
-  <Step title="Send the Corrective Invoice to the VERI*FACTU invoice workflow">
-    Send the corrective invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+  <Step title="Send the Corrective Invoice to the SII invoice workflow">
+    Send the corrective invoice to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice_ workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the _SII invoice_ workflow we created during setup
     - `silo_entry_id`: use the The Silo Entry ID of the corrective invoice you've just uploaded.
 
     The corrective invoice's status will change to `Sent` when the workflow completes successfully.
@@ -312,7 +312,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
 
 ## Cancel an Invoice
 
-VERI\*FACTU also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
+SII also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
 
 Different from a credit note or a corrective, canceling an invoice doesn't produce a second document, which means you don't have a paper to hand to your customer to show the cancellation. That's why, if the invoice has been handed to the customer, we recommend issuing a credit note instead.
 
@@ -322,8 +322,8 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
 
     <Tabs>
       <Tab title="Template">
-        <Card title="VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-cancel" cta="Add to my workspace">
-          This workflow will cancel a VERI\*FACTU document.
+        <Card title="SII cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-cancel" cta="Add to my workspace">
+          This workflow will cancel a SII document.
         </Card>
       </Tab>
       <Tab title="Code">
@@ -334,11 +334,11 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
       <Tab title="Build from scratch">
         Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "VERI\*FACTU Cancel Invoice".
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "SII Cancel Invoice".
 
         We recommend adding the following steps:
 
-        1. **Cancel invoice** - Cancels the VERI\*FACTU document.
+        1. **Cancel invoice** - Cancels the SII document.
         2. **Set State** - select _Void_ in the step configuration. This will set the state of the invoice to `Void`.
         3. In the Error Handling area, **Set State** - select `Error` in the step configuration.
 
@@ -347,11 +347,11 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
     </Tabs>
   </Step>
   <Step title="Send to cancellation workflow">
-    To cancel an invoice, simply send it to the VERI\*FACTU cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
+    To cancel an invoice, simply send it to the SII cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
 
     The invoice's status will change to `Void` when the workflow completes successfully.
   </Step>
-</Steps>
+</Steps>*/}
 
 ---
 
