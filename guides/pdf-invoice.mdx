@@ -1,7 +1,7 @@
 ---
 title: "PDF Invoice Guide"
-sidebarTitle: "Receipts (PDF)"
-icon: "globe"
+sidebarTitle: "PDF Generator"
+icon: "file-pdf"
 description: How to issue simple PDF invoices globally.
 ---
 
@@ -9,7 +9,9 @@ import WF_PDF_JSON from '/snippets/workflows/templates/pdf/invoice.mdx';
 
 ## Introduction
 
-The objective of this guide is to walk you through the process of generating a simple PDF invoice you can send to your customers. This is valid for tax regimes that don't require any electronic reporting or invoicing, and serves as a useful example from which to create your own workflows.
+This guide will walk you through the process of generating a simple PDF invoice you can send to your customers. It will also explain all the configuration options available in the "Generate PDF" workflow step.
+
+PDF invoices are valid for tax regimes that don't require e-reporting or e-invoicing, and serves as a useful example from which to create your own workflows.
 
 Once completed, the workflow will work with any GOBL invoice produced for any country in the world.
 
@@ -63,8 +65,6 @@ Finally, in the Error Handling area, add the **Set State** action and select sta
 
 </Tabs>
 
-
-
 ### Configuration options
 
 Once you have connected the "PDF Generator" app, you can configure the "Generate PDF" workflow step. The following  options are available.
@@ -75,7 +75,7 @@ Once you have connected the "PDF Generator" app, you can configure the "Generate
 
 |  |  |
 |-------|-------------|
-| **Upload logo** | Upload an image which will be used as a logo in the document. A square or horizontal logo layout in PNG format is recommended. If you need to upload a different logo for each supplier, include the `logos` field in the party entry [as detailed in the FAQ](/guides/pdf-invoice#how-can-i-add-a-different-logo-for-each-supplier). |
+| **Upload logo** | Upload an image which will be used as a logo in the document. A square or horizontal logo layout in PNG format is recommended. `PNG`, `GIF`, `JPG` and `SVG` file types are supported. For bitmap images, it is recommended that the logo is at least twice the size of the height for it to print in high quality. If you need to upload a different logo for each supplier, include the `logos` field in the party entry [as detailed in the FAQ](/guides/pdf-invoice#how-can-i-add-a-different-logo-for-each-supplier). |
 | **Logo height** | Height for the logo in pixels. There's 72 pixels in an inch and 37 pixels in a centimeter. The default height is 40 pixels (a little over 1cm) |
 
 <Frame>
@@ -263,7 +263,7 @@ Use the following example [GOBL Invoices](https://docs.gobl.org/draft-0/bill/inv
 <AccordionGroup>
 
 <Accordion title="How can I add a different logo for each supplier?">
-Add them within the supplier object within a logos array, here is an example:
+Add it to the supplier object within a `logos` array, the first logo in the array will be used. Make sure the "Generate PDF" step not configured with a logo, as it will override the supplier's logo.
 
 ```json
     "supplier": {
@@ -274,7 +274,7 @@ Add them within the supplier object within a logos array, here is an example:
         },
         "logos": [
             {
-                "url": "https://ams3.digitaloceanspaces.com/invopop-console-files-dev/9acccd03a8258818cadbfce3e32e67af1e7ff826deb2e6ec66c9cdc6fc8f24a1$0",
+                "url": "https://assets.invopop.com/logo.png",
                 "height": 100,
                 "width": 100
             }
@@ -282,7 +282,7 @@ Add them within the supplier object within a logos array, here is an example:
     }
 ```
 
-Make sure your image is publicly accessible. Sometimes server restrictions prevent our services from accessing the image. An easy way to verify this is by asking ChatGPT “is this URL https://… publicly accesible?”
+If the logo is not displayed, make sure your image is publicly accessible. Sometimes server restrictions prevent our services from accessing the image. An convenient way to verify that your image is publicly accessible is by asking an AI assistant “is this URL https://… publicly accesible?”.
 </Accordion>
 <Accordion title="Why would I want to use adjustment invoices?">
   Spain, along with a very small selection of other countries like Poland, doesn’t officially recognise the concept of credit or debit notes. Instead they use the concept of corrective or adjustment invoices whereby the amounts are displayed as differences from the original document. The two main types are:
