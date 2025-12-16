@@ -192,7 +192,13 @@ The process is best explained looking at the workflow steps:
     4. **Set State to Registered** labels the silo entry so you know registration is complete.
     5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
 
-    <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers. Re-running the workflow will not change the approval outcome, the supplier must be unregistered first.</Note>
+    <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers.</Note>
+
+      **Error flow:** if the supplier's documentation is rejected, or the supplier does not complete the registration within the job's time limit (100 days) a `KO` will be generated, triggering the error flow. Then these steps will be run:
+
+    1. **Unregister VERI\*FACTU** will clean up all registration processes and entitlements. You will be able to re-register the party later.
+    2. **Set State to Rejected** labels the silo entry so you know the registration was rejected (due to timeout or incorrect documentation).
+
 
 
 ## Register a Supplier
