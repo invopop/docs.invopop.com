@@ -5,7 +5,7 @@ description: "Create and register suppliers in Spain with SII."
 ---
 
 import UnregisterExample from '/snippets/workflows/templates/es/sii-unregister.mdx';
-import SupplierRegistration from '/snippets/workflows/templates/es/sii-supplier-registration.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/es/sii-register-party.mdx';
 import Supplier from '/snippets/suppliers/es/company.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
@@ -19,7 +19,7 @@ For this process, the supplier can sign the agreement PDF with a valid [digital 
 This guide will...
 
 1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label))
-2. The process of completing the supplier onboarding wizard, 
+2. The process of completing the supplier onboarding wizard,
 3. Explaining the approval process and what to do in case of rejection.
 
 ## Set-up
@@ -38,7 +38,7 @@ This guide will...
 
     <Tabs>
       <Tab title="Template">
-        <Card title="SII supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-supplier-registration" cta="Add to my workspace">
+        <Card title="SII supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-register-party" cta="Add to my workspace">
           This workflow will issue a registration request for a supplier to complete.
         </Card>
       </Tab>
@@ -78,7 +78,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
   <Steps>
     <Step title="Upload a supplier">
-      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT: 
+      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT:
 
       <Supplier />
 
@@ -105,7 +105,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
     <Tabs>
       <Tab title="Your own company">
-        Within the silo entry in console, select **Meta** and then click **sii.invopop.com**. This will launch the registration wizard for your company. 
+        Within the silo entry in console, select **Meta** and then click **sii.invopop.com**. This will launch the registration wizard for your company.
 
         <Frame>
           <img
@@ -151,7 +151,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
     Invopop's commitment is to review agreement documentation in less than 72 hours. However, in practice this will happen in less than 24 hours if the wizard is completed in workdays.
 
-    
+
     Once registration wizard has been completed, the supplier's status will change to `Registered`. If not successful because the supplier did not complete the process or their documentation was rejected, the status will change to `Rejected`, and you can inspect the job history of this document to see the reason.
 
         <Frame caption="Supplier registered successfully">
@@ -196,7 +196,7 @@ The process is best explained looking at the workflow steps:
 
 Suppliers need to provide the following documents for Invopop to issue invoices on their behalf:
 
-1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf). 
+1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf).
 2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents) if the agreement is not signed with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica) such as one from the FNMT.
 
 These documents can be collected through a multi-step web form (_wizard_) which enabled through the _Supplier registration workflow_ created during [setup](#set-up) or [sent via the API](https://docs.invopop.com/api-ref/apps/sii/agreement-upload) if you wish to have control over the process.
@@ -344,7 +344,7 @@ If you have special needs regarding the onboarding of suppliers for SII (such as
 
   5. [Upload identity images](/api-ref/apps/sii/identity-upload) `apps/sii/v1/entry/:silo_entry_id/identity`<br />
     Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
-    
+
   6. [Confirm Upload](/api-ref/apps/sii/confirm) `https://api.invopop.com/apps/sii/v1/entry/:silo_entry_id/confirm`<br />
     Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
 
@@ -397,7 +397,7 @@ Unregistering a supplier is essentially revoking their invoice issuing privilege
 
     In contrast, certificates generated directly by applications like Adobe Acrobat do not involve any identity verification. They are self-signed and therefore cannot be used for official submissions or as valid digital signatures in AEAT or government procedures.
 
-    If you wish to obtain a certificate that is valid for most (if not all) Spanish government procedures, you can do so by following the procedure on [certificates page of the FNMT](https://www.sede.fnmt.gob.es/certificados/persona-fisica). For instructions on how to make it available in Acrobat Reader to sign official documents, consult [this PDF](https://www.sede.fnmt.gob.es/documents/10445900/10528353/Firmar_documento_PDF_Adobe_Acrobat_Reader_DC.pdf). 
+    If you wish to obtain a certificate that is valid for most (if not all) Spanish government procedures, you can do so by following the procedure on [certificates page of the FNMT](https://www.sede.fnmt.gob.es/certificados/persona-fisica). For instructions on how to make it available in Acrobat Reader to sign official documents, consult [this PDF](https://www.sede.fnmt.gob.es/documents/10445900/10528353/Firmar_documento_PDF_Adobe_Acrobat_Reader_DC.pdf).
 
     Otherwise, we require the secondary procedure of signing the document by handwritten signature, and an official ID as proof of identity as required by the AEAT.
 </Accordion>
