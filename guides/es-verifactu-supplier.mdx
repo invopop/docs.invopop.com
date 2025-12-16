@@ -6,21 +6,24 @@ description: "Create and register suppliers in Spain with VERI*FACTU."
 
 import UnregisterExample from '/snippets/workflows/templates/es/verifactu-unregister.mdx';
 import SupplierRegistration from '/snippets/workflows/templates/es/verifactu-supplier-registration.mdx';
-import Supplier from '/snippets/suppliers/es/verifactu-essential.mdx';
+import Supplier from '/snippets/suppliers/es/company.mdx';
+import Autonomo from '/snippets/suppliers/es/autonomo.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
 
 ## Introduction
 
-The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es)) requires that companies formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the supplier's legal representative must sign an agreement granting Invopop the necessary consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
+The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es)) requires that companies and self-employed individuals (autónomos) formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the company's legal representative or _autónomo_ must sign an agreement granting Invopop consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
 
 For this process, the supplier can sign the agreement PDF with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica), such as one issued by the FNMT, or a handwritten signature with a company stamp (_sello de empresa_), in which case the user must provide a valid ID such as DNI, NIE or passport. In the case of self-employed individuals (_autónomos_) a company stamp is not required.
 
-This guide will walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label)), the process of completing the supplier onboarding wizard, explaining the approval process and what to do in case of rejection.
+This guide will...
+
+1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label))
+2. The process of completing the supplier onboarding wizard, 
+3. Explaining the approval process and what to do in case of rejection.
 
 ## Set-up
-
-### Getting started
 
 <Steps>
  <Step title="Connect the VERI*FACTU app">
@@ -28,7 +31,7 @@ This guide will walk you through the process of creating the workflows necessary
     2. Find **VERI\*FACTU Spain** in the app list.
     3. Click **Connect** to activate the app.
 
-    <Frame caption="Connect the VERI*FACTU app">
+    <Frame>
       <img
         width="600"
         src="/assets/guides/es-verifactu-app.png"
@@ -36,11 +39,9 @@ This guide will walk you through the process of creating the workflows necessary
       />
     </Frame>
 
-    After connecting, you'll see VERI\*FACTU listed in the Enabled Apps section.
-
   </Step>
   <Step title="Create a supplier registration workflow">
-    Create a new workflow in your workspace for registering suppliers. You should start with the template below:
+    Create a new workflow for registering suppliers. Start with the template below:
 
     <Tabs>
       <Tab title="Template">
@@ -67,7 +68,10 @@ This guide will walk you through the process of creating the workflows necessary
         5. **Wait for supplier approval** - In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
         6. **Set State** — select "Registered"
 
-        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+        Finally, in the Error Handling area, add the following steps:
+
+        1. **Set State** — select `Rejected`.
+        2. **Unregister supplier** - will clear the registration attempt allowing you to re-register them later.
 
         Add any additional steps you may need, and save the new workflow.
       </Tab>
@@ -77,17 +81,15 @@ This guide will walk you through the process of creating the workflows necessary
 
 ### Create a supplier entry
 
-Whether you issue invoices on behalf of third parties ([white label](/guides/use-cases/white-label)) or under your own name, the process is essentially the same. However, we divide the use case here for clarity:
+Whether you issue invoices on behalf of third parties ([white label](/guides/use-cases/white-label)) or under your own name, the process is essentially the same.
 
-<Tabs>
-  <Tab title="Upload and register third-parties">
   <Steps>
     <Step title="Upload a supplier">
-      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) (you can copy the example below) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. The required fields are `name` and `tax_id` while `address` and `email` are recommended. Set `folder` to `suppliers` to have the party appear in this section.
+      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT: 
 
       <Supplier />
 
-    You should see the supplier in the **Suppliers** section with status `Empty` after creating the entry.
+      Set the `folder` to `suppliers` to have the party appear in this section. It should appear with an `Empty` status unless set otherwise.
 
     <Frame caption="Upload supplier to Invopop">
       <img
@@ -99,14 +101,65 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
   </Step>
   <Step title="Send the supplier to the registration workflow">
 
-    Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - The `Silo Entry ID` of the supplier you uploaded on the previous step
-    - The Supplier Registration `Workflow ID` from the [Setup](#set-up) section
+    * **Via API** - Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint using the `ID`s of the **silo entry** and **supplier registration workflow**.
+    * **Via Console** - From the Silo Entry select "Run workflow" and select the **supplier registration workflow**.
 
-    ***
+    The supplier's status will change to `Processing` while waiting for supplier registration and verification.
 
-    The supplier's status will change to `Processing` while waiting for supplier registration and verification. Once these steps are completed successfully, the supplier's status will change to `Registered`. If not successful because the supplier did not complete the process or their documentation was rejected, the status will change to `Error`, and you can inspect the job history of this document to see the reason.
+   </Step>
+   <Step title="Complete the registration workflow">
+
+    <Tabs>
+      <Tab title="Your own company">
+        Within the silo entry in console, select **Meta** and then click **verifactu.invopop.com**. This will launch the registration wizard for your company. 
+
+        <Frame>
+          <img
+            width="398"
+            src="/assets/console/entry-meta-verifactu.png"
+            alt="Supplier entry meta"
+          />
+        </Frame>
+      </Tab>
+      <Tab title="Third-party companies">
+        Add a webhook before the **Wait for supplier registration** step to obtain the registration link. The `meta` object will look like this:
+
+      <Accordion title="Example supplier meta registration link">
+      ```
+      data: {
+        ...
+        "meta": [
+          {
+            "id": "...",
+            "created_at": "2025-11-05T15:10:28.132Z",
+            "updated_at": "2025-11-14T15:56:53.727Z",
+            "owner_id": "...",
+            "entry_id": "...",
+            "src": "verifactu",
+            "key": "link",
+            "ref": "EgDeG3pDBDe",
+            "link_url": "https://verifactu.invopop.com/reg/EgDeG3pDBDe",
+            "link_scope": "public",
+            "indexed": true,
+            "shared": true
+          }
+        ]
+      }
+      ```
+      </Accordion>
+        Forward the `link_url` to your customer.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Wait for approval">
+
+    The supplier will be entitled to issue invoices as soon as they submit their documentation, and will only be revoked if there was a problem with their documentation.
+
+    Invopop's commitment is to review agreement documentation in less than 72 hours. However, in practice this will happen in less than 24 hours if the wizard is completed in workdays.
+
+    
+    Once registration wizard has been completed, the supplier's status will change to `Registered`. If not successful because the supplier did not complete the process or their documentation was rejected, the status will change to `Rejected`, and you can inspect the job history of this document to see the reason.
 
         <Frame caption="Supplier registered successfully">
           <img
@@ -119,43 +172,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
     </Steps>
 
   <Warning>If a supplier's agreement documentation is rejected and you need to onboard them again, follow the instructions in [what happens if a supplier validation is rejected](#what-happens-if-a-supplier-validation-is-rejected)</Warning>
-  </Tab>
-  <Tab title="Upload and register your company">
-    <Steps>
-    <Step title="Create your company in the Supplier section">
 
-      We will set up your company as a supplier within Invopop so that we can register it for issuing VERI\*FACTU invoices. First, click on **Suppliers** on the left sidebar and click on the **New Supplier** button at the top right corner of the screen:
-
-      We suggest that you copy and modify our example supplier to your own information, then you can paste it into the editor in **Code View**. Then switch to **Form view** as indicated in the screenshot, this will build and validate the silo entry and, if there are no errors, you'll be able to save your company's information as a Silo Entry.
-
-      <Supplier />
-
-    After saving, you'll see your company in the **Suppliers** section with status `Empty`.
-
-    <Frame caption="Create Supplier in Invopop">
-      <img
-        width="600"
-        src="/assets/guides/es-verifactu-supplier-2.png"
-        alt="Create Supplier in Invopop"
-      />
-    </Frame>
-  </Step>
-  <Step title="Send your company to the registration workflow">
-
-    Locate your company in the **Suppliers** section and tap on "Select Workflow". From the side panel, select the **VERI\*FACTU supplier registration workflow** you created in the [Setup](#set-up) section.
-
-    The status will change to `Processing` while waiting for you to upload the required documents. As soon as the documents are uploaded, the state will change to `registered` and it will be possible to issue VERI\*FACTU invoices. However, in the rare case we detect a problem with the documentation provided, we will revoke it and you must follow the instructions in [what happens if a supplier validation is rejected](#what-happens-if-a-supplier-validation-is-rejected).
-        <Frame caption="Supplier registered successfully">
-          <img
-            width="600"
-            src="/assets/guides/es-verifactu-supplier-1.png"
-            alt="Supplier registered"
-          />
-        </Frame>
-      </Step>
-    </Steps>
-  </Tab>
-</Tabs>
 
 ## How VERI\*FACTU supplier registration works
 
@@ -175,7 +192,13 @@ The process is best explained looking at the workflow steps:
     4. **Set State to Registered** labels the silo entry so you know registration is complete.
     5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
 
-    <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers. Re-running the workflow will not change the approval outcome, the supplier must be unregistered first.</Note>
+    <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers.</Note>
+
+      **Error flow:** if the supplier's documentation is rejected, or the supplier does not complete the registration within the job's time limit (100 days) a `KO` will be generated, triggering the error flow. Then these steps will be run:
+
+    1. **Unregister VERI\*FACTU** will clean up all registration processes and entitlements. You will be able to re-register the party later.
+    2. **Set State to Rejected** labels the silo entry so you know the registration was rejected (due to timeout or incorrect documentation).
+
 
 
 ## Register a Supplier
@@ -318,40 +341,28 @@ This wizard can be embedded as an `iframe` to onboard your customers without lea
 
 If you have special needs regarding the onboarding of suppliers for VERI\*FACTU (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
 
-<Steps>
-  <Step title="Upload supplier">
-    [Create entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put)<br />
-    `/silo/v1/entries/{id}`<br />
+
+  1. [Create a supplier entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
     Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
-  </Step>
-  <Step title="Create a job with the supplier registration workflow">
-    [Create a job](/api-ref/transform/jobs/create-a-job-put)<br />
-    `https://api.invopop.com/transform/v1/jobs/{id}`<br />
-    The same workflow is used for API onboarding
-  </Step>
-  <Step title="Generate the agreement PDF">
-    [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch)<br />
-    `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
+
+  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`https://api.invopop.com/transform/v1/jobs/{id}`<br />
+    Using the supplier registration workflow ID and Silo Entry ID.
+
+  3. [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch) `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
     The agreement file will be created with the supplier's data.
-  </Step>
-  <Step title="Upload documents">
-    [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload)<br />
-    `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
+
+  4. [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload) `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
     Upload the agreement into the supplier's silo entry.
 
-    [Upload identity images](/api-ref/apps/verifactu/identity-upload)<br />
-    `apps/verifactu/v1/entry/:silo_entry_id/identity`<br />
+  5. [Upload identity images](/api-ref/apps/verifactu/identity-upload) `apps/verifactu/v1/entry/:silo_entry_id/identity`<br />
     Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
-  </Step>
-  <Step title="Confirm upload">
-    [Confirm](/api-ref/apps/verifactu/confirm) `https://api.invopop.com/apps/verifactu/v1/entry/:silo_entry_id/confirm`<br />
+    
+  6. [Confirm Upload](/api-ref/apps/verifactu/confirm) `https://api.invopop.com/apps/verifactu/v1/entry/:silo_entry_id/confirm`<br />
     Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
-  </Step>
-</Steps>
 
 ## Unregister a supplier
 
-Unregistering a supplier is essentially revoking their invoice issuing priviledges. You might need to unregister an entity because the supplier is no longer your client, because their agreement documentation was rejected, or because of a change in their Tax ID. To do so, use the following workflow template:
+Unregistering a supplier is essentially revoking their invoice issuing priviledges. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
 
   <Tabs>
       <Tab title="Template">
@@ -389,7 +400,6 @@ Unregistering a supplier is essentially revoking their invoice issuing priviledg
   <Accordion title="VERI*FACTU representation agreement">
     [Declaración responsable VERI\*FACTU - Invopop](https://drive.google.com/file/d/1IR2EuavoEi8E3hlAM4u-XTIFbalxxKzj/view) (PDF)
   </Accordion>
-
   <Accordion title="Valid digital signatures for the VERI*FACTU's Supplier Agreement PDF">
     Digital signatures rely on certificates, but not all certificates serve as proof of identity. The Spanish Tax Agency (AEAT) accepts only qualified certificates—those issued by an authority that has verified the holder’s identity in advance.
 
@@ -401,10 +411,11 @@ Unregistering a supplier is essentially revoking their invoice issuing priviledg
 
     Otherwise, we require the secondary procedure of signing the document by handwritten signature, and an official ID as proof of identity as required by the AEAT.
 </Accordion>
+</AccordionGroup>
+
 
 ---
 
-</AccordionGroup>
 
 <SpainResources />
 
@@ -414,7 +425,7 @@ Unregistering a supplier is essentially revoking their invoice issuing priviledg
   arrow="true"
   horizontal
 >
-  Find answers to frequently asked questions about invoicing in Spain →
+  Find answers to frequently asked questions about suppliers in Spain →
 </Card>
 
 
