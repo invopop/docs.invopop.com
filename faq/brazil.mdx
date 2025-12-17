@@ -27,22 +27,20 @@ sidebarTitle: "FAQ"
   <Accordion title="How does ISS tax work in Brazil?">
     ISS (Imposto Sobre Serviços) is not treated as a standard transactional tax calculated on top of a net amount. Instead, it is an **informative tax embedded in the final price**—the invoice only reports what portion of the total corresponds to ISS.
 
-    Because of this special treatment:
-    - ISS is not added to the price; it is already included in the final amount.
-    - The NFS-e document displays ISS as informational data, not as a calculated tax line.
-    - GOBL and Invopop handle ISS downstream, injecting the ISS information automatically into the document before submission to the Brazilian tax authority while ensuring pricing data remains compliant with NFS-e rules.
+    In GOBL, ISS is flagged as an "informative" tax category. This means:
+    - ISS must be added to the GOBL invoice like any other tax, with the proper percentage.
+    - The tax amount is not added to the price; it represents the portion of the total that corresponds to ISS.
+    - The NFS-e document displays ISS as informational data, reflecting what was already embedded in the final price.
   </Accordion>
   <Accordion title="How do I configure Chargebee or Stripe imports for Brazilian invoices with ISS?">
-    Since ISS is an informative tax embedded in the final price (not a standard tax added on top), you should **not configure ISS as a tax** in Chargebee or Stripe.
+    Billing platforms like Chargebee and Stripe are not aware of ISS particularities and tend to wrongly treat ISS as a typical tax included in the price. This causes `invalid-prices-include` errors during import because that pricing model is not compatible with how ISS works for NFS-e.
 
     The correct setup is:
-    - **No ISS tax configured** in your billing platform (Chargebee, Stripe, etc.).
-    - Prices in your billing platform should already be the **final public prices** with ISS embedded.
-    - ISS information is handled downstream by Invopop, purely as informational data on the NFS-e.
+    1. **Do not configure ISS as a tax** in your billing platform (Chargebee, Stripe, etc.).
+    2. Prices in your billing platform should already be the **final public prices** with ISS embedded.
+    3. Add a **Modify Silo Entry** step to your import workflow that injects the ISS tax with the desired percentage into the GOBL invoice.
 
-    If ISS is included in the billing platform payload, Invopop attempts to interpret it as a regular price-inclusive tax, which leads to `invalid-prices-include` errors during import. This pricing model is not compatible with how ISS works for NFS-e.
-
-    Your Invopop import workflow automatically injects the ISS information into the document after import and before submission to the Brazilian tax authority.
+    This workflow approach ensures ISS is properly added to the GOBL invoice as an informative tax category before submission to the Brazilian tax authority, while avoiding the pricing conflicts that occur when billing platforms try to handle ISS as a standard tax.
   </Accordion>
 </AccordionGroup>
 
@@ -54,4 +52,3 @@ sidebarTitle: "FAQ"
 >
   Ask and answer questions about Brazil's regulation →
 </Card>
-
