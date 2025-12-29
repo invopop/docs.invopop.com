@@ -1,0 +1,40 @@
+---
+title: "Document states"
+description: "Learn how document states track workflow events and label documents throughout their lifecycle."
+sidebarTitle: States
+---
+
+<Frame>
+<img src="/assets/console/states.png" width="282" alt="States" />
+</Frame>
+
+States are labels that do not reflect the internal state of the document. They are labels that don't represent the condition of the document itself. This decoupling means the state system provides metadata about workflow events, not assertions about the document's validity or integrity.
+
+
+Instead, states help you track the history of what happened to your document through a job run. For example, if a job encounters an error but doesn't explicitly set a state label, the document's state won't be marked as `Error`, even though the document may actually be affected. The state label only changes when you explicitly change it through the "Set State" workflow step or [through the API](/api-ref/silo/entries/update-an-entry#response-state) (though `Empty` and `Invalid` are exceptions to this rule). 
+
+
+We provide the following states to label the document throughout its lifecycle. Here they are described in order to assist you in selecting appropriate states for your documents (via API or workflows).
+
+|  |  |
+|-------|-------------|
+| **Invalid** | This state cannot be selected. It is set by the system when a GOBL document is uploaded through the API with the `allow_invalid` option, or is received through a network such as Peppol or SDI which allow receiving invoices. |
+| **Empty** | Initial creation state before processing |
+| **Draft** | Mainly used to mark documents that will require further changes. |
+| **Processing** | Mainly used to indicate the document is being processed. Typically, the **Set State** step will be placed at the beginning of a workflow and changed later in the workflow, such as `Sent` or `Error` depending on the outcome. |
+| **Registered** | When a party has been granted invoice issuing entitlements, or a document has been registered for reporting. |
+| **Completed** | Generic label for completion of a process. |
+| **Sent** | Document has been successfully transmitted (e.g., to tax authority or customer) |
+| **Received** | Document has been successfully received (e.g., receiving a document in your Peppol inbox). |
+| **Error** | Processing failed with an error, often placed in the error handling area of a workflow. |
+| **Rejected** | Rejected by the tax authority or by a third party (e.g., Peppol participant) |
+| **Paid** | Document (invoice or receipt) has been marked as paid |
+| **Void** | Document or party has been cancelled or voided |
+
+The Activity tab in the Console shows a chronological log of all state transitions and significant events affecting the document.
+
+<Tip>
+	Think of silo entry states as workflow markers. They are a way for your system and team to track a document's progress in your workflow.
+</Tip>
+
+Invopop provides workflow templates that include recommended points where the silo entry state may be updated, but these are just guidelines. You're free to modify or override them as needed, as these values have no impact on actual document processing, delivery, or government validation.

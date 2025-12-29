@@ -2,6 +2,7 @@
 title: "Peppol"
 description: "Submit invoices to the Peppol network."
 keywords: ['peppol','peppol-network','peppol-network']
+mode: wide
 ---
 
 import PeppolSendWorkflow from '/snippets/workflows/templates/peppol/peppol-send.mdx';
@@ -12,20 +13,18 @@ import PeppolInvoice from '/snippets/invoices/peppol/peppol-b2b.mdx';
 
 <Tabs>
 	<Tab title="Description">
-		<div class="flex gap-8">
+		<Columns cols="2">
 			<Card title="Peppol" icon="https://assets.invopop.com/apps/peppol/icon.svg"
 			  href="/guides/peppol" cta="View implementation guide">
 					Send and receive invoices through the global Peppol network.
 			</Card>
-			<div class="flex-shrink">
 				|               |       |
 				|---------------|-------|
 				| Developer | [Invopop](https://invopop.com) |
 				| Category | Network |
 				| Countries | [Multiple](/guides/peppol) |
 				| Docs | [Implementation&nbsp;guide](/guides/peppol) |
-		</div>
-	</div>
+		</Columns>
 
 	[Peppol (Pan-European Public Procurement On-Line)](https://peppol.org/) is a global network for electronic document exchange, widely adopted for e-invoicing across multiple countries. It provides a standardized protocol for companies to exchange business documents like invoices, credit notes, and purchase orders.
 
@@ -37,7 +36,7 @@ import PeppolInvoice from '/snippets/invoices/peppol/peppol-b2b.mdx';
 
 	Invopop allows you to send and receive documents through the Peppol network using a single integration while continuing to work with our [GOBL](https://docs.gobl.org/introduction) format. The Peppol app is designed to only send and receive documents, while format-specific apps such as OASIS UBL or UN/CEFACT CII handle the generation and import of the appropriate files.
 
-	#### Key Features
+	**Key Features**
 
 	* **Workflow Automation:** This app provides automated workflows for sending and receiving invoices through the Peppol network.
 	* **Bidirectional Communication:** Send invoices to Peppol participants and receive invoices from the network automatically.
@@ -98,6 +97,11 @@ import PeppolInvoice from '/snippets/invoices/peppol/peppol-b2b.mdx';
 			This workflow revokes participant permissions to issue and receive documents.
 				<PeppolUnregisterWorkflow />
 				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=peppol-unregister)
+			</Accordion>
+			<Accordion title="Handling 'Receiver Not Found' Errors"> 
+
+				If your job fails with a `KO` error status showing `receiver not found in the peppol network`, treat this the same as an invalid email address. As countries roll out their Peppol networks, you'll encounter a mix of registered and unregistered companies, so it's important to catch these issues early. Use the Peppol **Lookup Participant ID** step to validate the Peppol ID before sending anything to the network. We recommend to create a separate workflow for this validation and run it against customer's information. This will catch the error before creating the invoice.
+				
 			</Accordion>
 		</AccordionGroup>
 	</Tab>

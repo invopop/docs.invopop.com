@@ -1,0 +1,431 @@
+---
+title: "SII Supplier onboarding"
+sidebarTitle: "SII Suppliers"
+description: "Create and register suppliers in Spain with SII."
+---
+
+import UnregisterExample from '/snippets/workflows/templates/es/sii-unregister.mdx';
+import SupplierRegistration from '/snippets/workflows/templates/es/sii-register.mdx';
+import Supplier from '/snippets/suppliers/es/company.mdx';
+import SpainResources from '/snippets/tables/spain-resources.mdx';
+
+
+## Introduction
+
+The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es)) requires that companies and self-employed individuals (autónomos) formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the company's legal representative or _autónomo_ must sign an agreement granting Invopop consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
+
+For this process, the supplier can sign the agreement PDF with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica), such as one issued by the FNMT, or a handwritten signature with a company stamp (_sello de empresa_), in which case the user must provide a valid ID such as DNI, NIE or passport. In the case of self-employed individuals (_autónomos_) a company stamp is not required.
+
+This guide will...
+
+1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label))
+2. The process of completing the supplier onboarding wizard,
+3. Explaining the approval process and what to do in case of rejection.
+
+## Set-up
+
+<Steps>
+ <Step title="Connect the Spain app">
+    1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+    2. Find **Spain** in the app list.
+    3. Click **Connect** to activate the app.
+
+    After connecting, you'll see SII listed in the Enabled Apps section.
+
+  </Step>
+  <Step title="Create a supplier registration workflow">
+    Create a new workflow in your workspace for registering suppliers. Start with the template below:
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="SII supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-register" cta="Add to my workspace">
+          This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SII Supplier Registration".
+
+        The new workflow will need to perform the following steps:
+
+        1. **Register supplier** - will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
+        2. **Set State** — select "Processing".
+        3. **Wait for supplier registration** - waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through SII immediately after the documents are uploaded.
+        4. **Set State** — select "Registered".
+        5. **Wait for supplier approval** - In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
+        6. **Set State** — select "Registered"
+
+        Finally, in the Error Handling area, add the following steps:
+
+        1. **Set State** — select `Rejected`.
+        2. **Unregister supplier** - will clear the registration attempt allowing you to re-register them later.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+### Create a supplier entry
+
+Whether you issue invoices on behalf of third parties ([white label](/guides/use-cases/white-label)) or under your own name, the process is essentially the same.
+
+  <Steps>
+    <Step title="Upload a supplier">
+      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT:
+
+      <Supplier />
+
+      Set the `folder` to `suppliers` to have the party appear in this section. It should appear with an `Empty` status unless set otherwise.
+
+    <Frame caption="Upload supplier to Invopop">
+      <img
+        width="600"
+        src="/assets/guides/es-sii-supplier-2.png"
+        alt="Upload supplier to Invopop"
+      />
+    </Frame>
+  </Step>
+  <Step title="Send the supplier to the registration workflow">
+
+
+    * **Via API** - Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint using the `ID`s of the **silo entry** and **supplier registration workflow**.
+    * **Via Console** - From the Silo Entry select "Run workflow" and select the **supplier registration workflow**.
+
+    The supplier's status will change to `Processing` while waiting for supplier registration and verification.
+
+   </Step>
+   <Step title="Complete the registration workflow">
+
+    <Tabs>
+      <Tab title="Your own company">
+        Within the silo entry in console, select **Meta** and then click **sii.invopop.com**. This will launch the registration wizard for your company.
+
+        <Frame>
+          <img
+            width="398"
+            src="/assets/console/entry-meta-sii.png"
+            alt="Supplier entry meta"
+          />
+        </Frame>
+      </Tab>
+      <Tab title="Third-party companies">
+        Add a webhook before the **Wait for supplier registration** step to obtain the registration link. The webhook payload contains the `siloEntryId`, not the `meta` object directly. Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to retrieve the invoice and extract the `meta` object from the response.
+
+        The `meta` object looks like this:
+
+      <Accordion title="Example supplier meta registration link">
+      ```
+      data: {
+        ...
+        "meta": [
+          {
+            "id": "...",
+            "created_at": "2025-11-05T15:10:28.132Z",
+            "updated_at": "2025-11-14T15:56:53.727Z",
+            "owner_id": "...",
+            "entry_id": "...",
+            "src": "gov-es",
+            "key": "link",
+            "ref": "EgDeG3pDBDe",
+            "link_url": "https://sii.invopop.com/reg/EgDeG3pDBDe",
+            "link_scope": "public",
+            "indexed": true,
+            "shared": true
+          }
+        ]
+      }
+      ```
+      </Accordion>
+        Forward the `link_url` to your customer.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Wait for approval">
+
+    The supplier will be entitled to issue invoices as soon as they submit their documentation, and will only be revoked if there was a problem with their documentation.
+
+    Invopop's commitment is to review agreement documentation in less than 72 hours. However, in practice this will happen in less than 24 hours if the wizard is completed in workdays.
+
+
+    Once registration wizard has been completed, the supplier's status will change to `Registered`. If not successful because the supplier did not complete the process or their documentation was rejected, the status will change to `Rejected`, and you can inspect the job history of this document to see the reason.
+
+        <Frame caption="Supplier registered successfully">
+          <img
+            width="600"
+            src="/assets/guides/es-sii-supplier-1.png"
+            alt="Supplier registered"
+          />
+        </Frame>
+      </Step>
+    </Steps>
+
+  <Warning>If a supplier's agreement documentation is rejected and you need to onboard them again, follow the instructions in [what happens if a supplier validation is rejected](#what-happens-if-a-supplier-validation-is-rejected)</Warning>
+
+## How SII supplier registration works
+
+The process is best explained looking at the workflow steps:
+
+    <Frame caption="Supplier Registration Workflow">
+      <img
+        width="376"
+        src="/assets/guides/es-sii-register-supplier.png"
+        alt="Supplier Registration Workflow"
+      />
+    </Frame>
+
+    1. **Register supplier** will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
+    2. **Set State to Processing** labels the silo entry so you know it's in process of registration.
+    3. **Wait for supplier registration** waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through SII immediately after the documents are uploaded.
+    4. **Set State to Registered** labels the silo entry so you know registration is complete.
+    5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
+
+    <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers.</Note>
+
+    **Error flow:** if the supplier's documentation is rejected, or the supplier does not complete the registration within the job's time limit (100 days) a `KO` will be generated, triggering the error flow. Then these steps will be run:
+
+    1. **Unregister SII** will clean up all registration processes and entitlements. You will be able to re-register the party later.
+    2. **Set State to Rejected** labels the silo entry so you know the registration was rejected (due to timeout or incorrect documentation).
+
+
+## Register a Supplier
+
+Suppliers need to provide the following documents for Invopop to issue invoices on their behalf:
+
+1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf).
+2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents) if the agreement is not signed with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica) such as one from the FNMT.
+
+These documents can be collected through a multi-step web form (_wizard_) which enabled through the _Supplier registration workflow_ created during [setup](#set-up) or [sent via the API](https://docs.invopop.com/api-ref/apps/sii/agreement-upload) if you wish to have control over the process.
+
+### Onboard suppliers through the supplier registration wizard
+
+The supplier registration wizard walks you (or your customers) through the necessary legal requirements to issue SII invoices. Each issuer must submit a signed representation agreement between Invopop and the issuer, along with documentation proving their legal authority to enter into such an agreement.
+
+Once you run the Supplier Registration Workflow, you will find the `link_url` in the `meta` property of the supplier entry. Here is an example API response:
+
+
+<Accordion title="Example supplier meta registration link">
+```
+data: {
+  ...
+  "meta": [
+    {
+      "id": "...",
+      "created_at": "2025-11-05T15:10:28.132Z",
+      "updated_at": "2025-11-14T15:56:53.727Z",
+      "owner_id": "...",
+      "entry_id": "...",
+      "src": "gov-es",
+      "key": "link",
+      "ref": "EgDeG3pDBDe",
+      "link_url": "https://sii.invopop.com/reg/EgDeG3pDBDe",
+      "link_scope": "public",
+      "indexed": true,
+      "shared": true
+    }
+  ]
+}
+```
+</Accordion>
+
+In console, you will find the link in the `Meta` tab in the right sidebar of the supplier's entry.
+
+
+This wizard can be embedded as an `iframe` to onboard your customers without leaving your product or platform.
+
+<Steps>
+  <Step title="Welcome screen">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-1.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    Your customers will be met with the first page detailing the necessary documentation required for the process.
+  </Step>
+  <Step title="Information verification">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-2.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    The user can edit personal or company information. If the user is a self-employed individual, only the company information block will appear. Such individuals should enter their real name in the "Nombre" field, as this is matched by the AEAT against their tax id.
+  </Step>
+  <Step title="Download agreement">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-3.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    On the following page, the issuer can download and sign their agreement. The details from the previous page will auto-populate into the contract.
+
+    The issuer (you, or your customer) will require the following:
+
+    - Signed agreement (handwritten signature or e-signature with the [FNMT's Certificado Electrónico de Representante](https://www.sede.fnmt.gob.es/certificados/certificado-de-representante/persona-juridica))
+    - If handwritten signature, legal representative's ID (DNI/NIE/passport) and company stamp.
+
+    Please be advised that any certificate that is not issued by the FNMT is not valid. Self-signed and certificates issued by other authorities are not considered valid.
+
+  </Step>
+  <Step title="Upload signed agreement">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-4.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    Issuers select the type of signature they used and upload their document. If digital signature is selected, the following step will be skipped as a signature through a FNMT digital certificate counts as a proof of identification.
+  </Step>
+
+  <Step title="Upload ID">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-5.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    The legal representative or _autónomo_ upload a scan or clear photo of their ID in a valid image format (JPG or PNG). The ID should ideally be a DNI/NIE, as passports are only used when the person is not entitled to have one.
+
+    Both the front and reverse of the ID should be submitted here. If the ID is a passport (only valid for non-Spanish residents who are representatives of a company), they can upload the main page of their passport both times.
+  </Step>
+
+  <Step title="Review details">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-6.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    This page provides a summary of information so the user can verify they have submitted the correct data. Any corrections can be easily made through the edit function.
+  </Step>
+
+  <Step title="Confirmation screen">
+    <Frame>
+      <img
+        width="400"
+        src="/assets/guides/es-sii-supplier-wizard-7.png"
+        alt="Supplier registration wizard"
+      />
+    </Frame>
+    A green checkmark will indicate success, and the supplier will await approval from our team, which will be made in less than 72 hours.
+  </Step>
+
+</Steps>
+
+{/*
+### Onboard suppliers through the API
+
+If you have special needs regarding the onboarding of suppliers for SII (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
+
+
+  1. [Create a supplier entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
+    Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
+
+  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`https://api.invopop.com/transform/v1/jobs/{id}`<br />
+    Using the supplier registration workflow ID and Silo Entry ID.
+
+  3. [Generate agreement PDF](/api-ref/apps/sii/agreement-fetch) `apps/sii/v1/entry/:silo_entry_id/agreement`<br />
+    The agreement file will be created with the supplier's data.
+
+  4. [Upload agreement PDF](/api-ref/apps/sii/agreement-upload) `apps/sii/v1/entry/:silo_entry_id/agreement`<br />
+    Upload the agreement into the supplier's silo entry.
+
+  5. [Upload identity images](/api-ref/apps/sii/identity-upload) `apps/sii/v1/entry/:silo_entry_id/identity`<br />
+    Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
+
+  6. [Confirm Upload](/api-ref/apps/sii/confirm) `https://api.invopop.com/apps/sii/v1/entry/:silo_entry_id/confirm`<br />
+    Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
+
+*/}
+
+## Unregister a supplier
+
+Unregistering a supplier is essentially revoking their invoice issuing privileges. You might need to unregister an entity because the supplier is no longer your client, because their agreement documentation was rejected, or because of a change in their Tax ID. To do so, use the following workflow template:
+
+  <Tabs>
+      <Tab title="Template">
+        <Card title="SII unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-unregister" cta="Add to my workspace">
+          This workflow will revoke invoice issuing privileges for a SII supplier.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
+
+        1. **Unregister supplier** - Revokes invoice issuing authorization by the AEAT.
+        2. **Set State** - Select `void` to label the supplier accordingly.
+
+        In the Error Handling section, add the **Set State** action and select `Error`.
+
+      </Tab>
+    </Tabs>
+
+## Legal information
+
+<AccordionGroup>
+
+  <Accordion title="SII self certification process">
+    There is no official certification for SII from the AEAT (the Spanish tax agency). Instead, each developer, company, or provider that implements an invoicing software must provide an electronically signed declaration where they certify that their system meets all the requirements established in the regulations. This document is binding and must be kept available for the Tax Authority.
+
+    The AEAT requires that this declaration be available and always visible within the system itself, and it must include certain control elements such as the installation number, issuer data, software version, and system ID.
+
+    If you are a white label user of Invopop (you issue invoices in the name of third parties), you are required to display a link to this "declaración responsable" in your software. Here is [the template from the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/IVA/SII/EjemplosDeclaracionResponsable(V0.5.1).pdf), and our own for your reference: [Declaración responsable SII - Invopop](https://drive.google.com/file/d/1IR2EuavoEi8E3hlAM4u-XTIFbalxxKzj/view). Some of our customers have asked us if it is necessary to mention Invopop in their _declaración responable_. It is not required, but we appreciate it.
+  </Accordion>
+  <Accordion title="SII representation agreement">
+    [Declaración responsable SII - Invopop](https://drive.google.com/file/d/1IR2EuavoEi8E3hlAM4u-XTIFbalxxKzj/view) (PDF)
+  </Accordion>
+  <Accordion title="Valid digital signatures for the SII's Supplier Agreement PDF">
+    Digital signatures rely on certificates, but not all certificates serve as proof of identity. The Spanish Tax Agency (AEAT) accepts only qualified certificates—those issued by an authority that has verified the holder's identity in advance.
+
+    For individuals, this means using an official certificate from an accredited provider such as the FNMT. Obtaining that certificate requires submitting your ID and completing identity verification. Because this process already confirms who you are, the AEAT treats the resulting digital signature as legally binding identification. As a result, no additional identity check is needed during registration.
+
+    In contrast, certificates generated directly by applications like Adobe Acrobat do not involve any identity verification. They are self-signed and therefore cannot be used for official submissions or as valid digital signatures in AEAT or government procedures.
+
+    If you wish to obtain a certificate that is valid for most (if not all) Spanish government procedures, you can do so by following the procedure on [certificates page of the FNMT](https://www.sede.fnmt.gob.es/certificados/persona-fisica). For instructions on how to make it available in Acrobat Reader to sign official documents, consult [this PDF](https://www.sede.fnmt.gob.es/documents/10445900/10528353/Firmar_documento_PDF_Adobe_Acrobat_Reader_DC.pdf).
+
+    Otherwise, we require the secondary procedure of signing the document by handwritten signature, and an official ID as proof of identity as required by the AEAT.
+</Accordion>
+</AccordionGroup>
+
+
+
+
+---
+
+<SpainResources />
+
+<Card title="Spain Suppliers FAQ"
+  icon="square-question"
+  href="/faq/spain#suppliers"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about suppliers in Spain →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about suppliers in Spain →
+</Card>

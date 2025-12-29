@@ -1,5 +1,5 @@
 ---
-title: "Documentos fiscais eletrônicos guide"
+title: "Documentos Fiscais Eletrônicos guide"
 sidebarTitle: "🇧🇷 Brazil"
 description: Issue Documentos Fiscais Eletrônicos in Brazil
 ---
@@ -301,6 +301,30 @@ Please note:
 ---
 
 <BrazilResources />
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="How does ISS tax work in Brazil?">
+    ISS (Imposto Sobre Serviços) is not treated as a standard transactional tax calculated on top of a net amount. Instead, it is an **informative tax embedded in the final price**—the invoice only reports what portion of the total corresponds to ISS.
+
+    In GOBL, ISS is flagged as an "informative" tax category. This means:
+    - ISS must be added to the GOBL invoice like any other tax, with the proper percentage.
+    - The tax amount is not added to the price; it represents the portion of the total that corresponds to ISS.
+    - The NFS-e document displays ISS as informational data, reflecting what was already embedded in the final price.
+    - **Do not use `prices_include` with ISS**—since ISS is informative, it should not be treated as a price-inclusive tax.
+  </Accordion>
+  <Accordion title="How do I configure Chargebee or Stripe imports for Brazilian invoices with ISS?">
+    Billing platforms like Chargebee and Stripe are not aware of ISS particularities and tend to wrongly treat ISS as a typical tax included in the price. This causes `invalid-prices-include` errors during import because that pricing model is not compatible with how ISS works for NFS-e.
+
+    The correct setup is:
+    1. **Do not configure ISS as a tax** in your billing platform (Chargebee, Stripe, etc.).
+    2. Prices in your billing platform should already be the **final public prices** with ISS embedded.
+    3. Add a **Modify Silo Entry** step to your import workflow that injects the ISS tax with the desired percentage into the GOBL invoice.
+
+    This workflow approach ensures ISS is properly added to the GOBL invoice as an informative tax category before submission to the Brazilian tax authority, while avoiding the pricing conflicts that occur when billing platforms try to handle ISS as a standard tax.
+  </Accordion>
+</AccordionGroup>
 
 <Card title="Brazil FAQ"
   icon="square-question"

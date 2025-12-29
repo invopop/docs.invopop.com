@@ -8,7 +8,7 @@ sidebarTitle: Types
 
 Invopop supports a comprehensive set of business document types based on the [GOBL (Go Business Language)](https://docs.gobl.org) schema. All documents are stored as GOBL Envelopes, which wrap the document data with headers and digital signatures for integrity and authenticity.
 
-## Core Document Types
+## Core document types
 
 ### Invoices
 
@@ -16,17 +16,21 @@ Invopop supports a comprehensive set of business document types based on the [GO
 
 An invoice represents a payment claim for goods or services supplied under conditions agreed between the supplier and the customer. Invoices are the most commonly used document type and form the foundation of most billing workflows.
 
-#### Invoice Types
+#### Invoice types
 
 Invoices can be categorized by their `type` field:
 
 - **`standard`**: A regular invoice issued for goods or services. This is the default type for most invoices.
+
+- **`proforma`** - used to send a “preview” of the final invoice to a customer for their approval. If a customer approves a proforma invoice, they’re effectively entering into a contract with the supplier for the services or goods to be supplied, so while tax agencies don’t consider this an essential type for tax collection, they can have legal consequences.
 
 - **`credit-note`**: A document issued by the supplier to the buyer to indicate the intent to credit a specified amount. Credit notes are used to cancel, refund, or adjust a validated invoice. They reference the original invoice through a `preceding` block and are the most widely accepted method for making corrections. See [Correcting an Invoice](/console/doc-correct) for details.
 
 - **`debit-note`**: A document issued by the supplier to request additional funds related to a previously issued invoice (e.g., to account for omitted shipping costs). While valid, debit notes are rarely used in practice—issuing a new invoice is generally recommended instead.
 
 - **`corrective`**: A corrective invoice (also known as a rectifying invoice) is a new document that references and replaces the original one. It's typically used when there are significant errors in fields such as the buyer's name, tax ID, or invoice date, and it fully replaces the original invoice for legal and accounting purposes. Countries that support corrective invoices include Spain and Poland. In some countries where the tax regime supports it, such as Spain, GOBL may attempt to map credit and debit notes into the appropriate corrective format.
+
+There are some other regime specific invoice types such as simplified invoices that are supported through invoice scenarios. [Read more in about simplified invoices](https://docs.gobl.org/use-cases/invoicing#invoice-scenarios) in the GOBL docs.
 
 ### Orders
 
@@ -78,7 +82,7 @@ You can use parties for the following use cases:
 - Some regimes (Spain) and networks (Peppol) require supplier registration.
 - Customer and supplier data management.
 
-#### Party Types
+#### Party types
 
 - **Suppliers**: Legal entities or persons on behalf of whom invoices should be issued
 - **Customers**: Recipients of invoices and other business documents
@@ -108,20 +112,6 @@ Documents can be linked together using UUID references. Common relationships inc
 - **Invoices → Items**: Invoice lines can reference item documents by UUID
 
 See [Related Documents](/guides/related-docs) for more information on linking documents.
-
-## Document Lifecycle
-
-Documents progress through various states during their lifecycle:
-
-- **Draft**: Initial creation state before processing
-- **Processing**: Document is being processed by a workflow
-- **Sent**: Document has been successfully transmitted (e.g., to tax authority or customer)
-- **Paid**: Invoice has been marked as paid
-- **Void**: Document has been cancelled or voided
-- **Error**: Processing failed with an error
-- **Corrected**: Document has been corrected by a credit note or corrective invoice
-
-The Activity tab in the Console shows a chronological log of all state transitions and significant events affecting the document.
 
 ## Workflows and Document Types
 
@@ -178,6 +168,33 @@ See [Document Contents](/console/doc-content) for detailed information about the
 - [Related Documents Guide](/guides/related-docs)
 - [Workflows Overview](/console/workflow-intro)
 - [Series Management](/console/series)
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="What is the difference between a simplified invoice and a receipt?">
+
+
+The key difference lies in *what* each document proves.
+
+A **receipt** confirms that a **payment has been made**. It is produced by a payment or cash-register device (for example, a card reader or POS terminal) and serves as proof of transaction settlement.
+
+An **invoice** documents the **sale of goods or services**. It is issued by a billing system (such as a POS, PMS, or ERP) and includes a breakdown of items, taxes, and totals.
+
+A **simplified invoice** is a type of invoice commonly used for **B2C transactions** and usually **does not include customer identification details**.
+
+**Example:**
+In a restaurant, the printed bill showing the items and taxes is the *simplified invoice*. After you pay by card, the slip produced by the card reader is the *receipt*. The first documents the sale; the second documents the payment.
+
+From a regulatory perspective:
+
+* **Fiscalization rules** typically apply to **payment recording devices** (cash registers, card readers) → *receipts*
+* **E-invoicing and e-reporting rules** apply to **billing systems** (POS, PMS, ERP) → *invoices*
+
+In some countries, these systems overlap; in others (like Italy), they are separate or mutually exclusive. This is why businesses often require **both** a fiscalization provider and an e-invoicing provider to remain fully compliant.
+
+</Accordion>
+</AccordionGroup>
 
 ## Related resources
 
