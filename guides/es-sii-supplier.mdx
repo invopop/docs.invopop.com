@@ -9,7 +9,6 @@ import SupplierRegistration from '/snippets/workflows/templates/es/sii-register.
 import Supplier from '/snippets/suppliers/es/company.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
-
 ## Introduction
 
 The Spanish Tax Agency ([AEAT](https://sede.agenciatributaria.gob.es)) requires that companies and self-employed individuals (autónomos) formally authorize Invopop to issue invoices on their behalf. To comply with this regulation, the company's legal representative or _autónomo_ must sign an agreement granting Invopop consent to generate and manage invoices in their name. This signed authorization ensures that all invoicing activities carried out by Invopop are legally valid and recognized by the AEAT.
@@ -30,8 +29,7 @@ This guide will...
     2. Find **Spain** in the app list.
     3. Click **Connect** to activate the app.
 
-    After connecting, you'll see SII listed in the Enabled Apps section.
-
+    After connecting, you'll see Spain listed in the Enabled Apps section.
   </Step>
   <Step title="Create a supplier registration workflow">
     Create a new workflow in your workspace for registering suppliers. Start with the template below:
@@ -220,9 +218,9 @@ data: {
       "owner_id": "...",
       "entry_id": "...",
       "src": "gov-es",
-      "key": "link",
-      "ref": "EgDeG3pDBDe",
-      "link_url": "https://sii.invopop.com/reg/EgDeG3pDBDe",
+      "key": "sii-link",
+      "ref": "Kb01VKCpbxN",
+      "link_url": "https://gov-es.invopop.com/reg/sii/Kb01VKCpbxN",
       "link_scope": "public",
       "indexed": true,
       "shared": true
@@ -324,31 +322,27 @@ This wizard can be embedded as an `iframe` to onboard your customers without lea
 
 </Steps>
 
-{/*
 ### Onboard suppliers through the API
 
 If you have special needs regarding the onboarding of suppliers for SII (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
 
-
   1. [Create a supplier entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
     Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
 
-  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`https://api.invopop.com/transform/v1/jobs/{id}`<br />
+  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`/transform/v1/jobs/{id}`<br />
     Using the supplier registration workflow ID and Silo Entry ID.
 
-  3. [Generate agreement PDF](/api-ref/apps/sii/agreement-fetch) `apps/sii/v1/entry/:silo_entry_id/agreement`<br />
+  3. [Generate agreement PDF](/api-ref/apps/gov-es/agreement-fetch) `/apps/gov-es/v1/entry/{silo_entry_id}/sii/agreement`<br />
     The agreement file will be created with the supplier's data.
 
-  4. [Upload agreement PDF](/api-ref/apps/sii/agreement-upload) `apps/sii/v1/entry/:silo_entry_id/agreement`<br />
+  4. [Upload agreement PDF](/api-ref/apps/gov-es/agreement-upload) `/apps/gov-es/v1/entry/{silo_entry_id}/sii/agreement`<br />
     Upload the agreement into the supplier's silo entry.
 
-  5. [Upload identity images](/api-ref/apps/sii/identity-upload) `apps/sii/v1/entry/:silo_entry_id/identity`<br />
+  5. [Upload identity images](/api-ref/apps/gov-es/identity-upload) `/apps/gov-es/v1/entry/{silo_entry_id}/sii/identity`<br />
     Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
 
-  6. [Confirm Upload](/api-ref/apps/sii/confirm) `https://api.invopop.com/apps/sii/v1/entry/:silo_entry_id/confirm`<br />
+  6. [Confirm upload](/api-ref/apps/gov-es/confirm) `/apps/gov-es/v1/entry/{silo_entry_id}/sii/confirm`<br />
     Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
-
-*/}
 
 ## Unregister a supplier
 
