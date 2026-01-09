@@ -1,7 +1,7 @@
 ---
 title: "myDATA & IAPR Guide"
 sidebarTitle: "🇬🇷 Greece"
-description: Send invoices and credit notes to the Greek IAPR via the myDATA platform.
+description: "Send invoices and credit notes to the Greek IAPR via the myDATA platform."
 ---
 
 import WorkflowExample from  '/snippets/workflows/templates/gr/iapr-invoice.mdx';
@@ -30,54 +30,51 @@ To issue invoices in Greece, you will need:
 To issue invoices, follow these instructions in the [Invopop Console](https://console.invopop.com):
 
 <Steps>
+  <Step title="Connect ILYDA Greece App">
+    1. Navigate to **Configuration** → **Apps**.
+    2. Find **ILYDA Greece** in the app discovery list.
+    3. Click **Connect** to activate.
 
-<Step title="Connect ILYDA Greece App">
+    <Frame>
+      <img
+        src="/assets/guides/gr-iapr-app.png"
+        width="400"
+        alt="ILYDA Greece App"
+      />
+    </Frame>
+    <Info>
+      The ILYDA Greece app will send your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
+    </Info>
+  </Step>
+  <Step title="Prepare Invoice Workflow">
+    <Tabs>
+      <Tab title="Template">
+        <Card title="IAPR Invoice Workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=gr-iapr-invoice" cta="Add to my workspace">
+          This workflow will issue an invoice through IAPR.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
-  1. Navigate to **Configuration** → **Apps**.
-  2. Find **ILYDA Greece** in the app discovery list.
-  3. Click **Connect** to activate.
+        <WorkflowExample />
+      </Tab>
+      <Tab title="Build from scratch">
+        First, review our [workflows guide](/guides/features/workflows) to understand the basics.
 
-<Frame>
-  <img src="/assets/guides/gr-iapr-app.png" width="400" alt="ILYDA Greece App" />
-</Frame>
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-<Info>
-The ILYDA Greece app will send your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
-</Info>
+        1. **Set State** - to `Processing`.
+        2. **Add Sequential Code** - with dynamic sequences and a name like "IAPR Invoices".
+        3. **Sign Envelope**: The envelope must be signed before processing.
+        4. **Send to IAPR (via ILYDA)**.
+        5. **Set State** - to `Sent`.
 
-</Step>
+        Finally, in the Error Handling area, add the **Set State** action and select `Error`.
 
-<Step title= "Prepare Invoice Workflow">
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="IAPR Invoice Workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=gr-iapr-invoice" cta="Add to my workspace">
-      This workflow will issue an invoice through IAPR.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-    <WorkflowExample />
-  </Tab>
-  <Tab title="Build from scratch">
-
-    First, review our [workflows guide](/guides/features/workflows) to understand the basics.
-
-    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
-
-    1. **Set State** - to `Processing`.
-    2. **Add Sequential Code** - with dynamic sequences and a name like "IAPR Invoices".
-    3. **Sign Envelope**: The envelope must be signed before processing.
-    4. **Send to IAPR (via ILYDA)**.
-    5. **Set State** - to `Sent`.
-
-    Finally, in the Error Handling area, add the **Set State** action and select `Error`.
-
-    Add any additional steps you may need, and save the new workflow.
-  </Tab>
-</Tabs>
-</Step>
-
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
 </Steps>
 
 ## Running
@@ -92,9 +89,9 @@ In this section, we'll provide details on how to register new suppliers and issu
 
 Invopop has partnered with [ILYDA](https://ilyda.gr) to issue invoices in Greece. Each supplier must be registered with ILYDA to issue invoices on their behalf. This involves:
 
-* Authorizing ILYDA as an electronic invoicing provider in Taxisnet.
-* Declaring ILYDA as invoice issuer in myDATA.
-* Signing a service provision agreement with ILYDA.
+- Authorizing ILYDA as an electronic invoicing provider in Taxisnet.
+- Declaring ILYDA as invoice issuer in myDATA.
+- Signing a service provision agreement with ILYDA.
 
 Please contact us via Slack or [support@invopop.com](mailto:support@invopop.com) whenever you need to onboard a new supplier. We will walk you through the process.
 
@@ -118,7 +115,7 @@ Notice:
 - we've added the `gr-mydata-v1` [addon](https://docs.gobl.org/addons/gr-mydata-v1); this ensures the document will be validated and normalized using the myDATA v1 rules built into the [GOBL](https://docs.gobl.org) library,
 - we've set the `services` tag; this makes the addon set the `gr-mydata-invoice-type` [extension](https://docs.gobl.org/addons/gr-mydata-v1#invoice-type) automatically to `2.1` (service invoice),
 - similarly, the `credit-transfer` payment method will cause the addon to set the `gr-mydata-payment-means` [extension](https://docs.gobl.org/addons/gr-mydata-v1#payment-means) to `1` (credit transfer),
-- we added a charge for a special fee (tourist accomodation fee), using the `gr-mydata-fee` [extension](https://docs.gobl.org/addons/gr-mydata-v1#fee),
+- we added a charge for a special fee (tourist accomodation fee), using the `gr-mydata-fee` [extension](https://docs.gobl.org/addons/gr-mydata-v1#fee-category),
 - the specific income category and type are set using the `gr-mydata-income-cat` [extension](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-category) and the `gr-mydata-income-type` [extension](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-type) respectively,
 - only [VAT rates](https://docs.gobl.org/regimes/el#vat-rates) (`standard`) have been specified; percentages and values for the `gr-mydata-vat-rate` [extension](https://docs.gobl.org/addons/gr-mydata-v1#vat-rate) will be set automatically, and,
 - there are no totals or calculations; all these will be made automatically when uploading.
@@ -156,20 +153,10 @@ Notice:
 
 ---
 
-<Card title="Greece FAQ"
-  icon="square-question"
-  href="/faq/greece"
-  arrow="true"
-  horizontal
->
+<Card title="Greece FAQ" icon="square-question" horizontal href="/faq/greece">
   Find answers to frequently asked questions about invoicing in Greece →
 </Card>
 
-<Card title="Participate in our community"
-  icon="forumbee"
-  href="https://community.invopop.com"
-  arrow="true"
-  horizontal
->
+<Card title="Participate in our community" icon="forumbee" horizontal href="https://community.invopop.com">
   Ask and answer questions about invoicing in Greece →
 </Card>
