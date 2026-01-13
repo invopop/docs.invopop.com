@@ -149,15 +149,45 @@ import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="Credit note (rectificativa por sustitución)">
-      <CodeGroup>
+  <Accordion title="Credit note (rectificativa por diferencias)">
+    Credit notes (_Rectificativa por Diferencias_) are used to correct invoices by adjusting the value of the original invoice. This is the recommended approach for correcting invoices in Spain.
+
+    Credit notes must be issued when you need to:
+
+    - Reduce the amount of an invoice (e.g., if you issued an invoice for €100 but it should have been €80, issue a credit note for €20)
+    - Correct errors in amounts, quantities, or prices
+    - Process returns or refunds
+
+    To create a VERI\*FACTU credit note, set the invoice `type` to `credit-note` and include a `preceding` field that references the original invoice. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the correction type to `I` (Differences) and document type to `R1` when the silo entry is built.
+
+    <Note>
+      Credit notes are more widely supported across countries than corrective invoices. Unless you have a specific requirement to use a corrective invoice (such as incorrect supplier or customer data that can't be corrected through credit notes), we recommend using credit notes for corrections.
+    </Note>
+
+    <CodeGroup>
       <CreditNoteInvoiceMin />
       <CreditNoteInvoice />
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="Corrective invoice (rectificativa por diferencias)">
-    <CorrectiveInvoice />
+  <Accordion title="Corrective invoice (rectificativa por sustitución)">
+    Corrective invoices (_Rectificativa por Sustitución_) are used to replace an original invoice entirely. This method is specific to jurisdictions like Spain and should only be used when credit notes cannot correct the issue.
+
+    Corrective invoices must be issued when you need to:
+
+    - Correct incorrect supplier or customer data (name, tax ID, address, etc.)
+    - Replace an invoice that has fundamental errors that cannot be corrected through credit or debit notes
+    - Completely replace the original invoice with corrected information
+
+    To create a VERI\*FACTU corrective invoice, set the invoice `type` to `corrective` and include a `preceding` field that references the original invoice with all required details (including the original invoice's tax section). The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the correction type to `S` (Substitution) and document type to `R1` when the silo entry is built.
+
+    <Note>
+      Corrective invoices replace the original invoice entirely, whereas credit notes adjust the value. For example, if you issued an invoice for €100 but it should have been €80, you can issue a credit note for €20, or a corrective invoice for €80. Unless you need to correct supplier or customer data, credit notes are the recommended approach.
+    </Note>
+
+    <CodeGroup>
+      <CorrectiveInvoice />
+    </CodeGroup>
   </Accordion>
 
 </AccordionGroup>
