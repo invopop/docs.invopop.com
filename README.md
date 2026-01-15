@@ -16,6 +16,32 @@ Run the following command at the root of your documentation (where `docs.json` i
 mint dev
 ```
 
+### 🔨 Building Invoice Examples
+
+The project includes a script to automatically build invoice examples from minimal JSON files using the GOBL CLI tool.
+
+The `build-min-files.sh` script:
+- Finds all `.min.mdx` files in the `/snippets` directory
+- Extracts JSON from each MDX file's code block
+- Builds the JSON using `gobl build` to calculate totals, add UUIDs, and validate
+- Outputs the built JSON to corresponding `.mdx` files (without the `.min` suffix)
+- Preserves the original code block title
+- Handles errors gracefully and continues processing other files
+
+To use the script:
+
+```bash
+./build-min-files.sh
+```
+
+The script will:
+- Process all `.min.mdx` files in the snippets directory
+- Overwrite existing `.mdx` files if they exist
+- Report any build errors and continue processing
+- Display a summary of processed files and errors at the end
+
+**Prerequisites:** The script requires the `gobl` CLI tool to be installed and available in your PATH.
+
 ### 🪄 Tips & Tricks
 
 If your local preview is out of sync with what you see on the web in the production version, update your local CLI:
