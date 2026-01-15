@@ -1,192 +1,138 @@
-import B2CInvoice from '/snippets/invoices/es/verifactu-b2c.mdx';
-import B2CInvoiceMin from '/snippets/invoices/es/verifactu-b2c-min.mdx';
-import B2BInvoice from '/snippets/invoices/es/verifactu-b2b.mdx';
-import B2BInvoiceMin from '/snippets/invoices/es/verifactu-b2b-min.mdx';
-import B2BServicesEUClient from '/snippets/invoices/es/verifactu-b2b-services-eu.mdx';
-import B2BServicesEUClientMin from '/snippets/invoices/es/verifactu-b2b-services-eu-min.mdx';
-import B2BGoodsEUClient from '/snippets/invoices/es/verifactu-b2b-goods-eu.mdx';
-import B2BGoodsEUClientMin from '/snippets/invoices/es/verifactu-b2b-goods-eu-min.mdx';
-import B2BServicesNoEUClient from '/snippets/invoices/es/verifactu-b2b-services-no-eu.mdx';
-import B2BServicesNoEUClientMin from '/snippets/invoices/es/verifactu-b2b-services-no-eu-min.mdx';
-import B2BGoodsNoEUClient from '/snippets/invoices/es/verifactu-b2b-goods-no-eu.mdx';
-import B2BGoodsNoEUClientMin from '/snippets/invoices/es/verifactu-b2b-goods-no-eu-min.mdx';
-import B2BExemptE1Invoice from '/snippets/invoices/es/verifactu-exempt-E1.mdx';
-import B2BExemptE1InvoiceMin from '/snippets/invoices/es/verifactu-exempt-E1-min.mdx';
-import B2COneStopShopInvoice from '/snippets/invoices/es/verifactu-b2c-oss.mdx';
-import B2COneStopShopInvoiceMin from '/snippets/invoices/es/verifactu-b2c-oss-min.mdx';
-import CreditNoteInvoice from '/snippets/invoices/es/verifactu-credit-note.mdx';
-import CreditNoteInvoiceMin from '/snippets/invoices/es/verifactu-credit-note-min.mdx';
-import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
-
+import StandardMin from '/snippets/invoices/es/peppol-vf-standard.min.mdx';
+import Standard from '/snippets/invoices/es/peppol-vf-standard.mdx';
+import ZeroRateMin from '/snippets/invoices/es/zero-rate.min.mdx';
+import ZeroRate from '/snippets/invoices/es/zero-rate.mdx';
+import ExemptMin from '/snippets/invoices/es/peppol-vf-exempt.min.mdx';
+import Exempt from '/snippets/invoices/es/peppol-vf-exempt.mdx';
+import ReverseChargeMin from '/snippets/invoices/es/peppol-vf-reverse-charge.min.mdx';
+import ReverseCharge from '/snippets/invoices/es/peppol-vf-reverse-charge.mdx';
+import IntraCommunityMin from '/snippets/invoices/es/peppol-vf-intra-community.min.mdx';
+import IntraCommunity from '/snippets/invoices/es/peppol-vf-intra-community.mdx';
+import OutsideScopeMin from '/snippets/invoices/es/peppol-vf-outside-scope.min.mdx';
+import OutsideScope from '/snippets/invoices/es/peppol-vf-outside-scope.mdx';
+import ExportMin from '/snippets/invoices/es/peppol-vf-export.min.mdx';
+import Export from '/snippets/invoices/es/peppol-vf-export.mdx';
 
 <AccordionGroup>
   
-  <Accordion title="B2C Simplified Invoice">
-    Simplified invoices are used for B2C transactions when the customer is not a business. The transaction amount should be under €400 (VAT included) with some [exceptions](https://sede.agenciatributaria.gob.es/Sede/iva/facturacion-registro/facturacion-iva/tipos-factura.html) in which this threshold is increased to €3,000.
-
-    To create a simplified VERI\*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon.
-
-    <CodeGroup>
-      <B2CInvoiceMin />
-      <B2CInvoice />
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="B2B Standard Invoice">
+  <Accordion title="B2B Standard invoice Spain">
     Regular invoices are used for B2B transactions. Regular invoices must be issued when:
 
     - The customer is a registered business (has a tax identification number).
     - The transaction amount is €400 VAT included or above, or the customer requires a full invoice.
     - The customer needs a complete invoice with all tax details for accounting or tax purposes.
 
-    To create a regular VERI\*FACTU invoice, include the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `F1` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
+    To create a regular invoice, include the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `380` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
 
     <Note>
-      The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` NIF or VAT ID must be valid.
+      The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid.
     </Note>
 
     <CodeGroup>
-      <B2BInvoiceMin />
-      <B2BInvoice />
+      <StandardMin />
+      <Standard />
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="B2B Services EU Client (Reverse Charge)">
+  <Accordion title="B2B zero rated goods invoice Spain">
+    Goods and services that are subject to VAT but taxed at a 0% rate. Zero rated goods in Spain are:
+
+    - Daily and weekly newspapers, as well as periodical publications that meet a specific criteria.
+    - Recyclable materials such as waste and scrap intended for recycling.
+    - Educational materials under specific conditions.
+
+    To create a reverse charge invoice, use the tax key `zero` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `Z` (zero rated goods) when the silo entry is built.
+
+    <Note>
+      With zero-rated supplies, businesses can still reclaim input VAT on their purchases, whereas with exempt supplies they cannot.
+    </Note>
+
+    <CodeGroup>
+      <ZeroRateMin />
+      <ZeroRate />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="B2B exempt invoice Spain">
+    Exempt invoices are used for B2B transactions that are exempt from VAT, which also covers exemptions in internal operations.
+
+    To create an exempt invoice, use the tax key `exempt` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `E` when the silo entry is built. You must also state the reason for the exemption through the [CET VATEX](https://docs.gobl.org/catalogues/cef#cef-vatex) - VAT exemption reason codes.
+
+    <Note>
+      Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` tax id must be valid.
+    </Note>
+
+    <CodeGroup>
+      <ExemptMin />
+      <Exempt />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="B2B services invoice Spain → EU customer (Reverse Charge)">
     Reverse charge invoices are used for B2B services provided to customers in other EU member states. Reverse charge must be applied when:
 
     - The customer is a registered business in another EU member state (has a valid EU VAT ID).
     - The service is provided to a business customer (B2B), not a consumer.
     - The service is subject to VAT but the customer accounts for the VAT in their own country.
 
-    To create a reverse charge VERI\*FACTU invoice, use the tax key `reverse-charge` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `S2` (Subject and Not Exempt - With reverse charge) when the silo entry is built.
+    To create a reverse charge invoice, use the tax key `reverse-charge` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `AE` (reverse charge) when the silo entry is built.
 
     <Note>
-      With reverse charge, no VAT is charged by the supplier. The customer accounts for VAT in their own country. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+      With reverse charge, no VAT is charged by the supplier. The customer accounts for VAT in their own country. Both `supplier` and `customer` VAT ID must be valid and registered in the EU VIES system.
     </Note>
 
     <CodeGroup>
-      <B2BServicesEUClientMin />
-      <B2BServicesEUClient />
+      <ReverseChargeMin />
+      <ReverseCharge />
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="B2B Goods EU Client (Intra-Community)">
+  <Accordion title="B2B goods invoice Spain → EU customer (Intra-Community)">
     Intra-community supply invoices are used for B2B goods delivered to customers in other EU member states. Intra-community supplies must be applied when:
 
     - The customer is a registered business in another EU member state (has a valid EU VAT ID).
     - Goods are physically delivered to another EU member state.
-    - The supply is exempt from VAT in the origin country (Spain) and subject to VAT in the destination country.
+    - The supply is exempt from VAT in the origin country and subject to VAT in the destination country.
 
-    To create an intra-community supply VERI\*FACTU invoice, use the tax key `intra-community` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E5` ([Artículo 25 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a25)) when the silo entry is built.
+    To create an intra-community supply Peppol invoice, use the tax key `intra-community` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `K` (VAT exempt for EEA intra-community supply of goods and services) when the silo entry is built.
 
     <Note>
-      With intra-community supplies, no VAT is charged in Spain. The customer accounts for VAT in their destination country. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+      With intra-community supplies in the EU, the customer accounts for VAT in their destination country. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
     </Note>
 
     <CodeGroup>
-      <B2BGoodsEUClientMin />
-      <B2BGoodsEUClient />
+      <IntraCommunityMin />
+      <IntraCommunity />
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="B2B Services International Client (Outside Scope)">
+  <Accordion title="B2B services invoice Spain → international customer (Outside Scope)">
     Outside scope invoices are used for B2B services provided to customers outside the EU.
 
-    To create an outside scope VERI\*FACTU invoice, use the tax key `outside-scope` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the operation class to `N2` (Not Subject - Due to location rules) when the silo entry is built.
+    To create an outside scope Peppol invoice, use the tax key `outside-scope` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017)addon will automatically set the UNTDID 5305 tax category to `O` (Services outside scope of tax) when the silo entry is built.
 
     <Note>
-      Services provided to non-EU customers are generally outside the scope of Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
+      Services provided to non-EU customers are generally outside the scope of EU VAT.
     </Note>
 
     <CodeGroup>
-      <B2BServicesNoEUClientMin />
-      <B2BServicesNoEUClient />
+      <OutsideScopeMin />
+      <OutsideScope />
     </CodeGroup>
   </Accordion>
 
-  <Accordion title="B2B Goods International Client (Export)">
+  <Accordion title="B2B goods invoice Spain → international customer (Export)">
     Export invoices are used for B2B goods delivered to customers outside the EU.
 
-    To create an export VERI\*FACTU invoice, use the tax key `export` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E2` ([Artículo 21 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a21)) and regime code to `02` (Export) when the silo entry is built.
+    To create an export Peppol invoice, use the tax key `export` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `G` (Free export item, tax not charged) when the silo entry is built.
 
     <Note>
-      Exported goods are exempt from Spanish VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
+      Exported goods are exempt from VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
     </Note>
 
     <CodeGroup>
-      <B2BGoodsNoEUClientMin />
-      <B2BGoodsNoEUClient />
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="B2B Exempt E1 Invoice">
-    Exempt `E1` invoices are used for B2B transactions that are exempt from VAT pursuant ([Artículo 20 Ley de IVA](https://www.boe.es/eli/es/l/1992/12/28/37/con#a20)), which covers exemptions in internal operations.
-
-    To create an exempt E1 VERI\*FACTU invoice, use the tax key `exempt` in your invoice lines. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the exemption code to `E1` when the silo entry is built.
-
-    <Note>
-      Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` NIF must be valid.
-    </Note>
-
-    <CodeGroup>
-      <B2BExemptE1InvoiceMin />
-      <B2BExemptE1Invoice />
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="B2C One-Stop-Shop Invoice">
-    One-Stop-Shop (OSS) invoices are used for B2C distance sales of goods and services to consumers in other EU member states when the supplier is registered under the OSS scheme.
-
-    To create an OSS VERI\*FACTU invoice, include the `simplified` tag in your GOBL document with the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon. The invoice will be treated as a simplified invoice (document type `F2`) and VAT is accounted for through the OSS scheme in the destination country.
-
-    <Note>
-      OSS allows suppliers to register for VAT in one EU member state and account for VAT on all EU distance sales through that single registration. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and enrolled in the OSS scheme.
-    </Note>
-
-    <CodeGroup>
-      <B2COneStopShopInvoiceMin />
-      <B2COneStopShopInvoice />
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="Credit note (rectificativa por diferencias)">
-    Credit notes (_Rectificativa por Diferencias_) are used to correct invoices by adjusting the value of the original invoice. This is the recommended approach for correcting invoices in Spain.
-
-    Credit notes must be issued when you need to:
-
-    - Reduce the amount of an invoice (e.g., if you issued an invoice for €100 but it should have been €80, issue a credit note for €20)
-    - Correct errors in amounts, quantities, or prices
-    - Process returns or refunds
-
-    To create a VERI\*FACTU credit note, set the invoice `type` to `credit-note` and include a `preceding` field that references the original invoice. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the correction type to `I` (Differences) and document type to `R1` when the silo entry is built.
-
-    <Note>
-      Credit notes are more widely supported across countries than corrective invoices. Unless you have a specific requirement to use a corrective invoice (such as incorrect supplier or customer data that can't be corrected through credit notes), we recommend using credit notes for corrections.
-    </Note>
-
-    <CodeGroup>
-      <CreditNoteInvoiceMin />
-      <CreditNoteInvoice />
-    </CodeGroup>
-  </Accordion>
-
-  <Accordion title="Corrective invoice (rectificativa por sustitución)">
-    Corrective invoices (_Rectificativa por Sustitución_) are used to replace an original invoice entirely. This method is specific to jurisdictions like Spain and should only be used when credit notes cannot correct the issue.
-
-    Corrective invoices must be issued when you need to:
-
-    - Correct incorrect supplier or customer data (name, tax ID, address, etc.)
-    - Replace an invoice that has fundamental errors that cannot be corrected through credit or debit notes
-    - Completely replace the original invoice with corrected information
-
-    To create a VERI\*FACTU corrective invoice, set the invoice `type` to `corrective` and include a `preceding` field that references the original invoice with all required details (including the original invoice's tax section). The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon will automatically set the correction type to `S` (Substitution) and document type to `R1` when the silo entry is built.
-
-    <Note>
-      Corrective invoices replace the original invoice entirely, whereas credit notes adjust the value. For example, if you issued an invoice for €100 but it should have been €80, you can issue a credit note for €20, or a corrective invoice for €80. Unless you need to correct supplier or customer data, credit notes are the recommended approach.
-    </Note>
-
-    <CodeGroup>
-      <CorrectiveInvoice />
+      <ExportMin />
+      <Export />
     </CodeGroup>
   </Accordion>
 
