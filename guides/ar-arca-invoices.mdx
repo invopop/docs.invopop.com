@@ -1,0 +1,82 @@
+---
+title: "ARCA Invoices"
+sidebarTitle: "ARCA Invoices"
+description: "Issue invoices in Argentina with ARCA."
+---
+
+import ArInvoiceWorkflow from '/snippets/workflows/templates/ar/ar-invoice.mdx'
+import ArInvoiceA from '/snippets/invoices/ar/arca-invoice-A.mdx'
+import ArInvoiceB from '/snippets/invoices/ar/arca-invoice-B.mdx'
+import ArInvoiceC from '/snippets/invoices/ar/arca-invoice-C.mdx'
+
+## Introduction
+
+This guide explains how to issue invoices in Argentina through ARCA using Invopop's workflow system.
+
+## Prerequisites
+
+Before issuing invoices, ensure you have:
+
+- Completed the [ARCA Supplier onboarding guide](/guides/ar-arca-suppliers)
+- Registered the point of sale(s) you want to use in ARCA (**production only**). See the [point of sales registration guide](/guides/ar-arca-suppliers#point-of-sales-punto-de-venta)
+
+## Setup
+
+Create a new workflow for issuing invoices. Start with the template below:
+
+<Tabs>
+  <Tab title="Template">
+    <Card title="ARCA invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=ar-invoice" cta="Add to my workspace">
+      This workflow issues invoices in Argentina through ARCA.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    <ArInvoiceWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    Review the [workflows guide](/guides/features/workflows) to understand the general setup process before starting.
+
+    In [Console](https://console.invopop.com), create a new workflow using the [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) template. Give it a descriptive name like "ARCA Invoice".
+
+    Configure the workflow with these steps:
+
+    1. **Set State** — Set to "Processing"
+    2. **Send to ARCA** — Submits the invoice to ARCA and receives authorization
+    3. **Generate PDF** — Creates a PDF with the ARCA authorization code (CAE) and QR code
+    4. **Set State** — Set to "Sent"
+
+    Add any additional steps you need, then save the workflow.
+  </Tab>
+</Tabs>
+
+## Issue an invoice
+
+To issue an invoice through ARCA, your invoice must include the [`ar-arca-v4` addon](https://docs.gobl.org/addons/ar-arca-v4). Set the `series` field to your point of sale number, but **do not include a `code` value**.
+
+### Sequential invoice numbering
+
+ARCA requires all invoices to be numbered sequentially without gaps, as mandated by Argentine tax regulations. To ensure compliance, Invopop automatically assigns the invoice code during the **Send to ARCA** workflow step based on the last issued invoice number.
+
+**Important**: Do not sign your invoice before sending it to ARCA. The workflow handles both code assignment and signing automatically when submitting to ARCA. The **Generate PDF** step then creates the final PDF including the ARCA authorization code (CAE) and QR code.
+
+### Invoice examples
+
+Choose the appropriate invoice type based on your tax classification and customer type:
+
+<AccordionGroup>
+  <Accordion title="Factura A - Registered taxpayer to registered taxpayer">
+    Factura A is issued by registered taxpayers (Responsable Inscripto) to other registered taxpayers or monotributistas. This invoice type includes VAT broken down separately.
+
+    <ArInvoiceA />
+  </Accordion>
+  <Accordion title="Factura B - Registered taxpayer to final consumer">
+    Factura B is issued by registered taxpayers (Responsable Inscripto) to final consumers, exempt entities, non-categorized subjects, and foreign tourists. VAT is included in the total price.
+
+    <ArInvoiceB />
+  </Accordion>
+  <Accordion title="Factura C - Monotributista invoice">
+    Factura C is issued by monotributistas (simplified tax regime for small businesses and freelancers) to any type of customer. This invoice type does not break down VAT separately.
+
+    <ArInvoiceC />
+  </Accordion>
+</AccordionGroup>

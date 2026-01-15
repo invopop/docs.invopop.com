@@ -1,0 +1,56 @@
+---
+title: "Register in ARCA"
+description: "Register in ARCA"
+countryCode: "ar"
+appId: "gov-ar"
+schema: "org/party"
+---
+
+```json Example Register in ARCA workflow with states
+{
+    "name": "Register in ARCA",
+    "description": "",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "12e637b0-f1fe-11f0-9dd9-c3ebff709d81",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "fc109350-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Register supplier in ARCA",
+            "provider": "gov-ar.register"
+        },
+        {
+            "id": "ff7d3160-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Wait for Authorization via ARCA",
+            "provider": "gov-ar.wait.authorization"
+        },
+        {
+            "id": "0dc4bdb0-f1fe-11f0-9dd9-c3ebff709d81",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "f1be4e50-f203-11f0-b1d8-c7bdc0d915b1",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

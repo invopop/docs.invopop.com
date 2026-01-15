@@ -1,0 +1,70 @@
+---
+title: "Send Invoice to ARCA"
+description: "Send Invoice to ARCA"
+countryCode: "ar"
+appId: "gov-ar"
+schema: "bill/invoice"
+---
+
+```json Example Send Invoice to ARCA workflow with states
+{
+    "name": "Send Invoice to ARCA",
+    "description": "",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "bce37ad0-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "68863090-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Send invoice to ARCA",
+            "provider": "gov-ar.send"
+        },
+        {
+            "id": "6cc19050-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English - A4",
+            "config": {
+                "currency_template": "",
+                "date_format": "%Y-%m-%d",
+                "decimal_mark": "",
+                "label": "",
+                "layout": "A4",
+                "locale": "en",
+                "logo_height": 40,
+                "negative_template": "",
+                "scripting": false,
+                "thousands_separator": "",
+                "watermark": ""
+            }
+        },
+        {
+            "id": "c6221e30-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "d751af40-f1fd-11f0-9dd9-c3ebff709d81",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
