@@ -1,0 +1,134 @@
+import StandardMin from '/snippets/invoices/be/peppol-standard.min.mdx';
+import Standard from '/snippets/invoices/be/peppol-standard.mdx';
+import ZeroRateMin from '/snippets/invoices/be/peppol-zero-rate.min.mdx';
+import ZeroRate from '/snippets/invoices/be/peppol-zero-rate.mdx';
+import ExemptMin from '/snippets/invoices/be/peppol-exempt.min.mdx';
+import Exempt from '/snippets/invoices/be/peppol-exempt.mdx';
+import ReverseChargeMin from '/snippets/invoices/be/peppol-reverse-charge.min.mdx';
+import ReverseCharge from '/snippets/invoices/be/peppol-reverse-charge.mdx';
+import IntraCommunityMin from '/snippets/invoices/be/peppol-intra-community.min.mdx';
+import IntraCommunity from '/snippets/invoices/be/peppol-intra-community.mdx';
+import OutsideScopeMin from '/snippets/invoices/be/peppol-outside-scope.min.mdx';
+import OutsideScope from '/snippets/invoices/be/peppol-outside-scope.mdx';
+import ExportMin from '/snippets/invoices/be/peppol-export.min.mdx';
+import Export from '/snippets/invoices/be/peppol-export.mdx';
+
+<AccordionGroup>
+  
+  <Accordion title="Peppol Belgium - B2B standard invoice">
+    Regular invoices are used for B2B transactions. Regular invoices must be issued when:
+
+    - The customer is a registered business (has a tax identification number).
+    - The customer needs a complete invoice with all tax details for accounting or tax purposes.
+
+    To create a regular invoice, include the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `380` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
+
+    <CodeGroup>
+      <StandardMin />
+      <Standard />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B zero rated goods invoice">
+    Goods and services that are subject to VAT but taxed at a 0% rate. Zero rated goods in Belgium are:
+
+    - Daily and weekly newspapers, as well as periodical publications that meet a specific criteria.
+    - Recyclable materials such as waste and scrap intended for recycling.
+    - Educational materials under specific conditions.
+
+    To create an invoice with zero rated goods, use the tax key `zero` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `Z` (zero rated goods) when the silo entry is built.
+
+    <Note>
+      With zero-rated supplies, businesses can still reclaim input VAT on their purchases, whereas with exempt supplies they cannot.
+    </Note>
+
+    <CodeGroup>
+      <ZeroRateMin />
+      <ZeroRate />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B exempt invoice">
+    Exempt invoices are used for B2B transactions that are exempt from VAT, which also covers exemptions in internal operations.
+
+    To create an exempt invoice, use the tax key `exempt` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `E` when the silo entry is built. You must also state the reason for the exemption through the [CET VATEX](https://docs.gobl.org/catalogues/cef#cef-vatex) - VAT exemption reason codes.
+
+    <Note>
+      Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` tax id must be valid.
+    </Note>
+
+    <CodeGroup>
+      <ExemptMin />
+      <Exempt />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B services → EU customer (Reverse Charge)">
+    Reverse charge invoices are used for B2B services provided to customers in other EU member states. Reverse charge must be applied when:
+
+    - The customer is a registered business in another EU member state (has a valid EU VAT ID).
+    - The service is provided to a business customer (B2B), not a consumer.
+    - The service is subject to VAT but the customer accounts for the VAT in their own country.
+
+    To create a reverse charge invoice, use the tax key `reverse-charge` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `AE` (reverse charge) when the silo entry is built.
+
+    <Note>
+      With reverse charge, no VAT is charged by the supplier. The customer accounts for VAT in their own country. Both `supplier` and `customer` VAT ID must be valid and registered in the EU VIES system.
+    </Note>
+
+    <CodeGroup>
+      <ReverseChargeMin />
+      <ReverseCharge />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B goods → EU customer (Intra-Community)">
+    Intra-community supply invoices are used for B2B goods delivered to customers in other EU member states. Intra-community supplies must be applied when:
+
+    - The customer is a registered business in another EU member state (has a valid EU VAT ID).
+    - Goods are physically delivered to another EU member state.
+    - The supply is exempt from VAT in the origin country and subject to VAT in the destination country.
+
+    To create an intra-community supply Peppol invoice, use the tax key `intra-community` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `K` (VAT exempt for EEA intra-community supply of goods and services) when the silo entry is built.
+
+    <Note>
+      With intra-community supplies in the EU, the customer accounts for VAT in their destination country. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+    </Note>
+
+    <CodeGroup>
+      <IntraCommunityMin />
+      <IntraCommunity />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B services → international customer (Outside Scope)">
+    Outside scope invoices are used for B2B services provided to customers outside the EU.
+
+    To create an outside scope Peppol invoice, use the tax key `outside-scope` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017)addon will automatically set the UNTDID 5305 tax category to `O` (Services outside scope of tax) when the silo entry is built.
+
+    <Note>
+      Services provided to non-EU customers are generally outside the scope of EU VAT.
+    </Note>
+
+    <CodeGroup>
+      <OutsideScopeMin />
+      <OutsideScope />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Belgium - B2B goods → international customer (Export)">
+    Export invoices are used for B2B goods delivered to customers outside the EU.
+
+    To create an export Peppol invoice, use the tax key `export` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `G` (Free export item, tax not charged) when the silo entry is built.
+
+    <Note>
+      Exported goods are exempt from VAT. The `supplier` must be previously registered with the tax authority. Customer tax identification is optional but recommended for record-keeping purposes.
+    </Note>
+
+    <CodeGroup>
+      <ExportMin />
+      <Export />
+    </CodeGroup>
+  </Accordion>
+
+</AccordionGroup>
