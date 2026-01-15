@@ -1,6 +1,6 @@
 ---
-title: "VERI*FACTU Supplier onboarding"
-sidebarTitle: "VERI*FACTU Suppliers"
+title: "VERI*FACTU Supplier Onboarding Guide"
+sidebarTitle: "VERI*FACTU Onboarding"
 description: "Create and register suppliers in Spain with VERI*FACTU."
 ---
 
@@ -19,7 +19,7 @@ For this process, the supplier can sign the agreement PDF with a valid [digital 
 This guide will...
 
 1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label))
-2. The process of completing the supplier onboarding wizard, 
+2. The process of completing the supplier onboarding wizard,
 3. Explaining the approval process and what to do in case of rejection.
 
 ## Set-up
@@ -84,7 +84,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
   <Steps>
     <Step title="Upload a supplier">
-      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT: 
+      Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party) (example below). Strictly required fields are company `name` and `tax_id` (the supplier will be able to supplement the information as [required by the AEAT](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf)). To reduce user input errors, it's recommended filling the fields as required by the AEAT:
 
       <SupplierAccordion />
 
@@ -111,7 +111,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
     <Tabs>
       <Tab title="Your own company">
-        Within the silo entry in console, select **Meta** and then click **verifactu.invopop.com**. This will launch the registration wizard for your company. 
+        Within the silo entry in console, select **Meta** and then click **verifactu.invopop.com**. This will launch the registration wizard for your company.
 
         <Frame>
           <img
@@ -159,7 +159,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
 
     Invopop's commitment is to review agreement documentation in less than 72 hours. However, in practice this will happen in less than 24 hours if the wizard is completed in workdays.
 
-    
+
     Once registration wizard has been completed, the supplier's status will change to `Registered`. If not successful because the supplier did not complete the process or their documentation was rejected, the status will change to `Rejected`, and you can inspect the job history of this document to see the reason.
 
         <Frame caption="Supplier registered successfully">
@@ -346,19 +346,19 @@ If you have special needs regarding the onboarding of suppliers for VERI\*FACTU 
   1. [Create a supplier entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
     Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
 
-  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`https://api.invopop.com/transform/v1/jobs/{id}`<br />
+  2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`/transform/v1/jobs/{id}`<br />
     Using the supplier registration workflow ID and Silo Entry ID.
 
-  3. [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch) `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
+  3. [Generate agreement PDF](/api-ref/apps/verifactu/agreement-fetch) `/apps/verifactu/v1/entry/{silo_entry_id}/agreement`<br />
     The agreement file will be created with the supplier's data.
 
-  4. [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload) `apps/verifactu/v1/entry/:silo_entry_id/agreement`<br />
+  4. [Upload agreement PDF](/api-ref/apps/verifactu/agreement-upload) `/apps/verifactu/v1/entry/{silo_entry_id}/agreement`<br />
     Upload the agreement into the supplier's silo entry.
 
-  5. [Upload identity images](/api-ref/apps/verifactu/identity-upload) `apps/verifactu/v1/entry/:silo_entry_id/identity`<br />
+  5. [Upload identity images](/api-ref/apps/verifactu/identity-upload) `/apps/verifactu/v1/entry/{silo_entry_id}/identity`<br />
     Upload the ID into the supplier's silo entry (can be DNI, NIE or Passport).
-    
-  6. [Confirm Upload](/api-ref/apps/verifactu/confirm) `https://api.invopop.com/apps/verifactu/v1/entry/:silo_entry_id/confirm`<br />
+
+  6. [Confirm upload](/api-ref/apps/verifactu/confirm) `/apps/verifactu/v1/entry/{silo_entry_id}/confirm`<br />
     Call this endpoint to confirm that everything has been prepared correctly and the supplier is ready to start operating.
 
 ## Unregister a supplier
@@ -408,7 +408,7 @@ Unregistering a supplier is essentially revoking their invoice issuing priviledg
 
     In contrast, certificates generated directly by applications like Adobe Acrobat do not involve any identity verification. They are self-signed and therefore cannot be used for official submissions or as valid digital signatures in AEAT or government procedures.
 
-    If you wish to obtain a certificate that is valid for most (if not all) Spanish government procedures, you can do so by following the procedure on [certificates page of the FNMT](https://www.sede.fnmt.gob.es/certificados/persona-fisica). For instructions on how to make it available in Acrobat Reader to sign official documents, consult [this PDF](https://www.sede.fnmt.gob.es/documents/10445900/10528353/Firmar_documento_PDF_Adobe_Acrobat_Reader_DC.pdf). 
+    If you wish to obtain a certificate that is valid for most (if not all) Spanish government procedures, you can do so by following the procedure on [certificates page of the FNMT](https://www.sede.fnmt.gob.es/certificados/persona-fisica). For instructions on how to make it available in Acrobat Reader to sign official documents, consult [this PDF](https://www.sede.fnmt.gob.es/documents/10445900/10528353/Firmar_documento_PDF_Adobe_Acrobat_Reader_DC.pdf).
 
     Otherwise, we require the secondary procedure of signing the document by handwritten signature, and an official ID as proof of identity as required by the AEAT.
 </Accordion>

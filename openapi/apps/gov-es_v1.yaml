@@ -6,12 +6,11 @@ info:
     email: dev@invopop.com
     name: Invopop Developers
   description:
-    Set of end-points that help you test access to the Invopop API and
-    generate data.
+    Set of end-points that help you test access to the Spain app API.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: VERI*FACTU Service API
+  title: Spain Service API
   version: 0.1.0
 servers:
   - description: production
@@ -19,14 +18,33 @@ servers:
 security:
   - InvopopAuth: []
 paths:
-  /apps/verifactu/v1/entry/{silo_entry_id}/agreement:
+  /apps/gov-es/v1/entry/{silo_entry_id}/{system}/agreement:
     get:
       x-mint:
         mcp:
           enabled: true
-          name: get-verifactu-agreement
+          name: get-gov-es-agreement
           description: Generate a PDF agreement of a previously prepared org.Party silo entry.
       description: Generate a PDF agreement of a previously prepared org.Party silo entry.
+      parameters:
+      - description: ID of the org.Party silo entry to generate the agreement for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the org.Party silo entry to generate the agreement for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: System in which the party is being registered.
+        in: path
+        name: system
+        required: true
+        schema:
+          description: System in which the party is being registered.
+          title: System
+          type: string
+          enum: ["sii"]
       responses:
         "200":
           description: Successfully generated PDF of the agreement for the supplier or representative to sign.
@@ -55,6 +73,25 @@ paths:
                     description: Details of the error.
     post:
       description: Upload a signed copy of the PDF agreement.
+      parameters:
+      - description: ID of the org.Party silo entry to upload the agreement for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the org.Party silo entry to upload the agreement for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: System in which the party is being registered.
+        in: path
+        name: system
+        required: true
+        schema:
+          description: System in which the party is being registered.
+          title: System
+          type: string
+          enum: ["sii"]
       requestBody:
         content:
           application/json:
@@ -77,9 +114,28 @@ paths:
       responses:
         "202":
           description: "No content"
-  /apps/verifactu/v1/entry/{silo_entry_id}/identity:
+  /apps/gov-es/v1/entry/{silo_entry_id}/{system}/identity:
     post:
       description: Upload an image of an identity document.
+      parameters:
+      - description: ID of the org.Party silo entry to upload the identity for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the org.Party silo entry to upload the identity for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: System in which the party is being registered.
+        in: path
+        name: system
+        required: true
+        schema:
+          description: System in which the party is being registered.
+          title: System
+          type: string
+          enum: ["sii"]
       requestBody:
         content:
           application/json:
@@ -107,9 +163,28 @@ paths:
       responses:
         "202":
           description: "No content"
-  /apps/verifactu/v1/entry/{silo_entry_id}/confirm:
+  /apps/gov-es/v1/entry/{silo_entry_id}/{system}/confirm:
     post:
       description: Confirm that the upload process has completed.
+      parameters:
+      - description: ID of the org.Party silo entry to confirm the upload for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the org.Party silo entry to confirm the upload for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: System in which the party is being registered.
+        in: path
+        name: system
+        required: true
+        schema:
+          description: System in which the party is being registered.
+          title: System
+          type: string
+          enum: ["sii"]
       responses:
         "202":
           description: "No content"
