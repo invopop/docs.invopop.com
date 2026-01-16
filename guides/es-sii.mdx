@@ -5,9 +5,11 @@ description: "Issue invoices in Spain with SII."
 keywords: ['sii']
 ---
 
-import WorkflowExample from '/snippets/workflows/templates/es/sii-record-issued.mdx';
+import IssuedWorkflow from '/snippets/workflows/templates/es/sii-record-issued.mdx';
+import ReceivedWorkflow from '/snippets/workflows/templates/es/sii-record-received.mdx';
 import B2CInvoice from '/snippets/invoices/es/sii-b2c.mdx';
 import B2BInvoice from '/snippets/invoices/es/sii-b2b.mdx';
+import B2BReceivedInvoice from '/snippets/invoices/es/sii-b2b-received.mdx';
 import B2BServicesEUClient from '/snippets/invoices/es/sii-b2b-services-eu.mdx';
 import B2BGoodsEUClient from '/snippets/invoices/es/sii-b2b-goods-eu.mdx';
 import B2BServicesNoEUClient from '/snippets/invoices/es/sii-b2b-services-no-eu.mdx';
@@ -20,48 +22,82 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 
 ## Introduction
 
-SII (Suministro Inmediato de Información) is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires large businesses to report invoices through certified software. The system submits invoices in the SII format to the tax authorities.
+SII (Suministro Inmediato de Información) is a fiscal initiative by the Spanish Tax Agency (AEAT) that requires large businesses to report invoices through certified software. The system records issued and received invoices.
 
-<Note>SII is mandatory for companies that meet certain requirements. Companies reporting with VERI*FACTU or TicketBAI are exempt from reporting with SII.</Note>
+<Note>
+  SII is mandatory for companies that meet certain requirements. Companies reporting with VERI*FACTU or TicketBAI are exempt from reporting with SII.
+
+  Invopop provides a foundational implementation for SII with limitations, please check the current [implementation scope](/apps/spain#limitations) for more information.
+</Note>
 
 ## Prerequisites
 
-To issue your first SII invoice, you must have had registered at least one supplier. Make sure you read and implemented the [SII supplier onboarding guide](/guides/es-sii-supplier) before continuing with this guide.
+To issue your first SII invoice, you must have registered at least one supplier. Make sure you read and implemented the [SII supplier onboarding guide](/guides/es-sii-supplier) before continuing with this guide.
 
 
 ## Setup
 
-Add a new workflow to your workspace for issuing invoices. You can start with the template below.
+Add a new workflow to your workspace to issue invoices. You can start with the template below.
 
 <Tabs>
   <Tab title="Template">
-    <Card title="SII invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-invoice" cta="Add to my workspace">
-      This workflow will issue an invoice through SII.
+    <Card title="SII issued invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-record-issued" cta="Add to my workspace">
+      This workflow will record an issued invoice in the SII system.
     </Card>
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
-    <WorkflowExample />
+    <IssuedWorkflow />
   </Tab>
   <Tab title="Build from scratch">
     In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
 
-    1. **Sign Envelope** - Signs the SII document.
-    3. **Record invoice in SII** - Records the invoice in SII.
-    4. **Generate PDF** - Creates the PDF invoice with the required QR code.
+    1. **Set State** - Select `Processing`. This initial state marks the document as being processed.
+    2. **Add Sequential Code** - Use a `Dynamic` series with a name like "SII".
+    3. **Sign Envelope** - Signs the document.
+    4. **Record issued invoice in SII** - Records the issued invoice in SII.
+    5. **Generate PDF** - Creates the PDF invoice with the required QR code.
+    6. **Set State** - Select `Sent`. This final state marks the document as being sent.
 
     In the Error Handling section, add the **Set State** action and select `Error`.
 
   </Tab>
 </Tabs>
 
-Keep the `Workflow ID` at hand, you'll use it later.
+You can also add a new workflow to your workspace to record received invoices, if you plan to report those to SII:
+
+<Tabs>
+  <Tab title="Template">
+    <Card title="SII received invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-record-received" cta="Add to my workspace">
+      This workflow will record a received invoice in the SII system.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <ReceivedWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
+
+    1. **Set State** - Select `Processing`. This initial state marks the document as being processed.
+    2. **Add Sequential Code** - Use a `Dynamic` series with a name like "SII".
+    3. **Sign Envelope** - Signs the document.
+    4. **Record received invoice in SII** - Records the received invoice in SII.
+    5. **Generate PDF** - Creates the PDF invoice with the required QR code.
+    6. **Set State** - Select `Sent`. This final state marks the document as being sent.
+
+    In the Error Handling section, add the **Set State** action and select `Error`.
+
+  </Tab>
+</Tabs>
+
+Keep each `Workflow ID` at hand, you'll use them later.
 
 <Info>
   SII allows for document modifications after submission. If a document is rejected or contains errors, update the GOBL details and resubmit to the same workflow.
 </Info>
-
 
 ## Issue an Invoice
 
@@ -183,7 +219,7 @@ Keep the `Workflow ID` at hand, you'll use it later.
   <Step title="Send the Invoice to the SII invoice workflow">
     Send the invoice to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _SII invoice_ workflow created on setup.
+    - `workflow_id`: use the Workflow ID of the _SII issue invoice_ workflow created on setup.
     - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
 
     The invoice's status will change to `Sent` when the workflow completes successfully.
@@ -242,7 +278,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
   <Step title="Send the Credit Note to the SII invoice workflow">
     Send the credit note to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _SII invoice _workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the _SII issued invoice_ workflow we created during setup
     - `silo_entry_id`: use the The Silo Entry ID of the credit note you've just uploaded.
 
     The credit note's status will change to `Sent` when the workflow completes successfully.
@@ -276,12 +312,50 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
   <Step title="Send the Corrective Invoice to the SII invoice workflow">
     Send the corrective invoice to the SII workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the _SII invoice_ workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the _SII issued invoice_ workflow we created during setup
     - `silo_entry_id`: use the The Silo Entry ID of the corrective invoice you've just uploaded.
 
     The corrective invoice's status will change to `Sent` when the workflow completes successfully.
   </Step>
 </Steps>
+
+## Record a Received Invoice
+
+<Steps>
+  <Step title="Upload a Received Invoice">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the received invoice details. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field with these required fields:
+
+    - Add the [`es-sii-v1`](https://docs.gobl.org/addons/es-sii-v1) addon
+    - `customer`: Use the details of the party you've registered before.
+
+    You can copy the example invoice below as a reference. Note that any invoice type from the previous sections (issued invoices) could also be used, as well as credit notes, by simply swapping the `supplier` and `customer` fields.
+
+    <AccordionGroup>
+      <Accordion title="B2B Standard Received Invoice">
+        This is a standard B2B invoice received from a supplier where:
+
+        - The supplier is the business that has issued the invoice to you.
+        - The customer is your business (previously registered).
+        <B2BReceivedInvoice />
+      </Accordion>
+    </AccordionGroup>
+
+    After uploading you'll see the document in the **Invoices** section with status `Empty`.
+  </Step>
+  <Step title="Send the Invoice to the SII received invoice workflow">
+    Send the invoice to the SII received invoice workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the _SII received invoice_ workflow created on setup.
+    - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
+
+    The invoice's status will change to `Sent` when the workflow completes successfully.
+
+    You can verify that the PDF was generated by clicking on the invoice and selecting the PDF from the "Files" tab.
+
+  </Step>
+</Steps>
+
+
 
 {/*
 ## Cancel an Invoice
