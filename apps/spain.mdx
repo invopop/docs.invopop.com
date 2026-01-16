@@ -64,12 +64,50 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 	**SII Key Features**
 
 	1. **Workflow Automation:** This app makes several workflow actions available to report invoices and onboard suppliers.
-	2. **SII Reporting:** Invoices are reported directly to the AEAT through the SII system API, ensuring compliance with Spanish tax reporting requirements.
+	2. **SII Reporting:** Invoices are reported directly to the AEAT through the SII system API, ensuring compliance with Spanish tax reporting requirements for issued and received invoice registries (with [limitations](#limitations)).
 	3. **Supplier Registration & Verification:** This app will generate a registration link where suppliers will upload their identity documents and sign an agreement to report invoices under their name (also available through the API).
 	4. **White-Label:** The process allows reporting on behalf of clients (white-label) or directly as an organization, according to user needs.
 
 	Make sure to check out our [SII Onboarding guide](/guides/es-sii-supplier) and [SII Invoicing guide](/guides/es-sii) for instructions on how to set up and use these actions in your workflows.
 	</Tab>
+
+	<Tab title="Limitations">
+
+	### SII Implementation Scope
+
+	<Note>Our SII implementation is under active development and focuses on core functionality for the most common use cases. If these limitations affect your business requirements, please contact us to discuss your specific needs and our implementation roadmap.</Note>
+
+	The current SII integration provides a foundational implementation covering the primary VAT registry books required for most businesses operating in Spain. Understanding what is and isn't supported will help you determine if this solution meets your compliance needs.
+
+	#### Supported Registry Books
+
+	We currently support the two most commonly used VAT registry books:
+
+	- **Libro de Registro de Facturas Expedidas** (Issued Invoices Registry)
+	- **Libro de Registro de Facturas Recibidas** (Received Invoices Registry) - [with specific limitations](#received-invoices-registry-limitations)
+
+	#### Unsupported Registry Books
+
+	The following VAT registry books are **not supported**:
+
+	- **Libro de Registro de Bienes de Inversión** (Investment Goods Registry)
+	- **Libro de Registro de Determinadas Operaciones Intracomunitarias** (Specific Intra-Community Operations Registry)
+	- Other registries such as cash payments (*pagos en metálico*), travel agency operations (*operaciones de agencias de viajes*), etc.
+
+	#### Received Invoices Limitations
+
+	When reporting to the *Libro de Registro de Facturas Recibidas*, the following key limitations apply:
+
+	1. **Deductible VAT matching:** The deductible VAT amount (*cuota deducible*) always equals the charged VAT amount (*cuota repercutida*). Invoices where the deductible VAT is lower than the charged VAT cannot be reported.
+
+	2. **Investment goods flag:** Invoices cannot be marked as investment goods (*bienes de inversión*) within the received invoices registry.
+
+	3. **Deduction period alignment:** The deduction period must match the settlement period. Deduction periods that differ from the liquidation periods cannot be specified.
+
+	These represent the primary limitations in the current implementation.
+
+	</Tab>
+
 	<Tab title="Actions">
 		The following workflow actions will be available once you install and enable this app:
 
@@ -183,6 +221,7 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 		* [Upload Identity Image](/api-ref/apps/gov-es/identity-upload)
 		* [Confirm](/api-ref/apps/gov-es/confirm)
 	</Tab>
+
 </Tabs>
 
 ---
