@@ -1,15 +1,213 @@
 ---
 title: "Invoicing compliance in Argentina"
 sidebarTitle: "Compliance"
-description: "Integration in progress"
-icon: "transporter-empty"
+description: "Comprehensive guide to Argentina's mandatory e-invoicing requirements, Factura Electrónica implementation, and e-reporting obligations for B2B, B2C, and B2G transactions"
 ---
 
-## Current status
+import ArgentinaResources from '/snippets/tables/argentina-resources.mdx';
 
-In active development, expected Q1 2026.
+<Card title="Argentina's e-invoicing regulation timeline" size="20" icon="timeline" href="/timelines/argentina" horizontal>
+  View current and upcoming regulation  →
+</Card>
 
-<Note>For inquiries about Argentina, contact us at support@invopop.com.</Note>
+<ArgentinaResources />
+
+## Executive summary
+
+Argentina operates a mandatory electronic invoicing system through **ARCA (Agencia de Recaudación y Control Aduanero)**, formerly known as AFIP until November 2024, the national tax and customs authority. The system uses a **clearance model** (also known as continuous transaction control or CTC), where each invoice must be submitted to ARCA for validation and authorization in real time before it becomes legally valid.
+
+The Argentine e-invoicing system requires all registered taxpayers to issue electronic invoices (facturas electrónicas). Being a registered taxpayer means you hold a **CUIT (Clave Única de Identificación Tributaria)**, Argentina's tax identification number, and have a **Clave Fiscal**, a digital key used to access ARCA services online. Taxpayers can issue e-invoices either through ARCA's web portal or by integrating with **WSFE (Webservices de Factura Electrónica)**, ARCA's web service infrastructure.
+
+E-invoices are generated in **XML format** conforming to ARCA's prescribed schema (not a global standard like UBL). Each invoice requires a **CAE (Código de Autorización Electrónico)**, a 14-digit authorization code issued by ARCA that validates the invoice and must be included on the invoice for it to be legally valid. The system covers B2B, B2C, and B2G transactions across various invoice types (A, B, C, E, and others).
+
+E-reporting in Argentina is fully integrated into the electronic invoicing system. Under the clearance model, issuing an e-invoice automatically fulfills reporting obligations to ARCA without requiring separate periodic submissions. This real-time reporting gives ARCA continuous visibility into business transactions, enabling automated VAT reconciliation and streamlined audits.
+
+## Invoicing in Argentina
+
+<AccordionGroup>
+  <Accordion title="Factura Electrónica A (B2B, VAT-registered businesses)">
+
+    Factura A is used by VAT-registered businesses (Responsables Inscriptos) when selling to other VAT-registered entities. These invoices include detailed VAT breakdowns and allow the buyer to claim input VAT credits.
+
+    |            |             |
+    |------------|-------------|
+    | **Models** | B2B, B2G |
+    | **Format** | XML (ARCA schema) |
+    | **Infrastructure** | [ARCA](https://www.afip.gob.ar) |
+    | **Model** | Clearance continuous transaction control (CTC) |
+    | **Code** | 001 (Invoice), 002 (Debit Note), 003 (Credit Note) |
+    | **Scope & Deadline** | Mandatory for all registered taxpayers |
+    | **Agency** | [ARCA](https://www.afip.gob.ar) |
+    | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
+
+  </Accordion>
+
+  <Accordion title="Factura Electrónica B (B2C, non-VAT-registered clients)">
+
+    Factura B is used when selling to non-VAT-registered clients (final consumers or Monotributistas). VAT is included in the price but not separately detailed for input credit purposes.
+
+    |            |             |
+    |------------|-------------|
+    | **Models** | B2C, B2B |
+    | **Format** | XML (ARCA schema) |
+    | **Infrastructure** | [ARCA](https://www.afip.gob.ar) |
+    | **Model** | Clearance continuous transaction control (CTC) |
+    | **Code** | 006 (Invoice), 007 (Debit Note), 008 (Credit Note) |
+    | **Scope & Deadline** | Mandatory for all registered taxpayers |
+    | **Agency** | [ARCA](https://www.afip.gob.ar) |
+    | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
+
+  </Accordion>
+
+  <Accordion title="Factura Electrónica C (Monotributistas)">
+
+    Factura C is used by taxpayers under the Simplified Regime (Monotributo), a simplified tax scheme for small businesses and self-employed individuals. These invoices do not discriminate VAT.
+
+    |            |             |
+    |------------|-------------|
+    | **Models** | B2C, B2B |
+    | **Format** | XML (ARCA schema) |
+    | **Infrastructure** | [ARCA](https://www.afip.gob.ar) |
+    | **Model** | Clearance continuous transaction control (CTC) |
+    | **Code** | 011 (Invoice), 012 (Debit Note), 013 (Credit Note) |
+    | **Scope & Deadline** | Mandatory for Monotributistas |
+    | **Agency** | [ARCA](https://www.afip.gob.ar) |
+    | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
+
+  </Accordion>
+
+  <Accordion title="Factura Electrónica E (Exports)">
+
+    Factura E is used for export operations of goods and services. When exporting services that meet certain conditions, ARCA treats them like goods exports, meaning the taxpayer is exempt from VAT and can claim back VAT paid on local purchases.
+
+    |            |             |
+    |------------|-------------|
+    | **Models** | B2B (Export) |
+    | **Format** | XML (ARCA schema) |
+    | **Infrastructure** | [ARCA](https://www.afip.gob.ar) |
+    | **Model** | Clearance continuous transaction control (CTC) |
+    | **Code** | 019 (Invoice), 020 (Debit Note), 021 (Credit Note) |
+    | **Scope & Deadline** | Mandatory for export operations |
+    | **Agency** | [ARCA](https://www.afip.gob.ar) |
+    | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
+
+  </Accordion>
+</AccordionGroup>
+
+## E-reporting
+
+E-reporting is fully integrated into Argentina's electronic invoicing system rather than being a separate process. Under the clearance model, every electronic invoice is generated, submitted to ARCA, validated, and authorized in real time. Only upon receiving the CAE (Código de Autorización Electrónico) is the invoice legally valid and simultaneously reported to the tax authority. This means **issuing an e-invoice automatically fulfills reporting obligations** without requiring separate periodic submissions. This real-time architecture gives ARCA continuous visibility into all business transactions, enabling automated VAT reconciliation and streamlined audits.
+
+## Regulation
+
+<AccordionGroup>
+  <Accordion title="Invoice numbering system">
+
+    Argentine invoices use a two-part numbering system: **XXXXX-YYYYYYYY**
+
+    - **Punto de Venta (POS)**: A 5-digit code linked to the electronic invoicing method (e.g., Web Service, ARCA portal). Each POS has its own independent sequence and is listed in an official ARCA table.
+    - **Sequential Number**: An 8-digit code starting from `00000001` and increasing by 1 with each invoice. The sequence must be continuous with no skipped or repeated numbers.
+
+    The invoice type (A, B, C, etc.) and POS together define the invoice series. For example:
+    - Factura A from POS 0001: `00001-00000001`
+    - Factura B from POS 0002: `00002-00000001`
+
+  </Accordion>
+
+  <Accordion title="Main tax types in Argentina">
+
+    **IVA (VAT - Impuesto al Valor Agregado)**
+
+    VAT is the primary tax applied to most goods and services. Different rates (alícuotas) apply based on the nature of the product or service:
+
+    | **AFIP Code** | **Rate** | **Description** |
+    |---------------|----------|-----------------|
+    | 3 | 0% | VAT-exempt sales (exports, exempt activities) |
+    | 8 | 5% | Special reduced rate |
+    | 9 | 2.5% | Special reduced rate |
+    | 4 | 10.5% | Reduced rate (construction, agriculture) |
+    | 5 | 21% | Standard VAT rate |
+    | 6 | 27% | Higher rate (utilities, telecom services) |
+
+    Only taxpayers registered as *Responsables Inscriptos* can deduct VAT on their purchases. When VAT is deductible, each invoice line should include the base amount, the alícuota code, the applicable VAT rate percentage, and the resulting tax amount.
+
+    **Other Tax Types**
+
+    | **Tax** | **Description** | **Applies To** |
+    |---------|----------------|----------------|
+    | **IIBB** | Gross income tax (provincial) | Varies by province and activity |
+    | **Ganancias** | Income tax | Based on net profit |
+    | **Impuestos Internos** | Internal taxes | Alcohol, tobacco, luxury goods |
+
+    GOBL supports these tax types in its [Argentina tax regime](https://docs.gobl.org/regimes/ar).
+
+  </Accordion>
+
+  <Accordion title="Recent regulatory changes (2025-2026)">
+
+    **Consumer Tax Transparency Regime (General Resolution 5614/2024)**
+
+    Starting January 1, 2025, large companies must itemize VAT and other indirect national taxes on electronic invoices. All other taxpayers must comply by April 1, 2025.
+
+    **Foreign Currency Invoicing (General Resolution 5616/2024)**
+
+    Exchange rate information must be included in electronic invoices of types A, B, C, and E. Implementation timeline:
+    - January 15, 2025: WebService technical manuals available
+    - March 5, 2025: Mobile Invoicing system and electronic receipt platforms updated
+    - April 15, 2025: Mandatory use of WebService technical manuals
+
+  </Accordion>
+
+  <Accordion title="Legally required invoice content">
+
+    - **CUIT** of both issuer and receiver
+    - **Invoice number** (Punto de Venta + Sequential Number)
+    - **CAE (Código de Autorización Electrónica)**: 14-digit authorization code from ARCA
+    - **VAT Status** (*Tipo de Contribuyente*) of both parties
+    - **Date and place of issuance**
+    - **Product/service descriptions** with quantities and unit prices
+    - **Tax breakdown** (IVA, IIBB if applicable, etc.) with appropriate alícuota codes
+    - **Total amounts** with separate display of net, taxes, and gross
+    - **QR code** generated according to ARCA specifications
+    - **Economic activity code** of the issuer
+
+    For export invoices (Factura E), additional information about the destination country and export regime may be required.
+
+  </Accordion>
+
+  <Accordion title="Archival period">
+
+    Electronic invoices must be archived for a minimum of **10 years** in Argentina. This requirement applies to **both the issuer and the receiver**. The archive must include:
+
+    - The original electronic invoice (XML format)
+    - The CAE authorization code
+    - Digital signature and timestamp
+    - Audit logs of submissions
+
+    Electronic storage is allowed, and the data must reside in Argentina. The archived e-invoices must maintain integrity (unaltered original XML with its digital signature and CAE) and be available for inspection by ARCA upon request. The electronic archive is legally equivalent to a paper original.
+
+  </Accordion>
+
+  <Accordion title="WSFE Web Services">
+
+    ARCA provides web service infrastructure for automated invoice submission. Currently available web services include:
+
+    - **wsfev1** (Web Service de Factura Electrónica V1): For invoices A, B, C, and M without item detail, supporting CAE and CAEA
+    - **wsmtxca** (Web Service Factura Electrónica): For invoices A and B with item details, supporting CAE and CAEA
+    - **wsfexv1** (Web Service de Factura Electrónica de Exportación V1): For type E (export) invoices
+
+    Authentication requires the WSAA (Webservice de Autenticación y Autorización) to obtain a Ticket de Acceso (TA), which uses an X.509 digital certificate issued by ARCA's Certifying Authority.
+
+  </Accordion>
+
+  <Accordion title="What is the clearance model?">
+
+    A clearance model (also called real-time validation or continuous transaction control) is a regulatory architecture in which each invoice must be electronically submitted to the tax authority and formally approved before it becomes legally valid.
+
+    In Argentina's case, the issuer submits invoice data to ARCA, which validates it and returns a CAE (Código de Autorización Electrónico). Only with this authorization code can the invoice be legally issued to the customer. This architecture gives ARCA real-time visibility into all business transactions, preventing fraud and enabling automated tax compliance verification.
+
+  </Accordion>
+</AccordionGroup>
 
 ---
 
@@ -21,4 +219,3 @@ In active development, expected Q1 2026.
 >
   Ask and answer questions about Argentina's regulation →
 </Card>
-
