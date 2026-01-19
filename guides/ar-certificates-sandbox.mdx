@@ -1,179 +1,168 @@
 ---
-title: "Habilitar administrador de certificados de testing"
-sidebarTitle: "Certificados de testing"
-description: "Habilitar administrador de certificados de testing"
+title: "Guía para autorizar a ARCA a emitir facturas en sandbox"
+sidebarTitle: "Certificados"
+description: "Genera un certificado en ARCA (Agencia de Recaudación y Control Aduanero de Argentina) para emitir facturas con tu proveedor de facturación en sandbox"
 ---
 
 
-# Habilitar administrador de certificados de testing
-
-Para agregar la aplicación **«WSASS - Autogestión Certificados Homologación»** a nuestro escritorio de ARCA primero debemos ingresar en **«Administrador de Relaciones de Clave Fiscal»**
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FiVfqmWM4ZTLEWuDvtKyu%2FScreenshot%202025-02-17%20at%2009-32-46%20Portal%20de%20Clave%20Fiscal.png?alt=media&#x26;token=6a83dfe5-4abb-42ee-a7fd-940b09ca1190" alt="" />
-</Frame>
-
-En caso de tener permiso para administrar las relaciones de otros contribuyentes deberemos elegir el que queremos administrar, caso contrario se elegirá el nuestro automáticamente. Siempre en modo testing recomendamos usar el usuario de uno mismo.
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FqHuoNs0bysYlQ15hLqyQ%2FScreenshot%202025-02-17%20at%2009-33-04%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=69d6792f-d205-4ad8-9480-fd1770f4e8d7" alt="" />
-</Frame>
-
-Luego elegimos «Adherir servicio»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FMAjUHCeTKBYa9lLw4Dbe%2FScreenshot%202025-02-17%20at%2009-33-18%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=c60bcc39-0985-4d13-8548-9994a1aa0297" alt="" />
-</Frame>
-
-Allí dentro elegimos «ARCA > Servicios interactivos > WSASS - Autogestión Certificados Homologación»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FpxNZ1ZKEpNkKRtKUVwqp%2FScreenshot%202025-02-17%20at%2009-33-51%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=d829e61e-ce68-4102-be17-e6f3e905ec33" alt="" />
-</Frame>
-
-Le damos a confirmar y ya tendremos acceso a la aplicación desde nuestro escritorio de ARCA
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2Fc9gqNn0hd0WCsP7glLvJ%2FScreenshot%202025-02-17%20at%2009-34-20%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=85cfc937-6e37-44e5-9d32-c59846aefa0e" alt="" />
-</Frame>
-
-# Obtener certificado de testing
-
-<Info>
-Si querés evitar este trabajo manual, podés hacerlo automáticamente a través de tu sistema con la [automatización para Crear certificado de desarrollo](https://afipsdk.com/docs/automations/create-cert-dev/nodejs/).
-</Info>
-
-## Paso 1 - Instalar OpenSSL
+Para que tu proveedor de facturación pueda emitir facturas en tu nombre ante AFIP en Argentina, necesitas generar un certificado SSL que confirme esta autorización. Esta es una guía detallada que te ayudará a hacerlo en el entorno de sandbox.
 
 
-Ahora debemos abrir una consola. En Windows se debe abrir en modo administrador y navegar hacia `C:\OpenSSL`
+Primero habilitaremos el servicio de **Administración de Certificados Digitales**. 
 
-## Paso 2 - Generar la clave de cifrado (key)
+<Steps>
+<Step title="Ingresar en Administrador de Relaciones de Clave Fiscal">
 
-Dentro de la consola lo primero que debemos ejecutar es el siguiente comando para generar el archivo key.
+  Desde el [portal de ARCA](https://www.afip.gob.ar/), iniciar sesión y luego ingresar en **Administrador de Relaciones de Clave Fiscal**
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-portal.png" alt="" />
+  </Frame>
 
-```bash
-openssl genrsa -traditional -out [nombre de archivo] 2048
-```
+</Step>
+<Step title="Elegir el contribuyente que queremos administrar">
 
-Reemplazando:
-
-> * `[nombre de archivo]` con el nombre que querés que se guarde el archivo key.
-
-Este archivo key es muy importante porque representa la «contraseña» con la que va a funcionar el certificado así que no debemos perderlo.
-
-Por ejemplo yo voy a generarlo de la siguiente forma
-
-```
-openssl genrsa -traditional -out keytest 2048
-```
+Si administras otros contribuyentes, primero elige cuál quieres gestionar. Si solo administras uno, el sistema seleccionará automáticamente tu perfil.
 
 <Warning>
-Las versiones mas antiguas de OpenSSL no soportan el parámetro -traditional, si no te funciona borralo
+	En Sandbox recomendamos usar tu propio usuario.
 </Warning>
 
-De esta forma el nombre de mi archivo key seria `keytest`
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-select-issuer.png" alt="" />
+  </Frame>
+</Step>
+<Step title="Adherir servicio de certificados digitales">
+Dar click en **Adherir servicio**
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-adherir-servicio.png" alt="" />
+  </Frame>
 
-## Paso 3 - Generar el Certificate Signing Request (csr)
+  Dentro elegimos **ARCA > Servicios interactivos > WSASS - Autogestión Certificados Homologación**.
 
-Una vez generada la key estamos listos para generar el CSR. Para ello debemos ejecutar el siguiente comando:
+    <Frame>
+    <img src="/assets/guides/ar-onboarding-homologacion.png" alt="" />
+  </Frame>
 
-```
-openssl req -new -key [nombre de archivo key] -subj "/C=AR/O=[nombre de la empresa]/CN=[nombre del certificado]/serialNumber=CUIT [CUIT]" -out [nombre de archivo para el CSR]
-```
+  Al pulsar **Confirmar** tendremos acceso a la aplicación desde nuestro escritorio de ARCA.
 
-Reemplazando:
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-confirmar.png" alt="" />
+  </Frame>
+</Step>
 
-> * `[nombre de archivo key]` con el nombre del archivo key generado en el paso anterior.
-> * `[nombre de la empresa]` con el nombre de la empresa para quien es el certificado. En testing recomendamos utilizar el nombre de uno para no generar confusiones.
-> * `[nombre del certificado]` con el nombre que quieres que tenga el certificado. Solo se pueden utilizar letras y números. Esto es a modo de que puedas reconocerlo luego en la pagina de AFIP si generas varios certificados para diferentes sistemas.
-> * `[CUIT]` con el CUIT de la empresa para quien es el certificado. De nuevo, en testing recomendamos usar el CUIT de uno para no generar confusiones.
-> * `[nombre de archivo para el CSR]` con el nombre que quieres que se guarde el archivo CSR
+</Steps>
 
-Por ejemplo yo lo generaría de la siguiente forma
 
-```bash
-openssl req -new -key keytest -subj "/C=AR/O=IvanM/CN=Test1/serialNumber=CUIT 11111111111" -out csr-test1
-```
+Una vez habilitado el servicio, generaremos el **certificado digital**:
 
-Donde en `11111111111` pondría mi CUIT
+<Steps>
+  <Step title="Verificar la información de tu empresa">
 
-Teniendo el archivos CSR ya podemos dirigirnos a la página de ARCA para generar el certificado.
+En el flujo de alta, verifica o corrige la información de la empresa:
 
-<Warning>
-ATENCIÓN: El archivo CSR no es lo mismo que el certificado, suele ser un error común confundirlos al momento de usar el certificado
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-info.png" alt="" />
+  </Frame>
+</Step>
+
+<Step title="Obtener el CSR">
+
+Un CSR es un bloque de texto codificado que le proporcionas a ARCA para solicitar un certificado SSL/TLS. Contiene información sobre tu organización y el dominio que deseas proteger.
+
+Copie el **Alias** y el **CSR**.
+
+<Warning>El archivo CSR no es lo mismo que el certificado, suele ser un error común confundirlos al momento de usar el certificado</Warning>
+
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-generate.png" alt="" />
+  </Frame>
+</Step>
+
+<Step title="Generar el certificado digital">
+  Dentro de nuestro escritorio de AFIP debemos ingresar en **«Administración de Certificados Digitales»**
+
+  <Note>En caso de no tener esta aplicación en tu escritorio debes volver al inicio de esta guía</Note>
+
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-administracion.png" alt="" />
+  </Frame>
+</Step>
+
+<Step title="Elegir el contribuyente que queremos administrar">
+
+  Si administras otros contribuyentes, primero elige cuál quieres gestionar. Si solo administras uno, el sistema seleccionará automáticamente tu perfil.
+
+  <Warning>
+	En Sandbox recomendamos usar tu propio usuario.
 </Warning>
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-autoridad.png" alt="" />
+  </Frame>
+</Step>
 
-## Paso 4 - Generar el certificado (cert)
 
-Dentro de nuestro escritorio de ARCA debemos ingresar en **«WSASS - Autogestión Certificados Homologación»**
+<Step title="Subir el CSR y asignar el Alias">
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2Fl48KI5JIJuCvUfsr7B8i%2FScreenshot%202025-02-17%20at%2010-07-17%20Portal%20de%20Clave%20Fiscal.png?alt=media&#x26;token=103b996c-495f-46df-8470-8e1db179ff20" alt="" />
-</Frame>
+Dentro de esta aplicación debemos ir a **Nuevo Certificado**. En esta pantalla, pegar el **Alias** y **CSR** que hemos copiado anteriormente Luego pulse en **Crear DN y obtener certificado**.
+    <Frame>
+    <img src="/assets/guides/ar-onboarding-creardn.png" alt="" />
+  </Frame>
 
-En caso de no tener esta aplicación en tu escritorio debes ver el tutorial [Habilitar administrador de certificados de testing](https://docs.afipsdk.com/recursos/tutoriales-pagina-de-arca/habilitar-administrador-de-certificados-de-testing)
+  En el último campo se generará el certificado que comienza por el texto `----BEGIN CERTIFICATE----`. Seleccionar todo el texto y copiarlo: 
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-generated.png" alt="" />
+  </Frame>
+</Step>
 
-Dentro de esta aplicación debemos ir a «Nuevo Certificado»
+<Step title="Pegar el certificado en el flujo de alta">
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FX6VkvHbYSYg50uBQEM5V%2Fimagen.png?alt=media&#x26;token=d94dad78-2d37-4d1d-b1d1-c22a6580cc6a" alt="" width="563" />
-</Frame>
+  Pegar el texto copiado anteriormente en el flujo de alta:
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-upload.png" alt="" />
+  </Frame>
 
-Allí en `1. Nombre simbólico del DN` debemos colocar el nombre que le pusimos al certificado dentro del CSR.
+</Step>
 
-En `2. Solicitud del certificado en formato PKCS#10` debemos pegar el contenido de nuestro CSR.&#x20;
+<Step title="Cear autorización de servicio">
 
-<Info>
-El CSR lo podes abrir con cualquier editor de texto para ver su contenido en texto plano.
-</Info>
+  En **1. Nombre simbólico del DN a autorizar** debemos seleccionar el certificado que queremos autorizar.
 
-Y luego apretar `Crear DN y obtener certificado`. En mi caso quedaría así
+  En **3. CUIT representado** debemos ingresar el CUIT con el cual queremos utilizar el web service. En modo testing recomendamos usar el CUIT propio para no crear confusión.
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FfQR7UrnLAN38FXARo3Wq%2Fimagen.png?alt=media&#x26;token=0f71b648-3624-4b7d-8c88-f084ded7697a" alt="" width="563" />
-</Frame>
+  En **5. Servicio al que desea acceder** debemos elegir **wsfe (Web Service de Factura Electrónica)**.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-authorize.png" alt="" />
+  </Frame>
 
-Y debajo se nos generara el certificado, este debemos guardarlo en nuestra computadora junto con la key para usarlo luego en la librería.&#x20;
+</Step>
 
-<Info>
-El CSR ya no lo necesitaremos, podemos eliminarlo.
-</Info>
+<Step title="Verifica que la autorización haya sido correcta">
 
-Ahora lo que nos falta por hacer es autorizar a que con este certificado se pueda acceder al/los web service/s que queramos usar.
+  Pulse en "Autorizaciones" para verificar que se creó la autorización correctamente
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-paste.png" alt="" />
+  </Frame>
 
-# Autorizar web service de testing
+</Step>
 
-<Info>
-Si querés evitar este trabajo manual, podés hacerlo automáticamente a través de tu sistema con la [automatización para Autorizar web service de desarrollo](https://afipsdk.com/docs/automations/auth-web-service-dev/nodejs/).
-</Info>
+<Step title="Verifica el alta">
 
-Para que los certificados puedan acceder a un web service se debe crear una autorización, esto se hace de la siguiente manera:
+  Si has realizado los pasos correctamente, verás las pantalla de "Registro completo". En caso de recibir un error, verifica que hayas realizado todos los pasos correctamente.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-complete.png" alt="" />
+  </Frame>
 
-Dentro de **«WSASS - Autogestión Certificados Homologación»**, que anteriormente en [Obtener certificado de testing](https://docs.afipsdk.com/recursos/obtener-certificado-de-testing#paso-4-generar-el-certificado-cert) explicamos cómo ingresar, debemos ir a «Crear autorización a servicio»
+</Step>
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FfYteXltgXdvlT3OERlNz%2Fimagen.png?alt=media&#x26;token=11ca9bf0-c80e-48e3-9afe-4c66d487c0a4" alt="" width="563" />
-</Frame>
+</Steps>
 
-Allí dentro en `1. Nombre simbólico del DN a autorizar` debemos seleccionar el certificado que queremos autorizar.
+Si has llegado a la pantalla de "Registro Completo", ya has otorgado autorización a tu proveedor de facturación para emitir facturas a través de ARCA. 
 
-En `3. CUIT representado` debemos ingresar el CUIT con el cual queremos utilizar el web service. En modo testing recomendamos usar el CUIT propio para no crear confusión.
 
-Y en `5. Servicio al que desea acceder` debemos elegir el web service a utilizar.\`
 
-Con todo esto listo debemos presionar en «Crear autorización de acceso»
-
-Por ejemplo para autorizar al Web service de factura electrónica me quedaría así
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FFbRadp4zrbIvORZXKsrO%2Fimagen.png?alt=media&#x26;token=c3ca0126-fdc7-427a-be4a-d1059956ab52" alt="" width="563" />
-</Frame>
-
-Luego ingresamos en «Autorizaciones» para verificar que se creó la autorización correctamente
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FiD2c2RN1dA0sOVhRGrMb%2Fimagen.png?alt=media&#x26;token=dff88610-2cbd-4f20-a270-919b25d3064a" alt="" width="563" />
-</Frame>
-
-Eso sería todo, ya estamos listos para usar el certificado con el web service autorizado

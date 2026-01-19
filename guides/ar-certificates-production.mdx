@@ -1,10 +1,14 @@
 ---
-title: "Habilitar administrador de certificados"
+title: "Guía para autorizar a ARCA a emitir facturas"
 sidebarTitle: "Certificados"
-description: "Habilitar administrador de certificados"
+description: "Genera un certificado en ARCA (Agencia de Recaudación y Control Aduanero de Argentina) para emitir facturas con tu proveedor de facturación"
 ---
 
 
+Para que tu proveedor de facturación pueda emitir facturas en tu nombre ante AFIP en Argentina, necesitas generar un certificado SSL que confirme esta autorización. Esta es una guía detallada que te ayudará a hacerlo en el entorno de producción.
+
+
+Primero habilitaremos el servicio de **Administración de Certificados Digitales**. 
 
 <Steps>
 <Step title="Ingresar en Administrador de Relaciones de Clave Fiscal">
@@ -41,242 +45,118 @@ Dar click en **Adherir servicio**
     <img src="/assets/guides/ar-onboarding-confirmar.png" alt="" />
   </Frame>
 </Step>
+
 </Steps>
 
 
+Una vez habilitado el servicio, generaremos el **certificado digital**:
 
+<Steps>
+  <Step title="Verificar la información de tu empresa">
 
+En el flujo de alta, verifica o corrige la información de la empresa:
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FfuKPLnNAYyt9oiuqsvAl%2FScreenshot%202025-02-17%20at%2010-13-33%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=dffa944a-c59a-4a32-b49c-dfa88f5f8509" alt="" />
-</Frame>
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-info.png" alt="" />
+  </Frame>
+</Step>
 
-# Obtener certificado de producción
+<Step title="Obtener el CSR">
 
-<Info>
-Si querés evitar este trabajo manual, podés hacerlo automáticamente a través de tu sistema con la [automatización para Crear certificado de producción](https://afipsdk.com/docs/automations/create-cert-prod/nodejs/).
-</Info>
+Un CSR es un bloque de texto codificado que le proporcionas a ARCA para solicitar un certificado SSL/TLS. Contiene información sobre tu organización y el dominio que deseas proteger.
 
+Copie el **Alias** y **descargue el CSR** a su ordernador.
 
-## Paso 2 - Generar la clave de cifrado (key)
+<Warning>El archivo CSR no es lo mismo que el certificado, suele ser un error común confundirlos al momento de usar el certificado</Warning>
 
-Dentro de la consola lo primero que debemos ejecutar es el siguiente comando para generar el archivo key.
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-generate.png" alt="" />
+  </Frame>
+</Step>
 
-```bash
-openssl genrsa -traditional -out [nombre de archivo] 2048
-```
+<Step title="Generar el certificado digital">
+  Dentro de nuestro escritorio de AFIP debemos ingresar en **«Administración de Certificados Digitales»**
 
-Reemplazando:
+  <Note>En caso de no tener esta aplicación en tu escritorio debes volver al inicio de esta guía</Note>
 
-> * `[nombre de archivo]` con el nombre que querés que se guarde el archivo key.
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-administracion.png" alt="" />
+  </Frame>
+</Step>
 
-Este archivo key es muy importante porque representa la «contraseña» con la que va a funcionar el certificado así que no debemos perderlo.
+<Step title="Elegir el contribuyente que queremos administrar">
 
-Por ejemplo yo voy a generarlo de la siguiente forma
+  Si administras otros contribuyentes, primero elige cuál quieres gestionar. Si solo administras uno, el sistema seleccionará automáticamente tu perfil.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-autoridad.png" alt="" />
+  </Frame>
+</Step>
 
-```
-openssl genrsa -traditional -out keytest 2048
-```
 
-De esta forma el nombre de mi archivo key seria `keytest`
+<Step title="Subir el CSR y asignar el Alias">
 
-<Info>
-Las versiones mas antiguas de OpenSSL no soportan el parámetro -traditional, si no te funciona borralo
-</Info>
+Dentro de esta aplicación debemos ir a **Agregar alias**.
+    <Frame>
+    <img src="/assets/guides/ar-onboarding-alias.png" alt="" />
+  </Frame>
 
-## Paso 3 - Generar el Certificate Signing Request (csr)
+  En esta pantalla, pegar el **Alias** que hemos copiado anteriormente, y subir el CSR que hemos descargado a nuestro ordenador. Luego pulse en **Agregar alias**.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-upload.png" alt="" />
+  </Frame>
+</Step>
 
-Una vez generada la key estamos listos para generar el CSR. Para ello debemos ejecutar el siguiente comando
+<Step title="Descargar el certificado">
 
-```
-openssl req -new -key [nombre de archivo para la key] -subj "/C=AR/O=[nombre de la empresa]/CN=[nombre del certificado]/serialNumber=CUIT [CUIT]" -out [nombre de archivo para el CSR]
-```
+  En el listado de certificados, dar click en **Ver** en el listado que corresponde a `INVOPOP_PROD`
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-ver.png" alt="" />
+  </Frame>
 
-Reemplazando:
+  Luego descargar el certificado pulsando sobre el icono de descarga:
 
-> * `nombre de archivo para la key` con el nombre del archivo key generado anteriormente.
-> * `nombre de la empresa` con el nombre de la empresa para quien es el certificado.
-> * `nombre del certificado` con el nombre que quieres que tenga el certificado. Solo se pueden utilizar letras y números. Esto es a modo de que puedas reconocerlo luego si generas varios certificados para diferentes sistemas
-> * `CUIT` con el CUIT de la empresa para quien es el certificado.
-> * `nombre de archivo para el CSR` con el nombre que quieres que se guarde el archivo CSR
+    <Frame>
+    <img src="/assets/guides/ar-onboarding-download.png" alt="" />
+  </Frame>
 
-Por ejemplo yo lo generaría de la siguiente forma
+</Step>
 
-```
-openssl req -new -key keyproduccion -subj "/C=AR/O=Nombre Empresa/CN=Test1/serialNumber=CUIT 11111111111" -out csr-produccion
-```
+<Step title="Abrir y copiar el contenido del certificado">
 
-Donde en «Nombre Empresa» pondría el nombre de la empresa y en «11111111111» podía el CUIT de la empresa
+  Abre el certificado que has descargado en un editor de texto y copia el contenido, incluidas las líneas de `BEGIN` y `END CERTIFICATE`.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-ssl.png" alt="" />
+  </Frame>
 
-Teniendo el archivos CSR ya podemos dirigirnos a la página de AFIP para generar el certificado.
+</Step>
 
-<Warning>
-ATENCIÓN: El archivo CSR no es lo mismo que el certificado, suele ser un error común confundirlos al momento de usar el certificado
-</Warning>
+<Step title="Pega el certificado en el flujo de alta">
 
-## Paso 4 - Generar el certificado (cert)
+  Vuelve al flujo de alta, y pega el contenido del certificado en la pantalla de "Subir Certificado". Da click en **Continuar** para verificar la validez del certificado.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-paste.png" alt="" />
+  </Frame>
 
-Dentro de nuestro escritorio de AFIP debemos ingresar en **«Administración de Certificados Digitales»**
+</Step>
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FfxCUD7VAq7gQputn7RaR%2FScreenshot%202025-02-17%20at%2010-16-06%20Portal%20de%20Clave%20Fiscal.png?alt=media&#x26;token=f0ad55b8-f3b4-4fad-a7b7-666e58ec1426" alt="" />
-</Frame>
+<Step title="Verifica el alta">
 
-En caso de no tener esta aplicación en tu escritorio debes ver el tutorial [Habilitar administrador de certificados de producción](https://docs.afipsdk.com/recursos/tutoriales-pagina-de-arca/habilitar-administrador-de-certificados-de-produccion)
+  Si has realizado los pasos correctamente, verás las pantalla de "Registro completo". En caso de recibir un error, verifica que hayas realizado todos los pasos correctamente.
+  
+  <Frame>
+    <img src="/assets/guides/ar-onboarding-complete.png" alt="" />
+  </Frame>
 
-En caso de tener permiso para administrar las relaciones de otros contribuyentes nos hará elegir el de quien queremos administrar.
+</Step>
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2F8wIhNhwqi2jzor71xpPt%2FScreenshot%202025-02-17%20at%2010-10-46%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=c6eaea24-d652-489f-bcc2-b745bec880f3" alt="" />
-</Frame>
+</Steps>
 
-Dentro de esta aplicación debemos ir a «Agregar alias»
+Si has llegado a la pantalla de "Registro Completo", ya has otorgado autorización a tu proveedor de facturación para emitir facturas a través de ARCA. 
 
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FRLaHRvZJdQ4tI7s9M1I8%2FScreenshot%202025-02-17%20at%2010-17-15%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=b26b904b-84ea-47ce-a27a-3dfa03f44838" alt="" />
-</Frame>
 
-Allí en «Alias» debemos colocar el nombre que le pusimos el certificado dentro del CSR.
 
-Luego presionamos examinar y elegimos el CSR que generamos anteriormente.
-
-Por ultimo presionamos «Agregar Alias» y ya tenemos nuestro certificado
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FKwwPFmgh0ADtgQwxKUOk%2FScreenshot%202025-02-17%20at%2010-18-06%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=b0ba0a3c-98cf-42c1-aef8-f0250fdda2ab" alt="" />
-</Frame>
-
-Ahora en la lista de Alias presionamos «ver»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FyPB90Cge3globW0o07zf%2FScreenshot%202025-02-17%20at%2010-17-15%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=14266eaf-5094-4393-a640-c82b716e806b" alt="" />
-</Frame>
-
-Y allí presionamos el boto debajo de «descargar»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2F3qbYQE5GDbXCnfqsnAbx%2FScreenshot%202025-02-17%20at%2010-19-03%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=317bca58-982b-4c6f-af2d-e006fb44bd54" alt="" />
-</Frame>
-
-Y eso es todo ya tenemos nuestro certificado y la key para usarlos luego en la librería.
-
-<Info>
-El CSR ya no lo necesitaremos, podemos eliminarlo.
-</Info>
-
-Ahora lo que nos queda es autorizar a que con este certificado se pueda acceder al/los web service/s que queramos usar.
-
-# Obtener certificado de producción
-
-<Info>
-Si querés evitar este trabajo manual, podés hacerlo automáticamente a través de tu sistema con la [automatización para Crear certificado de producción](https://afipsdk.com/docs/automations/create-cert-prod/nodejs/).
-</Info>
-
-
-## Paso 2 - Generar la clave de cifrado (key)
-
-Dentro de la consola lo primero que debemos ejecutar es el siguiente comando para generar el archivo key.
-
-```bash
-openssl genrsa -traditional -out [nombre de archivo] 2048
-```
-
-Reemplazando:
-
-> * `[nombre de archivo]` con el nombre que querés que se guarde el archivo key.
-
-Este archivo key es muy importante porque representa la «contraseña» con la que va a funcionar el certificado así que no debemos perderlo.
-
-Por ejemplo yo voy a generarlo de la siguiente forma
-
-```
-openssl genrsa -traditional -out keytest 2048
-```
-
-De esta forma el nombre de mi archivo key seria `keytest`
-
-<Info>
-Las versiones mas antiguas de OpenSSL no soportan el parámetro -traditional, si no te funciona borralo
-</Info>
-
-## Paso 3 - Generar el Certificate Signing Request (csr)
-
-Una vez generada la key estamos listos para generar el CSR. Para ello debemos ejecutar el siguiente comando
-
-```
-openssl req -new -key [nombre de archivo para la key] -subj "/C=AR/O=[nombre de la empresa]/CN=[nombre del certificado]/serialNumber=CUIT [CUIT]" -out [nombre de archivo para el CSR]
-```
-
-Reemplazando:
-
-> * `nombre de archivo para la key` con el nombre del archivo key generado anteriormente.
-> * `nombre de la empresa` con el nombre de la empresa para quien es el certificado.
-> * `nombre del certificado` con el nombre que quieres que tenga el certificado. Solo se pueden utilizar letras y números. Esto es a modo de que puedas reconocerlo luego si generas varios certificados para diferentes sistemas
-> * `CUIT` con el CUIT de la empresa para quien es el certificado.
-> * `nombre de archivo para el CSR` con el nombre que quieres que se guarde el archivo CSR
-
-Por ejemplo yo lo generaría de la siguiente forma
-
-```
-openssl req -new -key keyproduccion -subj "/C=AR/O=Nombre Empresa/CN=Test1/serialNumber=CUIT 11111111111" -out csr-produccion
-```
-
-Donde en «Nombre Empresa» pondría el nombre de la empresa y en «11111111111» podía el CUIT de la empresa
-
-Teniendo el archivos CSR ya podemos dirigirnos a la página de AFIP para generar el certificado.
-
-<Warning>
-ATENCIÓN: El archivo CSR no es lo mismo que el certificado, suele ser un error común confundirlos al momento de usar el certificado
-</Warning>
-
-## Paso 4 - Generar el certificado (cert)
-
-Dentro de nuestro escritorio de AFIP debemos ingresar en **«Administración de Certificados Digitales»**
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FfxCUD7VAq7gQputn7RaR%2FScreenshot%202025-02-17%20at%2010-16-06%20Portal%20de%20Clave%20Fiscal.png?alt=media&#x26;token=f0ad55b8-f3b4-4fad-a7b7-666e58ec1426" alt="" />
-</Frame>
-
-En caso de no tener esta aplicación en tu escritorio debes ver el tutorial [Habilitar administrador de certificados de producción](https://docs.afipsdk.com/recursos/tutoriales-pagina-de-arca/habilitar-administrador-de-certificados-de-produccion)
-
-En caso de tener permiso para administrar las relaciones de otros contribuyentes nos hará elegir el de quien queremos administrar.
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2F8wIhNhwqi2jzor71xpPt%2FScreenshot%202025-02-17%20at%2010-10-46%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=c6eaea24-d652-489f-bcc2-b745bec880f3" alt="" />
-</Frame>
-
-Dentro de esta aplicación debemos ir a «Agregar alias»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FRLaHRvZJdQ4tI7s9M1I8%2FScreenshot%202025-02-17%20at%2010-17-15%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=b26b904b-84ea-47ce-a27a-3dfa03f44838" alt="" />
-</Frame>
-
-Allí en «Alias» debemos colocar el nombre que le pusimos el certificado dentro del CSR.
-
-Luego presionamos examinar y elegimos el CSR que generamos anteriormente.
-
-Por ultimo presionamos «Agregar Alias» y ya tenemos nuestro certificado
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FKwwPFmgh0ADtgQwxKUOk%2FScreenshot%202025-02-17%20at%2010-18-06%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=b0ba0a3c-98cf-42c1-aef8-f0250fdda2ab" alt="" />
-</Frame>
-
-Ahora en la lista de Alias presionamos «ver»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2FyPB90Cge3globW0o07zf%2FScreenshot%202025-02-17%20at%2010-17-15%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=14266eaf-5094-4393-a640-c82b716e806b" alt="" />
-</Frame>
-
-Y allí presionamos el boto debajo de «descargar»
-
-<Frame>
-<img src="https://4026677166-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FVEAVwm5cCW83gSe7NH8Z%2Fuploads%2F3qbYQE5GDbXCnfqsnAbx%2FScreenshot%202025-02-17%20at%2010-19-03%20AFIP%20-%20ADMINISTRACION%20FEDERAL%20DE%20INGRESOS%20PUBLICOS.png?alt=media&#x26;token=317bca58-982b-4c6f-af2d-e006fb44bd54" alt="" />
-</Frame>
-
-Y eso es todo ya tenemos nuestro certificado y la key para usarlos luego en la librería.
-
-<Info>
-El CSR ya no lo necesitaremos, podemos eliminarlo.
-</Info>
-
-Ahora lo que nos queda es autorizar a que con este certificado se pueda acceder al/los web service/s que queramos usar.
