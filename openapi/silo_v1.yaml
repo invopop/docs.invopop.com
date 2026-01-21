@@ -3,7 +3,8 @@ info:
   contact:
     email: dev@invopop.com
     name: Invopop Developers
-  description: Store and manage GOBL documents along with their attachments in "Silo
+  description:
+    Store and manage GOBL documents along with their attachments in "Silo
     Entries".
   license:
     name: Apache 2.0
@@ -11,10 +12,10 @@ info:
   title: Silo Service API
   version: 1.0.0
 servers:
-- description: production
-  url: https://api.invopop.com
+  - description: production
+    url: https://api.invopop.com
 security:
-- authToken: []
+  - authToken: []
 paths:
   /silo/v1/entries:
     get:
@@ -25,48 +26,64 @@ paths:
           description: Fetch all the silo entries in the current company.
       description: Fetch all the silo entries in the current company.
       parameters:
-      - description: The folder in which to search for entries.
-        in: query
-        name: folder
-        schema:
-          description: The folder in which to search for entries.
-          example: invoices
-          title: Folder
-          type: string
-      - description: The starting date and time for retrieving results in descending
-          order, formatted as an ISO timestamp.
-        in: query
-        name: created_at
-        schema:
-          description: The starting date and time for retrieving results in descending
+        - description: The folder in which to search for entries.
+          in: query
+          name: folder
+          schema:
+            description: The folder in which to search for entries.
+            example: invoices
+            title: Folder
+            type: string
+        - description:
+            The starting date and time for retrieving results in descending
             order, formatted as an ISO timestamp.
-          example: "2023-08-02T00:00:00.000Z"
-          title: Created At
-          type: string
-      - description: The position marker from the previous result's next_cursor property,
-          used for pagination.
-        in: query
-        name: cursor
-        schema:
-          description: The position marker from the previous result's next_cursor
-            property, used for pagination.
-          title: Cursor
-          type: string
-      - description: The maximum number of entries to return in a single page of results.
-        in: query
-        name: limit
-        schema:
-          description: The maximum number of entries to return in a single page of
-            results.
-          example: 20
-          title: Limit
-          type: integer
+          in: query
+          name: created_at
+          schema:
+            description:
+              The starting date and time for retrieving results in descending
+              order, formatted as an ISO timestamp.
+            example: "2023-08-02T00:00:00.000Z"
+            title: Created At
+            type: string
+        - description:
+            The position marker from the previous result's next_cursor property,
+            used for pagination.
+          in: query
+          name: cursor
+          schema:
+            description:
+              The position marker from the previous result's next_cursor
+              property, used for pagination.
+            title: Cursor
+            type: string
+        - description: The maximum number of entries to return in a single page of results.
+          in: query
+          name: limit
+          schema:
+            description:
+              The maximum number of entries to return in a single page of
+              results.
+            example: 20
+            title: Limit
+            type: integer
+        - description:
+            When true, results are returned in ascending order instead of
+            descending.
+          in: query
+          name: ascending
+          schema:
+            description:
+              When true, results are returned in ascending order instead
+              of descending.
+            title: Ascending
+            type: boolean
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntryCollection'
+                $ref: "#/components/schemas/SiloEntryCollection"
           description: OK
     post:
       description: Create a new silo entry without an explicit UUID.
@@ -74,74 +91,47 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCreateEntry'
+              $ref: "#/components/schemas/SiloCreateEntry"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntry'
+                $ref: "#/components/schemas/SiloEntry"
           description: OK
-  /silo/v1/entries/{entry_id}/attachments/{id}:
-    get:
-      x-mint:
-        mcp:
-          enabled: true
-          name: get-silo-entry-attachment
-          description: Download silo entry attachment's data. Content type and disposition
-            will be set according to the source.
-      description: Download silo entry attachment's data. Content type and disposition
-        will be set according to the source.
+  /silo/v1/entries/{entry_id}/files:
+    post:
+      description:
+        Add a new file to a silo entry without an explicit UUID. The file
+        data can be provided inline as base64 encoded data, or omitted to create a
+        placeholder. When data is not provided, you must provide sha256, size, and
+        mime fields, and the response will include a `url` field that can be used
+        to stream/upload the file contents directly via a PUT request to that URL.
+        For non enrolled users, only the `format` and `attachment` categories are
+        allowed.
       parameters:
-      - description: UUID of the attachment to fetch, may be a previous version.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of the attachment to fetch, may be a previous version.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
-      - description: UUID of the silo entry.
-        in: path
-        name: entry_id
-        required: true
-        schema:
-          description: UUID of the silo entry.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: Entry ID
-          type: string
-      responses:
-        "200":
-          description: Contains the attachment data.
-    put:
-      description: Add a new attachment to a silo entry. This is only available to
-        applications with 'enrolled' scope at this time.
-      parameters:
-      - description: UUID of attachment to create
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of attachment to create
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
-      - description: UUID of the silo entry.
-        in: path
-        name: entry_id
-        required: true
-        schema:
-          description: UUID of the silo entry.
-          title: Entry ID
-          type: string
+        - description: UUID of the silo entry.
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the silo entry.
+            title: Entry ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               properties:
+                category:
+                  description: Category of the file.
+                  example: format
+                  title: Category
+                  type: string
                 data:
-                  description: Base64 encoded binary data.
+                  description:
+                    Base64 encoded binary data. Optional - if not provided,
+                    sha256, size, and mime are required.
                   format: byte
                   type: string
                 desc:
@@ -150,20 +140,25 @@ paths:
                   title: Description
                   type: string
                 embeddable:
-                  description: When true, this attachment may be embedded inside other
-                    attachments, like PDFs. Default is false.
+                  description:
+                    When true, this file may be embedded inside other files,
+                    like PDFs. Default is false.
                   example: true
                   title: Embeddable
                   type: boolean
+                key:
+                  description: Key used to identify the file in the entry.
+                  example: pdf
+                  title: Key
+                  type: string
                 meta:
                   additionalProperties:
                     type: string
-                  description: Any additional meta data about the attachment.
+                  description: Any additional meta data about the file.
                   title: Meta
                   type: object
                 mime:
-                  description: MIME type of the file to upload. Required when only
-                    creating placeholder.
+                  description: MIME type of the file. Required when data is not provided.
                   example: application/pdf
                   title: MIME
                   type: string
@@ -173,26 +168,168 @@ paths:
                   title: Name
                   type: string
                 private:
-                  description: When true, this attachment is private and can only
-                    be accessed by the owner. Default is false.
+                  description:
+                    When true, this file is private and can only be accessed
+                    by the owner. Default is false.
                   example: true
                   title: Private
                   type: boolean
                 sha256:
-                  description: SHA256 hex hash of the file that will be upload in
-                    a separate request. Required when only creating placeholder.
+                  description:
+                    SHA256 hex hash of the file. Required when data is
+                    not provided.
                   example: 27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28
                   title: SHA256
                   type: string
+                size:
+                  description:
+                    Size of the file in bytes. Required when data is not
+                    provided.
+                  example: 12345
+                  title: Size
+                  type: integer
               required:
-              - name
+                - name
               type: object
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloAttachment'
+                $ref: "#/components/schemas/SiloFile"
+          description: OK
+  /silo/v1/entries/{entry_id}/files/{id}:
+    get:
+      description:
+        Download silo entry file's data. Content type and disposition will
+        be set according to the source.
+      parameters:
+        - description: UUID of the file to fetch, may be a previous version.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the file to fetch, may be a previous version.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
+        - description: UUID of the silo entry.
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the silo entry.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Entry ID
+            type: string
+      responses:
+        "200":
+          description: Contains the file data.
+    put:
+      description:
+        Add a new file to a silo entry with a specific UUID. The file data
+        can be provided inline as base64 encoded data, or omitted to create a placeholder.
+        When data is not provided, you must provide sha256, size, and mime fields,
+        and the response will include a `url` field that can be used to stream/upload
+        the file contents directly via a PUT request to that URL. For non enrolled
+        users, only the `format` and `attachment` categories are allowed.
+      parameters:
+        - description: UUID of file to create
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of file to create
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
+        - description: UUID of the silo entry.
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the silo entry.
+            title: Entry ID
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                category:
+                  description: Category of the file.
+                  example: format
+                  title: Category
+                  type: string
+                data:
+                  description:
+                    Base64 encoded binary data. Optional - if not provided,
+                    sha256, size, and mime are required.
+                  format: byte
+                  type: string
+                desc:
+                  description: Description of the file.
+                  example: Invoice for January 2021.
+                  title: Description
+                  type: string
+                embeddable:
+                  description:
+                    When true, this file may be embedded inside other files,
+                    like PDFs. Default is false.
+                  example: true
+                  title: Embeddable
+                  type: boolean
+                key:
+                  description: Key used to identify the file in the entry.
+                  example: pdf
+                  title: Key
+                  type: string
+                meta:
+                  additionalProperties:
+                    type: string
+                  description: Any additional meta data about the file.
+                  title: Meta
+                  type: object
+                mime:
+                  description: MIME type of the file. Required when data is not provided.
+                  example: application/pdf
+                  title: MIME
+                  type: string
+                name:
+                  description: Name of the file.
+                  example: invoice.pdf
+                  title: Name
+                  type: string
+                private:
+                  description:
+                    When true, this file is private and can only be accessed
+                    by the owner. Default is false.
+                  example: true
+                  title: Private
+                  type: boolean
+                sha256:
+                  description:
+                    SHA256 hex hash of the file. Required when data is
+                    not provided.
+                  example: 27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28
+                  title: SHA256
+                  type: string
+                size:
+                  description:
+                    Size of the file in bytes. Required when data is not
+                    provided.
+                  example: 12345
+                  title: Size
+                  type: integer
+              required:
+                - name
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiloFile"
           description: OK
   /silo/v1/entries/{entry_id}/states:
     get:
@@ -203,68 +340,68 @@ paths:
           description: Fetch the current and previous state objects for a silo entry.
       description: Fetch the current and previous state objects for a silo entry.
       parameters:
-      - description: UUID of the entry to find states for.
-        in: path
-        name: entry_id
-        required: true
-        schema:
-          description: UUID of the entry to find states for.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: Entry ID
-          type: string
+        - description: UUID of the entry to find states for.
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the entry to find states for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Entry ID
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloStateCollection'
+                $ref: "#/components/schemas/SiloStateCollection"
           description: OK
     post:
       description: Create a new state for a silo entry without time
       parameters:
-      - description: UUID of the entry to create state for
-        in: path
-        name: entry_id
-        required: true
-        schema:
-          description: UUID of the entry to create state for
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: Entry ID
-          type: string
+        - description: UUID of the entry to create state for
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the entry to create state for
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Entry ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCreateState'
+              $ref: "#/components/schemas/SiloCreateState"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloState'
+                $ref: "#/components/schemas/SiloState"
           description: OK
   /silo/v1/entries/{entry_id}/states/{at}:
     put:
       description: Create a new state for a silo entry
       parameters:
-      - description: ISO timestamp with millisecond accuracy.
-        in: path
-        name: at
-        required: true
-        schema:
-          description: ISO timestamp with millisecond accuracy.
-          example: "2023-08-02T00:00:00.000Z"
-          title: Timestamp
-          type: string
-      - description: UUID of the entry to create state for
-        in: path
-        name: entry_id
-        required: true
-        schema:
-          description: UUID of the entry to create state for
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: Entry ID
-          type: string
+        - description: ISO timestamp with millisecond accuracy.
+          in: path
+          name: at
+          required: true
+          schema:
+            description: ISO timestamp with millisecond accuracy.
+            example: "2023-08-02T00:00:00.000Z"
+            title: Timestamp
+            type: string
+        - description: UUID of the entry to create state for
+          in: path
+          name: entry_id
+          required: true
+          schema:
+            description: UUID of the entry to create state for
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Entry ID
+            type: string
       requestBody:
         content:
           application/json:
@@ -286,14 +423,14 @@ paths:
                   title: Notes
                   type: string
               required:
-              - key
+                - key
               type: object
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloState'
+                $ref: "#/components/schemas/SiloState"
           description: OK
   /silo/v1/entries/{id}:
     get:
@@ -304,65 +441,66 @@ paths:
           description: Fetch an existing silo entry given its UUID.
       description: Fetch an existing silo entry given its UUID.
       parameters:
-      - description: UUID of the silo entry to fetch.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of the silo entry to fetch.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+        - description: UUID of the silo entry to fetch.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the silo entry to fetch.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntry'
+                $ref: "#/components/schemas/SiloEntry"
           description: OK
     patch:
       description: Update an existing silo entry given its UUID.
       parameters:
-      - description: UUID of the silo entry to update.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of the silo entry to update.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+        - description: UUID of the silo entry to update.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the silo entry to update.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloUpdateEntry'
+              $ref: "#/components/schemas/SiloUpdateEntry"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntry'
+                $ref: "#/components/schemas/SiloEntry"
           description: OK
     put:
       description: Create a new silo entry with the given UUID.
       parameters:
-      - description: UUID of the silo entry to create.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of the silo entry to create.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+        - description: UUID of the silo entry to create.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the silo entry to create.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               properties:
                 allow_invalid:
-                  description: When true, the envelope's contents are allowed to be
+                  description:
+                    When true, the envelope's contents are allowed to be
                     invalid.
                   example: true
                   title: Allow Invalid
@@ -379,18 +517,21 @@ paths:
                   title: Correct
                   type: object
                 data:
-                  description: Data contents to upload which may either be a GOBL
+                  description:
+                    Data contents to upload which may either be a GOBL
                     Envelope or Object. Any partial data will be calculated and validated
                     automatically.
                   title: Data
                   type: object
                 folder:
-                  description: In which folder the entry should be associated, leave
+                  description:
+                    In which folder the entry should be associated, leave
                     empty to use the automatic rules.
                   title: Folder
                   type: string
                 key:
-                  description: Key used to identify the entry idempotently within
+                  description:
+                    Key used to identify the entry idempotently within
                     a workspace.
                   example: invoice-101
                   title: Key
@@ -411,7 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntry'
+                $ref: "#/components/schemas/SiloEntry"
           description: OK
   /silo/v1/entries/{id}/related:
     get:
@@ -422,70 +563,80 @@ paths:
           description: Find silo entries whose document mentions the given entry's UUID.
       description: Find silo entries whose document mentions the given entry's UUID.
       parameters:
-      - description: The unique identifier of the document to find related entries
-          for.
-        in: query
-        name: uuid
-        schema:
-          description: The unique identifier of the document to find related entries
+        - description:
+            The unique identifier of the document to find related entries
             for.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: UUID
-          type: string
-      - description: The specific context within a document where the silo entry's
-          UUID is referenced.
-        in: query
-        name: context
-        schema:
-          description: The specific context within a document where the silo entry's
+          in: query
+          name: uuid
+          schema:
+            description:
+              The unique identifier of the document to find related entries
+              for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: UUID
+            type: string
+        - description:
+            The specific context within a document where the silo entry's
             UUID is referenced.
-          example: line.item
-          title: Context
-          type: string
-      - description: The starting date and time for retrieving related entries in
-          descending order, formatted as an ISO timestamp.
-        in: query
-        name: created_at
-        schema:
-          description: The starting date and time for retrieving related entries in
+          in: query
+          name: context
+          schema:
+            description:
+              The specific context within a document where the silo entry's
+              UUID is referenced.
+            example: line.item
+            title: Context
+            type: string
+        - description:
+            The starting date and time for retrieving related entries in
             descending order, formatted as an ISO timestamp.
-          example: "2023-08-02T00:00:00.000Z"
-          title: Created At
-          type: string
-      - description: The position marker from the previous result's next_cursor property,
-          used for pagination.
-        in: query
-        name: cursor
-        schema:
-          description: The position marker from the previous result's next_cursor
-            property, used for pagination.
-          title: Cursor
-          type: string
-      - description: The maximum number of related entries to return in a single page
-          of results.
-        in: query
-        name: limit
-        schema:
-          description: The maximum number of related entries to return in a single
-            page of results.
-          example: 20
-          title: Limit
-          type: integer
-      - description: Silo entry ID to find related entries for.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: Silo entry ID to find related entries for.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+          in: query
+          name: created_at
+          schema:
+            description:
+              The starting date and time for retrieving related entries in
+              descending order, formatted as an ISO timestamp.
+            example: "2023-08-02T00:00:00.000Z"
+            title: Created At
+            type: string
+        - description:
+            The position marker from the previous result's next_cursor property,
+            used for pagination.
+          in: query
+          name: cursor
+          schema:
+            description:
+              The position marker from the previous result's next_cursor
+              property, used for pagination.
+            title: Cursor
+            type: string
+        - description:
+            The maximum number of related entries to return in a single page
+            of results.
+          in: query
+          name: limit
+          schema:
+            description:
+              The maximum number of related entries to return in a single
+              page of results.
+            example: 20
+            title: Limit
+            type: integer
+        - description: Silo entry ID to find related entries for.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: Silo entry ID to find related entries for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntryCollection'
+                $ref: "#/components/schemas/SiloEntryCollection"
           description: OK
   /silo/v1/entries/key/{key}:
     get:
@@ -496,21 +647,21 @@ paths:
           description: Fetch an existing silo entry by its key.
       description: Fetch an existing silo entry by its key.
       parameters:
-      - description: Key used to identify the entry idempotently within a workspace.
-        in: path
-        name: key
-        required: true
-        schema:
-          description: Key used to identify the entry idempotently within a workspace.
-          example: invoice-101
-          title: Key
-          type: string
+        - description: Key used to identify the entry idempotently within a workspace.
+          in: path
+          name: key
+          required: true
+          schema:
+            description: Key used to identify the entry idempotently within a workspace.
+            example: invoice-101
+            title: Key
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntry'
+                $ref: "#/components/schemas/SiloEntry"
           description: OK
   /silo/v1/entries/related:
     get:
@@ -521,61 +672,71 @@ paths:
           description: Find silo entries whose document mentions the UUID parameter.
       description: Find silo entries whose document mentions the UUID parameter.
       parameters:
-      - description: The unique identifier of the document to find related entries
-          for.
-        in: query
-        name: uuid
-        schema:
-          description: The unique identifier of the document to find related entries
+        - description:
+            The unique identifier of the document to find related entries
             for.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: UUID
-          type: string
-      - description: The specific context within a document where the silo entry's
-          UUID is referenced.
-        in: query
-        name: context
-        schema:
-          description: The specific context within a document where the silo entry's
+          in: query
+          name: uuid
+          schema:
+            description:
+              The unique identifier of the document to find related entries
+              for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: UUID
+            type: string
+        - description:
+            The specific context within a document where the silo entry's
             UUID is referenced.
-          example: line.item
-          title: Context
-          type: string
-      - description: The starting date and time for retrieving related entries in
-          descending order, formatted as an ISO timestamp.
-        in: query
-        name: created_at
-        schema:
-          description: The starting date and time for retrieving related entries in
+          in: query
+          name: context
+          schema:
+            description:
+              The specific context within a document where the silo entry's
+              UUID is referenced.
+            example: line.item
+            title: Context
+            type: string
+        - description:
+            The starting date and time for retrieving related entries in
             descending order, formatted as an ISO timestamp.
-          example: "2023-08-02T00:00:00.000Z"
-          title: Created At
-          type: string
-      - description: The position marker from the previous result's next_cursor property,
-          used for pagination.
-        in: query
-        name: cursor
-        schema:
-          description: The position marker from the previous result's next_cursor
-            property, used for pagination.
-          title: Cursor
-          type: string
-      - description: The maximum number of related entries to return in a single page
-          of results.
-        in: query
-        name: limit
-        schema:
-          description: The maximum number of related entries to return in a single
-            page of results.
-          example: 20
-          title: Limit
-          type: integer
+          in: query
+          name: created_at
+          schema:
+            description:
+              The starting date and time for retrieving related entries in
+              descending order, formatted as an ISO timestamp.
+            example: "2023-08-02T00:00:00.000Z"
+            title: Created At
+            type: string
+        - description:
+            The position marker from the previous result's next_cursor property,
+            used for pagination.
+          in: query
+          name: cursor
+          schema:
+            description:
+              The position marker from the previous result's next_cursor
+              property, used for pagination.
+            title: Cursor
+            type: string
+        - description:
+            The maximum number of related entries to return in a single page
+            of results.
+          in: query
+          name: limit
+          schema:
+            description:
+              The maximum number of related entries to return in a single
+              page of results.
+            example: 20
+            title: Limit
+            type: integer
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntryCollection'
+                $ref: "#/components/schemas/SiloEntryCollection"
           description: OK
   /silo/v1/gobl/build:
     post:
@@ -584,29 +745,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloBuildGOBL'
+              $ref: "#/components/schemas/SiloBuildGOBL"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloGOBL'
+                $ref: "#/components/schemas/SiloGOBL"
           description: OK
   /silo/v1/gobl/correct:
     post:
-      description: Correct or determine the correction options for a GOBL Envelope
+      description:
+        Correct or determine the correction options for a GOBL Envelope
         (not Object!)
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloCorrectGOBL'
+              $ref: "#/components/schemas/SiloCorrectGOBL"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloGOBL'
+                $ref: "#/components/schemas/SiloGOBL"
           description: OK
   /silo/v1/gobl/sign:
     post:
@@ -615,13 +777,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SiloSignGOBL'
+              $ref: "#/components/schemas/SiloSignGOBL"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloGOBL'
+                $ref: "#/components/schemas/SiloGOBL"
           description: OK
   /silo/v1/search:
     get:
@@ -632,49 +794,50 @@ paths:
           description: Perform a free-text search on all documents in the current company.
       description: Perform a free-text search on all documents in the current company.
       parameters:
-      - description: Search query string.
-        in: query
-        name: q
-        required: true
-        schema:
-          description: Search query string.
-          example: TEST
-          title: Query
-          type: string
-      - description: Folder to search within.
-        in: query
-        name: folder
-        schema:
-          description: Folder to search within.
-          example: invoices
-          title: Folder
-          type: string
-      - description: Maximum number of entries to show in a page of results.
-        in: query
-        name: limit
-        schema:
-          description: Maximum number of entries to show in a page of results.
-          example: 20
-          title: Limit
-          type: integer
-      - description: The number of entries to skip in the result set.
-        in: query
-        name: offset
-        schema:
-          description: The number of entries to skip in the result set.
-          example: 10
-          title: Offset
-          type: integer
+        - description: Search query string.
+          in: query
+          name: q
+          required: true
+          schema:
+            description: Search query string.
+            example: TEST
+            title: Query
+            type: string
+        - description: Folder to search within.
+          in: query
+          name: folder
+          schema:
+            description: Folder to search within.
+            example: invoices
+            title: Folder
+            type: string
+        - description: Maximum number of entries to show in a page of results.
+          in: query
+          name: limit
+          schema:
+            description: Maximum number of entries to show in a page of results.
+            example: 20
+            title: Limit
+            type: integer
+        - description: The number of entries to skip in the result set.
+          in: query
+          name: offset
+          schema:
+            description: The number of entries to skip in the result set.
+            example: 10
+            title: Offset
+            type: integer
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloEntrySearchCollection'
+                $ref: "#/components/schemas/SiloEntrySearchCollection"
           description: OK
   /silo/v1/spool:
     post:
-      description: Upload temporary file data to the silo spool. Requires 'enrolled'
+      description:
+        Upload temporary file data to the silo spool. Requires 'enrolled'
         scope.
       requestBody:
         content:
@@ -701,21 +864,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SiloUploadTempFileResponse'
+                $ref: "#/components/schemas/SiloUploadTempFileResponse"
           description: OK
   /silo/v1/spool/{key}:
     delete:
       description: Delete a previously uploaded entry from the spool.
       parameters:
-      - description: Key of the file provided during upload
-        in: path
-        name: key
-        required: true
-        schema:
-          description: Key of the file provided during upload
-          example: 2025-W20-123467abcde-invoice.xml
-          title: Key
-          type: string
+        - description: Key of the file provided during upload
+          in: path
+          name: key
+          required: true
+          schema:
+            description: Key of the file provided during upload
+            example: 2025-W20-123467abcde-invoice.xml
+            title: Key
+            type: string
       responses:
         "204":
           description: No Content
@@ -727,15 +890,15 @@ paths:
           description: Download a previously uploaded entry from the spool.
       description: Download a previously uploaded entry from the spool.
       parameters:
-      - description: Key of the file provided during upload
-        in: path
-        name: key
-        required: true
-        schema:
-          description: Key of the file provided during upload
-          example: 2025-W20-123467abcde-invoice.xml
-          title: Key
-          type: string
+        - description: Key of the file provided during upload
+          in: path
+          name: key
+          required: true
+          schema:
+            description: Key of the file provided during upload
+            example: 2025-W20-123467abcde-invoice.xml
+            title: Key
+            type: string
       responses:
         "200":
           description: Contains the originally uploaded data.
@@ -748,101 +911,6 @@ components:
         val:
           type: string
       type: object
-    SiloAttachment:
-      properties:
-        created_at:
-          description: The date and time this attachment was created.
-          example: "2018-01-01T00:00:00.000Z"
-          title: Created At
-          type: string
-        desc:
-          description: Description of the file.
-          example: Invoice for January 2021.
-          title: Description
-          type: string
-        embeddable:
-          description: When true, the attachment can be embedded inside another attachment,
-            like a PDF.
-          example: true
-          title: Embeddable
-          type: boolean
-        entry_id:
-          description: The UUID of the entry this attachment belongs to.
-          example: 347c5b04-cde2-11ed-afa1-0242ac120002
-          title: Entry ID
-          type: string
-        hash:
-          description: SHA256 hash of the file.
-          example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
-          title: Hash
-          type: string
-        id:
-          description: The UUID that identifies the attachment.
-          title: ID
-          type: string
-        meta:
-          additionalProperties:
-            type: string
-          description: Any additional meta data about the attachment.
-          title: Meta
-          type: object
-        mime:
-          description: MIME type of the file.
-          example: application/pdf
-          title: MIME
-          type: string
-        name:
-          description: Name of the file.
-          example: invoice.pdf
-          title: Name
-          type: string
-        previous:
-          description: Set of previous versions of the attachment.
-          items:
-            $ref: '#/components/schemas/SiloAttachmentVersion'
-          title: Previous
-          type: array
-        private:
-          description: When true, the attachment will not have a public link.
-          title: Private
-          type: boolean
-        size:
-          description: Size of the file in bytes.
-          example: 12345
-          title: Size
-          type: integer
-        stored:
-          description: When true, indicates that the file's contents have been uploaded
-            successfully.
-          example: true
-          title: Stored
-          type: boolean
-        url:
-          description: URL where the file's contents can be downloaded.
-          title: Public URL
-          type: string
-      type: object
-    SiloAttachmentVersion:
-      properties:
-        created_at:
-          description: The date and time this attachment was created.
-          example: "2018-01-01T00:00:00.000Z"
-          title: Created At
-          type: string
-        hash:
-          description: The SHA256 of the attachment's contents.
-          title: Hash
-          type: string
-        id:
-          description: The UUID that identifies the attachment when it was originally
-            uploaded.
-          title: ID
-          type: string
-        size:
-          description: Size of the attachment.
-          title: Size
-          type: integer
-      type: object
     SiloBuildGOBL:
       properties:
         data:
@@ -851,7 +919,8 @@ components:
           title: Data
           type: object
         envelop:
-          description: When true, a complete GOBL Envelope will be provided as opposed
+          description:
+            When true, a complete GOBL Envelope will be provided as opposed
             to the standalone object.
           title: Envelop
           type: boolean
@@ -868,7 +937,8 @@ components:
           title: Options
           type: object
         show_options:
-          description: When true, the options schema for correction are provided in
+          description:
+            When true, the options schema for correction are provided in
             the response.
           title: Show Options
           type: boolean
@@ -892,12 +962,14 @@ components:
           title: Correct
           type: object
         data:
-          description: Data contents to upload which may either be a GOBL Envelope
+          description:
+            Data contents to upload which may either be a GOBL Envelope
             or Object. Any partial data will be calculated and validated automatically.
           title: Data
           type: object
         folder:
-          description: In which folder the entry should be associated, leave empty
+          description:
+            In which folder the entry should be associated, leave empty
             to use the automatic rules.
           title: Folder
           type: string
@@ -935,18 +1007,19 @@ components:
           title: Notes
           type: string
       required:
-      - key
+        - key
       type: object
     SiloEntry:
       properties:
         attachments:
-          description: List of attachments for this entry.
+          description: List of files for this entry.
           items:
-            $ref: '#/components/schemas/SiloAttachment'
+            $ref: "#/components/schemas/SiloFile"
           title: Attachments
           type: array
         context:
-          description: When entry provided within a related query, this is the context
+          description:
+            When entry provided within a related query, this is the context
             within the document.
           example: line.item
           title: Context
@@ -961,7 +1034,7 @@ components:
           title: Data
           type: object
         digest:
-          $ref: '#/components/schemas/DsigDigest'
+          $ref: "#/components/schemas/DsigDigest"
         doc_schema:
           description: Schema URL for the envelope's payload.
           example: https://gobl.org/draft-0/bill/invoice
@@ -978,10 +1051,11 @@ components:
           title: Envelope Schema
           type: string
         faults:
-          description: List of faults that occurred during the processing of the job
+          description:
+            List of faults that occurred during the processing of the job
             associated with the last state.
           items:
-            $ref: '#/components/schemas/SiloFault'
+            $ref: "#/components/schemas/SiloFault"
           title: Faults
           type: array
         folder:
@@ -995,7 +1069,8 @@ components:
           title: ID
           type: string
         invalid:
-          description: When true, the envelope's contents are invalid and need to
+          description:
+            When true, the envelope's contents are invalid and need to
             be reviewed.
           example: true
           title: Invalid
@@ -1008,7 +1083,7 @@ components:
         meta:
           description: Additional meta fields associated with the entry.
           items:
-            $ref: '#/components/schemas/SiloMeta'
+            $ref: "#/components/schemas/SiloMeta"
           title: Meta
           type: array
         signed:
@@ -1056,7 +1131,8 @@ components:
           title: Folder
           type: string
         limit:
-          description: Maximum number of entries to show in a page of results, up
+          description:
+            Maximum number of entries to show in a page of results, up
             to 100.
           example: 20
           title: Limit
@@ -1064,7 +1140,7 @@ components:
         list:
           description: Array of entries sorted by creation time in descending order.
           items:
-            $ref: '#/components/schemas/SiloEntry'
+            $ref: "#/components/schemas/SiloEntry"
           nullable: true
           title: List
           type: array
@@ -1081,7 +1157,8 @@ components:
           title: Folder
           type: string
         limit:
-          description: Maximum number of entries to show in a page of results, up
+          description:
+            Maximum number of entries to show in a page of results, up
             to 100.
           example: 20
           title: Limit
@@ -1089,7 +1166,7 @@ components:
         list:
           description: Array of entries ordered by relevance.
           items:
-            $ref: '#/components/schemas/SiloEntry'
+            $ref: "#/components/schemas/SiloEntry"
           nullable: true
           title: List
           type: array
@@ -1107,12 +1184,14 @@ components:
     SiloFault:
       properties:
         code:
-          description: Code assigned by the provider that may provide additional information
+          description:
+            Code assigned by the provider that may provide additional information
             about the fault.
           title: Code
           type: string
         message:
-          description: Message assigned by the provider that may provide additional
+          description:
+            Message assigned by the provider that may provide additional
             information about the fault.
           title: Message
           type: string
@@ -1121,6 +1200,114 @@ components:
           example: pdf
           title: Provider
           type: string
+      type: object
+    SiloFile:
+      properties:
+        category:
+          description: Category of the file.
+          example: version
+          title: Category
+          type: string
+        created_at:
+          description: The date and time this file was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        desc:
+          description: Description of the file.
+          example: Invoice for January 2021.
+          title: Description
+          type: string
+        embeddable:
+          description:
+            When true, the file can be embedded inside another file, like
+            a PDF.
+          example: true
+          title: Embeddable
+          type: boolean
+        entry_id:
+          description: The UUID of the entry this file belongs to.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
+        hash:
+          description: SHA256 hash of the file.
+          example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+          title: Hash
+          type: string
+        id:
+          description: The UUID that identifies the file in the entry.
+          title: ID
+          type: string
+        key:
+          description:
+            Key used to identify the file by the service or app that generated
+            it.
+          example: pdf
+          title: Key
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional meta data about the file.
+          title: Meta
+          type: object
+        mime:
+          description: MIME type of the file.
+          example: application/pdf
+          title: MIME
+          type: string
+        name:
+          description: Name of the file.
+          example: invoice.pdf
+          title: Name
+          type: string
+        previous:
+          description: Set of previous versions of the file.
+          items:
+            $ref: "#/components/schemas/SiloFileVersion"
+          title: Previous
+          type: array
+        private:
+          description: When true, the file will not have a public link.
+          title: Private
+          type: boolean
+        size:
+          description: Size of the file in bytes.
+          example: 12345
+          title: Size
+          type: integer
+        stored:
+          description:
+            When true, indicates that the file's contents have been uploaded
+            successfully.
+          example: true
+          title: Stored
+          type: boolean
+        url:
+          description: URL where the file's contents can be downloaded.
+          title: Public URL
+          type: string
+      type: object
+    SiloFileVersion:
+      properties:
+        created_at:
+          description: The date and time this file was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: Created At
+          type: string
+        hash:
+          description: The SHA256 of the file's contents.
+          title: Hash
+          type: string
+        id:
+          description: The UUID that identifies the file when it was originally uploaded.
+          title: ID
+          type: string
+        size:
+          description: Size of the file.
+          title: Size
+          type: integer
       type: object
     SiloGOBL:
       properties:
@@ -1163,7 +1350,8 @@ components:
           title: Link Scope
           type: string
         link_url:
-          description: URL associated with the meta row that may be used to perform
+          description:
+            URL associated with the meta row that may be used to perform
             additional actions or view more details.
           example: https://example.com/info
           title: Link URL
@@ -1174,18 +1362,21 @@ components:
           title: Owned
           type: boolean
         owner_id:
-          description: UUID of the owner of the silo entry, typically a workspace
+          description:
+            UUID of the owner of the silo entry, typically a workspace
             ID. Included for reference when the authentication token does not already
             include the owner such as for lookups by reference.
           title: Owner ID
           type: string
         ref:
-          description: Indexable value used to locate the meta entry if a silo entry
+          description:
+            Indexable value used to locate the meta entry if a silo entry
             ID is not available.
           title: Reference
           type: string
         secure:
-          description: When true, the meta entry is never included in lists and needs
+          description:
+            When true, the meta entry is never included in lists and needs
             to be specifically requested.
           example: true
           title: Secure
@@ -1228,10 +1419,11 @@ components:
           title: Created At
           type: string
         faults:
-          description: List of faults that occurred during the processing of the job
+          description:
+            List of faults that occurred during the processing of the job
             where state was assigned.
           items:
-            $ref: '#/components/schemas/SiloFault'
+            $ref: "#/components/schemas/SiloFault"
           title: Faults
           type: array
         id:
@@ -1269,22 +1461,31 @@ components:
         list:
           description: Array of states.
           items:
-            $ref: '#/components/schemas/SiloState'
+            $ref: "#/components/schemas/SiloState"
           nullable: true
           title: List
           type: array
       type: object
     SiloUpdateEntry:
       properties:
+        allow_invalid:
+          description:
+            When true, the updated envelope's contents are allowed to be
+            invalid.
+          example: true
+          title: Allow Invalid
+          type: boolean
         content_type:
-          description: The content type of the data being uploaded which by default
+          description:
+            The content type of the data being uploaded which by default
             expects application/json for a complete document, simple merge patch application/merge-patch+json
             (RFC7396), or a line-by-line patch application/json-patch+json (RFC6902)
           example: application/json
           title: Content Type
           type: string
         data:
-          description: Updated envelope data either a complete envelope or document,
+          description:
+            Updated envelope data either a complete envelope or document,
             or patched data according to the content type.
           nullable: true
           title: Data
@@ -1310,7 +1511,8 @@ components:
   securitySchemes:
     authToken:
       bearerFormat: JWT
-      description: 'Use the `Bearer` scheme with a valid JWT token to authenticate
-        requests. Example: `Authorization: Bearer <token>`'
+      description:
+        "Use the `Bearer` scheme with a valid JWT token to authenticate
+        requests. Example: `Authorization: Bearer <token>`"
       scheme: bearer
       type: http

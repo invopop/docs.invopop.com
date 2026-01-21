@@ -3,7 +3,8 @@ info:
   contact:
     email: dev@invopop.com
     name: Invopop Developers
-  description: The Invopop Transform Service API offers end points to be able to manage
+  description:
+    The Invopop Transform Service API offers end points to be able to manage
     tasks and workflows with the primary objective being to send requests for jobs.
   license:
     name: Apache 2.0
@@ -11,38 +12,44 @@ info:
   title: Transform Service API
   version: 1.0.1
 servers:
-- description: production
-  url: https://api.invopop.com
+  - description: production
+    url: https://api.invopop.com
 security:
-- authToken: []
+  - authToken: []
 paths:
   /transform/v1/jobs:
     post:
       description: Create a new job without an explicit ID.
       parameters:
-      - description: Maximum number of seconds to block the http request waiting for
-          the job to complete and provide a response.
-        in: query
-        name: wait
-        schema:
-          description: Maximum number of seconds to block the http request waiting
-            for the job to complete and provide a response.
-          example: 60
-          title: Wait
-          type: integer
+        - description:
+            Only for testing. Maximum number of seconds to block the http
+            request waiting for the job to complete and provide a response, do not use
+            this in production.
+          in: query
+          name: wait
+          schema:
+            description:
+              Only for testing. Maximum number of seconds to block the http
+              request waiting for the job to complete and provide a response, do not
+              use this in production.
+            example: 60
+            title: Wait
+            type: integer
       requestBody:
         content:
           application/json:
             schema:
               properties:
                 args:
-                  description: Additional arguments that may be used by workflow actions.
+                  description:
+                    Additional arguments that may be used by workflow actions.
                     Binary data may provided inside a Data URI, including the 'name'
                     parameter.
                   title: Args
                   type: object
                 data:
-                  description: Raw JSON data of the GOBL Envelope or Object when the
+                  description:
+                    Raw JSON data of the GOBL Envelope or Object when the
                     Silo Entry ID is empty.
                   title: Data
                   type: object
@@ -51,7 +58,8 @@ paths:
                   title: Key
                   type: string
                 silo_entry_id:
-                  description: ID for the entry in the silo as an alternative for
+                  description:
+                    ID for the entry in the silo as an alternative for
                     the raw data object.
                   title: Silo Entry ID
                   type: string
@@ -66,14 +74,14 @@ paths:
                   title: Workflow ID
                   type: string
               required:
-              - workflow_id
+                - workflow_id
               type: object
       responses:
         "202":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformJob'
+                $ref: "#/components/schemas/TransformJob"
           description: Accepted
   /transform/v1/jobs/{id}:
     get:
@@ -84,58 +92,64 @@ paths:
           description: Fetch an existing job by ID.
       description: Fetch an existing job by ID.
       parameters:
-      - description: ID of the job to fetch.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: ID of the job to fetch.
-          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+        - description: ID of the job to fetch.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: ID of the job to fetch.
+            example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformJob'
+                $ref: "#/components/schemas/TransformJob"
           description: OK
     put:
       description: Create a new job with the given ID.
       parameters:
-      - description: Maximum number of seconds to block the http request waiting for
-          the job to complete and provide a response.
-        in: query
-        name: wait
-        schema:
-          description: Maximum number of seconds to block the http request waiting
-            for the job to complete and provide a response.
-          example: 60
-          title: Wait
-          type: integer
-      - description: ID of the job to create.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: ID of the job to create.
-          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
-          format: uuid
-          title: ID
-          type: string
+        - description:
+            Only for testing. Maximum number of seconds to block the http
+            request waiting for the job to complete and provide a response, do not use
+            this in production.
+          in: query
+          name: wait
+          schema:
+            description:
+              Only for testing. Maximum number of seconds to block the http
+              request waiting for the job to complete and provide a response, do not
+              use this in production.
+            example: 60
+            title: Wait
+            type: integer
+        - description: ID of the job to create.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: ID of the job to create.
+            example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+            format: uuid
+            title: ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               properties:
                 args:
-                  description: Additional arguments that may be used by workflow actions.
+                  description:
+                    Additional arguments that may be used by workflow actions.
                     Binary data may provided inside a Data URI, including the 'name'
                     parameter.
                   title: Args
                   type: object
                 data:
-                  description: Raw JSON data of the GOBL Envelope or Object when the
+                  description:
+                    Raw JSON data of the GOBL Envelope or Object when the
                     Silo Entry ID is empty.
                   title: Data
                   type: object
@@ -144,7 +158,8 @@ paths:
                   title: Key
                   type: string
                 silo_entry_id:
-                  description: ID for the entry in the silo as an alternative for
+                  description:
+                    ID for the entry in the silo as an alternative for
                     the raw data object.
                   title: Silo Entry ID
                   type: string
@@ -159,14 +174,14 @@ paths:
                   title: Workflow ID
                   type: string
               required:
-              - workflow_id
+                - workflow_id
               type: object
       responses:
         "202":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformJob'
+                $ref: "#/components/schemas/TransformJob"
           description: Accepted
   /transform/v1/jobs/key/{key}:
     get:
@@ -177,21 +192,21 @@ paths:
           description: Fetch an existing job by a recent key.
       description: Fetch an existing job by a recent key.
       parameters:
-      - description: Key of the job to fetch.
-        in: path
-        name: key
-        required: true
-        schema:
-          description: Key of the job to fetch.
-          example: sample-key-00001
-          title: Key
-          type: string
+        - description: Key of the job to fetch.
+          in: path
+          name: key
+          required: true
+          schema:
+            description: Key of the job to fetch.
+            example: sample-key-00001
+            title: Key
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformJob'
+                $ref: "#/components/schemas/TransformJob"
           description: OK
   /transform/v1/workflows:
     get:
@@ -202,36 +217,36 @@ paths:
           description: Fetch workflows in the current workspace.
       description: Fetch workflows in the current workspace.
       parameters:
-      - description: Maximum number of workflows to return.
-        in: query
-        name: limit
-        schema:
-          description: Maximum number of workflows to return.
-          example: 100
-          title: Limit
-          type: integer
-      - description: Date from which results are provided.
-        in: query
-        name: created_at
-        schema:
-          description: Date from which results are provided.
-          example: "2023-08-02T00:00:00.000Z"
-          title: Created At
-          type: string
-      - description: Short schema name that the workflow will be allowed to process.
-        in: query
-        name: schema
-        schema:
-          description: Short schema name that the workflow will be allowed to process.
-          example: bill/invoice
-          title: Schema
-          type: string
+        - description: Maximum number of workflows to return.
+          in: query
+          name: limit
+          schema:
+            description: Maximum number of workflows to return.
+            example: 100
+            title: Limit
+            type: integer
+        - description: Date from which results are provided.
+          in: query
+          name: created_at
+          schema:
+            description: Date from which results are provided.
+            example: "2023-08-02T00:00:00.000Z"
+            title: Created At
+            type: string
+        - description: Short schema name that the workflow will be allowed to process.
+          in: query
+          name: schema
+          schema:
+            description: Short schema name that the workflow will be allowed to process.
+            example: bill/invoice
+            title: Schema
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformWorkflowCollection'
+                $ref: "#/components/schemas/TransformWorkflowCollection"
           description: OK
   /transform/v1/workflows/{id}:
     get:
@@ -242,115 +257,72 @@ paths:
           description: Fetch an existing workflow given its UUID.
       description: Fetch an existing workflow given its UUID.
       parameters:
-      - description: ID of the workflow to fetch.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: ID of the workflow to fetch.
-          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
-          title: ID
-          type: string
+        - description: ID of the workflow to fetch.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: ID of the workflow to fetch.
+            example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+            title: ID
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformWorkflow'
+                $ref: "#/components/schemas/TransformWorkflow"
           description: OK
     patch:
       description: Update an existing workflow given its UUID.
       parameters:
-      - description: UUID of the workflow to update.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID of the workflow to update.
-          example: 186522a6-e697-4e34-8498-eee961bcb845
-          title: ID
-          type: string
+        - description: UUID of the workflow to update.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the workflow to update.
+            example: 186522a6-e697-4e34-8498-eee961bcb845
+            title: ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransformUpdateWorkflow'
+              $ref: "#/components/schemas/TransformUpdateWorkflow"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformWorkflow'
+                $ref: "#/components/schemas/TransformWorkflow"
           description: OK
     put:
       description: Create a new workflow with the given UUID.
       parameters:
-      - description: UUID (any version) of the workflow to create.
-        in: path
-        name: id
-        required: true
-        schema:
-          description: UUID (any version) of the workflow to create.
-          example: 186522a6-e697-4e34-8498-eee961bcb845
-          title: ID
-          type: string
+        - description: UUID (any version) of the workflow to create.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID (any version) of the workflow to create.
+            example: 186522a6-e697-4e34-8498-eee961bcb845
+            title: ID
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransformCreateWorkflow'
+              $ref: "#/components/schemas/TransformCreateWorkflow"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransformWorkflow'
+                $ref: "#/components/schemas/TransformWorkflow"
           description: OK
 components:
   schemas:
-    TransformAttachment:
-      properties:
-        desc:
-          description: Description of the attachment
-          example: My file description.
-          title: Description
-          type: string
-        hash:
-          description: SHA256 hash of the file
-          example: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-          title: Hash
-          type: string
-        id:
-          description: UUIDv4 for the Attachment
-          example: b564ff94-7823-4f54-975e-280feb38df3f
-          title: ID
-          type: string
-        meta:
-          additionalProperties:
-            type: string
-          description: Any additional data that might be relevant.
-          title: Meta
-          type: object
-        mime:
-          description: MIME type of the file
-          example: application/pdf
-          title: MIME
-          type: string
-        name:
-          description: Name of the attachment
-          example: my-file.pdf
-          title: Name
-          type: string
-        size:
-          description: Size of the file in bytes
-          example: 12345
-          title: Size
-          type: integer
-        url:
-          description: Public URL where the file can be downloaded.
-          title: URL
-          type: string
-      type: object
     TransformCreateWorkflow:
       properties:
         country:
@@ -363,7 +335,8 @@ components:
           title: Description
           type: string
         draft:
-          description: When true, the current version of the workflow will not be
+          description:
+            When true, the current version of the workflow will not be
             published.
           title: Draft
           type: boolean
@@ -374,7 +347,7 @@ components:
         rescue:
           description: Array of steps to execute en case of an unmanaged KO.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Rescue
           type: array
@@ -386,7 +359,7 @@ components:
         steps:
           description: Array of Steps to use for this workflow.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Steps
           type: array
@@ -396,7 +369,8 @@ components:
         args:
           additionalProperties:
             type: string
-          description: Map of additional arguments that will be included in embedded
+          description:
+            Map of additional arguments that will be included in embedded
             actions.
           title: Arguments
           type: object
@@ -406,7 +380,8 @@ components:
           title: At
           type: string
         code:
-          description: Code assigned by the provider that may provide additional information
+          description:
+            Code assigned by the provider that may provide additional information
             about the event.
           title: Code
           type: string
@@ -416,7 +391,8 @@ components:
           title: Index
           type: integer
         message:
-          description: Message assigned by the provider that may provide additional
+          description:
+            Message assigned by the provider that may provide additional
             information about the event, especially errors.
           title: Message
           type: string
@@ -433,12 +409,14 @@ components:
     TransformFault:
       properties:
         code:
-          description: Code assigned by the provider that may provide additional information
+          description:
+            Code assigned by the provider that may provide additional information
             about the fault.
           title: Code
           type: string
         message:
-          description: Message assigned by the provider that may provide additional
+          description:
+            Message assigned by the provider that may provide additional
             information about the fault.
           title: Message
           type: string
@@ -446,6 +424,59 @@ components:
           description: ID of the provider that generated the fault.
           example: pdf
           title: Provider
+          type: string
+      type: object
+    TransformFile:
+      properties:
+        category:
+          description: Category of the file
+          example: version
+          title: Category
+          type: string
+        desc:
+          description: Description of the file
+          example: My file description.
+          title: Description
+          type: string
+        hash:
+          description: SHA256 hash of the file
+          example: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+          title: Hash
+          type: string
+        id:
+          description: UUID for the file inside the entry
+          example: b564ff94-7823-4f54-975e-280feb38df3f
+          title: ID
+          type: string
+        key:
+          description: Short identifier for the file.
+          example: pdf
+          title: Key
+          type: string
+        meta:
+          additionalProperties:
+            type: string
+          description: Any additional data that might be relevant.
+          title: Meta
+          type: object
+        mime:
+          description: MIME type of the file
+          example: application/pdf
+          title: MIME
+          type: string
+        name:
+          description: Name of the file
+          example: my-file.pdf
+          title: Name
+          type: string
+        size:
+          description: Size of the file in bytes
+          example: 12345
+          title: Size
+          type: integer
+        url:
+          description: Public URL where the file can be downloaded.
+          title: URL
           type: string
       type: object
     TransformIntent:
@@ -461,7 +492,7 @@ components:
         events:
           description: Array of event objects tracking the execution of the intent.
           items:
-            $ref: '#/components/schemas/TransformEvent'
+            $ref: "#/components/schemas/TransformEvent"
           title: Events
           type: array
         id:
@@ -498,10 +529,11 @@ components:
           title: Args
           type: object
         attachments:
-          description: Any attachments that have been generated while processing the
-            job in the workflow will be here.
+          description:
+            Any files that have been generated while processing the job
+            in the workflow will be here.
           items:
-            $ref: '#/components/schemas/TransformAttachment'
+            $ref: "#/components/schemas/TransformFile"
           title: Attachments
           type: array
         completed_at:
@@ -517,10 +549,11 @@ components:
           title: GOBL Envelope
           type: object
         faults:
-          description: Array of fault objects that represent errors that occurred
+          description:
+            Array of fault objects that represent errors that occurred
             during the processing of the job.
           items:
-            $ref: '#/components/schemas/TransformFault'
+            $ref: "#/components/schemas/TransformFault"
           title: Faults
           type: array
         id:
@@ -529,10 +562,11 @@ components:
           title: ID
           type: string
         intents:
-          description: Array of intent objects following the execution of each of
+          description:
+            Array of intent objects following the execution of each of
             the steps of the associated workflow.
           items:
-            $ref: '#/components/schemas/TransformIntent'
+            $ref: "#/components/schemas/TransformIntent"
           title: Intents
           type: array
         key:
@@ -569,13 +603,14 @@ components:
           title: Code
           type: string
         status:
-          description: Step status to match against, when empty this next step will
+          description:
+            Step status to match against, when empty this next step will
             always be executed.
           enum:
-          - OK
-          - SKIP
-          - KO
-          - TIMEOUT
+            - OK
+            - SKIP
+            - KO
+            - TIMEOUT
           title: Status
           type: string
         step_id:
@@ -586,7 +621,7 @@ components:
         steps:
           description: Array of steps to execute
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           title: Steps
           type: array
         stop:
@@ -617,7 +652,7 @@ components:
         next:
           description: Optional array of next steps to execute after this one.
           items:
-            $ref: '#/components/schemas/TransformNext'
+            $ref: "#/components/schemas/TransformNext"
           title: Next
           type: array
         notes:
@@ -636,7 +671,8 @@ components:
           title: Description
           type: string
         draft:
-          description: When true, the current version of the workflow will not be
+          description:
+            When true, the current version of the workflow will not be
             published.
           title: Draft
           type: boolean
@@ -647,14 +683,14 @@ components:
         rescue:
           description: Array of steps to execute en case of an unmanaged KO.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Rescue
           type: array
         steps:
           description: Array of Steps to use for this workflow.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Steps
           type: array
@@ -678,7 +714,8 @@ components:
           title: Disabled
           type: boolean
         draft:
-          description: When true, this workflow is still in draft mode and will not
+          description:
+            When true, this workflow is still in draft mode and will not
             be used in jobs.
           title: Draft
           type: boolean
@@ -696,10 +733,11 @@ components:
           title: Name
           type: string
         rescue:
-          description: List of steps to execute when a KO status is returned by a
+          description:
+            List of steps to execute when a KO status is returned by a
             previous step and not explicitly managed.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Rescue
           type: array
@@ -710,7 +748,7 @@ components:
         steps:
           description: List of steps to execute.
           items:
-            $ref: '#/components/schemas/TransformStep'
+            $ref: "#/components/schemas/TransformStep"
           nullable: true
           title: Steps
           type: array
@@ -723,17 +761,19 @@ components:
           title: Version
           type: string
         versions:
-          description: List of previously published versions of this workflow, only
+          description:
+            List of previously published versions of this workflow, only
             provided when requesting the primary workflow.
           items:
-            $ref: '#/components/schemas/TransformWorkflowVersion'
+            $ref: "#/components/schemas/TransformWorkflowVersion"
           title: Versions
           type: array
       type: object
     TransformWorkflowCollection:
       properties:
         created_at:
-          description: First or queried timestamp when the first entry in the page
+          description:
+            First or queried timestamp when the first entry in the page
             was created.
           title: Created At
           type: string
@@ -744,12 +784,13 @@ components:
         list:
           description: List of workflows.
           items:
-            $ref: '#/components/schemas/TransformWorkflow'
+            $ref: "#/components/schemas/TransformWorkflow"
           nullable: true
           title: List
           type: array
         next_created_at:
-          description: Timestamp that indicates the start of the next page of results,
+          description:
+            Timestamp that indicates the start of the next page of results,
             if any.
           title: Next Created At
           type: string
@@ -789,7 +830,8 @@ components:
   securitySchemes:
     authToken:
       bearerFormat: JWT
-      description: 'Use the `Bearer` scheme with a valid JWT token to authenticate
-        requests. Example: `Authorization: Bearer <token>`'
+      description:
+        "Use the `Bearer` scheme with a valid JWT token to authenticate
+        requests. Example: `Authorization: Bearer <token>`"
       scheme: bearer
       type: http
