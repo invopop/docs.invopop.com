@@ -1,0 +1,192 @@
+---
+title: "Upload files to silo entries"
+sidebarTitle: "Upload files"
+description: "Learn how to upload files to silo entries using the API"
+icon: "file-upload"
+---
+
+Silo entries can store files as attachments, such as PDF invoices, XML documents, or other supporting files. This guide explains how to upload files to silo entries using the API.
+
+## Upload endpoints
+
+You can upload files using either:
+
+- **POST** `/silo/v1/entries/{entry_id}/files` <br />
+System generates the UUID.
+- **PUT** `/silo/v1/entries/{entry_id}/files/{id}` <br />
+You specify the UUID.
+
+Both endpoints support the same features and parameters. Most applications use `POST` and let the system generate UUIDs. However, `PUT` is useful when you need idempotent operations (safe retries with the same UUID), when integrating with external systems that have their own identifiers, or when you need to reference the file URL before the upload completes.
+
+## Upload options
+
+Both endpoints support two upload methods:
+
+#### Inline upload (base64)
+
+Upload the file data directly in the request body as base64-encoded content. This works well for smaller files.
+
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/{entry_id}/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "invoice.pdf",
+    "category": "format",
+    "mime": "application/pdf",
+    "data": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9MZW5ndGg..."
+  }'
+```
+
+#### Placeholder with streaming upload
+
+Create a placeholder file first, then upload the actual file contents to the URL provided in the response. This is useful for larger files or when you want to separate metadata creation from file upload.
+
+<Steps>
+<Step title="Create the placeholder">
+
+```bash cURL
+curl -X POST \ 
+  'https://api.invopop.com/silo/v1/entries/{id}/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "invoice.pdf",
+    "category": "format",
+    "mime": "application/pdf",
+    "sha256": "27a0b656df99dc32124b4c49f2f3c35025f...",
+    "size": 12345
+  }'
+```
+
+To calculate the `sha256` hash and `size`, use your programming language's built-in crypto and file system libraries. In Node.js, use the `crypto` module with `createHash('sha256')` and `fs.statSync()`. In Python, use `hashlib.sha256()` and `os.path.getsize()`. In Go, use `crypto/sha256` and `os.Stat()`. Most languages provide similar standard library functions for these operations.
+
+</Step>
+
+<Step title="Upload the file to the URL from the response">
+
+```json Success
+{
+  "id": "347c5b04-cde2-11ed-afa1-0242ac120002",
+  "entry_id": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "invoice.pdf",
+  "mime": "application/pdf",
+  "size": 12345,
+  "url": "https://storage.invopop.com/upload/...",
+  "stored": false
+}
+```
+
+Use the `url` field from the response to upload the file contents:
+
+```bash cURL
+curl -X PUT 'https://storage.invopop.com/upload/...' \
+  -H 'Content-Type: application/pdf' \
+  --data-binary @invoice.pdf
+```
+</Step>
+</Steps>
+
+## Request parameters
+
+The file upload endpoints accept the following parameters:
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `name` | Yes | Name of the file (e.g., `invoice.pdf`) |
+| `category` | No | Use `format` for alternative formats (PDF, XML), `attachment` for supporting documents. |
+| `data` | Conditional | Base64-encoded binary data. Required if `sha256`, `size`, and `mime` are not provided |
+| `mime` | Conditional | MIME type (e.g., `application/pdf`). Required when `data` is not provided |
+| `sha256` | Conditional | SHA256 hex hash of the file. Required when `data` is not provided |
+| `size` | Conditional | Size of the file in bytes. Required when `data` is not provided |
+| `key` | No | Key used to identify the file in the entry (e.g., `pdf`, `xml`) |
+| `desc` | No | Description of the file |
+| `embeddable` | No | When `true`, the file may be embedded inside other files like PDFs. Default is `false` |
+| `private` | No | When `true`, the file is private and can only be accessed by the owner. Default is `false` |
+| `meta` | No | Additional metadata about the file (key-value pairs) |
+
+
+## Examples
+
+<AccordionGroup>
+<Accordion title="Upload a PDF invoice">
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/123e4567-e89b-12d3-a456-426614174000/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "invoice-2024-001.pdf",
+    "category": "format",
+    "mime": "application/pdf",
+    "key": "pdf",
+    "desc": "Invoice PDF for January 2024",
+    "data": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9MZW5ndGg..."
+  }'
+```
+</Accordion>
+<Accordion title="Upload an XML file">
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/123e4567-e89b-12d3-a456-426614174000/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "facturae.xml",
+    "category": "format",
+    "mime": "application/xml",
+    "key": "xml",
+    "data": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4K..."
+  }'
+```
+</Accordion>
+<Accordion title="Create a placeholder for large file upload">
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/123e4567-e89b-12d3-a456-426614174000/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "large-document.pdf",
+    "category": "attachment",
+    "mime": "application/pdf",
+    "sha256": "27a0b656df99dc32124b4c49f2f3c35025f0a7453f289cbaa0701435cfcf4e28",
+    "size": 5242880,
+    "desc": "Large document attachment"
+  }'
+```
+
+The response will contain a `url` field that can be used to upload the file contents.
+</Accordion>
+</AccordionGroup>
+
+## Response
+
+View the response fields for the file upload endpoints in our [File Upload API Reference](/api-ref/silo/entries/files-post#response-category).
+
+
+## Fetching files
+
+After uploading a file, you can retrieve it using the [Fetch a File](/api-ref/silo/entries/files-fetch) endpoint:
+
+```bash cURL
+curl -X GET 'https://api.invopop.com/silo/v1/entries/{entry_id}/files/{id}' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+The response will contain the file data with the appropriate `Content-Type` and `Content-Disposition` headers set according to the file's source.
+
+## Best practices
+
+1. **Use placeholders for large files** — For files larger than a few megabytes, create a placeholder first and upload via the streaming URL to avoid timeouts.
+
+2. **Provide file metadata** — Include `key`, `desc`, and `category` to make files easier to identify and organize.
+
+3. **Verify uploads** — Check the `stored` field in the response to confirm the file was uploaded successfully.
+
+4. **Use appropriate categories** — Use `format` for alternative invoice formats (PDF, XML) and `attachment` for supporting documents.
+
+5. **Set privacy flags** — Use the `private` flag for sensitive files that shouldn't be publicly accessible.
+
+## Related documentation
+
+- [Create a File (POST)](/api-ref/silo/entries/files-post) — API reference for POST endpoint
+- [Create a File (PUT)](/api-ref/silo/entries/files-put) — API reference for PUT endpoint
+- [Fetch a File](/api-ref/silo/entries/files-fetch) — Retrieve uploaded files
