@@ -11,9 +11,9 @@ Silo entries can store files as attachments, such as PDF invoices, XML documents
 
 You can upload files using either:
 
-- **POST** `/silo/v1/entries/{entry_id}/files` <br />
+- [POST](/api-ref/silo/entries/files-post) `/silo/v1/entries/{entry_id}/files` <br />
 System generates the UUID.
-- **PUT** `/silo/v1/entries/{entry_id}/files/{id}` <br />
+- [PUT](/api-ref/silo/entries/files-put) `/silo/v1/entries/{entry_id}/files/{id}` <br />
 You specify the UUID.
 
 Both endpoints support the same features and parameters. Most applications use `POST` and let the system generate UUIDs. However, `PUT` is useful when you need idempotent operations (safe retries with the same UUID), when integrating with external systems that have their own identifiers, or when you need to reference the file URL before the upload completes.
@@ -77,7 +77,7 @@ To calculate the `sha256` hash and `size`, use your programming language's built
 }
 ```
 
-Use the `url` field from the response to upload the file contents:
+Use the `url` field from the response to upload the file contents. Note `stored` is `false` until the file is uploaded.
 
 ```bash cURL
 curl -X PUT 'https://storage.invopop.com/upload/...' \
@@ -159,7 +159,38 @@ The response will contain a `url` field that can be used to upload the file cont
 
 ## Response
 
-View the response fields for the file upload endpoints in our [File Upload API Reference](/api-ref/silo/entries/files-post#response-category).
+This is an example response from the file upload endpoints:
+
+
+```json expandable
+{
+  "category": "version",
+  "created_at": "2018-01-01T00:00:00.000Z",
+  "desc": "Invoice for January 2021.",
+  "embeddable": true,
+  "entry_id": "347c5b04-cde2-11ed-afa1-0242ac120002",
+  "hash": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
+  "id": "<string>",
+  "key": "pdf",
+  "meta": {},
+  "mime": "application/pdf",
+  "name": "invoice.pdf",
+  "previous": [
+    {
+      "created_at": "2018-01-01T00:00:00.000Z",
+      "hash": "<string>",
+      "id": "<string>",
+      "size": 123
+    }
+  ],
+  "private": true,
+  "size": 12345,
+  "stored": true,
+  "url": "<string>"
+}
+```
+
+View them detailed response fields in our [File Upload API Reference](/api-ref/silo/entries/files-post#response-category).
 
 
 ## Fetching files
@@ -184,9 +215,3 @@ The response will contain the file data with the appropriate `Content-Type` and 
 4. **Use appropriate categories** — Use `format` for alternative invoice formats (PDF, XML) and `attachment` for supporting documents.
 
 5. **Set privacy flags** — Use the `private` flag for sensitive files that shouldn't be publicly accessible.
-
-## Related documentation
-
-- [Create a File (POST)](/api-ref/silo/entries/files-post) — API reference for POST endpoint
-- [Create a File (PUT)](/api-ref/silo/entries/files-put) — API reference for PUT endpoint
-- [Fetch a File](/api-ref/silo/entries/files-fetch) — Retrieve uploaded files
