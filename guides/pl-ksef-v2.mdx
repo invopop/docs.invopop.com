@@ -1,0 +1,485 @@
+---
+title: "KSeF Poland Guide"
+sidebarTitle: "🇵🇱 Poland (KSeF 2.0)"
+description: "Register suppliers and issue electronic invoices through Poland's KSeF 2.0 system"
+---
+
+import PolandResources from '/snippets/tables/poland-resources.mdx';
+import PartyRegistrationWorkflow from '/snippets/workflows/templates/pl/pl-register.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/templates/pl/pl-send.mdx';
+
+<Warning>
+  **Sandbox Only - KSeF 2.0 Production Environment Not Yet Available**
+
+  KSeF 2.0 is currently only available in the sandbox environment. The production environment is expected to launch in February 2026 for large taxpayers. This guide uses sandbox credentials and test data.
+</Warning>
+
+## Introduction
+
+KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing system operated by the [Ministry of Finance](https://www.gov.pl/web/finanse). The system uses the FA(3) XML schema format for structured invoice data and provides real-time clearance for all B2B invoices.
+
+Invoices are encoded in FA(3), a strict XML format that enforces standardized fields for domestic and cross-border transactions. The KSeF system validates all submitted invoices in real-time and assigns a unique KSeF ID upon successful clearance.
+
+This guide covers two key processes:
+- **Party Registration**: Registering suppliers in the KSeF system
+- **Invoice Issuance**: Creating and sending FA(3) invoices through KSeF
+
+## Prerequisites
+
+To issue invoices through KSeF, you will need:
+
+- **For Sandbox**: Test Polish Tax ID (NIP). You can generate fake NIPs for testing at [http://generatory.it/](http://generatory.it/)
+- **For Production** (when available): Valid company NIP and already logged in to (KSeF MCU Portal)[https://ksef.podatki.gov.pl/modul-certyfikatow-i-uprawnien-mcu/]
+
+## Setup
+
+There are three key processes to prepare:
+- Connect the Poland app
+- Configure a party registration workflow
+- Configure an invoice sending workflow
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Connect the Poland app">
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Poland** in the app discovery list
+  3. Click **Connect** to activate
+
+<Frame>
+<img width="354" src="/assets/guides/gov-pl-connect.png" alt="Connect KSeF app" />
+</Frame>
+
+The initial connection requires no configuration.
+</Step>
+
+<Step title="Configure party registration workflow">
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="KSeF party registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" cta="Add to my workspace">
+      Registers a party (supplier) with the KSeF system.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <PartyRegistrationWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Register Party".
+
+    The new workflow will need to perform these steps:
+
+    1. **Set State** - To `Processing`
+    2. **Register Party in KSeF (Poland)** - Registers the party with KSeF
+    3. **Set State** - To `Registered`
+
+    Finally, in the **Error Handling** area, add the **Set State** action and select `Error`.
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure invoice sending workflow">
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="KSeF send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-send" cta="Add to my workspace">
+      Signs and converts the [GOBL](https://docs.gobl.org) document into the FA(3) XML format and sends it to KSeF.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <SendInvoiceWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
+
+    1. **Set State** - To `Processing`
+    2. **Add sequential code** - Add the desired sequence for your invoices
+    3. **Sign Envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications
+    4. **Generate FA(3) XML** - Generates the FA(3) XML
+    5. **Send FA(3) XML to KSeF** - Sends the FA(3) XML to KSeF
+    6. **Set State** - To `Sent`
+
+    In the **Error Handling** section, add a **Set State** step with the state set to `Error` to capture and flag failed submissions.
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Running
+
+In this section, we'll provide details on how to first register a party (supplier) and then issue invoices on their behalf.
+
+<Info>
+  The recommended approach is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-put).
+</Info>
+
+### Register a Party
+
+<Steps>
+
+<Step title="Create the Party with Tax ID">
+
+<Info>
+  **For Sandbox**: You can use fake Polish Tax IDs (NIP) generated from [http://generatory.it/](http://generatory.it/). The sandbox environment doesn't validate against real company data.
+</Info>
+
+In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click **+ New Supplier**.
+
+Create a party entry with the following minimum information:
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/party",
+  "name": "Test Supplier Sp. z o.o.",
+  "tax_id": {
+    "country": "PL",
+    "code": "9876543210"
+  }
+}
+```
+
+Click **Build**, ensure there are no errors, and click **Save**.
+
+</Step>
+
+<Step title="Run the Registration Workflow">
+
+Once the party is created, find and click the **Select Workflow** button on the party details page.
+
+Select the **KSeF Register Party** workflow created during setup and click **Run Workflow**.
+
+<Note>
+  In the sandbox environment, registration completes immediately. No additional steps are required to start issuing invoices.
+</Note>
+
+The party will now be in the `Registered` state and ready to issue invoices through KSeF.
+
+</Step>
+
+</Steps>
+
+### Send an Invoice
+
+Once a party is registered, you can issue invoices on their behalf. The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+<Tip>
+  [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to KSeF require the following properties:
+  - `$regime` set to [`PL`](https://docs.gobl.org/regimes/pl)
+  - `$addons` must include [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) for FA(3) schema compliance
+</Tip>
+
+<AccordionGroup>
+
+<Accordion title="B2B Standard Invoice">
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "PL",
+  "$addons": ["pl-favat-v3"],
+  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3c4d",
+  "type": "standard",
+  "series": "INVOICE",
+  "code": "001",
+  "issue_date": "2026-01-20",
+  "currency": "PLN",
+  "supplier": {
+    "name": "Testowa Firma Sp. z o.o.",
+    "tax_id": {
+      "country": "PL",
+      "code": "9876543210"
+    },
+    "addresses": [
+      {
+        "street": "ul. Główna 1",
+        "locality": "Warsaw",
+        "code": "00-001",
+        "country": "PL"
+      }
+    ],
+    "emails": [
+      {
+        "addr": "kontakt@testowa.pl"
+      }
+    ]
+  },
+  "customer": {
+    "name": "Klient Testowy Sp. z o.o.",
+    "tax_id": {
+      "country": "PL",
+      "code": "1111111111"
+    },
+    "addresses": [
+      {
+        "street": "ul. Testowa 10",
+        "locality": "Kraków",
+        "code": "30-001",
+        "country": "PL"
+      }
+    ]
+  },
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "10",
+      "item": {
+        "name": "Software Development Services",
+        "price": "100.00",
+        "unit": "h"
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "key": "standard",
+          "rate": "general"
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "quantity": "5",
+      "item": {
+        "name": "Consulting Services",
+        "price": "150.00",
+        "unit": "h"
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "key": "standard",
+          "rate": "reduced"
+        }
+      ]
+    }
+  ],
+  "payment": {
+    "instructions": {
+      "key": "credit-transfer",
+      "detail": "Transfer payment to our bank account",
+      "credit_transfer": [
+        {
+          "iban": "PL61109010140000071219812874",
+          "name": "Testowa Firma Sp. z o.o."
+        }
+      ]
+    }
+  }
+}
+
+```
+
+</Accordion>
+
+<Accordion title="B2B Reverse Charge Invoice">
+
+For reverse charge invoices, the process is the same but the customer will have a EU VAT ID:
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "PL",
+  "$addons": ["pl-favat-v3"],
+  "$tags": ["reverse-charge"],
+  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3ccf",
+  "type": "standard",
+  "series": "RC",
+  "code": "001",
+  "issue_date": "2026-01-20",
+  "currency": "PLN",
+  "supplier": {
+    "name": "Testowa Firma Sp. z o.o.",
+    "tax_id": {
+      "country": "PL",
+      "code": "9876543210"
+    },
+    "addresses": [
+      {
+        "street": "ul. Główna 1",
+        "locality": "Warsaw",
+        "code": "00-001",
+        "country": "PL"
+      }
+    ]
+  },
+  "customer": {
+    "name": "EU Business GmbH",
+    "tax_id": {
+      "country": "DE",
+      "code": "111111125"
+    },
+    "addresses": [
+      {
+        "street": "Hauptstraße 100",
+        "locality": "Berlin",
+        "code": "10115",
+        "country": "DE"
+      }
+    ]
+  },
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "1",
+      "item": {
+        "name": "IT Services - EU Reverse Charge",
+        "price": "5000.00"
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "key": "reverse-charge"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "key": "legal",
+      "text": "Reverse charge mechanism applies - VAT to be accounted for by the customer."
+    }
+  ]
+}
+
+```
+
+</Accordion>
+
+<Accordion title="B2B Credit Note">
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "PL",
+  "$addons": ["pl-favat-v3"],
+  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3c8b",
+  "type": "credit-note",
+  "series": "KOR",
+  "code": "001",
+  "issue_date": "2026-01-20",
+  "currency": "PLN",
+  "preceding": [
+    {
+      "type": "standard",
+      "series": "INVOICE",
+      "code": "001",
+      "issue_date": "2026-01-20",
+      "reason": "Price correction",
+      "ext": {
+        "pl-favat-effective-date": "1"
+      },
+      "stamps": [
+        {
+          "prv": "favat-ksef-number",
+          "val": "1234567890-20260120-ABCD1234-EF"
+        }
+      ]
+    }
+  ],
+  "supplier": {
+    "name": "Testowa Firma Sp. z o.o.",
+    "tax_id": {
+      "country": "PL",
+      "code": "9876543210"
+    },
+    "addresses": [
+      {
+        "street": "ul. Główna 1",
+        "locality": "Warsaw",
+        "code": "00-001",
+        "country": "PL"
+      }
+    ]
+  },
+  "customer": {
+    "name": "Klient Testowy Sp. z o.o.",
+    "tax_id": {
+      "country": "PL",
+      "code": "9876543210"
+    },
+    "addresses": [
+      {
+        "street": "ul. Testowa 10",
+        "locality": "Kraków",
+        "code": "30-001",
+        "country": "PL"
+      }
+    ]
+  },
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "10",
+      "item": {
+        "name": "Software Development Services",
+        "price": "10.00",
+        "unit": "h"
+      },
+      "taxes": [
+        {
+          "cat": "VAT",
+          "key": "standard",
+          "rate": "general"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+After creating the invoice in the Console:
+1. Click **Build** to validate
+2. Click **Save** to store in the silo
+3. Click **Select Workflow** and choose the **KSeF Send Invoice** workflow
+4. Click **Run Workflow**
+
+The invoice will be validated, converted to FA(3) XML format, and sent to KSeF. Upon successful clearance, it will receive a unique KSeF ID.
+
+<Note>
+  For international transactions, the invoice is created and cleared in KSeF just like domestic invoices. Because the foreign recipient cannot log into KSeF, delivery happens outside the platform (via email, EDI, etc.) with the KSeF QR code included for verification.
+</Note>
+
+## GOBL Addon Reference
+
+Detailed information about the FA(3)-specific extensions and validations can be found in:
+- [Poland FA(3) VAT v3 Addon Documentation](https://docs.gobl.org/addons/pl-favat-v3)
+- [Poland Tax Regime Documentation](https://docs.gobl.org/regimes/pl)
+
+You can also use the [GOBL Builder](https://build.gobl.org) to create custom invoices with the Polish regime and FA(3) addon.
+
+---
+
+<PolandResources />
+
+<Card title="Poland FAQ"
+  icon="square-question"
+  href="/faq/poland"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Poland →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Poland →
+</Card>

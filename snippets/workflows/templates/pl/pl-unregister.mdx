@@ -1,0 +1,51 @@
+---
+title: "Unregister party from KSEF"
+description: "Unregister a party from KSEF"
+countryCode: "pl"
+appId: "gov-pl"
+schema: "org/party"
+---
+
+```json Example Unregister supplier for KSEF workflow with states
+{
+    "name": "Unregister party from KSEF",
+    "description": "Unregister a party from KSEF",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "9e9514b0-fb6e-11f0-8a4e-79beeb9e3cf2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "a5ec8180-fb6e-11f0-8a4e-79beeb9e3cf2",
+            "name": "Unregister from KSEF",
+            "provider": "gov-pl.unregister"
+        },
+        {
+            "id": "a8c06200-fb6e-11f0-8a4e-79beeb9e3cf2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "aebf6ac0-fb6e-11f0-8a4e-79beeb9e3cf2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
