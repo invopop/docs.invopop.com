@@ -1,0 +1,114 @@
+# OpenAPI Poland v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you interact with the Poland KSeF app API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Poland Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-pl/v1/entry/{entry_id}/certificate:
+    post:
+      description: Upload the KSeF certificate, private key, and password for a registered party. This endpoint provides an alternative to the web-based certificate upload wizard for programmatic integration.
+      parameters:
+      - description: ID of the party silo entry to upload the certificate for.
+        in: path
+        name: entry_id
+        required: true
+        schema:
+          description: ID of the party silo entry to upload the certificate for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  description: |-
+                    The password set during certificate generation in the KSeF portal.
+                  type: string
+                  example: "MySecurePassword123!"
+                private_key:
+                  description: |-
+                    Base64 encoded private key file downloaded from the KSeF portal.
+                    The private key must match the certificate and be properly formatted.
+                  format: byte
+                  type: string
+                certificate:
+                  description: |-
+                    Base64 encoded certificate file downloaded from the KSeF portal.
+                    The certificate must be valid, with a start date that is not in the future,
+                    and must be configured for "Authentication in the KSeF system".
+                  format: byte
+                  type: string
+              required:
+                - password
+                - private_key
+                - certificate
+      responses:
+        "204":
+          description: "Certificate uploaded successfully and validated."
+        "400":
+          description: Bad Request - Invalid certificate data or mismatched private key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "404":
+          description: Not Found - Entry ID not found or not in a state waiting for certificate upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "422":
+          description: Unprocessable Entity - Certificate validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "500":
+          description: Internal Server Error - Failed to process certificate upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+        Example: `Authorization: Bearer <token>`
