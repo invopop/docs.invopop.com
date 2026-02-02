@@ -11,11 +11,13 @@ import ItalyResources from '/snippets/tables/italy-resources.mdx';
 
 ## Introduction
 
-Electronic invoicing is mandatory for all businesses in Italy. The _Sistema di Interscambio_ (SDI) serves as the Italian government's central hub for transmitting, validating, and delivering all electronic invoices throughout the country.
-
 The SDI system operates using a standardized XML format called FatturaPA, which ensures all invoices contain the required information and comply with the strict validation rules established by the Italian tax authority (_Agenzia delle Entrate_). To ensure proper routing of invoices to the correct recipient, the SDI system uses a unique identifier called a Recipient Code, which is assigned to each registered SDI provider.
 
-Invopop simplifies SDI integration by allowing you to work with [GOBL](https://docs.gobl.org) format instead of XML, providing synchronous validation before submission, and offering a simple API integration with automatic handling of SDI notifications and status updates. For sending invoices through SDI, see our companion guide: [Italy - SDI: Sending Invoices](/guides/countries/it-sdi-sending).
+To receive FatturaPA XML documents, Invopop uses the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library to automatically process conversions into [GOBL](https://docs.gobl.org) format.
+
+Detailed information about the SDI-specific extensions and validations can be found in:
+- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
+- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
 
 ## Setup
 
@@ -111,8 +113,11 @@ To start processing incoming invoices navigate to **Configuration** → **Apps**
 This workflow will automatically trigger whenever a new invoice is received through SDI. Any errors in the import process will trigger the rescue steps in the workflow, allowing identification and resolution of issues.
 </Step>
 
-<Step title="Register with Italian tax authority">
-You must register the Recipient Code (Codice Destinatario) for each company you want to receive invoices.
+<Step title="Register with Italian tax authority (live only)">
+  <Note>
+    In Sandbox skip this step, as Invopop simulates the receiving environment. 
+  </Note>
+For each company you want to receive invoices, register the Recipient Code (Codice Destinatario) at Agenzia Entrate.
 
 1. Access the [Italian tax authority's website](https://ivaservizi.agenziaentrate.gov.it/portale/) and log in with valid credentials for the company being registered.
 
@@ -123,49 +128,26 @@ You must register the Recipient Code (Codice Destinatario) for each company you 
 4. Select the Recipient Code (_Codice Destinatario_) option and enter the code `JKKZDGR` provided by Invopop
 5. Tap on **Conferma**
 
-After completing this registration with the tax authority, execute the [SDI register customer](#template-2) workflow in Invopop to complete the setup for that company.
-
-<Note>
-Complete both steps for each company: (1) Register Codice Destinatario `JKKZDGR` with the Italian tax authority, and (2) Run the Customer Registration workflow in Invopop. Registration is only needed for receiving invoices, not sending.
-</Note>
-
-<Warning>
+<Tip>
   Make sure you notify the companies about their new Codice Destinatario. It works as a routing identifier that tells the SDI system where to deliver incoming electronic invoices. Invoices sent to an outdated Codice Destinatario will be rejected. 
-</Warning>
+</Tip>
+</Step>
+
+<Step title="Run the Customer Registration workflow in Invopop">
+  In Invopop, execute the [SDI register customer](#template-2) workflow on the supplier's silo entry to complete the setup for that company.
 </Step>
 </Steps>
+
+<Warning>
+ In live workspaces make sure you both register Codice Destinatario `JKKZDGR` and run the customer registration workflow. Registration is only needed for receiving invoices, not sending.
+</Warning>
 
 ## Receiving Invoices
 
-Invopop uses the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library to process conversions, automatically converting received FatturaPA XML documents into [GOBL](https://docs.gobl.org) format.
 
-Detailed information about the SDI-specific extensions and validations can be found in:
-- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
-- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
-
-### How the process works
-
-<Steps>
-<Step title="Register with Italian tax authority">
-Register the Recipient Code `JKKZDGR` with the Italian tax authority for each company that needs to receive invoices, as outlined in the setup steps.
-</Step>
-
-<Step title="Set up the Customer Registration workflow">
-Run this workflow for each company that needs to receive invoices. This registers the company's tax ID with our SDI integration partner to subscribe to invoice events for that organization.
-</Step>
-
-<Step title="Configure the app for import">
-Select the Import Invoices workflow in the SDI Italy app configuration to automatically process incoming invoices.
-</Step>
-
-<Step title="Process received invoices">
-Once registered, any invoices addressed to the registered companies with the Recipient Code will be automatically received and processed through the Import Invoices workflow configured in the app settings.
-
-The import process uses the open-source library [gobl.fatturapa](https://github.com/invopop/gobl.fatturapa) to convert FatturaPA documents into [GOBL](https://docs.gobl.org) format, making them accessible within the Invopop workspace like any other document.
+Once registered, any invoices addressed to the registered companies with the Recipient Code will be automatically received and processed through the Import Invoices workflow configured in the app settings. Received invoices will appear in your **Expenses** folder.
 
 If errors occur during the import process, they will trigger the rescue steps in the workflow, allowing users to check what went wrong and take appropriate action.
-</Step>
-</Steps>
 
 ---
 
