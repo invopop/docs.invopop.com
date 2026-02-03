@@ -1,0 +1,238 @@
+---
+title: "Argentina FAQ"
+description: "Frequently asked questions about invoicing compliance in Argentina"
+sidebarTitle: "FAQ"
+---
+
+#### General Invoicing in Argentina
+
+<AccordionGroup>
+  <Accordion title="What does it mean that Argentina has a clearance model for invoicing?">
+    A clearance model (also called real-time validation or continuous transaction control) is a regulatory architecture in which each invoice must be electronically submitted to the tax authority and formally approved before it becomes legally valid.
+
+    In Argentina's case, the issuer submits invoice data to ARCA, which validates it and returns a CAE (Código de Autorización Electrónico). Only with this authorization code can the invoice be legally issued to the customer. This architecture gives ARCA real-time visibility into all business transactions, preventing fraud and enabling automated tax compliance verification.
+  </Accordion>
+
+  <Accordion title="What is the difference between AFIP and ARCA?">
+    AFIP (Administración Federal de Ingresos Públicos) was Argentina's national tax authority until November 2024. It was then renamed to ARCA (Agencia de Recaudación y Control Aduanero). The organization's functions and systems remain the same—only the name has changed. You may still see references to AFIP in older documentation and systems.
+  </Accordion>
+
+  <Accordion title="What is a CAE code and why is it required?">
+    The CAE (Código de Autorización Electrónico) is a 14-digit authorization code issued by ARCA that validates an invoice. Every electronic invoice must receive a CAE before it becomes legally valid. The CAE must be displayed on the invoice along with its expiration date (typically 15 days from issuance).
+
+    Without a CAE, an invoice is not legally valid in Argentina, and the issuer cannot claim it as a deductible expense or VAT credit.
+  </Accordion>
+
+  <Accordion title="What invoice types are supported in Argentina?">
+    Argentina has several invoice types based on the tax classification of both the issuer and the customer:
+
+    - **Factura A**: Issued by registered taxpayers (Responsable Inscripto) to other registered taxpayers. VAT is broken down separately.
+    - **Factura B**: Issued by registered taxpayers to final consumers, exempt entities, and non-categorized subjects. VAT is included in the total price.
+    - **Factura C**: Issued by monotributistas (simplified tax regime) to any type of customer. No VAT breakdown.
+    - **Factura E**: Used for export operations of goods and services.
+
+    Invopop supports all of these invoice types through the Argentina app.
+  </Accordion>
+
+  <Accordion title="How does invoice numbering work in Argentina?">
+    Argentine invoices use a two-part numbering system: **XXXXX-YYYYYYYY**
+
+    - **Punto de Venta (POS)**: A 5-digit code (e.g., 00001) that identifies the point of sale or electronic invoicing method.
+    - **Sequential Number**: An 8-digit code (e.g., 00000001) that increases by 1 with each invoice.
+
+    The sequence must be continuous with no skipped or repeated numbers. Each invoice type (A, B, C) and POS combination has its own independent sequence. For example, Factura A from POS 0001 starts at `00001-00000001`, while Factura B from the same POS would also start at `00001-00000001`.
+
+    Invopop automatically manages sequential numbering for each punto de venta.
+  </Accordion>
+
+  <Accordion title="What is a Punto de Venta (point of sale)?">
+    A Punto de Venta (POS) is a 5-digit code that identifies where invoices are issued from. In electronic invoicing, it represents the electronic invoicing method or channel (e.g., Web Service, ARCA portal).
+
+    Each POS has its own independent invoice sequence for each invoice type. You must register your punto de venta with ARCA before you can issue invoices through it in production. In the sandbox environment, you can use test punto de venta numbers without registration.
+  </Accordion>
+
+  <Accordion title="Do I need different puntos de venta for different invoice types?">
+    No, you can use the same punto de venta for different invoice types (Factura A, B, C, etc.). However, each invoice type will have its own independent sequential numbering within that punto de venta.
+
+    For example, using POS 00001:
+    - Factura A: 00001-00000001, 00001-00000002, 00001-00000003...
+    - Factura B: 00001-00000001, 00001-00000002, 00001-00000003...
+  </Accordion>
+</AccordionGroup>
+
+#### ARCA System and Technical Requirements
+
+<AccordionGroup>
+  <Accordion title="What is WSFE and how does Invopop use it?">
+    WSFE (Web Services de Factura Electrónica) is ARCA's web service infrastructure for automated invoice submission. ARCA provides several web services:
+
+    - **wsfev1**: For invoices A, B, C, and M without item detail
+    - **wsmtxca**: For invoices A and B with item details
+    - **wsfexv1**: For type E (export) invoices
+
+    Invopop integrates with these services to automatically submit your invoices to ARCA and receive CAE authorization codes in real time.
+  </Accordion>
+
+  <Accordion title="Do I need to upload digital certificates to Invopop?">
+    Yes, to issue invoices through ARCA's web services, you need to upload your CSD (Certificado de Sello Digital) to Invopop. This certificate is issued by ARCA and is used to authenticate your requests to their system.
+
+    The registration process involves:
+    1. Generating a certificate signing request (CSR) with ARCA
+    2. Downloading the certificate and private key
+    3. Uploading them to Invopop through the supplier registration flow
+
+    See our [ARCA Supplier Onboarding guide](/guides/ar-arca-suppliers) for detailed instructions.
+  </Accordion>
+
+  <Accordion title="What is a CUIT and Clave Fiscal?">
+    - **CUIT** (Clave Única de Identificación Tributaria) is Argentina's tax identification number. Every registered taxpayer must have a CUIT to issue electronic invoices.
+    - **Clave Fiscal** is a digital key used to access ARCA's online services, including the certificate management portal. You need it to generate digital certificates for electronic invoicing.
+
+    Both are obtained through ARCA when you register as a taxpayer.
+  </Accordion>
+
+  <Accordion title="What happens if ARCA rejects my invoice?">
+    If ARCA rejects an invoice, you'll receive an error message explaining the reason for rejection. Common reasons include:
+
+    - Invalid or unregistered CUIT
+    - Missing required fields
+    - Incorrect tax calculations
+    - Sequential numbering errors
+    - Invalid punto de venta
+
+    Review the error message, correct the issue in your GOBL document, and resubmit the invoice. The rejected invoice does not count toward your sequential numbering, so you can use the same number after correction.
+  </Accordion>
+
+  <Accordion title="Can I issue invoices with a date in the past?">
+    Argentine regulations require invoices to be submitted to ARCA promptly after the transaction occurs. While ARCA may accept invoices with recent past dates, it's best practice to issue invoices in real time or as close to the transaction date as possible.
+
+    For recording operation dates that differ from the issue date, use GOBL's `op_date` field to store the actual transaction date while keeping `issue_date` as the current date.
+  </Accordion>
+</AccordionGroup>
+
+#### Tax Classifications and Regulations
+
+<AccordionGroup>
+  <Accordion title="What is the difference between Responsable Inscripto and Monotributista?">
+    These are two different tax regimes in Argentina:
+
+    **Responsable Inscripto** (Registered Taxpayer):
+    - Standard tax regime for most businesses
+    - Must charge and collect VAT separately
+    - Can issue Factura A (to other registered taxpayers) and Factura B (to consumers)
+    - Must file monthly VAT and income tax returns
+
+    **Monotributista**:
+    - Simplified tax regime for small businesses and self-employed individuals
+    - Pays a fixed monthly amount covering VAT and income tax
+    - Can only issue Factura C
+    - Cannot deduct VAT on purchases
+
+    Your choice of regime determines which invoice types you can issue.
+  </Accordion>
+
+  <Accordion title="When should I issue a Factura A vs Factura B?">
+    As a Responsable Inscripto (registered taxpayer):
+
+    **Issue Factura A when your customer is:**
+    - Another Responsable Inscripto
+    - A Monotributista
+    - Any entity that needs to claim VAT credits
+
+    **Issue Factura B when your customer is:**
+    - A final consumer (Consumidor Final)
+    - An exempt entity (Exento)
+    - A non-categorized subject
+    - A foreign tourist
+
+    The key difference is that Factura A breaks down VAT separately (allowing the buyer to claim input VAT credits), while Factura B includes VAT in the total price.
+  </Accordion>
+
+  <Accordion title="What VAT rates are used in Argentina?">
+    Argentina has several VAT rates (alícuotas):
+
+    | AFIP Code | Rate | Description |
+    |-----------|------|-------------|
+    | 3 | 0% | VAT-exempt sales (exports, exempt activities) |
+    | 9 | 2.5% | Special reduced rate |
+    | 8 | 5% | Special reduced rate |
+    | 4 | 10.5% | Reduced rate (construction, agriculture) |
+    | 5 | 21% | Standard VAT rate (most goods and services) |
+    | 6 | 27% | Higher rate (utilities, telecom services) |
+
+    The standard rate is 21%, which applies to most goods and services. GOBL's [Argentina tax regime](https://docs.gobl.org/regimes/ar) supports all of these rates.
+  </Accordion>
+</AccordionGroup>
+
+#### Supplier Registration
+
+<AccordionGroup>
+  <Accordion title="What information is required to register a supplier?">
+    To register a supplier for ARCA invoicing, you need:
+
+    **Company Information:**
+    - Legal name (Razón Social)
+    - CUIT (tax ID)
+    - Fiscal address
+    - Economic activity code
+    - Tax classification (Responsable Inscripto or Monotributista)
+
+    **Digital Certificates:**
+    - CSD certificate (.crt file)
+    - Private key (.key file)
+    - Key password (if applicable)
+
+    See our [ARCA Supplier Onboarding guide](/guides/ar-arca-suppliers) for detailed registration instructions.
+  </Accordion>
+
+  <Accordion title="How long does supplier registration take?">
+    The supplier registration process typically takes a few minutes once the supplier has their digital certificates ready. The steps are:
+
+    1. Generate a registration link in Invopop
+    2. Supplier uploads their certificate and key
+    3. System validates the credentials with ARCA
+    4. Registration is complete
+
+    The longest part is usually obtaining the digital certificate from ARCA, which can take a few days if the supplier hasn't done it before.
+  </Accordion>
+
+  <Accordion title="Can I register multiple puntos de venta for one supplier?">
+    Yes, a single supplier can have multiple puntos de venta. Each punto de venta operates independently with its own sequential numbering for each invoice type.
+
+    When registering a supplier, you specify which punto de venta to use. You must register each punto de venta with ARCA in production before using it to issue invoices.
+  </Accordion>
+
+  <Accordion title="What happens if a supplier's certificate expires?">
+    Digital certificates issued by ARCA have an expiration date. When a certificate is about to expire, the supplier must generate a new one through ARCA's portal and upload it to Invopop.
+
+    To update an expired certificate:
+    1. Obtain a new certificate from ARCA
+    2. Use the supplier registration workflow to upload the new certificate
+    3. The new certificate will replace the old one
+
+    It's recommended to renew certificates before they expire to avoid disruption to your invoicing process.
+  </Accordion>
+</AccordionGroup>
+
+#### White-Label and B2B2B Operations
+
+<AccordionGroup>
+  <Accordion title="Does Invopop support white-label invoicing in Argentina?">
+    Yes, Invopop supports white-label (B2B2B) operations in Argentina. This means you can issue invoices on behalf of your clients using their CUIT and digital certificates.
+
+    This is particularly useful for platforms and software providers who want to offer invoicing services to their customers without requiring them to integrate directly with ARCA.
+
+    Each supplier (your client) needs to complete the registration process with their own certificates, and then you can issue invoices on their behalf through Invopop's workflows.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Argentina's regulation →
+</Card>
