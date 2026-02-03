@@ -5,6 +5,7 @@ description: "Create and register suppliers in Argentina with ARCA."
 ---
 
 import ArRegistrationWorkflow from '/snippets/workflows/templates/ar/ar-supplier-registration.mdx'
+import ArgentinaResources from '/snippets/tables/argentina-resources.mdx'
 
 ## Introduction
 
@@ -15,6 +16,13 @@ To issue invoices in Argentina through ARCA, each supplier must generate a digit
 
 <Steps>
  <Step title="Connect the Argentina app">
+  <Frame>
+    <img
+      width="366"
+      src="/assets/guides/ar-onboarding-connect.png"
+      alt="Argentina App"
+    />
+  </Frame>
     1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
     2. Find **Argentina** in the app list.
     3. Click **Connect** to activate the app.
@@ -36,13 +44,13 @@ To issue invoices in Argentina through ARCA, each supplier must generate a digit
       <Tab title="Build from scratch">
         Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
 
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "ARCA Supplier Registration".
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "Register in ARCA".
 
         The new workflow will need to perform the following steps:
 
-        1. **Register supplier** - will generate a unique URL and add it into a `url` key value within the `meta` property. You could add a webhook or email step after this step to notify the supplier.
-        2. **Set State** — select "Processing".
-        3. **Wait for ARCA Authorization** - waits for the supplier to complete the registration process in the ARCA webpage.
+        1. **Set State** — select "Processing".
+        2. **Register supplier in ARCA** - will generate a unique URL and add it into a `url` key value within the `meta` property. Optionally, add a webhook or email step after this step to notify the supplier.
+        3. **Wait for ARCA authorization** - waits for the supplier to complete the registration process in the ARCA webpage.
         4. **Set State** — select "Registered".
 
         Add any additional steps you may need, and save the new workflow.
@@ -57,91 +65,107 @@ The registration process is the same whether you're issuing invoices on behalf o
 
   <Steps>
     <Step title="Create a supplier entry">
+
+      <Badge color="green">Via API</Badge><br />
       Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to create a new supplier [party](https://docs.gobl.org/draft-0/org/party). The required fields are:
       - `name` - company name
       - `tax_id` - tax identification number
 
       Set the `folder` parameter to `suppliers` so the entry appears in the suppliers section. The entry will have an `Empty` status initially.
 
+      <Badge color="green">Via Console</Badge><br />
+      Navigate to **Parties > Suppliers** and click on <kbd>+ New supplier</kbd>. The following json code will appear in the editor:
+
+      ```json
+      {
+        "$schema": "https://gobl.org/draft-0/org/party",
+        "name": "", // Name of the company or individual
+        "tax_id": {
+            "code": "", // 11 digit CUIT
+            "country": "" // "AR"
+        }
+      }
+      ```
+      Fill in the necessary information and click on <kbd>Build</kbd> and then <kbd>Save</kbd>.
+
   </Step>
   <Step title="Run the registration workflow">
-    Trigger the supplier registration workflow using one of these methods:
+    <Badge color="green">Via API</Badge><br />
+    Use the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint with the following payload:
 
-    * **Via API** - Use the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint with the IDs of both the **silo entry** and **supplier registration workflow**.
-    * **Via Console** - Open the supplier entry, click **Run workflow**, and select the **supplier registration workflow**.
+      ```json
+      // POST https://api.invopop.com/transform/v1/jobs
+      {
+        "workflow_id": "<uuid>",
+        "silo_entry_id": "<uuid>"
+      }
+      ```
+
+      You can obtain the `workflow_id` from the workflows list, and the `silo_entry_id` from the **Meta** tab in the supplier entry.
+
+    <Badge color="green">Via Console</Badge><br />
+    Open the supplier entry, click <kbd>Run workflow</kbd>, and select **Register in ARCA**.
 
     The supplier's status will change to `Processing` while awaiting registration completion.
 
    </Step>
    <Step title="Access the registration wizard">
 
-    <Tabs>
-      <Tab title="Your own company">
-        In the Console, open the supplier entry and navigate to the **Meta** tab. Click on **gov-ar.invopop.com** to launch the registration wizard. 
+    <Badge color="blue">Your own company</Badge><br />
+    In the Console, open the supplier entry and navigate to the **Meta** tab. Click on **gov-ar.invopop.com** to launch the registration wizard. 
 
-        <Frame>
-          <img
-            width="398"
-            src="/assets/console/entry-meta-argentina.png"
-            alt="Supplier entry meta"
-          />
-        </Frame>
-      </Tab>
-      <Tab title="Third-party companies">
+    <Frame>
+      <img
+        width="398"
+        src="/assets/console/entry-meta-argentina.png"
+        alt="Supplier entry meta"
+      />
+    </Frame>
+
+    <Badge color="blue">Third-party companies</Badge><br />
         To send the registration link to your customer, add a webhook step before **Wait for ARCA Authorization**.
 
         The webhook payload includes the `siloEntryId`. Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to retrieve the full entry, including the `meta` object containing the registration link.
 
-        Example `meta` object structure:
 
-      <Accordion title="Example supplier meta registration link">
-      ```
-      data: {
-        ...
-        "meta": [
-          {
-            "id": "...",
-            "created_at": "2025-11-05T15:10:28.132Z",
-            "updated_at": "2025-11-14T15:56:53.727Z",
-            "owner_id": "...",
-            "entry_id": "...",
-            "src": "gov-ar",
-            "key": "link",
-            "ref": "EgDeG3pDBDe",
-            "link_url": "https://gov-ar.invopop.com/reg/EgDeG3pDBDe",
-            "link_scope": "public",
-            "indexed": true,
-            "shared": true
-          }
-        ]
-      }
-      ```
-      </Accordion>
+            ``` json Example webhook response expandable
+            data: {
+              "meta": [
+                {
+                  "id": "...",
+                  "created_at": "2025-11-05T15:10:28.132Z",
+                  "updated_at": "2025-11-14T15:56:53.727Z",
+                  "owner_id": "...",
+                  "entry_id": "...",
+                  "src": "gov-ar",
+                  "key": "link",
+                  "ref": "EgDeG3pDBDe",
+                  "link_url": "https://gov-ar.invopop.com/reg/EgDeG3pDBDe",
+                  "link_scope": "public",
+                  "indexed": true,
+                  "shared": true
+                }
+              ]
+            }
+            ```
+
         Send the `link_url` to your customer to complete their registration.
-      </Tab>
-    </Tabs>
   </Step>
   </Steps>
 
 
 ## Complete the registration wizard
 
-When your customer opens the registration link, ARCA guides them through a wizard to create a certificate and upload it to Invopop.
+The wizard will guide the user to create a certificate in ARCA's portal and upload it to Invopop. The steps differ between sandbox and production. For your convenience, we provide guides in Spanish which you can share with your customers or adapt to your own needs:
 
-The steps differ between sandbox and production. Share the Spanish guides below with the customer who will complete the wizard:
-
-- **Sandbox**: [ARCA certificate wizard (sandbox)](/guides/ar-certificates-sandbox)
-- **Production**: [ARCA certificate wizard (production)](/guides/ar-certificates-production)
+- **Sandbox**: [ARCA certificate wizard (in Spanish)](/guides/ar-certificates-sandbox)
+- **Production**: [ARCA certificate wizard (in Spanish)](/guides/ar-certificates-production)
 
 Once you've successfully uploaded and validated the certificate, the supplier is ready to issue invoices.
 
 ## Point of sales (Punto de venta)
 
-In Invopop, the point of sale is specified in the `series` field of the invoice.
-
-**Sandbox environment**: You can use any point of sale number after the registration process is complete and your certificate is uploaded.
-
-**Production environment**: You must register each point of sale in ARCA before using it. The registration process varies depending on your tax classification:
+In Invopop, the point of sale is specified in the `series` field of the invoice. Once the registration process is complete, in **sandbox** you can use any point of sale number, while **production** requires registering each point of sale in ARCA before using it. The registration process varies depending on your tax classification:
 
 - **Monotributista**: A simplified tax regime for small businesses and freelancers in Argentina
 - **Registered taxpayer** (Responsable Inscripto): Standard tax regime for companies registered for VAT
@@ -171,7 +195,7 @@ Follow these steps to register a point of sale in production:
       />
     </Frame>
 
-    **For registered taxpayer**: Select "RECE para aplicativo y Web Service"
+    **For registered taxpayers**: Select "RECE para aplicativo y Web Service"
     <Frame>
       <img
         src="/assets/guides/ar-company-pos.png"
@@ -185,9 +209,6 @@ Follow these steps to register a point of sale in production:
 
 
 <ArgentinaResources />
-
-
-
 
 
 <Card title="Participate in our community"
