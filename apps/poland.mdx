@@ -7,6 +7,8 @@ mode: wide
 
 import WorkflowExample from '/snippets/workflows/templates/pl/pl-send.mdx';
 import RegistrationWorkflow from '/snippets/workflows/templates/pl/pl-register.mdx';
+import ImportInvoiceWorkflow from '/snippets/workflows/templates/pl/pl-import.mdx';
+import SyncInvoicesWorkflow from '/snippets/workflows/templates/pl/pl-sync.mdx';
 import PolandResources from '/snippets/tables/poland-resources.mdx';
 import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 
@@ -38,8 +40,9 @@ import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 
 	* **Party Registration:** Register suppliers in the KSeF system with their Polish Tax ID (NIP).
 	* **API Certificate Upload:** Upload KSeF certificates, private keys, and passwords programmatically via API for automated integration.
-	* **Workflow Automation:** Automated workflows for registering parties and issuing invoices through the KSeF 2.0 system.
+	* **Workflow Automation:** Automated workflows for registering parties, issuing invoices, and importing received invoices through the KSeF 2.0 system.
 	* **Real-Time Validation:** Every invoice is validated in real-time against the FA(3) schema and business rules, ensuring compliance with Polish e-invoicing regulations.
+	* **Invoice Import & Sync:** Automatically poll KSeF for received invoices and import them into Invopop in GOBL format.
 	* **Legally Compliant PDF Invoices:** Invoices are generated with all mandatory fields and FA(3) QR codes linked to the KSeF portal.
 	* **FA(3) XML Generation:** Compliant XML generation is supported for the KSeF FA(3) schema.
 	* **QR Code:** Generates the FA(3) QR code according to KSeF specifications.
@@ -71,6 +74,16 @@ import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 2</div>
 		 Submit FA(3) XML invoices to the KSeF clearance system and receive KSeF ID upon approval.
 		</Card>
+
+		<Card title="Import Invoice from KSeF" icon="https://assets.invopop.com/flags/pl.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Import a received invoice from KSeF and convert it to GOBL format.
+		</Card>
+
+		<Card title="Sync Received Invoices from KSeF" icon="https://assets.invopop.com/flags/pl.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Query KSeF for received invoices in a time range and create import jobs for each invoice.
+		</Card>
 	</Tab>
 
 	<Tab title="Workflows">
@@ -88,20 +101,26 @@ import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 				<WorkflowExample />
 				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=pl-send)
 			</Accordion>
+
+			<Accordion title="Poland invoice import workflow">
+			This workflow imports a received invoice from KSeF and converts it to GOBL format.
+				<ImportInvoiceWorkflow />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=pl-import)
+			</Accordion>
+
+			<Accordion title="Poland invoice sync workflow">
+			This workflow syncs all received invoices for a party within a specific time range and creates import jobs for each invoice found.
+				<SyncInvoicesWorkflow />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=pl-sync)
+			</Accordion>
 		</AccordionGroup>
 	</Tab>
 	<Tab title="Documents">
 		The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
 
-		<Tip>
-		  [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to KSeF require the `$regime` set to `PL` and `$addons` must include `pl-favat-v3` for FA(3) schema compliance.
-		</Tip>
-
 		<ExampleAccordion />
 
-		<Note>
-		  For more examples and detailed documentation, visit the [Poland Guide](/guides/pl-ksef).
-		</Note>
+		For more examples and detailed documentation, visit the [Poland Guide](/guides/pl-ksef).
 	</Tab>
 </Tabs>
 
