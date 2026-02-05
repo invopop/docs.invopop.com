@@ -1,21 +1,14 @@
 ---
-title: "KSeF Poland Guide"
-sidebarTitle: "🇵🇱 Poland (KSeF 2.0)"
+title: "KSeF 2.0 Poland Guide"
+sidebarTitle: "🇵🇱 Poland"
 description: "Register suppliers and issue electronic invoices through Poland's KSeF 2.0 system"
 ---
 
 import PolandResources from '/snippets/tables/poland-resources.mdx';
 import PartyRegistrationWorkflow from '/snippets/workflows/templates/pl/pl-register.mdx';
 import SendInvoiceWorkflow from '/snippets/workflows/templates/pl/pl-send.mdx';
+import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 
-<Warning>
-  **KSeF 2.0 Production Environment Status**
-
-  KSeF 2.0 production environment is expected to launch in February 2026 for large taxpayers. This guide covers:
-  - **Invopop Sandbox - Test Mode**: Auto-generated certificates for quick testing
-  - **Invopop Sandbox - Demo Mode**: Real certificates from KSeF demo portal for production-like testing
-  - **Invopop Production**: Registration in KSeF production for live invoice issuance (available February 2026)
-</Warning>
 
 ## Introduction
 
@@ -24,25 +17,20 @@ KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing sy
 Invoices are encoded in FA(3), a strict XML format that enforces standardized fields for domestic and cross-border transactions. The KSeF system validates all submitted invoices in real-time and assigns a unique KSeF ID upon successful clearance.
 
 This guide covers two key processes:
-- **Party Registration**: Registering suppliers in the KSeF system
-- **Invoice Issuance**: Creating and sending FA(3) invoices through KSeF
+- [Party Registration](#register-a-party-for-test-environment): Registering suppliers in the KSeF system
+- [Invoice Issuance](#send-an-invoice): Creating and sending FA(3) invoices through KSeF
 
 ## Prerequisites
 
 To issue invoices through KSeF, you will need:
 
-- **For Invopop Sandbox - Test Mode**: Test Polish Tax ID (NIP). You can generate fake NIPs for testing at [http://generatory.it/](http://generatory.it/). In test mode, a self-signed certificate will be generated automatically, and you can start sending invoices immediately.
-- **For Invopop Sandbox - Demo Mode**: Real Polish Tax ID (NIP) and credentials to access the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/). Demo mode follows the same registration process as production but operates in the demo environment.
-- **For Invopop Production** (when available): Valid company NIP and credentials to access the [KSeF Portal](https://ksef.mf.gov.pl/). You will need to generate a certificate through the KSeF portal. Registration will automatically target the KSeF production environment.
+| Environment | Requirements |
+|-------------|--------------|
+| <Badge color="green">Invopop Sandbox</Badge><br />Test mode | **Test Polish Tax ID (NIP)** <br /> You can generate fake NIPs for testing at [http://generatory.it/](http://generatory.it/). In test mode, a self-signed certificate will be generated automatically, and you can start sending invoices immediately. <br />
+| <Badge color="green">Invopop Sandbox</Badge><br />Demo mode | **Real Polish Tax ID (NIP) and credentials to access the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/)** <br /> Demo mode follows the same registration process as production but operates in the demo environment. |
+| <Badge color="green">Invopop Live</Badge> | **Valid company NIP and credentials to access the [KSeF Portal](https://ksef.mf.gov.pl/)** <br /> You will need to generate a certificate through the KSeF portal. Registration will automatically target the KSeF production environment. |
 
 ## Setup
-
-There are three key processes to prepare:
-- Connect the Poland app
-- Configure a party registration workflow
-- Configure an invoice sending workflow
-
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
 
@@ -60,25 +48,23 @@ The initial connection requires no configuration.
 
 <Step title="Configure party registration workflow">
 
-<Info>
-  **Choosing Your Registration Environment**
-
-  When configuring the **Register Party in KSeF** step in **sandbox**, you must select the environment:
-  - **test**: Self-signed certificate generated automatically, no manual steps required
-  - **demo**: Requires manual certificate generation from the demo portal (production-like process)
-
-  If you're using Invopop in **production**, the workflow will automatically register suppliers in the KSeF production environment.
-
-  If you want to test both sandbox modes, create two separate workflows with different configurations. For example: "KSeF Register Party (Test)" and "KSeF Register Party (Demo)".
-</Info>
-
 <Frame>
   <img
     width="400"
     src="/assets/guides/pl-choose-environment.png"
-    alt="Choose KSeF environment (test or demo)"
+    alt="Choose KSeF environment (Test or Demo)"
   />
 </Frame>
+
+  In **Sandbox** the **Register Party in KSeF** step allows you to configure the environment:
+
+  - **Test**: Self-signed certificate generated automatically, no manual steps required
+  - **Demo**: Requires manual certificate generation from the demo portal.
+
+  <Info>Test is more convenient while Demo is more accurate simulating the production environment. It is convenient to create two workflows configured differently to easily switch between the Demo and Test options.</Info>
+
+  In **live workspaces** no configuration is available, all suppliers are registered in the KSeF production environment.
+
 
 <Tabs>
   <Tab title="Template">
@@ -153,16 +139,14 @@ In this section, we'll provide details on how to register parties (suppliers) an
 ### Register a Party for Test Environment
 
 <Note>
-  **When to use**: Choose test mode when you want to quickly test KSeF integration without dealing with real certificates or authentication. Perfect for development and automated testing.
+  Choose test mode when you want to quickly test the KSeF integration without dealing with real certificates or authentication. Certificates are generated automatically, allowing you to start sending invoices immediately without any manual certificate generation.
 </Note>
-
-Test mode uses auto-generated self-signed certificates, allowing you to start sending invoices immediately without any manual certificate generation.
 
 <Steps>
 
 <Step title="Create the Party">
 
-In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click **+ New Supplier**.
+In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click <kbd>+ New Supplier</kbd>.
 
 Use fake Polish Tax IDs (NIP) generated from [http://generatory.it/](http://generatory.it/):
 
@@ -177,15 +161,15 @@ Use fake Polish Tax IDs (NIP) generated from [http://generatory.it/](http://gene
 }
 ```
 
-Click **Build**, ensure there are no errors, and click **Save**.
+Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
 
 </Step>
 
 <Step title="Run the Workflow">
 
-On the party details page, click **Select Workflow**, choose your **KSeF Register Party (Test)** workflow, and click **Run Workflow**.
+In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Register Party (Test)** workflow, and click <kbd>Run Workflow</kbd>.
 
-**That's it!** ✓ Registration completes automatically. The party is now in `Registered` state and ready to issue invoices.
+**That's it!** ✓ Registration completes automatically. The party is now in <Badge color="purple">Registered</Badge> state and ready to issue invoices.
 
 </Step>
 
@@ -196,9 +180,7 @@ On the party details page, click **Select Workflow**, choose your **KSeF Registe
 ### Register a Party for Demo/Production Environment
 
 <Note>
-  **When to use**:
-  - **Demo mode**: Test the complete production flow with real KSeF authentication in a safe demo environment (available in Invopop Sandbox)
-  - **Production**: Live invoice issuance with real suppliers (available in Invopop Production)
+  In sandbox workspaces, choose Demo mode when you want to simulate the real production flow with KSeF authentication in a safe demo environment.
 </Note>
 
 <Steps>
@@ -219,7 +201,7 @@ On the party details page, click **Select Workflow**, choose your **KSeF Registe
     ```
 
 
-Click **Build**, ensure there are no errors, and click **Save**.
+Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
 
 </Step>
 
@@ -229,7 +211,7 @@ On the party details page, click **Select Workflow**:
 - **For Demo**: Choose your **KSeF Register Party (Demo)** workflow
 - **For Production**: Choose your **KSeF Register Party (Production)** workflow
 
-Click **Run Workflow**. The party will be in `Processing` state until certificate upload is complete.
+Click <kbd>Run Workflow</kbd>. The party will be in <Badge color="yellow">Processing</Badge> state until certificate upload is complete.
 
 </Step>
 
@@ -237,21 +219,22 @@ Click **Run Workflow**. The party will be in `Processing` state until certificat
 
 Get the registration link to begin certificate generation:
 
-<Tabs>
-  <Tab title="Your own company">
-    In Console, go to the supplier entry → **Meta** tab → click the **gov-pl.invopop.com** link to launch the registration wizard.
 
-    <Frame>
-      <img
-        width="398"
-        src="/assets/guides/pl-meta-link.png"
-        alt="Supplier entry meta with KSeF registration link"
-      />
-    </Frame>
-  </Tab>
+<Badge color="green">Your own company</Badge><br />
+In Console, go to the supplier entry → **Meta** tab → click the **gov-pl.invopop.com** link to launch the registration wizard.
 
-  <Tab title="Third-party companies (White Label)">
-    Add a webhook after the **Register Party in KSeF** step to receive the `siloEntryId`.
+<Frame>
+  <img
+    width="398"
+    src="/assets/guides/pl-meta-link.png"
+    alt="Supplier entry meta with KSeF registration link"
+  />
+</Frame>
+
+<Badge color="green">Third-party companies</Badge> (white label)<br />
+In Console, go to the supplier entry → **Meta** tab → click the **gov-pl.invopop.com** link to launch the registration wizard.
+
+Add a webhook after the **Register Party in KSeF** step to receive the `siloEntryId`.
 
     Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get the registration link from the `meta` object:
 
@@ -270,23 +253,21 @@ Get the registration link to begin certificate generation:
     ```
 
     Send the `link_url` to your customer.
-  </Tab>
-</Tabs>
 
 </Step>
 
-<Step title="Generate Certificate in KSeF Portal">
+<Step title="Generate a Certificate in KSeF Portal">
 
 The registration wizard will guide you through these steps:
 
-1. **Open the correct KSeF portal**
+1. Visit the KSeF portal
    - Demo: [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/)
    - Production: [KSeF Portal](https://ksef.mf.gov.pl/)
 
-2. **Log in with Trusted Profile (Profil Zaufany)**
+2. Log in with Trusted Profile (Profil Zaufany)
    - [Video tutorial: Setting up Trusted Profile](https://www.youtube.com/watch?v=V6E1fGUFPw4)
 
-3. **Generate the certificate**
+3. Generate the certificate
    - Navigate to certificate generation section
    - Enter certificate name and password (save the password!)
    - Download the private key (automatically generated)
@@ -296,17 +277,17 @@ The registration wizard will guide you through these steps:
    - [Video tutorial: Certificate generation](https://www.youtube.com/watch?v=SE0IHuPHtRE)
 
 <Warning>
-  Save these three items: **certificate file**, **private key file**, and **password**. You'll need all three in the next step.
+  Save the certificate and private key files, as well as the password. You'll need them in the next step.
 </Warning>
 
 </Step>
 
 <Step title="Upload Certificate to Invopop">
 
-You can upload the certificate in two ways:
+There are two ways to upload the certificate:
 
-<Tabs>
-  <Tab title="Web Upload (Wizard)">
+
+<Badge color="green">Web Upload</Badge> (Wizard)<br />
     Return to the registration wizard and upload:
     - Certificate file
     - Private key file
@@ -320,28 +301,18 @@ You can upload the certificate in two ways:
       />
     </Frame>
 
-    Click **Upload and verify certificate**. The system validates and securely stores your credentials.
-  </Tab>
+    Click <kbd>Upload and verify certificate</kbd>. The system validates and securely stores your credentials.
 
-  <Tab title="API Upload">
+  <Badge color="green">API Upload</Badge><br />
     Upload the certificate programmatically using the [Upload KSeF certificate endpoint](/api-ref/apps/gov-pl/certificate-upload).
 
     <Note>
       This approach is ideal for automated integrations where you want to handle certificate generation and upload programmatically without user interaction with the web wizard.
     </Note>
-  </Tab>
-</Tabs>
 
-✓ **Success**: The supplier transitions to `Registered` state and can begin issuing invoices.
+✓ **Success**: The supplier transitions to <Badge color="purple">Registered</Badge> state and can begin issuing invoices.
+× **Failure**: See [Why did my supplier registration fail?](/faq/poland#why-did-my-supplier-registration-fail) in Poland's FAQ.
 
-<Warning>
-  **Upload failed?** Verify:
-  - Certificate and private key match
-  - Password is correct
-  - Certificate start date is not in the future
-  - Files are from the correct portal (demo vs production)
-  - For API uploads: files are properly base64-encoded
-</Warning>
 
 </Step>
 
@@ -352,272 +323,10 @@ You can upload the certificate in two ways:
 Once a party is registered, you can issue invoices on their behalf. The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
 
 <Tip>
-  [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to KSeF require the following properties:
-  - `$regime` set to [`PL`](https://docs.gobl.org/regimes/pl)
-  - `$addons` must include [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) for FA(3) schema compliance
+  [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to KSeF require the `$regime` set to `PL` and `$addons` must include [`pl-favat-v3`] for FA(3) schema compliance
 </Tip>
 
-<AccordionGroup>
-
-<Accordion title="B2B Standard Invoice">
-
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$regime": "PL",
-  "$addons": ["pl-favat-v3"],
-  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3c4d",
-  "type": "standard",
-  "series": "INVOICE",
-  "code": "001",
-  "issue_date": "2026-01-20",
-  "currency": "PLN",
-  "supplier": {
-    "name": "Testowa Firma Sp. z o.o.",
-    "tax_id": {
-      "country": "PL",
-      "code": "9876543210"
-    },
-    "addresses": [
-      {
-        "street": "ul. Główna 1",
-        "locality": "Warsaw",
-        "code": "00-001",
-        "country": "PL"
-      }
-    ],
-    "emails": [
-      {
-        "addr": "kontakt@testowa.pl"
-      }
-    ]
-  },
-  "customer": {
-    "name": "Klient Testowy Sp. z o.o.",
-    "tax_id": {
-      "country": "PL",
-      "code": "1111111111"
-    },
-    "addresses": [
-      {
-        "street": "ul. Testowa 10",
-        "locality": "Kraków",
-        "code": "30-001",
-        "country": "PL"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "i": 1,
-      "quantity": "10",
-      "item": {
-        "name": "Software Development Services",
-        "price": "100.00",
-        "unit": "h"
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "key": "standard",
-          "rate": "general"
-        }
-      ]
-    },
-    {
-      "i": 2,
-      "quantity": "5",
-      "item": {
-        "name": "Consulting Services",
-        "price": "150.00",
-        "unit": "h"
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "key": "standard",
-          "rate": "reduced"
-        }
-      ]
-    }
-  ],
-  "payment": {
-    "instructions": {
-      "key": "credit-transfer",
-      "detail": "Transfer payment to our bank account",
-      "credit_transfer": [
-        {
-          "iban": "PL61109010140000071219812874",
-          "name": "Testowa Firma Sp. z o.o."
-        }
-      ]
-    }
-  }
-}
-
-```
-
-</Accordion>
-
-<Accordion title="B2B Reverse Charge Invoice">
-
-For reverse charge invoices, the process is the same but the customer will have a EU VAT ID:
-
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$regime": "PL",
-  "$addons": ["pl-favat-v3"],
-  "$tags": ["reverse-charge"],
-  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3ccf",
-  "type": "standard",
-  "series": "RC",
-  "code": "001",
-  "issue_date": "2026-01-20",
-  "currency": "PLN",
-  "supplier": {
-    "name": "Testowa Firma Sp. z o.o.",
-    "tax_id": {
-      "country": "PL",
-      "code": "9876543210"
-    },
-    "addresses": [
-      {
-        "street": "ul. Główna 1",
-        "locality": "Warsaw",
-        "code": "00-001",
-        "country": "PL"
-      }
-    ]
-  },
-  "customer": {
-    "name": "EU Business GmbH",
-    "tax_id": {
-      "country": "DE",
-      "code": "111111125"
-    },
-    "addresses": [
-      {
-        "street": "Hauptstraße 100",
-        "locality": "Berlin",
-        "code": "10115",
-        "country": "DE"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "i": 1,
-      "quantity": "1",
-      "item": {
-        "name": "IT Services - EU Reverse Charge",
-        "price": "5000.00"
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "key": "reverse-charge"
-        }
-      ]
-    }
-  ],
-  "notes": [
-    {
-      "key": "legal",
-      "text": "Reverse charge mechanism applies - VAT to be accounted for by the customer."
-    }
-  ]
-}
-
-```
-
-</Accordion>
-
-<Accordion title="B2B Credit Note">
-
-```json
-{
-  "$schema": "https://gobl.org/draft-0/bill/invoice",
-  "$regime": "PL",
-  "$addons": ["pl-favat-v3"],
-  "uuid": "01927639-c1a0-7f3a-88d9-5b1f2a5e3c8b",
-  "type": "credit-note",
-  "series": "KOR",
-  "code": "001",
-  "issue_date": "2026-01-20",
-  "currency": "PLN",
-  "preceding": [
-    {
-      "type": "standard",
-      "series": "INVOICE",
-      "code": "001",
-      "issue_date": "2026-01-20",
-      "reason": "Price correction",
-      "ext": {
-        "pl-favat-effective-date": "1"
-      },
-      "stamps": [
-        {
-          "prv": "favat-ksef-number",
-          "val": "1234567890-20260120-ABCD1234-EF"
-        }
-      ]
-    }
-  ],
-  "supplier": {
-    "name": "Testowa Firma Sp. z o.o.",
-    "tax_id": {
-      "country": "PL",
-      "code": "9876543210"
-    },
-    "addresses": [
-      {
-        "street": "ul. Główna 1",
-        "locality": "Warsaw",
-        "code": "00-001",
-        "country": "PL"
-      }
-    ]
-  },
-  "customer": {
-    "name": "Klient Testowy Sp. z o.o.",
-    "tax_id": {
-      "country": "PL",
-      "code": "9876543210"
-    },
-    "addresses": [
-      {
-        "street": "ul. Testowa 10",
-        "locality": "Kraków",
-        "code": "30-001",
-        "country": "PL"
-      }
-    ]
-  },
-  "lines": [
-    {
-      "i": 1,
-      "quantity": "10",
-      "item": {
-        "name": "Software Development Services",
-        "price": "10.00",
-        "unit": "h"
-      },
-      "taxes": [
-        {
-          "cat": "VAT",
-          "key": "standard",
-          "rate": "general"
-        }
-      ]
-    }
-  ]
-}
-```
-
-</Accordion>
-
-</AccordionGroup>
+<ExampleAccordion />
 
 After creating the invoice in the Console:
 1. Click **Build** to validate
