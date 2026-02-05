@@ -1,0 +1,51 @@
+---
+title: "Import KSeF invoice"
+description: "Import a received invoice from KSeF"
+countryCode: "pl"
+appId: "gov-pl"
+schema: "bill/invoice"
+---
+
+```json Example Import KSeF invoice workflow with states
+{
+    "name": "Import KSeF invoice",
+    "description": "Import a received invoice from KSeF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ba8faad0-01d7-11f1-8b4e-fdb288ce1d84",
+            "name": "Import invoice from KSeF",
+            "provider": "gov-pl.import"
+        },
+        {
+            "id": "5efe18e0-01e7-11f1-8a2b-3f4babb9af4d",
+            "name": "Set Folder",
+            "provider": "silo.folder",
+            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+            "config": {
+                "folder": "expenses"
+            }
+        },
+        {
+            "id": "653ff700-01e7-11f1-8a2b-3f4babb9af4d",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "7d993da0-0275-11f1-94f6-05637523f70d",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
