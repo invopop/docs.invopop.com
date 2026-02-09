@@ -1,0 +1,72 @@
+import TicketB2CInvoiceMin from '/snippets/invoices/it/ticket-b2c.min.mdx';
+import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
+import TicketB2CInvoiceCompleteMin from '/snippets/invoices/it/ticket-b2c-complete.min.mdx';
+import TicketB2CInvoiceComplete from '/snippets/invoices/it/ticket-b2c-complete.mdx';
+import TicketB2CInvoiceCorrectiveMin from '/snippets/invoices/it/ticket-b2c-corrective.min.mdx';
+import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
+
+<AccordionGroup>
+	<Accordion title="B2C Invoice">
+
+		This example shows a simple B2C invoice from an Italian supplier (Documento Commerciale). Key points to note:
+
+		- The minimal version (`ticket-b2c.min.mdx`) contains only the essential fields required to create the invoice
+		- The [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1) addon ensures validation using AdE CF v1 rules built into [GOBL](https://docs.gobl.org)
+		- Extensions (`ext`) fields specify values that cannot be determined otherwise:
+			- Items have an extension identifying them as goods or services
+			- VAT exemptions require an Italian exemption code
+		- The `prices_include` field indicates that item prices include VAT
+		- When running `gobl build`, the system automatically calculates totals, line item sums, IVA breakdowns, and normalizes the document according to Smart Receipts requirements
+		- The built version (`ticket-b2c.mdx`) shows the normalized document with all calculated fields including line indices, sums, and total amounts
+
+		<CodeGroup>
+			<TicketB2CInvoiceMin />
+			<TicketB2CInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2C Invoice Complete">
+
+		After the AdE (Agenzia delle Entrate) accepts the invoice, they add a reference to each line item. This reference, stored in the [`it-ticket-line-ref`](https://docs.gobl.org/addons/it-ticket-v1#ade-line-reference) extension, is essential for processing refunds.
+
+		Notice:
+
+		- This example shows a complete invoice with line references added by the AdE after acceptance
+		- The minimal version contains the basic invoice structure before AdE processing
+		- When running `gobl build`, the system calculates all totals and normalizes the document
+		- The built version shows the complete document with AdE-assigned line references, calculated totals, and all automatically generated fields
+		- These line references are required for creating corrective invoices and processing refunds
+		- The complete invoice represents the final state after successful submission to and acceptance by the AdE
+
+		<CodeGroup>
+			<TicketB2CInvoiceCompleteMin />
+			<TicketB2CInvoiceComplete />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Corrective Invoice">
+
+		When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
+
+		To create a corrective invoice, take the original [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) and:
+
+		1. Set the `type` field to `corrective`
+		2. Add a reference to the original invoice using the `preceding` object
+		3. Include the original document number stamp from the first invoice
+		4. Keep the lines and quantities you want to refund
+
+		Notice:
+
+		- The minimal version (`ticket-b2c-corrective.min.mdx`) contains only essential correction details including references to the original invoice
+		- The corrective invoice preserves the [`it-ticket-line-ref`](https://docs.gobl.org/addons/it-ticket-v1#ade-line-reference) extension from the original invoice for proper tracking
+		- When running `gobl build`, the system automatically calculates negative amounts for refunds, validates the corrective structure, and applies AdE rules
+		- The built version (`ticket-b2c-corrective.mdx`) shows the normalized document with calculated negative totals, tax refunds, and all automatically generated fields
+		- The corrective invoice references the original invoice using the `preceding` object and maintains line item references for accurate tracking
+		- This example shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice
+
+		<CodeGroup>
+			<TicketB2CInvoiceCorrectiveMin />
+			<TicketB2CInvoiceCorrective />
+		</CodeGroup>
+	</Accordion>
+</AccordionGroup>

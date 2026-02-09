@@ -16,11 +16,13 @@ Run the following command at the root of your documentation (where `docs.json` i
 mint dev
 ```
 
-### 🔨 Building Invoice Examples
+### 🔨 Building and Unbuilding Examples
 
-The project includes a script to automatically build invoice examples from minimal JSON files using the GOBL CLI tool.
+The project includes scripts to build and unbuild invoice examples using the GOBL CLI tool.
 
-The `build-min-files.sh` script:
+#### Building Examples
+
+The `gobl-build.sh` script:
 - Finds all `.min.mdx` files in the `/snippets` directory
 - Extracts JSON from each MDX file's code block
 - Builds the JSON using `gobl build` to calculate totals, add UUIDs, and validate
@@ -39,6 +41,30 @@ The script will:
 - Overwrite existing `.mdx` files if they exist
 - Report any build errors and continue processing
 - Display a summary of processed files and errors at the end
+
+#### Unbuilding Examples
+
+The `gobl-unbuild.rb` script minimizes GOBL documents by removing calculated fields:
+- Takes a fully built GOBL JSON file and extracts the digest
+- Iteratively tests each field to determine if it's required
+- Removes fields that don't affect the digest (calculated values)
+- Removes all UUID fields (randomly generated)
+- Preserves special fields like `$regime` and `$addons`
+- Maintains the original indentation style
+
+To unbuild a single file:
+
+```bash
+ruby gobl-unbuild.rb <input_file>
+```
+
+To modify the file in place:
+
+```bash
+ruby gobl-unbuild.rb -i <input_file>
+```
+
+This is useful when you want to create minimal `.min.mdx` files from full GOBL documents by removing all the calculated fields.
 
 **Prerequisites:** The script requires the `gobl` CLI tool to be installed and available in your PATH.
 

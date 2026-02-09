@@ -8,9 +8,7 @@ import PostRegistrationFlow from '/snippets/workflows/templates/it/sdi-post-regi
 import TicketRegisterSupplier from '/snippets/workflows/templates/it/ticket-register-supplier.mdx';
 import TicketIssueReceipt from '/snippets/workflows/templates/it/ticket-send.mdx';
 import TicketVoidReceipt from '/snippets/workflows/templates/it/ticket-void-receipt.mdx';
-import TicketB2CInvoice from '/snippets/invoices/it/ticket-b2c.mdx';
-import TicketB2CInvoiceComplete from '/snippets/invoices/it/ticket-b2c-complete.mdx';
-import TicketB2CInvoiceCorrective from '/snippets/invoices/it/ticket-b2c-corrective.mdx';
+import TicketAccordion from '/snippets/invoices/it/ticket-accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 
 ## Introduction
@@ -303,19 +301,7 @@ For proper validation and normalization, set these properties in your [GOBL Invo
 
 While Invopop attempts to set these automatically based on other invoice fields, we recommend defining them explicitly.
 
-The example below shows a simple B2C invoice from an Italian supplier. Key points to note:
-
-- The [`it-ticket-v1`](https://docs.gobl.org/addons/it-ticket-v1) addon ensures validation using AdE CF v1 rules
-- Extensions (`ext`) fields specify values that cannot be determined otherwise:
-  - Items have an extension identifying them as goods or services
-  - VAT exemptions require an Italian exemption code
-- The `prices_include` field indicates that item prices include VAT
-- VAT for "Cleaning Products" automatically sets to the standard rate
-- Totals and calculations are generated automatically
-
-<Accordion title="B2C Invoice">
-<TicketB2CInvoice />
-</Accordion>
+<TicketAccordion />
 
 The AdE will automatically generate a document number for the invoice. Once the invoice is sent, you will find the document number in a stamp inside the document header.
 
@@ -323,31 +309,9 @@ The AdE will automatically generate a document number for the invoice. Once the 
   <img src="/assets/guides/it-ticket-invoice-stamp.png" alt="Invoice Stamp" />
 </Frame>
 
-After the AdE accepts the invoice, they add a reference to each line item. This reference, stored in the [`it-ticket-line-ref`](https://docs.gobl.org/addons/it-ticket-v1#ade-line-reference) extension, is essential for processing refunds. The example below shows a complete invoice with these references.
-
-<Accordion title="B2C Invoice Complete">
-<TicketB2CInvoiceComplete/>
-</Accordion>
-
 ### Refund an Invoice
 
-When a customer requests a refund for specific items, you can process it by issuing a corrective invoice. Since this is still considered sending an invoice, you can use the same workflow as before.
-
-To create a corrective invoice take a original [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) and:
-
-1. Set the `type` field to `corrective`
-2. Add a reference to the original invoice using the `preceding` object
-3. Include the original document number stamp from the first invoice
-4. Keep the lines and quantities you want to refund
-
-The example below shows a corrective invoice that refunds two units of "Cleaning Products" from the original invoice. The corrective invoice:
-- Preserves the [`it-ticket-line-ref`](https://docs.gobl.org/addons/it-ticket-v1#ade-line-reference) extension from the original invoice
-- References the original invoice using the `preceding` object
-- Maintains the same line item references for accurate tracking
-
-<Accordion title="Corrective Invoice">
-<TicketB2CInvoiceCorrective/>
-</Accordion>
+Refund processing is handled through corrective invoices, which you can issue using the same workflow as regular invoices. See the "Corrective Invoice" accordion above for details and examples.
 
 ### Void an Invoice
 

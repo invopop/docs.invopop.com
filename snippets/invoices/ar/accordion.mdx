@@ -7,21 +7,54 @@ import InvoiceCBuilt from '/snippets/invoices/ar/arca-invoice-C.mdx';
 
 <AccordionGroup>
 	<Accordion title="Factura A - Registered taxpayer to registered taxpayer (B2B)">
+		
 		Factura A is issued by registered taxpayers (Responsable Inscripto) to other registered taxpayers or monotributistas. This invoice type includes VAT broken down separately.
+
+		Notice:
+
+		- the minimal version (`arca-invoice-A.min.mdx`) contains only the essential fields required to create the Factura A,
+		- the [`ar-afip-v1`](https://docs.gobl.org/addons/ar-afip-v1) addon ensures the document will be validated using the AFIP rules built into the [GOBL](https://docs.gobl.org) library,
+		- both supplier and customer must be registered taxpayers with valid CUIT numbers,
+		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
+		- the built version (`arca-invoice-A.mdx`) shows the normalized document with calculated totals, line item sums, IVA breakdowns shown separately, and automatically generated fields, and,
+		- the invoice will be submitted to AFIP for authorization and receive a CAE (Código de Autorización Electrónico).
+
 		<CodeGroup>
 			<InvoiceA />
 			<InvoiceABuilt />
 		</CodeGroup>
 	</Accordion>
 	<Accordion title="Factura B - Registered taxpayer to final consumer  (B2C)">
+		
 		Factura B is issued by registered taxpayers (Responsable Inscripto) to final consumers, exempt entities, non-categorized subjects, and foreign tourists. VAT is included in the total price.
+
+		Notice:
+
+		- the customer is typically a final consumer (Consumidor Final) and may not have a CUIT,
+		- the minimal version contains only essential fields; `gobl build` handles all calculations,
+		- when running `gobl build`, the system automatically calculates totals with IVA included in the price (not shown separately as in Factura A),
+		- the built version shows the normalized document with calculated totals where VAT is included in the final amounts,
+		- the [`ar-afip-v1`](https://docs.gobl.org/addons/ar-afip-v1) addon applies Factura B specific rules and validations, and,
+		- the invoice will be submitted to AFIP for authorization and receive a CAE.
+
 		<CodeGroup>
 			<InvoiceB />
 			<InvoiceBBuilt />
 		</CodeGroup>
 	</Accordion>
 	<Accordion title="Factura C - Monotributista invoice (SMB2B)">
+		
 		Factura C is issued by monotributistas (simplified tax regime for small businesses and freelancers) to any type of customer. This invoice type does not break down VAT separately.
+
+		Notice:
+
+		- the supplier is registered under the monotributo regime, which is a simplified tax system for small businesses,
+		- the minimal version contains only essential fields; totals are calculated by `gobl build`,
+		- when running `gobl build`, the system automatically calculates totals without breaking down VAT separately (VAT is included but not itemized),
+		- the built version shows the normalized document with calculated totals where no VAT breakdown is shown, as monotributistas don't separately charge VAT,
+		- the [`ar-afip-v1`](https://docs.gobl.org/addons/ar-afip-v1) addon applies Factura C specific rules and ensures compliance with monotributo requirements, and,
+		- the invoice will be submitted to AFIP for authorization and receive a CAE.
+
 		<CodeGroup>
 			<InvoiceC />
 			<InvoiceCBuilt />

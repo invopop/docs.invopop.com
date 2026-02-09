@@ -9,6 +9,16 @@ import B2BCreditNote from '/snippets/invoices/pl/ksef-b2b-credit-note.mdx';
 
 <Accordion title="B2B Standard Invoice">
 
+	In this example, we're issuing a standard B2B invoice from a Polish supplier to another Polish business customer.
+
+	Notice:
+
+	- the minimal version (`ksef-b2b-standard.min.mdx`) contains only the essential fields required to create the invoice,
+	- the [`pl-ksef-v1`](https://docs.gobl.org/addons/pl-ksef-v1) addon ensures the document will be validated using the KSeF rules built into the [GOBL](https://docs.gobl.org) library,
+	- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
+	- the built version (`ksef-b2b-standard.mdx`) shows the normalized document with calculated totals, line item sums, tax breakdowns, and automatically generated fields like `i` (line index), `sum`, and `total`, and,
+	- make sure to process it with the "Issue KSeF invoice" workflow created during setup.
+
 	<CodeGroup>
 		<B2BStandardMin />
 		<B2BStandard />
@@ -17,7 +27,15 @@ import B2BCreditNote from '/snippets/invoices/pl/ksef-b2b-credit-note.mdx';
 
 <Accordion title="B2B Reverse Charge Invoice">
 
-	For reverse charge invoices, the process is the same but the customer will have a EU VAT ID:
+	In this example, we're issuing a reverse charge invoice from a Polish supplier to a customer in another EU member state.
+
+	Notice:
+
+	- the customer has a valid EU VAT ID, indicating the transaction is subject to reverse charge mechanism,
+	- the minimal version contains only essential fields; totals and tax calculations are omitted,
+	- when running `gobl build`, the system automatically calculates totals, applies reverse charge rules, and normalizes the document,
+	- the built version shows all calculated fields including the reverse charge indicator, tax breakdowns, and final totals, and,
+	- the invoice is validated using the KSeF rules to ensure compliance with Polish e-invoicing requirements.
 
 	<CodeGroup>
 		<B2BReverseChargeMin />
@@ -26,6 +44,17 @@ import B2BCreditNote from '/snippets/invoices/pl/ksef-b2b-credit-note.mdx';
 </Accordion>
 
 <Accordion title="B2B Credit Note">
+
+	In this example, we're issuing a credit note to correct or refund a previous invoice.
+
+	Notice:
+
+	- the `type` field is set to `credit-note` to indicate this is a corrective document,
+	- the `preceding` field references the original invoice being corrected,
+	- the minimal version contains only the essential fields; calculations are handled by GOBL,
+	- when running `gobl build`, the system automatically calculates negative totals, tax refunds, and validates the credit note structure,
+	- the built version shows all calculated fields including negative amounts for the refund, and,
+	- the document is validated using the KSeF rules to ensure compliance with Polish credit note requirements.
 
 	<CodeGroup>
 		<B2BCreditNoteMin />

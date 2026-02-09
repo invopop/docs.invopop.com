@@ -1,0 +1,62 @@
+import B2BInvoiceMin from '/snippets/invoices/es/ticketbai-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/es/ticketbai-b2b.mdx';
+import B2CInvoiceMin from '/snippets/invoices/es/ticketbai-b2c.min.mdx';
+import B2CInvoice from '/snippets/invoices/es/ticketbai-b2c.mdx';
+
+<AccordionGroup>
+	<Accordion title="B2B Invoice">
+
+		In this example, we're issuing a standard B2B invoice from a Basque supplier to a customer in Madrid.
+
+		Scenario details:
+
+		- The supplier is based out of Bilbao in Bizkaia, using the sandbox data provided by TicketBAI.
+		- The customer is in Madrid.
+		- They're selling software development services with standard VAT.
+		- The series for the invoice is "F1".
+
+		Notice:
+
+		- the minimal version (`ticketbai-b2b.min.mdx`) contains only the essential fields required to create the invoice,
+		- we're applying the [`es-tbai-v1`](https://docs.gobl.org/addons/es-tbai-v1) addon to ensure GOBL's TicketBAI validation checks are applied,
+		- there is no `currency` nor `issue_date`, as these will be assigned automatically,
+		- there is no invoice `code` as this will be assigned by the workflow,
+		- TicketBAI **requires** a general note, so we've added one at the bottom,
+		- when running `gobl build`, the system automatically calculates totals, assigns the `$regime` to `ES`, sets the [`es-tbai-region`](https://docs.gobl.org/addons/es-tbai-v1#region-code) extension to `BI` (Bizkaia) based on the supplier's address, applies the standard VAT rate (21%), and assigns the [`es-tbai-product`](https://docs.gobl.org/addons/es-tbai-v1#ticketbai-product-key) extension to `services` based on the item unit,
+		- the built version (`ticketbai-b2b.mdx`) shows the normalized document with calculated totals, line item sums, tax breakdowns, and automatically generated fields, and,
+		- there are no totals or calculations in the minimal version; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2BInvoiceMin />
+			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2C Simplified Invoice">
+
+		In this example, we're issuing a simplified B2C invoice from a Basque supplier for an in-person sale.
+
+		Scenario details:
+
+		- The supplier is based out of Bilbao in Bizkaia, using the sandbox data provided by TicketBAI.
+		- There is no customer.
+		- Physical goods are being sold with a standard VAT rate.
+		- The series for the invoice is "FS1".
+
+		Notice:
+
+		- the minimal version (`ticketbai-b2c.min.mdx`) contains only the essential fields required to create the simplified invoice,
+		- there is no `customer` object,
+		- the `tax` object contains the `prices_include` value set to `VAT`, which will ensure all totals will be calculated assuming that prices include VAT,
+		- the line item includes a [`es-tbai-product`](https://docs.gobl.org/addons/es-tbai-v1#ticketbai-product-key) extension with the value `goods`,
+		- TicketBAI **requires** a general note, in this case we've added a generic message,
+		- when running `gobl build`, the system automatically calculates the tax-included totals (splitting the €25.10 price into €20.74 base + €4.36 VAT), assigns the `$regime` to `ES`, sets the [`es-tbai-region`](https://docs.gobl.org/addons/es-tbai-v1#region-code) extension to `BI` (Bizkaia), applies the standard VAT rate (21%), and normalizes all fields,
+		- the built version (`ticketbai-b2c.mdx`) shows the normalized document with calculated totals including tax-included calculations, line item sums, tax breakdowns, and automatically generated fields, and,
+		- there are no totals or calculations in the minimal version; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2CInvoiceMin />
+			<B2CInvoice />
+		</CodeGroup>
+	</Accordion>
+</AccordionGroup>
