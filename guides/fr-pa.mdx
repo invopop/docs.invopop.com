@@ -1,53 +1,268 @@
 ---
 title: "PA (Plateforme Agréée) Guide"
 sidebarTitle: "Plateforme Agréée (PA)"
-description: Guide for France PA e-invoicing setup and approval status
+description: Planning guide for France PA e-invoicing integration
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
 
-<Note>
-  While Invopop has been approved as a PA platform, the service is not yet available as we continue developing and preparing for the mandatory implementation date.
-</Note>
+## Introduction
 
-France handles e-invoicing through approved PA (_Plateforme Agréée_) platforms as part of its electronic invoicing reform. Invopop is an officially approved PA platform, as listed on the [French government's official list of approved platforms](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees.
+<Warning>
+  Invopop's implementation of France is not yet complete. This is a planning guide to help you prepare your implementation. The service will be available in sandbox in the upcoming weeks, with mandatory implementation by September 2026.
+</Warning>
 
-## Official Approval Status
+France handles e-invoicing through approved PA (_Plateforme Agréée_) platforms as part of its electronic invoicing reform. Invopop is an officially approved PA platform, as listed on the [French government's official list of approved platforms](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees).
 
 Invopop is _Plateforme Agréée_ (Approved Platform) by the French tax administration, meaning we have successfully provided all necessary documentation for the registration procedure and passed the technical compliance verification.
 
-The approval process consists of two stages:
+### Prerequisites
 
-1. **Registration under reserve** - ✅ **Completed** - Invopop has provided all required documentation and passed the initial approval stage
-2. **Technical compliance verification** - ✅ **Completed** - Invopop has verified technical compliance with specifications including platform-to-platform invoice exchange and data extraction capabilities
+To use the France PA integration, you will need:
 
-## PA and Peppol Network
+- **Invopop workspace** with Peppol and France apps enabled.
+- **French company registration details** including tax identification numbers
+- **Understanding of your invoicing flows** (B2B, B2C, domestic, cross-border) to plan registration and reporting requirements
+- **Business processes for status updates** to implement the status reporting workflow
 
-The French PA system relies on the [Peppol network](/guides/features/peppol) infrastructure with additional French-specific requirements. This creates a "five corner model" for e-invoicing compliance:
 
-1. **Supplier** - Issues the invoice
-2. **Supplier's PA** - Processes and transmits the invoice
-3. **DGFiP (French Tax Administration)** - Receives mandatory invoice data and status updates
-4. **Customer's PA** - Receives and processes the invoice
-5. **Customer** - Receives the final invoice
+## Updates to support France
 
-## What This Means for You
+<Note>
+  If your workspace already supports Peppol and you want to add France, some minor changes to your existing invoice issuing workflow will be required.
+</Note>
 
-As an approved PA platform, Invopop will:
+If you have an existing Peppol workspace and you want to support French parties (issuers) in this workspace, you will need to update your workflows to support France's compliance requirements. Whether you incorporate the changes into your existing workflows, or you migrate your customizations into our new Peppol workflows, depends on the complexity of your customized workflows.
 
-- **Issue** electronic invoices through the Peppol network with French compliance
-- **Transmit** invoices to other PA platforms via Peppol infrastructure
-- **Send mandatory data** to DGFiP for each invoice as required by French law
-- **Report status updates** to DGFiP throughout the invoice life cycle
-- **Handle annuaire (French e-invoicing directory) registration** for French e-invoicing directory compliance
-- **Receive** electronic invoices from other approved platforms
-- **Extract** necessary data for tax administration purposes
+### GOBL France Add-on
 
-## Getting Started
+A GOBL add-on tailored for French invoicing is currently under development. This add-on will extend the EN 16931 standard with French-specific validation rules and formatting requirements. The add-on will be released in the coming weeks.
 
-French e-invoicing via PA platforms will become mandatory starting **September 2026**. While Invopop is already approved as a PA platform, the service is not yet available as we continue developing and preparing for the mandatory implementation date.
+### Updated Peppol workflows
 
-We will update this guide with detailed setup instructions and configuration details as we approach the launch date. In the meantime, you can familiarize yourself with our [Peppol guide](/guides/features/peppol), as the French PA system builds upon the Peppol network infrastructure.
+The France PA integration is designed to work seamlessly with other Peppol countries. The same workflow can handle invoices for France, Belgium, and other countries without requiring separate processes. The system automatically detects when French requirements apply based on party registration status.
+
+France specific behavior involves reporting two mandatory statuses: **encaissé** (paid) and **refusé** (refused). You can also send non-mandatory statuses for additional lifecycle tracking. Other two mandatory statuses are handled automatically by Invopop: "déposée" (deposited) is sent when invoices are created, and "rejeté" (rejected) is sent if Invopop cannot process an invoice. Sending and receiving invoices work with your existing Peppol workflows.
+
+
+
+
+
+
+## Key Concepts
+
+Understanding these concepts will help you plan your France PA integration:
+
+|      |            |
+|------|------------|
+| **Annuaire** | The French e-invoicing directory where parties must be registered to participate in regulated e-invoicing flows. Registration in the _annuaire_ is required for all companies that need to comply with French e-invoicing mandates. |
+| **PPF** | Portail Public de Facturation (Public Invoicing Portal) - the French government system that receives mandatory invoice data and lifecycle updates for compliance and tax purposes. Invopop handles all communications with the PPF automatically. |
+| **Regulated Flow** | An invoice exchange where both the sender and receiver are registered in the annuaire. These invoices follow the complete French e-invoicing process including Peppol transmission and PPF reporting. |
+| **Non-Regulated Flow** | An invoice exchange where only one party (sender or receiver) is registered in the annuaire. These invoices are stored for e-reporting to the PPF but may not be transmitted via Peppol if the other party is not a Peppol participant. |
+| **E-Reporting** | France has two types of mandatory e-reporting which Invopop supports: **Real-time reporting** reporting invoices immediately via F1 format for B2B national (regulated) flows; and **Periodic reporting** where invoices are stored and reported at designated intervals for non-regulated flows and B2C transactions.|
+| **CDAR** | Cross Domain Acknowledgement and Response. The underlying format for status updates or "cycle de vie" (lifecycle) in France. Used to communicate invoice lifecycle events such as payment, rejection, or refusal between parties and to the PPF. |
+| **F1 Invoice** | Simplified UBL format used for e-reporting to the PPF. For regulated flows (B2B national), the F1 invoice is sent in real-time when the invoice is created. This is generated automatically by Invopop based on the original invoice data. |
+
+## Registration workflow
+
+The registration process prepares parties to send and receive invoices in France. This workflow builds upon the standard [Peppol registration workflow](/guides/features/peppol) with additional French-specific requirements.
+
+The registration process includes the following steps:
+
+<Steps>
+
+<Step title="Approval">
+Standard approval process to verify party details and authorization.
+</Step>
+
+<Step title="Register in Annuaire">
+Register the party in the annuaire (French e-invoicing directory) under Invopop's name. This step is required for the party to participate in French e-invoicing.
+</Step>
+
+<Step title="Register for Peppol">
+Complete standard Peppol registration. Invopop uses Peppol as the designated method for sending and receiving invoices in the French PA system.
+</Step>
+
+<Step title="Enable Reporting">
+  <Badge color="green">Optional</Badge>
+Enable e-reporting for the party to comply with French tax reporting requirements. It's also possible to disable it if done through another system.
+</Step>
+
+</Steps>
+
+## Sending workflow
+
+The sending process builds upon the standard [Peppol sending workflow](/guides/features/peppol), adding French-specific checks and reporting requirements on top of the base workflow. The same workflow automatically handles both French and non-French invoices.
+
+1. **Check Sender Registration** <br />
+This annuaire registration check allows you to use the same workflow for France and other countries without creating separate processes. If the sender is: 
+    - **Not registered** process as a standard UBL invoice (no French-specific steps required). 
+    - **Registered** continue to record invoice.
+
+2. **Record invoice**<br />
+Store the invoice for compliance and determine if it belongs to a regulated or non-regulated flow:
+
+<Columns cols="2">
+  <Card title="Regulated flow">
+    Both parties are registered in the _annaure_:
+    <Steps>
+      <Step title="Generate French UBL">Use the UBL app option to generate French-compliant UBL format</Step>
+      <Step title="Send to Peppol">Transmit the invoice via the Peppol network to the receiver's PA platform</Step>
+      <Step title="Report Invoice">Send the F1 invoice (simplified UBL) to the PPF for real-time e-reporting</Step>
+      <Step title="Inform PPF">Sends the "déposée" (deposited) mandatory status to the PPF</Step>
+    </Steps>
+
+  </Card>
+  <Card title="Non-regulated flow">
+    Only sender is registered in the _annaure_:
+    <Steps>
+      <Step title="Record invoice">
+        Unlike regulated flows which are reported in real-time, non-regulated flows and B2C transactions are reported at designated intervals determined by the party's registration type.
+      </Step>
+      <Step title="Optional Peppol Delivery">
+        Use the **Lookup Peppol Participant** step to check if the receiver is in the Peppol network
+         - If found: send via Peppol for delivery
+         - If not found: skip Peppol delivery
+      </Step>
+    </Steps>
+  </Card>
+</Columns>
+
+
+### Receiving workflow
+
+The receiving process builds upon the standard [Peppol receiving workflow](/guides/features/peppol), adding French-specific processing for multiple formats including UBL, CII, and FacturX. The workflow automatically handles French-specific requirements based on registration status.
+
+<Steps>
+
+<Step title="Import from Peppol">
+Standard Peppol import process handles [UBL](/apps/oasis-ubl), [CII](/apps/uncefact-cii) and FacturX. Each format is automatically detected and routed to the appropriate processing step.
+</Step>
+
+<Step title="Format-Specific Processing">
+
+Each format follows a different processing path depending on the format:
+
+
+    <Card title="UBL Import" icon="https://assets.invopop.com/apps/ubl/logo.svg" horizontal>
+      Processes UBL documents as standard invoices. After import, the workflow continues with the registration check (see next step).
+    </Card>
+
+    <Card title="PDF Import (FacturX)" icon="https://assets.invopop.com/apps/pdf/logo.svg" horizontal>
+      The CII app provides a PDF Import step that handles FacturX documents, separating PDF and XML data.
+    </Card>
+
+    <Card title="CII Import" icon="https://assets.invopop.com/apps/cii/logo.svg" horizontal>
+
+      If the document contains an input, continue with the regular invoice workflow. If it contains a status update, route to the **Import CDAR** step for status processing.
+    </Card>
+
+    <Card title="Import CDAR" icon="https://assets.invopop.com/flags/fr.svg" horizontal>
+     A CDAR status will update the invoice with the received status (e.g., encaissé, refusé, rejeté) and store the status for audit and compliance purposes.
+    </Card>
+
+<Info>
+Both received and sent CDAR statuses are automatically stored and attached to invoices for audit and tracking purposes.
+</Info>
+
+
+
+</Step>
+
+<Step title="Check Registration Status">
+
+Verifies if the receiver (the party registered in Invopop) is registered for France. If not registered it will import the document as a standard Peppol import with no French specific processing. If registered, the **Record Invoice** step will route the document through the registered flow, and if not registered it will go through the non-regulated flow and store for e-reporting.
+
+After registration checks are complete, continue with your standard invoice processing workflow (validation, parsing, integration with your systems, etc.).
+
+<Info>
+The **Record Invoice** step determines whether the invoice represents a regulated or non-regulated flow and handles e-reporting accordingly.
+</Info>
+</Step>
+
+</Steps>
+
+### Real-Time Reporting workflow
+
+France requires two distinct types of e-reporting to the PPF, depending on the invoice type.
+
+**B2B national invoices** (both parties are registered in the annuaire)<br />
+<Badge color="green">Real-Time reporting</Badge>
+
+1. **Report Invoice**: automatically sends `F1` invoice (simplified UBL) to PPF when invoice is created
+2. **Inform PPF**: Configured to automatically send "déposée" (deposited) mandatory status to PPF
+
+
+**B2C & B2B international invoices** (only one party is registered)<br />
+<Badge color="green">Periodic reporting</Badge>
+
+1. **Record Invoice**: Invoices automatically recorded during sending/receiving
+2. **Periodical reports** are generated based on party registration type
+3. **Automatic submission** by Invopop determined by party registration type
+
+<Info>
+The reporting interval for periodic reports is determined based on the type of party registration. This timing is identified automatically by Invopop and may require additional party information (requirements still being finalized).
+</Info>
+
+### Status Update workflow
+
+<Warning>
+  Mandatory status reporting is the main new workflow users need to implement for France. You'll need to implement workflows for two mandatory statuses: encaissé (paid) and refusé (refused).
+</Warning>
+
+France requires four mandatory statuses to be reported to the PPF for B2B national invoices:
+
+| Status | Status Type | Description | Trigger |
+|---|---|---|---|
+| **Déposée** (deposited) | **Automatic** (handled by Invopop) | Sent automatically when the invoice is created | Invoice creation |
+| **Rejeté** (rejected) | **Automatic** (handled by Invopop) | Sent automatically if Invopop cannot process the invoice (technical rejection) | Processing failure |
+| **Encaissé** (paid) | **Manual** (requires user workflows) | Must be sent when the invoice is paid | Invoice payment |
+| **Refusé** (refused) | **Manual** (requires user workflows) | Must be sent if the end user refuses the invoice (business rejection) | Invoice refusal |
+
+The status workflow allows you to send both mandatory and non-mandatory status updates:
+
+<Steps>
+
+<Step title="Generate Status">
+The **Generate Status** workflow step allows you to report the following statuses:
+
+- **Encaissé** (paid) - Invoice has been paid
+- **Refusé** (refused) - Invoice refused by end user (business rejection, e.g., disputed charges)
+
+**Non-mandatory statuses** can also be sent for additional lifecycle tracking. These can be configured via the API based on your business requirements.
+</Step>
+
+<Step title="Send to Peppol">
+Transmits the status update to the other party via the Peppol network. All statuses (both mandatory and non-mandatory) are sent to the receiver to keep them informed of the invoice lifecycle.
+</Step>
+
+<Step title="Inform PPF (For Mandatory Statuses)">
+For mandatory status updates, the **Inform PPF** step sends the status notification to the PPF in the required format (different from the Peppol status format).
+</Step>
+
+</Steps>
+
+## Conclusion
+
+The France PA integration is designed to work seamlessly with your existing Peppol workflows, minimizing the changes needed to your workspaces.
+
+### Key Benefits
+
+- **Single Workflow**: Use the same workflow for France, Belgium, and other countries without duplication
+- **Automatic Detection**: The system automatically detects if French requirements apply based on party registration in the annuaire
+- **No Separate Paths**: No need to create separate workflows for French vs non-French invoices
+- **Minimal Changes**: Main addition is the status reporting workflow; sending and receiving work with existing Peppol processes
+- **Flexible Configuration**: Reporting can be enabled or disabled per party based on your business needs
+
+This approach reduces complexity, maintenance overhead, and the risk of routing errors while ensuring full compliance with French e-invoicing requirements.
+
+### Next Steps
+
+1. Watch for sandbox release announcements via email and the [Invopop community](https://community.invopop.com)
+2. Test your workflows in sandbox before the September 2026 mandatory date
+3. Review updates to this documentation as features are finalized
+4. Reach out to Invopop support if you have questions about your specific use case
+
 
 ---
 
