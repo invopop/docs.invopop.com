@@ -1,0 +1,109 @@
+import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoiceMin from '/snippets/invoices/mx/sat-b2c.min.mdx';
+import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/mx/sat-simplified.min.mdx';
+import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
+import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
+import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
+
+<AccordionGroup>
+	<Accordion title="B2B invoice (Personas Morales)">
+
+		In this example, we're issuing a standard B2B invoice from a Mexican supplier (Persona Moral) to another Mexican business customer (Persona Moral).
+
+		Notice:
+
+		- the minimal version (`sat-b2b.min.mdx`) contains only the essential fields required to create the invoice,
+		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon ensures the document will be validated using the SAT CFDI 4.0 rules built into the [GOBL](https://docs.gobl.org) library,
+		- both supplier and customer have their RFC (tax identification) and fiscal regime properly specified,
+		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
+		- the built version (`sat-b2b.mdx`) shows the normalized document with calculated totals, line item sums, tax breakdowns (IVA), and automatically generated fields, and,
+		- make sure to process it with the appropriate SAT workflow to generate the CFDI XML and obtain the fiscal stamp.
+
+		<CodeGroup>
+			<B2BInvoiceMin />
+			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2C invoice (Personas Físicas)">
+
+		In this example, we're issuing a B2C invoice from a Mexican supplier to an individual customer (Persona Física).
+
+		Notice:
+
+		- the customer is identified as a Persona Física with their RFC and fiscal regime,
+		- the minimal version contains only essential fields; calculations are handled by GOBL,
+		- when running `gobl build`, the system automatically calculates totals, applies IVA (VAT), and normalizes the document according to SAT requirements,
+		- the built version shows all calculated fields including tax breakdowns, line totals, and final amounts,
+		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates the document structure for Personas Físicas transactions, and,
+		- the CFDI will be stamped by the PAC (Proveedor Autorizado de Certificación) after processing through the workflow.
+
+		<CodeGroup>
+			<B2CInvoiceMin />
+			<B2CInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Simplified invoice (Factura al público en general)">
+
+		In this example, we're issuing a simplified invoice to the general public without specific customer details.
+
+		Notice:
+
+		- the customer is set to "Público en General" (RFC: XAXX010101000) as per SAT requirements for general public invoices,
+		- the minimal version omits calculations; `gobl build` will handle all totals and tax computations,
+		- when running `gobl build`, the system automatically calculates IVA, line totals, and applies the simplified invoice rules,
+		- the built version shows the normalized document with all calculated fields and validations applied,
+		- simplified invoices have specific requirements in CFDI 4.0, which are automatically validated by the addon, and,
+		- these invoices are commonly used for retail transactions where customer identification is not required.
+
+		<CodeGroup>
+			<SimplifiedInvoiceMin />
+			<SimplifiedInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Global invoice">
+
+		In this example, we're issuing a global invoice that summarizes multiple transactions from a specific period (daily, weekly, or monthly).
+
+		Notice:
+
+		- global invoices consolidate multiple sales to the general public into a single CFDI document,
+		- the minimal version includes only essential fields; totals for all consolidated transactions are calculated by GOBL,
+		- when running `gobl build`, the system aggregates line items, calculates total IVA, and applies global invoice-specific validations,
+		- the built version shows the complete document with all calculated totals, tax summaries, and period information,
+		- global invoices must be issued within specific timeframes as defined by SAT regulations, and,
+		- these are commonly used by businesses with high volumes of small transactions to the general public.
+
+		<CodeGroup>
+			<GlobalInvoiceMin />
+			<GlobalInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Credit note">
+
+		In this example, we're issuing a credit note (nota de crédito) to correct, cancel, or refund a previously issued invoice.
+
+		Notice:
+
+		- the `type` field is set to `credit-note` to indicate this is a corrective document,
+		- the `preceding` field contains references to the original invoice(s) being corrected with the relationship type,
+		- the minimal version includes only essential correction details; `gobl build` calculates the negative amounts,
+		- when running `gobl build`, the system automatically calculates negative totals, tax refunds, validates the relationship with the original invoice, and applies CFDI credit note rules,
+		- the built version shows all calculated fields including negative amounts for the refund and proper tax adjustments,
+		- credit notes must be properly linked to the original CFDI using the UUID and relationship type, and,
+		- the PAC will validate the credit note against the original invoice before stamping.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+</AccordionGroup>

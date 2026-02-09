@@ -13,9 +13,7 @@ import CancelPayment from '/snippets/workflows/templates/pt/at-cancel-payment.md
 import IssueDelivery from '/snippets/workflows/templates/pt/at-issue-delivery.mdx';
 import CancelDelivery from '/snippets/workflows/templates/pt/at-cancel-delivery.mdx';
 import Supplier from '/snippets/suppliers/pt/at-supplier.mdx';
-import B2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
-import Delivery from '/snippets/deliveries/pt/delivery.mdx';
-import Payment from '/snippets/payments/pt/payment.mdx';
+import DocumentAccordion from '/snippets/documents/pt/accordion.mdx';
 import PortugalResources from '/snippets/tables/portugal-resources.mdx';
 
 ## Introduction
@@ -434,63 +432,11 @@ Unlike other countries, Portugal regulations do not allow pre-assigning sequence
 
 The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the corresponding processing workflow (invoice, delivery, or payment) created during setup.
 
-    <Tip>
-      [GOBL](https://docs.gobl.org) Documents reported to the AT require the following properties to perform the correct normalization and validation steps. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading:
-      - `$regime` to be set to [`PT`](https://docs.gobl.org/regimes/pt)
-      - `$addons` to include [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1)
-    </Tip>
+<Tip>
+  GOBL Documents reported to the AT require the regime to be set to PT and addons to include pt-saft-v1. Invopop will try to assign these automatically, but we recommend defining them explicitly before uploading.
+</Tip>
 
-<Tabs>
-  <Tab title="Invoice">
-
-
-    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
-
-    <B2BInvoice />
-
-    Notice:
-
-    - we've added the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
-    - this is a `standard` invoice and the advance payments don't cover the total amount of the invoice; so, [GOBL](https://docs.gobl.org) will automatically assign the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension to `FT` (Fatura),
-    - the `card` payment method will cause the addon to set the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension to `CC` (Cartão crédito),
-    - the `h` item unit will cause the [`pt-saft-product-type`](https://docs.gobl.org/addons/pt-saft-v1#product-type) extension to be set to `S` (Serviço),
-    - the `standard` VAT rate will cause the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension to be set to `NOR` (Normal),
-    - the [`pt-region`](https://docs.gobl.org/regimes/pt#region-code) extension will automatically be set to the default value of `PT`, and
-    - there are no totals or calculations; all these will be made automatically when uploading.
-  </Tab>
-  <Tab title="Delivery">
-
-    In this example, we're issuing a delivery note from a Portuguese supplier to another Portuguese receiver.
-
-    <Delivery />
-
-    Notice:
-
-    - we've added the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
-    - this is an `advice` document type and the advance payments don't cover the total amount of the invoice; so, [GOBL](https://docs.gobl.org) will automatically assign the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension to `FT` (Fatura),
-    - the `standard` VAT rate will cause the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension to be set to `NOR` (Normal),
-    - the [`pt-region`](https://docs.gobl.org/regimes/pt#region-code) extension will automatically be set to the default value of `PT`, and
-    - there are no totals or calculations; all these will be made automatically when uploading.
-  </Tab>
-  <Tab title="Payment">
-
-    In this example, we're issuing a simple invoice from a Portuguese supplier to another Portuguese business.
-
-    <Payment />
-
-    Notice:
-
-    - we've added the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon; this ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-    - the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](#series-management) for details),
-    - this is a `receipt` payment and the method is set to key `cash`; so, GOBL will automatically assign the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension to `NU` (Numerário),
-    - the `h` item unit will cause the [`pt-saft-product-type`](https://docs.gobl.org/addons/pt-saft-v1#product-type) extension to be set to `S` (Serviço),
-    - the `standard` VAT rate will cause the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension to be set to `NOR` (Normal),
-    - the [`pt-region`](https://docs.gobl.org/regimes/pt#region-code) extension will automatically be set to the default value of `PT`, and
-    - there are no totals or calculations; all these will be made automatically when uploading.
-  </Tab>
-</Tabs>
+<DocumentAccordion />
 
 ### Cancel a document
 

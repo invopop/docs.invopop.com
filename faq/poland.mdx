@@ -4,37 +4,152 @@ description: "Frequently asked questions about invoicing compliance in Poland"
 sidebarTitle: "FAQ"
 ---
 
+## Suppliers
+
 <AccordionGroup>
+
   <Accordion title="Why did my supplier registration fail?">
-  
-  Verify that...
+    Common reasons for registration failures:
 
-  - Certificate and private key match
-  - Password is correct
-  - Certificate start date is not in the future
-  - Files are from the correct portal (demo vs production)
-  - For API uploads: files are properly base64-encoded
-  </Accordion>
-  <Accordion title="Can I add attachments to an e-invoice?">
-    Yes. The structured "Zalacznik" (attachment) is allowed for tax-relevant data on  quantities and unit prices. The feature is aimed at technical transactions in the energy sector, but any company can apply to use them.
+    - **Certificate and private key mismatch**: Ensure you uploaded both files from the same certificate generation
+    - **Incorrect password**: Verify the password matches what you set during certificate generation
+    - **Future start date**: Certificate start date must be today or in the past
+    - **Wrong portal environment**: Demo certificates won't work with production, and vice versa
+    - **File encoding issues**: For API uploads, ensure files are properly base64-encoded
+    - **Expired certificate**: Check that the certificate is still valid
+    - **Invalid NIP**: Verify the Polish Tax ID is correct and has access to KSeF
 
-    Each attachment is limited to 3 MB, and should not include any non-tax related materials (such as contracts, manuals, advertising).
+    <Note>
+      Check the workflow error logs in the Invopop Console for detailed error messages that can help diagnose the specific issue.
+    </Note>
   </Accordion>
-  <Accordion title="Will B2C transactions need to be reported in KSeF?">
-    No. B2C invoices in KSeF are optional.
-  </Accordion>
-  <Accordion title="What KSeF applications are available? ">
-    - [<u>KSeF Taxpayer Application</u>](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/bezplatne-narzedzie-wersja-produkcyjna/) – the main portal with all functionalities. 
-    - [<u>KSeF Mobile Application</u>](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/aplikacja-mobilna-ksef/) – a mobile app.
-    - [<u>e-mikrofirma</u>](https://login.mf.gov.pl/Account/Select?ReturnUrl=%2Fconnect%2Fauthorize%2Fcallback%3Fclient_id%3D09e2877e-702a-4e27-8818-9472ca964c0a%26redirect_uri%3Dhttps%253A%252F%252Furzadskarbowy.gov.pl%26response_type%3Dcode%26scope%3Dprofile%2520openid%2520DataHub.UserAccess%2520eFormsClientApi.UserAccess%2520ChatApi.UserAccess%2520offline_access%26state%3D8f196c7682654d0da49b42bfc9045e51%26code_challenge%3DSIwxyxXJpAzUgzrMW96UIH9vNc6P0-dkdc7l482AWQA%26code_challenge_method%3DS256) – a portal aimed at micro-entrepreneurs.
-  </Accordion>
-  <Accordion title="What types of invoices are supported in Invopop's KSeF Integration?">
-    We currently support Standard Invoices (VAT) and Credit Notes (KOR). We add support for more types as required by our customers.
-  </Accordion>
-  <Accordion title="I don't have presence in Poland in order to obtain an Issuer NIP or Token">
-    In special cases we facilitate test NIPs and tokens to our clients. Get in touch with the [support team](mailto:support@invopop.com) if you require credentials for testing.
+
+  <Accordion title="I don't have a Polish NIP for testing. How can I get one?">
+    **For sandbox testing**:
+    - **Test mode**: Generate fake NIPs at [http://generatory.it/](http://generatory.it/). These work immediately with self-signed certificates.
+    - **Demo mode**: You need a real NIP with access to the KSeF Demo Portal.
+
+    **For special cases**: If you need demo credentials but don't have Polish presence, contact the [support team](mailto:support@invopop.com). We can facilitate test NIPs and tokens for our clients.
   </Accordion>
 </AccordionGroup>
+
+## Sending invoices
+
+<AccordionGroup>
+  <Accordion title="What types of invoices are supported in Invopop's KSeF integration?">
+    Currently supported invoice types:
+    - **Standard Invoices (FAT)**: Regular B2B invoices with FA(3) schema
+    - **Credit Notes (KOR)**: Invoice corrections and adjustments
+
+    All invoices must include the `pl-favat-v3` addon in GOBL to ensure FA(3) schema compliance.
+
+    <Note>
+      Additional invoice types can be supported based on customer requirements. Contact [support](mailto:support@invopop.com) if you need specific invoice types.
+    </Note>
+  </Accordion>
+
+  <Accordion title="What happens when I send an invoice to a foreign recipient?">
+    International (cross-border) invoices are handled just like domestic invoices in KSeF:
+
+    - The invoice is created in GOBL with the foreign recipient's details
+    - It's converted to FA(3) XML format and submitted to KSeF
+    - KSeF validates and clears the invoice, assigning a unique KSeF ID
+    - The invoice is registered in the KSeF system
+
+    However, since foreign recipients cannot access KSeF, you must deliver the invoice through other channels (email, EDI, etc.). Include the KSeF QR code in the delivery for verification purposes.
+  </Accordion>
+
+  <Accordion title="Will B2C transactions need to be reported in KSeF?">
+    No. B2C invoices in KSeF are optional. The mandatory requirement applies only to B2B transactions.
+  </Accordion>
+
+  <Accordion title="Can I add attachments to an invoice in KSeF?">
+    Yes. The structured "Zalacznik" (attachment) is allowed for tax-relevant data on quantities and unit prices. This feature is primarily aimed at technical transactions in the energy sector, but any company can apply to use attachments.
+
+    Requirements:
+    - Each attachment is limited to 3 MB
+    - Attachments must contain only tax-related data
+    - Do not include non-tax materials (contracts, manuals, advertising)
+  </Accordion>
+</AccordionGroup>
+
+## Receiving invoices
+
+<AccordionGroup>
+  <Accordion title="How do I import received invoices from suppliers?">
+    Invopop automatically imports received invoices through a polling service:
+
+    1. **Configure polling interval** during party registration (hourly, daily, weekly, or monthly)
+    2. **Set up the sync workflow** to query KSeF for new invoices
+    3. **Configure the import workflow** to convert FA(3) XML to GOBL format
+    4. **Link the workflows** in the Poland app configuration
+
+    The system automatically checks KSeF at your chosen interval and imports any new invoices to your configured folder.
+
+    **For manual import**, use the API to trigger import jobs with specific KSeF numbers or date ranges. See the [Import Received Invoices](/guides/pl-ksef#import-received-invoices) section in the guide.
+  </Accordion>
+
+  <Accordion title="Can I import historical invoices or backfill missed invoices?">
+    Yes. You can manually trigger a sync workflow to import invoices from a specific date range using the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job).
+
+    Pass the `from` and `to` date parameters to sync all invoices received within that period:
+
+    ```json
+    {
+      "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
+      "entry_id": "YOUR_PARTY_ENTRY_ID",
+      "args": {
+        "from": "2026-01-01T00:00:00Z",
+        "to": "2026-01-31T23:59:59Z"
+      }
+    }
+    ```
+
+    This is useful for backfilling invoices after a polling outage or importing historical data before enabling automatic polling.
+  </Accordion>
+
+  <Accordion title="How do I know if my automatic invoice import is working?">
+    Check these indicators:
+
+    1. **Polling configuration**: Verify the polling interval is set in your party registration workflow configuration
+    2. **App configuration**: Confirm the Poland app has your sync workflow configured
+    3. **Recent imports**: Check the "Invoices · Expenses" folder for newly imported invoices
+    4. **Job logs**: Review job logs in the Console for sync and import workflow executions
+    5. **Error notifications**: Set up email or Slack notifications in your workflow error handling to alert you of failures
+
+    <Tip>
+      Test the import by manually triggering the sync workflow with a date range that includes known received invoices.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What's the difference between test, demo, and production environments?">
+    **Test mode** (sandbox only): Uses self-signed certificates generated automatically by Invopop. Perfect for quick testing without accessing the KSeF portal. Invoices are not sent to real KSeF servers.
+
+    **Demo mode** (sandbox only): Connects to the official [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/). Requires manual certificate generation, simulating the full production flow in a safe test environment.
+
+    **Production mode** (live workspace): Connects to the live [KSeF Portal](https://ksef.mf.gov.pl/). Requires valid company credentials and certificates. All invoices are submitted to the official KSeF system.
+
+    <Tip>
+      Use test mode for initial integration testing, then switch to demo mode when you're ready to simulate the real certificate flow before going live.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="What KSeF applications and portals are available?">
+    Official KSeF applications:
+    - [KSeF Taxpayer Application](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/bezplatne-narzedzie-wersja-produkcyjna/) – the main portal with all functionalities
+    - [KSeF Mobile Application](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/aplikacja-mobilna-ksef/) – a mobile app for on-the-go access
+    - [e-mikrofirma](https://login.mf.gov.pl/Account/Select?ReturnUrl=%2Fconnect%2Fauthorize%2Fcallback%3Fclient_id%3D09e2877e-702a-4e27-8818-9472ca964c0a%26redirect_uri%3Dhttps%253A%252F%252Furzadskarbowy.gov.pl%26response_type%3Dcode%26scope%3Dprofile%2520openid%2520DataHub.UserAccess%2520eFormsClientApi.UserAccess%2520ChatApi.UserAccess%2520offline_access%26state%3D8f196c7682654d0da49b42bfc9045e51%26code_challenge%3DSIwxyxXJpAzUgzrMW96UIH9vNc6P0-dkdc7l482AWQA%26code_challenge_method%3DS256) – a simplified portal aimed at micro-entrepreneurs
+
+    For testing:
+    - [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) – demo environment for testing
+  </Accordion>
+</AccordionGroup>
+
+---
 
 <Card title="Participate in our community"
   icon="forumbee"

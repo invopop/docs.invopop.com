@@ -1,0 +1,87 @@
+import B2CInvoiceMin from '/snippets/invoices/it/sdi-b2c.min.mdx';
+import B2CInvoice from '/snippets/invoices/it/sdi-b2c.mdx';
+import B2BInvoiceMin from '/snippets/invoices/it/sdi-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/it/sdi-b2b.mdx';
+import B2BAdditionalMin from '/snippets/invoices/it/sdi-b2b-additional.min.mdx';
+import B2BAdditional from '/snippets/invoices/it/sdi-b2b-additional.mdx';
+import CreditnoteMin from '/snippets/invoices/it/sdi-creditnote.min.mdx';
+import Creditnote from '/snippets/invoices/it/sdi-creditnote.mdx';
+
+<AccordionGroup>
+	<Accordion title="B2C Standard Invoice">
+
+		In this example, we're issuing a standard B2C invoice from an Italian supplier to a consumer.
+
+		Notice:
+
+		- the minimal version (`sdi-b2c.min.mdx`) contains only the essential fields required to create the invoice,
+		- the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon ensures the document will be validated using the SDI (Sistema di Interscambio) rules built into the [GOBL](https://docs.gobl.org) library,
+		- customer details may be simplified for B2C transactions as per Italian requirements,
+		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
+		- the built version (`sdi-b2c.mdx`) shows the normalized document with calculated totals, line item sums, IVA (VAT) breakdowns, and automatically generated fields, and,
+		- make sure to process it with the SDI workflow to transmit the invoice to the Italian tax authority.
+
+		<CodeGroup>
+			<B2CInvoiceMin />
+			<B2CInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2B Invoice">
+
+		In this example, we're issuing a standard B2B invoice from an Italian supplier to another Italian business customer.
+
+		Notice:
+
+		- both supplier and customer have their Partita IVA (VAT number) and Codice Fiscale properly specified,
+		- the minimal version contains only essential fields; `gobl build` handles all calculations,
+		- when running `gobl build`, the system automatically calculates totals, applies IVA rates, and normalizes the document according to SDI requirements,
+		- the built version shows all calculated fields including tax breakdowns, line totals, payment terms, and final amounts,
+		- the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon validates the document structure for B2B transactions, and,
+		- the invoice will be transmitted through the SDI system and delivered to the customer's designated channel.
+
+		<CodeGroup>
+			<B2BInvoiceMin />
+			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2B Invoice with Additional Fields">
+
+		In this example, we're issuing a comprehensive B2B invoice with additional optional fields such as ordering information, payment details, and document references.
+
+		Notice:
+
+		- this invoice demonstrates advanced SDI features like CIG/CUP codes, payment methods, and bank details,
+		- the minimal version includes ordering and payment details; `gobl build` calculates all totals,
+		- when running `gobl build`, the system validates all additional fields according to SDI specifications and calculates totals,
+		- the built version shows the complete document with all calculated fields, tax breakdowns, and properly formatted additional information,
+		- additional fields like `ordering`, `payment`, and document references are important for public administration invoices (B2G), and,
+		- the addon ensures all optional fields are properly validated and formatted for SDI transmission.
+
+		<CodeGroup>
+			<B2BAdditionalMin />
+			<B2BAdditional />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Credit Note">
+
+		In this example, we're issuing a credit note (nota di credito) to correct or refund a previously issued invoice.
+
+		Notice:
+
+		- the `type` field is set to `credit-note` to indicate this is a corrective document,
+		- the `preceding` field references the original invoice being corrected,
+		- the minimal version contains only essential correction details; `gobl build` calculates negative amounts,
+		- when running `gobl build`, the system automatically calculates negative totals, IVA refunds, validates the credit note structure, and applies SDI rules,
+		- the built version shows all calculated fields including negative amounts for the refund and proper tax adjustments,
+		- credit notes must be properly linked to the original invoice and transmitted through SDI, and,
+		- the SDI system validates the credit note format before accepting and forwarding it to the recipient.
+
+		<CodeGroup>
+			<CreditnoteMin />
+			<Creditnote />
+		</CodeGroup>
+	</Accordion>
+</AccordionGroup>

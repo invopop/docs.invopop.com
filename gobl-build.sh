@@ -26,7 +26,7 @@ while IFS= read -r min_file; do
     # Extract JSON from the MDX file
     # Look for JSON code block (```json ... ```)
     # First, get the title from the opening line
-    title_line=$(grep -m 1 '^```json' "$min_file" || true)
+    title_line=$(grep -m 1 '^``` *json' "$min_file" || true)
     if [ -z "$title_line" ]; then
         echo -e "${YELLOW}WARNING: No JSON code block found${NC}"
         ERRORS=$((ERRORS + 1))
@@ -38,7 +38,7 @@ while IFS= read -r min_file; do
     title="Built version"
     
     # Extract JSON content (between code block markers, excluding the markers themselves)
-    json_content=$(awk '/^```json/,/^```$/ {if (!/^```/) print}' "$min_file")
+    json_content=$(awk '/^``` *json/,/^```$/ {if (!/^```/) print}' "$min_file")
     
     if [ -z "$json_content" ]; then
         echo -e "${YELLOW}WARNING: Empty JSON content${NC}"

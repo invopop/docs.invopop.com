@@ -1,0 +1,213 @@
+---
+title: "XRechnung & ZUGFeRD Guide"
+sidebarTitle: "XRechnung & ZUGFeRD"
+description: Generate compliant electronic invoices in Germany.
+---
+
+import XrechnungWorkflow from '/snippets/workflows/templates/de/xrechnung.mdx'
+import ZugferdWorkflow from '/snippets/workflows/templates/de/zugferd.mdx'
+import XRechnungB2BInvoiceMin from '/snippets/invoices/de/peppol-xrechnung-b2b.min.mdx'
+import XRechnungB2BInvoice from '/snippets/invoices/de/peppol-xrechnung-b2b.mdx'
+import ZugferdB2CInvoiceMin from '/snippets/invoices/de/zugferd-b2c.min.mdx'
+import ZugferdB2CInvoice from '/snippets/invoices/de/zugferd-b2c.mdx'
+import ZugferdB2BAdditionalMin from '/snippets/invoices/de/zugferd-b2b-additional.min.mdx'
+import ZugferdB2BAdditional from '/snippets/invoices/de/zugferd-b2b-additional.mdx'
+import GermanyResources from '/snippets/tables/germany-resources.mdx';
+
+## Introduction
+
+Germany requires electronic invoicing for different business scenarios, with two main standards: **XRechnung** and **ZUGFeRD**. Both are semantic data models aligned with the European Norm `EN 16931` and can be implemented using the same syntaxes.
+
+### XRechnung
+
+**XRechnung** is Germany's official standard for electronic invoices in public procurement (called _E-Rechnungen_), though it is also used for B2B transactions. It's part of the implementation of the EU directive `2014/55/EU`, which requires all contracting authorities in the EU to accept electronic invoices in a structured XML format.
+
+XRechnung can be implemented using two different syntaxes:
+- **UN/CEFACT CII** (Cross Industry Invoice)
+- **OASIS UBL** (Universal Business Language)
+
+Both syntaxes contain the same information but have different field names.
+
+### ZUGFeRD
+
+**ZUGFeRD** is a German standard for electronic invoicing designed to bridge the gap between traditional invoices and digital formats. ZUGFeRD combines a standard PDF/A-3 invoice with an embedded XML file containing the structured data. This hybrid approach makes it especially popular in B2B transactions, as it allows both people and accounting software to work with the same document.
+
+ZUGFeRD is fully aligned with the European Norm `EN 16931` and is worth noting that ZUGFeRD and [Factur-X](/guides/countries/fr-facturx) are a joint project between Germany and France, and their content is identical.
+
+<Tip>
+    When referring to syntaxes, it is important to note that XRechnung, ZUGFeRD, and Factur-X are all *semantic data models*. What this means is that they define the data that must be present in the invoice, but not the actual format of the data or the explicit name of the fields.
+
+    To implement the semantic models, there are two syntaxes approved by the EU: UN/CEFACT Cross Industry Invoice ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) and OpenOASIS Universal Business Language ([UBL](https://docs.OASIS-open.org/ubl/UBL-2.1.html)).
+</Tip>
+
+## Prerequisites
+
+To convert invoices to XRechnung or ZUGFeRD format, ensure you have:
+
+- A valid API key and a basic understanding of the [workflow engine](/guides/features/workflows) and [API](api-ref/introduction).
+- An invoice with:
+  - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) regime for specifics.
+  - Line items with name, price, and applicable taxes.
+
+## Setup
+
+To issue XRechnung or ZUGFeRD invoices, follow these instructions in the [Invopop Console](https://console.invopop.com):
+
+### XRechnung Setup
+
+<Steps>
+  <Step title="Connect the OASIS UBL app">
+
+    1. Navigate to **Configuration** → **Apps**.
+    2. Locate **OASIS UBL** in the app discovery list.
+    3. Click **Connect** to activate.
+
+    No additional configuration is needed.
+  </Step>
+  <Step title="Configure invoice workflow">
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="XRechnung invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-xrechnung" cta="Add to my workspace">
+        This workflow will generate an XRechnung UBL document.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <XrechnungWorkflow />
+      </Tab>
+      <Tab title="Build from scratch">
+
+        First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the essential steps:
+
+        1. **Set State** - Select `Processing`
+        2. **Sign Envelope**: The envelope must be signed before processing.
+        3. **Generate UBL Document**: In "Invoice Output Document Type" select `XRechnung UBL Invoice v2.0`. It's also possible to use the **Generate UN/CEFACT CII Invoice** step selecting `XRechnung V3` as both UBL and CII are valid formats for XRechnung.
+        4. **Set State** - Select `Sent`.
+
+        Finally, in the "Error Handling" area, add **Set State** and select `Error`.
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+### ZUGFeRD Setup
+
+<Steps>
+  <Step title="Connect the UN/CEFACT CII app">
+
+    1. Navigate to **Configuration** → **Apps**.
+    2. Locate **UN/CEFACT CII** in the app discovery list.
+    3. Click **Connect** to activate.
+
+    No additional configuration is needed.
+  </Step>
+  <Step title="Configure invoice workflow">
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="ZUGFeRD invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-zugferd" cta="Add to my workspace">
+        This workflow will generate a ZUGFeRD XML document and embed it into a PDF.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <ZugferdWorkflow />
+      </Tab>
+      <Tab title="Build from scratch">
+
+        First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the essential steps:
+
+        1. **Set State** - Select `Processing`
+        2. **Sign Envelope**: The envelope must be signed before processing.
+        3. **Generate UN/CEFACT CII Invoice**: In "Invoice Output Document Type" select `ZUGFeRD v2`.
+        4. **Generate PDF**: this step creates the PDF with the embedded XML.
+        5. **Set State** - Select `Sent`.
+
+        Finally, in the "Error Handling" area, add **Set State** and select `Error`.
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+## Running
+
+Invopop uses the [GOBL](https://gobl.org) library to process conversions. GOBL's implementation validates [national business rules](https://www.xoev.de/sixcms/media.php/13/XRechnung-EnglishSummary-v220-final.pdf) in addition to the rules defined in `EN 16931-1`.
+
+Some example invoices are provided below, along with example workflows to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+
+### XRechnung examples
+
+Be sure to set the `regime` field to `DE` in your invoices and include the [XRechnung](https://docs.gobl.org/addons/de-xrechnung-v3) addon. This will add extra validations to ensure the document is compliant with the standard.
+
+<AccordionGroup>
+  <Accordion title="XRechnung B2B Invoice">
+    Standard XRechnung invoice for business-to-business transactions using the UBL format.
+
+    <CodeGroup>
+      <XRechnungB2BInvoiceMin />
+      <XRechnungB2BInvoice />
+    </CodeGroup>
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  In your invoice data, make sure to include the [XRechnung addon](https://docs.gobl.org/addons/de-xrechnung-v3) and set the regime as `DE`.
+</Info>
+
+
+### ZUGFeRD examples
+
+Be sure to set the `regime` field to `DE` in your invoices and include the [ZUGFeRD](https://docs.gobl.org/addons/de-xrechnung-v3) addon. This will add extra validations to ensure the document is compliant with the standard.
+
+<AccordionGroup>
+  <Accordion title="ZUGFeRD B2C Invoice">
+    Standard ZUGFeRD invoice for business-to-consumer transactions with embedded XML in PDF format.
+
+    <CodeGroup>
+      <ZugferdB2CInvoiceMin />
+      <ZugferdB2CInvoice />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="ZUGFeRD B2B Invoice with Additional Fields">
+    Comprehensive ZUGFeRD invoice demonstrating additional optional fields such as ordering information, payment terms, delivery details, and discounts.
+
+    <CodeGroup>
+      <ZugferdB2BAdditionalMin />
+      <ZugferdB2BAdditional />
+    </CodeGroup>
+  </Accordion>
+</AccordionGroup>
+<Info>
+  In your invoice data, make sure to include the [ZUGFeRD addon](https://docs.gobl.org/addons/de-xrechnung-v3) and set the regime as `DE`.
+</Info>
+
+
+---
+
+<GermanyResources />
+
+<Card title="Germany FAQ"
+  icon="square-question"
+  href="/faq/germany"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Germany →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Germany →
+</Card>

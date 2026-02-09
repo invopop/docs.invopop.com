@@ -102,12 +102,12 @@ The initial connection requires no configuration.
 
     The new workflow will need to perform these steps:
 
-    1. **Set State** - To `Processing`
-    2. **Register Party in KSeF (Poland)** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
+    1. **Set state** - To `Processing`
+    2. **Register party in KSeF (Poland)** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
     3. **Wait for KSeF certificate upload** - Waits for the supplier to generate and upload their KSeF certificate (automatically skipped in test mode)
-    4. **Set State** - To `Registered`
+    4. **Set state** - To `Registered`
 
-    Finally, in the **Error Handling** area, add the **Set State** action and select `Error`.
+    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
   </Tab>
 </Tabs>
 
@@ -131,14 +131,14 @@ The initial connection requires no configuration.
 
     In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
 
-    1. **Set State** - To `Processing`
+    1. **Set state** - To `Processing`
     2. **Add sequential code** - Add the desired sequence for your invoices
-    3. **Sign Envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications
+    3. **Sign envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications
     4. **Generate FA(3) XML** - Generates the FA(3) XML
     5. **Send FA(3) XML to KSeF** - Sends the FA(3) XML to KSeF
-    6. **Set State** - To `Sent`
+    6. **Set state** - To `Sent`
 
-    In the **Error Handling** section, add a **Set State** step with the state set to `Error` to capture and flag failed submissions.
+    In the **Error handling** section, add a **Set state** step with the state set to `Error` to capture and flag failed submissions.
   </Tab>
 </Tabs>
 
@@ -171,10 +171,10 @@ This workflow imports individual invoices from KSeF when they are received. It w
     The new workflow will need to perform these steps:
 
     1. **Import invoice from KSeF** - Downloads the invoice from KSeF and converts it to GOBL format
-    2. **Set Folder** - To `Invoices · Expenses` (or your preferred folder)
-    3. **Set State** - To `Registered`
+    2. **Set folder** - To `Invoices · Expenses` (or your preferred folder)
+    3. **Set state** - To `Registered`
 
-    Finally, in the **Error Handling** area, add the **Set State** action and select `Error`.
+    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
 
     <Note>
       We recommend adding notification steps (email, Slack, etc.) in the error handling section to alert you when invoice imports fail.
@@ -256,7 +256,7 @@ To enable automatic import of received invoices, configure the Poland app with y
 
 In this section, we'll provide details on how to register parties (suppliers) and issue invoices on their behalf.
 
-### Register a Party for Test Environment
+### Register a party for test environment
 
 <Note>
   Choose test mode when you want to quickly test the KSeF integration without dealing with real certificates or authentication. Certificates are generated automatically, allowing you to start sending invoices immediately without any manual certificate generation.
@@ -264,7 +264,7 @@ In this section, we'll provide details on how to register parties (suppliers) an
 
 <Steps>
 
-<Step title="Create the Party">
+<Step title="Create the party">
 
 In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click <kbd>+ New Supplier</kbd>.
 
@@ -285,7 +285,7 @@ Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
 
 </Step>
 
-<Step title="Run the Workflow">
+<Step title="Run the workflow">
 
 In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Register Party (Test)** workflow, and click <kbd>Run Workflow</kbd>.
 
@@ -297,7 +297,7 @@ In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Regi
 
 ---
 
-### Register a Party for Demo/Production Environment
+### Register a party for demo/production environment
 
 <Note>
   In sandbox workspaces, choose Demo mode when you want to simulate the real production flow with KSeF authentication in a safe demo environment.
@@ -305,7 +305,7 @@ In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Regi
 
 <Steps>
 
-<Step title="Create the Party">
+<Step title="Create the party">
 
     Use real Polish Tax IDs (NIP) with access to the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) or [KSeF Portal](https://ksef.mf.gov.pl/):
 
@@ -325,7 +325,7 @@ Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
 
 </Step>
 
-<Step title="Run the Workflow">
+<Step title="Run the workflow">
 
 On the party details page, click **Select Workflow**:
 - **For Demo**: Choose your **KSeF Register Party (Demo)** workflow
@@ -335,7 +335,7 @@ Click <kbd>Run Workflow</kbd>. The party will be in <Badge color="yellow">Proces
 
 </Step>
 
-<Step title="Access the Registration Link">
+<Step title="Access the registration link">
 
 Get the registration link to begin certificate generation:
 
@@ -376,7 +376,7 @@ Add a webhook after the **Register Party in KSeF** step to receive the `siloEntr
 
 </Step>
 
-<Step title="Generate a Certificate in KSeF Portal">
+<Step title="Generate a certificate in KSeF portal">
 
 The registration wizard will guide you through these steps:
 
@@ -402,7 +402,7 @@ The registration wizard will guide you through these steps:
 
 </Step>
 
-<Step title="Upload Certificate to Invopop">
+<Step title="Upload certificate to Invopop">
 
 There are two ways to upload the certificate:
 
@@ -438,12 +438,12 @@ There are two ways to upload the certificate:
 
 </Steps>
 
-### Send an Invoice
+### Send an invoice
 
 Once a party is registered, you can issue invoices on their behalf. The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
 
 <Tip>
-  [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to KSeF require the `$regime` set to `PL` and `$addons` must include [`pl-favat-v3`] for FA(3) schema compliance
+  GOBL Invoices sent to KSeF require the regime set to PL and addons must include pl-favat-v3 for FA(3) schema compliance.
 </Tip>
 
 <ExampleAccordion />
@@ -451,8 +451,8 @@ Once a party is registered, you can issue invoices on their behalf. The followin
 After creating the invoice in the Console:
 1. Click **Build** to validate
 2. Click **Save** to store in the silo
-3. Click **Select Workflow** and choose the **KSeF Send Invoice** workflow
-4. Click **Run Workflow**
+3. Click **Select workflow** and choose the **KSeF Send Invoice** workflow
+4. Click **Run workflow**
 
 The invoice will be validated, converted to FA(3) XML format, and sent to KSeF. Upon successful clearance, it will receive a unique KSeF ID.
 
@@ -460,23 +460,21 @@ The invoice will be validated, converted to FA(3) XML format, and sent to KSeF. 
   For international transactions, the invoice is created and cleared in KSeF just like domestic invoices. Because the foreign recipient cannot log into KSeF, delivery happens outside the platform (via email, EDI, etc.) with the KSeF QR code included for verification.
 </Note>
 
-### Import Received Invoices
+### Import received invoices
 
-Once you've configured the import and sync workflows, Invopop will automatically poll KSeF for new received invoices based on the polling interval you set during party registration.
+Once you've configured the import and sync workflows, Invopop will automatically poll KSeF for new received invoices based on the polling interval you set during party registration. Here is how it works:
 
-#### How Automatic Import Works
-
-1. **Polling Service**: Invopop checks KSeF at your configured interval (1 hour, 1 day, 1 week, or 1 month)
-2. **Sync Workflow**: When new invoices are detected, the sync workflow queries KSeF for all invoices received since the last poll
-3. **Import Jobs**: For each invoice found, a job is created using your import workflow
-4. **Import Workflow**: Each job downloads the FA(3) XML from KSeF, converts it to GOBL format, and stores it in your Invopop silo
+1. **Polling service**: Invopop checks KSeF at your configured interval (1 hour, 1 day, 1 week, or 1 month)
+2. **Sync workflow**: When new invoices are detected, the sync workflow queries KSeF for all invoices received since the last poll
+3. **Import jobs**: For each invoice found, a job is created using your import workflow
+4. **Import workflow**: Each job downloads the FA(3) XML from KSeF, converts it to GOBL format, and stores it in your Invopop silo
 5. **Organization**: Imported invoices are automatically placed in the configured folder (typically "Invoices · Expenses") with a `Registered` state
 
-<Note>
-  **Polling Intervals**: You can set different polling intervals for each party during registration. If you don't want to automatically receive invoices for a specific party, set the polling interval to "no polling" during registration.
-</Note>
+<Info>
+  You can set different polling intervals for each party during registration. If you don't want to automatically receive invoices for a specific party, set the polling interval to "no polling" during registration.
+</Info>
 
-#### Manual Import
+#### Manual import
 
 If you need to import invoices outside of the automatic polling schedule, you can manually trigger imports using the Invopop API.
 
@@ -484,81 +482,84 @@ If you need to import invoices outside of the automatic polling schedule, you ca
   Manual import with workflow arguments is only available via API. The Console UI does not currently support passing custom arguments to workflow jobs.
 </Note>
 
-**Import a Single Invoice**
+**Import a single invoice**
 
 To import a specific invoice from KSeF:
 
-1. **Get Invoice Details** from the KSeF portal:
-   - **KSeF Number**: The unique invoice identifier (e.g., `1234567890-20260120-ABCD1234-EF`)
-   - **Supplier NIP**: The Polish Tax ID of the invoice issuer
+<Steps>
+  <Step title="Get invoice details from the KSeF portal">
+    - **KSeF Number**: The unique invoice identifier (e.g., `1234567890-20260120-ABCD1234-EF`)
+    - **Supplier NIP**: The Polish Tax ID of the invoice issuer
+  </Step>
 
-2. **Create a job via API** using the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job):
+  <Step title="Create a job via API">
+    Use the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job):
 
-```bash
-curl -X POST https://api.invopop.com/silo/jobs \
-  -H "Authorization: Bearer YOUR_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow_id": "YOUR_IMPORT_WORKFLOW_ID",
-    "args": {
-      "ksef-number": "1234567890-20260120-ABCD1234-EF",
-      "nip": "1234567890"
-    }
-  }'
-```
+    ```bash
+    curl -X POST https://api.invopop.com/silo/jobs \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "workflow_id": "YOUR_IMPORT_WORKFLOW_ID",
+        "args": {
+          "ksef-number": "1234567890-20260120-ABCD1234-EF",
+          "nip": "1234567890"
+        }
+      }'
+    ```
 
-The invoice will be downloaded from KSeF, converted to GOBL, and stored in your silo.
+    The invoice will be downloaded from KSeF, converted to GOBL, and stored in your silo.
+  </Step>
+</Steps>
 
-**Import Multiple Invoices by Date Range**
+**Import multiple invoices by date range**
 
 To import all invoices received within a specific time period:
 
-1. **Determine the date range** you want to sync (from and to dates)
+<Steps>
+  <Step title="Determine the date range">
+    Decide the date range you want to sync (from and to dates).
+  </Step>
 
-2. **Create a job via API** using the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job) with your sync workflow:
+  <Step title="Create a job via API">
+    Use the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job) with your sync workflow:
 
-```bash
-curl -X POST https://api.invopop.com/silo/jobs \
-  -H "Authorization: Bearer YOUR_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
-    "entry_id": "YOUR_PARTY_ENTRY_ID",
-    "args": {
-      "from": "2026-01-01T00:00:00Z",
-      "to": "2026-01-31T23:59:59Z"
-    }
-  }'
-```
+    ```bash
+    curl -X POST https://api.invopop.com/silo/jobs \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
+        "entry_id": "YOUR_PARTY_ENTRY_ID",
+        "args": {
+          "from": "2026-01-01T00:00:00Z",
+          "to": "2026-01-31T23:59:59Z"
+        }
+      }'
+    ```
 
-The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
+    The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
+  </Step>
+</Steps>
 
 <Tip>
-  **Use Cases**:
-  - **Single invoice**: Import a specific invoice immediately after receiving notification from a supplier
-  - **Date range sync**: Backfill invoices after a polling outage or to import historical invoices before automatic polling was enabled
+  Use single invoice import to bring in a specific invoice immediately after receiving notification from a supplier. Use date range sync to backfill invoices after a polling outage or to import historical invoices before automatic polling was enabled.
 </Tip>
 
-#### Error Handling and Notifications
+#### Error handling and notifications
 
 We strongly recommend adding notification steps to your workflows to alert you of import failures:
 
-- **In the Import Workflow**: Add email or Slack notifications to the error handling section
-- **In the Sync Workflow**: Add notifications for when the sync process encounters issues
+- **In the import workflow**: Add email or Slack notifications to the error handling section
+- **In the sync workflow**: Add notifications for when the sync process encounters issues
 
 This ensures you're immediately aware if invoices fail to import, allowing you to take corrective action.
 
 <Tip>
-  **Common Import Issues**:
-  - Certificate expired or invalid
-  - KSeF API temporarily unavailable
-  - Invoice format not supported by GOBL conversion
-  - Network connectivity issues
-
-  Check your workflow error logs in the Console for detailed error messages.
+  Common import issues include certificate expired or invalid, KSeF API temporarily unavailable, invoice format not supported by GOBL conversion, and network connectivity issues. Check your workflow error logs in the Console for detailed error messages.
 </Tip>
 
-## GOBL Addon Reference
+## GOBL addon reference
 
 Detailed information about the FA(3)-specific extensions and validations can be found in:
 - [Poland FA(3) VAT v3 Addon Documentation](https://docs.gobl.org/addons/pl-favat-v3)

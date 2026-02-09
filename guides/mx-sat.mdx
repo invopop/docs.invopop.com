@@ -8,10 +8,15 @@ import PostRegistration from '/snippets/workflows/templates/mx/sat-postregistrat
 import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supplier.mdx';
 import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
 import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
+import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
 import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoiceMin from '/snippets/invoices/mx/sat-b2c.min.mdx';
 import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/mx/sat-simplified.min.mdx';
 import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
 import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
+import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 
@@ -268,7 +273,10 @@ Notice:
 - VAT will be applied at the standard rate, the percentage will be set automatically, and,
 - there are no totals nor calculations, all of these will be made automatically when uploading.
 
-<B2BInvoice />
+<CodeGroup>
+	<B2BInvoiceMin />
+	<B2BInvoice />
+</CodeGroup>
 
 </Accordion>
 
@@ -283,7 +291,10 @@ In addition to the observations for regular B2B invoices, note in the customer:
 
 It is important in Mexico to ensure the correct Fiscal Regime and CFDI Use codes are set correctly as the SAT will check these details and reject documents with unexpected combinations.
 
-<B2CInvoice />
+<CodeGroup>
+	<B2CInvoiceMin />
+	<B2CInvoice />
+</CodeGroup>
 
 </Accordion>
 
@@ -302,7 +313,10 @@ To create this type of invoice in Invopop:
 - the `customer` field is not required
 - the `$tags` field is used to identify this as a simplified invoice.
 
-<SimplifiedInvoice />
+<CodeGroup>
+	<SimplifiedInvoiceMin />
+	<SimplifiedInvoice />
+</CodeGroup>
 
 </Accordion>
 
@@ -315,7 +329,11 @@ Notice:
 - the `$tags` field has been used to identify this as a global invoice,
 - each `line` has a `ref` which is used to identify the invoice that it belongs to,
 - the [`tax.ext.mx-cfdi-global-month`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-month), [`mx-cfdi-global-period`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-period), and [`mx-cfdi-global-year`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-year) fields have been used to identify the global invoice period.
-<GlobalInvoice />
+
+<CodeGroup>
+	<GlobalInvoiceMin />
+	<GlobalInvoice />
+</CodeGroup>
 
 </Accordion>
 
@@ -328,26 +346,13 @@ Notice:
 - the `$type` field has been set to `credit-note`,
 - the `preceding` field has been used to identify the invoice that is being cancelled.
 
-<CreditNote />
+<CodeGroup>
+	<CreditNoteMin />
+	<CreditNote />
+</CodeGroup>
 
 </Accordion>
 
-</AccordionGroup>
-
-## FAQ
-
-<AccordionGroup>
-  <Accordion title="What does the CFDI40999 error mean and how do I resolve it?">
-    CFDI40999 is a generic "unclassified error" returned by the SAT when no other, more specific error code applies. This error can have multiple causes.
-
-    A common scenario is invoicing in border zones with the reduced 8% VAT rate. If you receive this error in that context, verify:
-
-    1. **RFC registration**: The supplier's RFC must be registered in the taxpayers registry for the appropriate border region tax incentive. Without this registration, the SAT will reject all invoices with the reduced rate. See [SAT's registration requirements and procedures](https://www.sat.gob.mx/minisitio/EstimulosFiscalesFronteraNorteSur/) for more information.
-    2. **Issue place postal code**: The [`mx-cfdi-issue-place`](https://docs.gobl.org/addons/mx-cfdi-v4#place-of-issue) field must contain a postal code from a municipality within a border zone.
-    3. **Tax rate**: Ensure you're applying the correct percentage (typically 8%) for the border zone.
-
-    If the error persists after verifying these points, or you're getting this error for other reasons, please reach out to our support team.
-  </Accordion>
 </AccordionGroup>
 
 ---
