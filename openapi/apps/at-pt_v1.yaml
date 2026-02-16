@@ -1,0 +1,440 @@
+# OpenAPI AT-PT v1 Specification
+# This document is created by hand.
+# TODO: Move to ../docs.invopop.com/openapi/apps/at-pt_v1.yaml
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points to interact with the AT Portugal app API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Portugal AT Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/at-pt/v1/entry/{silo_entry_id}/credentials:
+    post:
+      description:
+        Set or update the AT web services credentials for a given supplier.
+      parameters:
+        - description: Silo entry ID of the supplier to set the credentials for.
+          in: path
+          name: silo_entry_id
+          required: true
+          schema:
+            description: Silo entry ID of the supplier to set the credentials for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Silo Entry ID
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                username:
+                  description: AT username.
+                  example: "599999993/37"
+                  title: Username
+                  type: string
+                password:
+                  description: AT password.
+                  example: "MySecretPassword123"
+                  format: password
+                  title: Password
+                  type: string
+              required:
+                - username
+                - password
+              type: object
+        required: true
+      responses:
+        "204":
+          description: Credentials updated successfully.
+        "400":
+          description: Invalid parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Supplier not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "422":
+          description: Invalid credentials (not validated against AT).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /apps/at-pt/v1/entry/{silo_entry_id}/series:
+    get:
+      description:
+        List all registered series with the AT for the supplier.
+      parameters:
+        - description: Silo entry ID of the supplier to list series for.
+          in: path
+          name: silo_entry_id
+          required: true
+          schema:
+            description: Silo entry ID of the supplier to list series for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Silo Entry ID
+            type: string
+        - description:
+            The position marker from the previous result's next_cursor property,
+            used for pagination.
+          in: query
+          name: cursor
+          required: false
+          schema:
+            description:
+              The position marker from the previous result's next_cursor property,
+              used for pagination.
+            example: eyJsYXN0X2lkIjoiMTIzNCIsImxpbWl0IjoyMH0=
+            title: Cursor
+            type: string
+        - description: The maximum number of entries to return in a single page of results.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 100
+            description: The maximum number of entries to return in a single page of results.
+            example: 20
+            maximum: 100
+            minimum: 1
+            title: Limit
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesListResponse'
+          description: Paginated list of series.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid parameters (malformed cursor or limit).
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Supplier not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Internal server error.
+    post:
+      description:
+        Register a new series with the AT for the supplier.
+      parameters:
+        - description: Silo entry ID of the supplier to register the series for.
+          in: path
+          name: silo_entry_id
+          required: true
+          schema:
+            description: Silo entry ID of the supplier to register the series for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Silo Entry ID
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                base:
+                  description: Base code for the series (without the document type prefix).
+                  example: SERIES-A
+                  title: Base
+                  type: string
+                document_type:
+                  description: |-
+                    Document type for the series:
+                    - `FT`: Invoice (Fatura)
+                    - `FS`: Simplified Invoice (Fatura Simplificada)
+                    - `FR`: Invoice-Receipt (Fatura-Recibo)
+                    - `ND`: Debit Note (Nota de Débito)
+                    - `NC`: Credit Note (Nota de Crédito)
+                    - `RG`: Receipt (Recibo)
+                    - `GR`: Waybill (Guia de Remessa)
+                  enum:
+                    - FT
+                    - FS
+                    - FR
+                    - ND
+                    - NC
+                    - RG
+                    - GR
+                  example: FT
+                  title: Document Type
+                  type: string
+                type:
+                  description: |-
+                    Type of the series:
+                    - `N`: Normal
+                    - `F`: Training (Formação)
+                    - `R`: Recovery (Recuperação)
+                  enum:
+                    - N
+                    - F
+                    - R
+                  example: N
+                  title: Type
+                  type: string
+              required:
+                - base
+                - type
+                - document_type
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: Series registered successfully.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid parameters.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Supplier not found.
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description:
+            Validation error (e.g., supplier without AT credentials, invalid
+            series type for current mode).
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Internal server error.
+  /apps/at-pt/v1/entry/{silo_entry_id}/series/{id}:
+    get:
+      description: Get details of a specific series by ID.
+      parameters:
+        - description: Silo entry ID of the supplier to get the series for.
+          in: path
+          name: silo_entry_id
+          required: true
+          schema:
+            description: Silo entry ID of the supplier to get the series for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Silo Entry ID
+            type: string
+        - description: UUID of the series to get the details for.
+          in: path
+          name: id
+          required: true
+          schema:
+            description: UUID of the series to get the details for.
+            example: 1d8ab49a-bd14-11ef-925f-325096b39f47
+            title: Series ID
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: Series details.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid series ID format.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Series or supplier not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Internal server error.
+  /apps/at-pt/v1/entry/{silo_entry_id}/saft:
+    get:
+      description:
+        Generate and download a SAF-T PT report for the specified period.
+      parameters:
+        - description: Silo entry ID of the supplier to generate the SAF-T PT report for.
+          in: path
+          name: silo_entry_id
+          required: true
+          schema:
+            description: Silo entry ID of the supplier to generate the SAF-T PT report for.
+            example: 347c5b04-cde2-11ed-afa1-0242ac120002
+            title: Silo Entry ID
+            type: string
+        - description: Report year for the SAF-T PT report.
+          in: query
+          name: year
+          required: true
+          schema:
+            description: Report year for the SAF-T PT report.
+            example: 2024
+            minimum: 2020
+            title: Year
+            type: integer
+        - description:
+            Report month (1-12) for monthly report. Omit or use 0 for full year
+            report.
+          in: query
+          name: period
+          required: false
+          schema:
+            default: 0
+            description:
+              Report month (1-12) for monthly report. Omit or use 0 for full
+              year report.
+            example: 3
+            maximum: 12
+            minimum: 0
+            title: Period
+            type: integer
+      responses:
+        "200":
+          content:
+            application/xml:
+              schema:
+                format: binary
+                type: string
+          description: SAF-T report generated successfully.
+          headers:
+            Content-Disposition:
+              description: Suggested filename for download.
+              schema:
+                example: 'attachment; filename="saft-2024-03-01-2024-03-31.xml"'
+                type: string
+            Content-Type:
+              description: MIME type with Windows-1252 charset.
+              schema:
+                example: application/xml; charset=windows-1252
+                type: string
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description:
+            Invalid parameters (year < 2020, period out of range, future
+            date).
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Supplier not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Internal server error.
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+
+        Example: `Authorization: Bearer <token>`
+  schemas:
+    Error:
+      properties:
+        message:
+          description: Details of the error.
+          title: Message
+          type: string
+      type: object
+    Series:
+      properties:
+        id:
+          description: Series ID.
+          example: 1d8ab49a-bd14-11ef-925f-325096b39f47
+          title: ID
+          type: string
+        code:
+          description: Full series code (document type + base code).
+          example: FT SERIES-A
+          title: Code
+          type: string
+        base:
+          description: Base code for the series.
+          example: SERIES-A
+          title: Base
+          type: string
+        document_type:
+          description: Document type for the series.
+          example: FT
+          title: Document Type
+          type: string
+        type:
+          description: Type of the series.
+          example: N
+          title: Type
+          type: string
+        validation_code:
+          description: AT validation code for the series used to generate ATCUD codes.
+          example: AAJFJ3N5YS
+          title: Validation Code
+          type: string
+      type: object
+    SeriesListResponse:
+      properties:
+        limit:
+          description: Maximum number of entries in this page.
+          example: 20
+          title: Limit
+          type: integer
+        list:
+          description: List of series for this page.
+          items:
+            $ref: '#/components/schemas/Series'
+          title: List
+          type: array
+        next_cursor:
+          description:
+            Cursor used to identify the next page of results. Omitted when there are no more results.
+          example: eyJsYXN0X2lkIjoiMTIzNCIsImxpbWl0IjoyMH0=
+          title: Next Cursor
+          type: string
+      type: object
