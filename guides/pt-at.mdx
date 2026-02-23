@@ -446,6 +446,20 @@ When you register series through the Supplier Portal, you're asked to provide a 
 
 Unlike other countries, Portugal regulations do not allow pre-assigning sequence numbers to documents. The sequence number (_i.e._, the document's `code` property) is automatically assigned during the **Record for SAF-T reporting (Portugal)** step in your workflow, following AT regulations. This is why you'll find no `sequence` step in Portugal workflow templates and you should not add one.
 
+#### Series type
+
+Every series registered with the AT has a type that determines its purpose. You must choose one of three types when [registering a series](/api-ref/apps/at-pt/series-register), whether through the Supplier Portal or the API:
+
+| Type | Code | Description |
+| --- | --- | --- |
+| **Normal** | `N` | The standard type for series used in production. Use this type for all real documents with fiscal effect in live workspaces. |
+| **Training**<br/>_(Formação)_ | `F` | For testing and training purposes only. Documents issued under a training series are fictitious and carry no fiscal effect. Use this type in sandbox workspaces when validating your integration before going live. |
+| **Recovery**<br/>_(Recuperação)_ | `R` | A special type for registering documents that were issued manually on paper during a system outage. Portuguese law requires that when the invoicing system is unavailable, issuers continue on paper and then re-enter those documents once the system is restored. This type covers that scenario. |
+
+<Note>
+  The series type is set at registration time and cannot be changed afterward. Make sure to choose the correct type for your use case.
+</Note>
+
 ### Send a document
 
 The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. After uploading, you must run the corresponding processing workflow (invoice, delivery, or payment) created during setup.
