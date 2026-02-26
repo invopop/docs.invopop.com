@@ -25,6 +25,7 @@ import B2COneStopShopInvoiceMin from '/snippets/invoices/es/verifactu-b2c-oss.mi
 import ExamplesAccordion from '/snippets/invoices/es/accordion.mdx';
 import CreditNote from '/snippets/invoices/es/verifactu-credit-note.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
+import ReplacementInvoiceMin from '/snippets/invoices/es/verifactu-replacement.min.mdx';
 import CancelInvoice from '/snippets/workflows/templates/es/verifactu-cancel.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
@@ -222,6 +223,41 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     - `silo_entry_id`: use the The Silo Entry ID of the corrective invoice you've just uploaded.
 
     The corrective invoice's status will change to `Sent` when the workflow completes successfully.
+  </Step>
+</Steps>
+
+## Issue a Replacement Invoice (Factura de Canje)
+
+A replacement invoice (_Factura de Canje_) is used to replace a simplified invoice with a full invoice. This is common when a customer who originally received a simplified invoice (e.g., a receipt) later requests a full invoice with their tax identification details.
+
+<Steps>
+  <Step title="Upload a Replacement Invoice">
+    A replacement invoice is a standard invoice with the `replacement` tag. Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the replacement invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data), with these required fields:
+
+    - `regime`: `ES`
+    - Add the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon
+    - `type`: `standard`
+    - `tax.tags`: include `replacement`
+    - `supplier`: use the same supplier details as in the original invoice
+    - `preceding`: references the original simplified invoice, within it, you must include:
+      - `type`: type of the original invoice
+      - `issue_date`: the date of the original invoice
+      - `series`: the series of the original invoice
+      - `code`: the code of the original invoice
+
+  You can copy the example replacement invoice below as a reference.
+
+	<ReplacementInvoiceMin />
+
+  After successful upload, you'll see the replacement invoice in the **Invoices** section with status `Empty`.
+  </Step>
+  <Step title="Send the Replacement Invoice to the VERI*FACTU invoice workflow">
+    Send the replacement invoice to the VERI\*FACTU workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the _VERI\*FACTU invoice_ workflow we created during setup
+    - `silo_entry_id`: use the Silo Entry ID of the replacement invoice you've just uploaded.
+
+    The replacement invoice's status will change to `Sent` when the workflow completes successfully.
   </Step>
 </Steps>
 
