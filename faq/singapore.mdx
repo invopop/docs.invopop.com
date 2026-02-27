@@ -2,12 +2,42 @@
 title: "Singapore FAQ"
 description: "Frequently asked questions about invoicing compliance in Singapore"
 sidebarTitle: "FAQ"
-icon: "transporter-empty"
 ---
 
 <AccordionGroup>
-  <Accordion title="Documentation in progress">
-    FAQ content for Singapore is being prepared. For specific questions, please contact [support@invopop.com](mailto:support@invopop.com).
+  <Accordion title="What is the five-corner model in the context of Peppol?">
+    The standard Peppol network uses a four-corner model: the supplier (corner 1) sends an invoice through their Access Point (corner 2) to the buyer's Access Point (corner 3), which delivers it to the buyer (corner 4). Each party connects to the network through an accredited Access Point provider rather than exchanging documents directly.
+
+    Singapore's GST InvoiceNow Requirement extends this to a **five-corner model** by adding IRAS (Inland Revenue Authority of Singapore) as the fifth corner. In this arrangement, the supplier's Access Point transmits a copy of every covered invoice to IRAS in near real time, alongside the normal delivery to the buyer. This gives the tax authority continuous visibility into transaction data without requiring businesses to file separate invoice-level reports.
+
+    ```mermaid actions={false}
+    %%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+    flowchart TB
+      IRAS["🏛 IRAS — Tax Authority<br /> (Corner 5)"]
+
+      Supplier("👨🏻‍💼 Supplier<br /> (Corner 1)")
+      Buyer("💁‍♂️ Buyer<br /> (Corner 4)")
+
+      AP_S["🌐 Supplier Access Point<br /> (Corner 2)"]
+      AP_B["🌐 Buyer Access Point<br /> (Corner 3)"]
+
+      Supplier --> AP_S
+      AP_S -- "Invoice" --> AP_B
+      AP_B --> Buyer
+      AP_S -. "Copy to tax authority" .-> IRAS
+      AP_B -. "Copy to tax authority" .-> IRAS
+
+      classDef tax fill:#fff,stroke:#169958,color:#103830
+      classDef business fill:#fff,stroke:#169958,color:#103830
+      classDef ap fill:#fff,stroke:#169958,color:#103830
+      linkStyle default stroke:#999,font-size:13px,color:#red
+
+      class IRAS tax
+      class Supplier,Buyer business
+      class AP_S,AP_B ap
+    ```
+
+    The five-corner model is not unique to Singapore. Other Peppol jurisdictions, including Malaysia and Australia, are adopting or exploring similar approaches where the national tax authority receives invoice data as an additional corner of the network.
   </Accordion>
 </AccordionGroup>
 
