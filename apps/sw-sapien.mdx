@@ -1,0 +1,92 @@
+---
+title: "SW Sapien"
+description: "Bulk download and import CFDIs from Mexico's SAT using SW Sapien's Efisco service."
+keywords: ["Mexico", "sat", "cfdi", "sw-sapien", "efisco", "bulk-import", "e-invoicing"]
+mode: wide
+---
+
+import RegisterParty from '/snippets/workflows/templates/mx/sw-sapien-register-party.mdx';
+import ImportCFDI from '/snippets/workflows/templates/mx/sw-sapien-import-cfdi.mdx';
+import ConvertCFDI from '/snippets/workflows/templates/mx/sat-convert-cfdi.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+
+<Warning>
+  The SW Sapien app is not available by default. Contact us if you are interested in using it.
+</Warning>
+
+<Tabs>
+  <Tab title="Description">
+    <Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="SW Sapien" icon="https://assets.invopop.com/apps/sw-sapien/icon.svg"
+				  href="/guides/mx-sat-receiving" horizontal>
+				  View implementation guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | Issued, Received                       |
+				| Country   | [Mexico](/compliance/mexico)            |
+		</Columns>
+
+    The **SW Sapien app** connects Invopop to [SW Sapien's](https://sw.com.mx/) Efisco service to bulk download CFDI documents from the SAT (Servicio de Administración Tributaria). Instead of managing sensitive eFirma certificates or building brittle web-scraping solutions, this app delegates the complexity of SAT authentication and download to a trusted third-party provider.
+
+    <Note>
+      This app handles CFDI **download** only. Once downloaded, each CFDI is passed to the [SAT Mexico app](/apps/sat-mexico) for conversion to [GOBL](https://docs.gobl.org) format via a separate workflow.
+    </Note>
+
+    #### Key features
+
+    - **Bulk CFDI download:** Request and download CFDIs for a given date range, both issued and received, through SW Sapien's Efisco API.
+    - **Automatic job dispatch:** For each downloaded CFDI, the app uploads the file and creates a workflow job that triggers the conversion process.
+    - **Periodic execution:** Combine with the [Cron app](/apps/cron) to schedule automatic daily (or other interval) imports.
+    - **Flexible document types:** Configure whether to import received invoices, issued invoices, or both.
+    - **No sensitive certificate management:** Authentication with SAT is handled entirely by SW Sapien, so eFirma certificates never need to be stored in Invopop.
+
+    Check out our [Mexico: Receiving invoices guide](/guides/mx-sat-receiving) for step-by-step setup instructions. The app also supports importing issued invoices; refer to the configuration options below for details.
+  </Tab>
+  <Tab title="Actions">
+    The following workflow actions will be available once you install and enable this app:
+
+    <Card title="Register Efisco Party" icon="https://assets.invopop.com/apps/sw-sapien/icon.svg" horizontal>
+      Initiate the registration of a party with SW Sapien's Efisco service, generating a link for uploading the e.firma (FIEL) certificate.
+    </Card>
+
+    <Card title="Import CFDIs from Efisco" icon="https://assets.invopop.com/apps/sw-sapien/icon.svg" horizontal>
+      Request CFDI downloads from SW Sapien's Efisco service for a specified date range, wait for completion, and dispatch individual conversion jobs for each CFDI.
+    </Card>
+
+  </Tab>
+  <Tab title="Workflows">
+    The following templates help you get started quickly. Use them as is or as a base for your own flows.
+
+    <AccordionGroup>
+      <Accordion title="SW Sapien register party">
+        Initiate the registration of a party with SW Sapien's Efisco service to enable CFDI downloads.
+
+        <RegisterParty />
+      </Accordion>
+      <Accordion title="SW Sapien import CFDIs">
+        Download CFDIs from SAT via SW Sapien's Efisco service and dispatch a conversion job for each document. This workflow is designed to be executed periodically using the [Cron app](/apps/cron).
+
+        <ImportCFDI />
+      </Accordion>
+      <Accordion title="SAT convert CFDI">
+        Convert an individual CFDI to [GOBL](https://docs.gobl.org) format using the [SAT Mexico app](/apps/sat-mexico).
+
+        <ConvertCFDI />
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+---
+
+<MexicoResources />
+
+<Card title="Participate in our community" icon="square-question" horizontal href="https://community.invopop.com">
+  Ask and answer questions about SW Sapien App →
+</Card>

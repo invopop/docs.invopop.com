@@ -1,0 +1,330 @@
+---
+title: "CFDI receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: Import received CFDI documents from Mexico's SAT into your Invopop workspace.
+---
+
+import ConvertCFDI from '/snippets/workflows/templates/mx/sat-convert-cfdi.mdx';
+import ImportCFDI from '/snippets/workflows/templates/mx/sw-sapien-import-cfdi.mdx';
+import RegisterParty from '/snippets/workflows/templates/mx/sw-sapien-register-party.mdx';
+import SubscribeImport from '/snippets/workflows/templates/mx/mx-subscribe-import.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+
+<Warning>
+  This guide uses the [SW Sapien app](/apps/sw-sapien), which is not available by default. Contact us if you are interested in using it.
+</Warning>
+
+## Introduction
+
+The SAT (_Servicio de Administración Tributaria_) provides mechanisms for bulk downloading CFDI (_Comprobante Fiscal Digital por Internet_) documents, both issued and received. Importing these documents into Invopop lets you convert them to [GOBL](https://docs.gobl.org) format and take advantage of processing capabilities such as accounts payable workflows, PDF generation, and integrations with external systems.
+
+This guide walks you through configuring your Invopop workspace to automatically import **received** invoices from SAT on a recurring schedule. The process uses three apps working together:
+
+- **[Cron](/apps/cron):** Schedules the import workflow to run automatically at a regular interval (_e.g._, daily).
+- **[SW Sapien](/apps/sw-sapien):** Downloads CFDIs in bulk from SAT through [SW Sapien's](https://sw.com.mx/) Efisco service, a trusted third-party provider that handles SAT authentication.
+- **[SAT Mexico](/apps/sat-mexico):** Converts CFDI XML documents to GOBL format.
+
+<Note>
+  The SW Sapien app also supports importing _issued_ invoices. See the [SW Sapien app documentation](/apps/sw-sapien) for configuration details.
+</Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An **Invopop workspace**. See the [quickstart guide](/get-started/quickstart) if you need to create one.
+- An **SW Sapien Efisco account** with API credentials. Visit [sw.com.mx](https://sw.com.mx/) to create an account and obtain your API token.
+- The **RFC** (_Registro Federal de Contribuyentes_) of the entity whose received invoices you want to import.
+- The entity's **e.firma (FIEL)** certificate. This digital certificate issued by SAT is required to authorize bulk CFDI downloads on behalf of the entity.
+
+## How it works
+
+The import process follows three main stages:
+
+1. **Scheduling:** The [Cron app](/apps/cron) creates a job for the import workflow at each configured interval, passing the time window (`from` and `upto`) to process.
+2. **Downloading:** Each import job runs the [SW Sapien app](/apps/sw-sapien) to request CFDIs from SAT via Efisco for the given time window. Once the download is ready, it uploads each CFDI file and creates a conversion job.
+3. **Converting:** Each conversion job runs the [SAT Mexico app's](/apps/sat-mexico) import action to convert the CFDI XML into GOBL format.
+
+## Setup
+
+Configure your Invopop workspace for receiving CFDI imports by following these steps in the [Invopop Console](https://console.invopop.com):
+
+<Steps>
+
+<Step title="Connect the SAT Mexico app">
+  Navigate to **Configuration** → **Apps**, locate **SAT Mexico** in the app discovery list, and click **Connect**.
+
+  <Tip>
+    If you already use the SAT Mexico app for issuing invoices, you can skip this step. The same app handles both sending and importing.
+  </Tip>
+</Step>
+
+<Step title="Connect the SW Sapien app">
+  In the same **Apps** section, locate **SW Sapien** and click **Connect**. The app will move to the "Enabled Apps" section.
+
+  Next, click **Configure** and enter your SW Sapien API credentials:
+  - **API Token**: Your SW Sapien Efisco API token.
+</Step>
+
+<Step title="Connect the Cron app">
+  Still in the **Apps** section, locate **Cron** and click **Connect**. No additional configuration is needed at this stage.
+</Step>
+
+<Step title="Set up the CFDI Conversion Workflow">
+  This workflow converts individual CFDI documents to GOBL format. It will be triggered automatically for each downloaded CFDI.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT convert CFDI workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-convert-cfdi" cta="Add to my workspace">
+    Convert a CFDI document to GOBL format.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <ConvertCFDI />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name it something descriptive like "SAT Convert CFDI".
+
+    The workflow needs these steps:
+
+    1. **Import CFDI document** - Uses the SAT Mexico app to convert the CFDI XML to GOBL format.
+    2. **Add Signature** - Signs the envelope to prevent further modifications.
+    3. **Set State** - To "received".
+
+    In the **Error Handling** section, add a **Set State** step and select `Error`.
+  </Tab>
+</Tabs>
+
+  <Tip>
+    You can extend the conversion workflow with additional steps to suit your needs, such as generating a PDF, sending a [webhook](/guides/webhooks) notification, forwarding the invoice by [email](/apps/email), or storing a copy in [Google Drive](/apps/google-drive).
+  </Tip>
+
+  <Note>
+    Remember the name you give this workflow. You will need to select it by name when configuring the import workflow in the next step.
+  </Note>
+
+
+</Step>
+
+<Step title="Set up the CFDI Import Workflow">
+  This workflow uses the SW Sapien app to download CFDIs from SAT and dispatch conversion jobs for each one. It will be executed periodically by the Cron app.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SW Sapien import CFDIs workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sw-sapien-import-cfdi" cta="Add to my workspace">
+    Download CFDIs from SAT via SW Sapien and dispatch conversion jobs.
+    </Card>
+
+    After adding the template, open the **Bulk Import CFDIs via Efisco (Mexico)** step and set the **Import Workflow** field to the CFDI Conversion Workflow created in the previous step.
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <ImportCFDI />
+
+    After saving, open the **Bulk Import CFDIs via Efisco (Mexico)** step and set the **Import Workflow** field to the CFDI Conversion Workflow created in the previous step.
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name it something descriptive like "SW Sapien Import CFDIs".
+
+    The workflow needs a single step:
+
+    1. **Bulk Import CFDIs via Efisco (Mexico)** - Configure with:
+       - **Document Type**: Select `Received` to import invoices received by the party.
+       - **Import Workflow**: Select the CFDI Conversion Workflow created in the previous step.
+
+    In the **Error Handling** section, add a **Set State** step and select `Error`.
+  </Tab>
+</Tabs>
+
+  <Note>
+    Remember the name you give this workflow. You will need to select it by name when configuring the subscription workflow in the next step.
+  </Note>
+</Step>
+
+<Step title="Set up the Party Subscription Workflow">
+  This workflow subscribes a party to periodic CFDI imports using the Cron app. Run it once per party you want to receive invoices for.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="Subscribe party to CFDI import workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-subscribe-import" cta="Add to my workspace">
+    Subscribe a party to daily CFDI bulk imports.
+    </Card>
+
+    After adding the template, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the CFDI Import Workflow created in the previous step.
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <SubscribeImport />
+
+    After saving, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the CFDI Import Workflow created in the previous step.
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name it something descriptive like "Subscribe to CFDI Import".
+
+    The workflow needs these steps:
+
+    1. **Subscribe to Periodic Import** - Uses the Cron app. Configure with:
+       - **Workflow**: Select the CFDI Import Workflow created in the previous step.
+       - **Interval**: Select the desired frequency (for example, `daily`).
+    2. **Set State** - To "registered".
+
+    In the **Error Handling** section, add a **Set State** step and select `Error`.
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Set up the Party Registration Workflow">
+  This workflow registers a party with SW Sapien's Efisco service by generating a link where the party's e.firma (FIEL) certificate can be uploaded. Run it once per party before subscribing them to periodic imports.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SW Sapien register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sw-sapien-register-party" cta="Add to my workspace">
+    Register a party with SW Sapien's Efisco service for CFDI downloads.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterParty />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name it something descriptive like "SW Sapien Register Party".
+
+    The workflow needs these steps:
+
+    1. **Set State** - To "processing".
+    2. **Register Efisco Party** - Initiates the registration of the party with SW Sapien's Efisco service.
+
+    In the **Error Handling** section, add a **Set State** step and select `Error`.
+  </Tab>
+</Tabs>
+</Step>
+
+</Steps>
+
+## Running
+
+With all workflows in place, you can now register parties and start receiving invoices. For each entity whose invoices you want to import, you need to register them with SW Sapien's Efisco service and then subscribe them to periodic imports.
+
+### Register a receiving party
+
+<Steps>
+  <Step title="Create the party">
+    In the left sidebar, go to the **Parties** section and click **Suppliers**.
+
+    Click **+New Supplier** and enter the party's data. At a minimum, provide:
+    - **Name** of the entity
+    - **RFC** (_Registro Federal de Contribuyentes_)
+
+    Click **Build**, verify there are no errors, then click **Save**.
+  </Step>
+
+  <Step title="Run the Registration Workflow">
+    With the party entry selected, click **Select Workflow** and execute the **SW Sapien Register Party** workflow.
+
+    After it completes, the party's state will change to `Processing` and a registration link will appear in the **Meta** tab of the entry.
+  </Step>
+
+  <Step title="Complete the eFirma upload">
+    Open the **Details** window and click on **Meta**. You will see a **Registration Link** with a URL.
+
+    <Info>
+      You can access the registration link via the API by [fetching the silo entry](/api-ref/silo/entries/fetch-an-entry) and locating the meta entry where the key is `registration-link`.
+    </Info>
+
+    Visit that URL to access the registration form. Fill in the entity's **RFC** and upload the **e.firma (FIEL)** certificate files (`.cer` and `.key`) along with the private key password.
+
+    <Note>
+      This form can be shared directly with the entity if required.
+    </Note>
+
+    When you click **Save**, the certificate details are securely sent to SW Sapien's Efisco service, which will use them to authenticate bulk CFDI download requests from SAT on behalf of the entity.
+
+    <Note>
+      You can also upload the e.firma certificate programmatically using the [Upload e.firma certificate](/api-ref/apps/sw-sapien/certificate-upload) API endpoint. This is useful for automating onboarding or integrating the registration process into your own application.
+    </Note>
+  </Step>
+
+  <Step title="Subscribe the party to imports">
+    Once the e.firma has been uploaded, execute the **Subscribe to CFDI Import** workflow on the same party entry.
+
+    Once the workflow completes successfully, the party's state will change to `Registered` and the Cron app will begin scheduling import jobs at the configured interval.
+  </Step>
+</Steps>
+
+### Monitor imported invoices
+
+Once the subscription is active, the [Cron app](/apps/cron) will automatically create an import job at each configured interval (for example, daily). Here is what happens during each cycle:
+
+1. **Cron creates an import job** with a time window (`from` and `upto`) corresponding to the scheduled interval. You can see these jobs as they are created in the **Workflows** → **History** section of the Console.
+
+2. **The import step shifts the window 72 hours into the past.** This is because SAT allows invoices to be issued with a date up to 72 hours before the current time. By shifting the window, the import ensures it only downloads consolidated data where all invoices for that period have been finalized.
+
+<Note>
+  For example, if Cron schedules a job on March 10 covering March 9–10, the actual download request to SAT will cover March 6–7. This three-day lag guarantees completeness.
+</Note>
+
+3. **The import job enters a `Queued` state** while the SW Sapien app requests the CFDIs from SAT via Efisco. This is an asynchronous process: SAT may take anywhere from a few minutes to several hours (and in exceptional cases, up to six days) to make the download available. The job remains queued until the data is ready.
+
+4. **Once the download completes**, the import step retrieves the CFDIs and dispatches a separate conversion job for each one. These conversion jobs will also appear in **Workflows** → **History**.
+
+5. **Each conversion job** runs the CFDI Conversion Workflow, which converts the CFDI XML to [GOBL](https://docs.gobl.org) format, signs the envelope, and marks the document with the state `Received`. The resulting silo entries will appear in the **Invoices** section of the Console.
+
+If errors occur during any stage, the rescue steps in the corresponding workflow will set the document state to `Error`, allowing you to identify and resolve issues through the Console or API.
+
+### Run the CFDI import manually
+
+For testing purposes, you can trigger the CFDI Import Workflow manually instead of waiting for the Cron app to execute it on schedule.
+
+<Steps>
+  <Step title="Open the workflow">
+    Navigate to the **Workflows** section in the Console and locate the CFDI Import Workflow you created during setup. Click on it to open its details.
+  </Step>
+
+  <Step title="Run the workflow">
+    Click the <kbd>Run</kbd> button and configure the execution:
+
+    - **Document**: Enter the party entry whose RFC you want to import invoices for.
+    - **Arguments**: Add the following two parameters:
+      - `from`: The start of the time window in ISO 8601 format, for example `2025-03-01T00:00:00Z`.
+      - `upto`: The end of the time window in ISO 8601 format, for example `2025-03-02T00:00:00Z`.
+
+    <Note>
+      The import step applies the 72-hour shift described above. For example, if you set `from` and `upto` to cover March 9–10, the actual download request to SAT will cover March 6–7.
+    </Note>
+  </Step>
+</Steps>
+
+### Unsubscribe a party
+
+To stop importing invoices for a specific party, create a workflow with the Cron **Unsubscribe** action and execute it on the party's entry. This removes the subscription and no further import jobs will be scheduled.
+
+---
+
+<MexicoResources />
+
+<Card title="Mexico FAQ"
+  icon="square-question"
+  href="/faq/mexico"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Mexico →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Mexico →
+</Card>

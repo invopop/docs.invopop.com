@@ -1,0 +1,112 @@
+# OpenAPI SW Sapien v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you interact with the SW Sapien app API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: SW Sapien Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/sw-sapien/v1/entry/{silo_entry_id}/certificate:
+    post:
+      description: Upload the e.firma (FIEL) certificate, private key, and password for a registered party. This endpoint provides an alternative to the web-based registration form for programmatic integration.
+      parameters:
+      - description: ID of the party silo entry to upload the certificate for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the party silo entry to upload the certificate for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: Silo Entry ID
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cer_file:
+                  description: |-
+                    Base64 encoded e.firma certificate file (`.cer`) issued by SAT.
+                  format: byte
+                  type: string
+                key_file:
+                  description: |-
+                    Base64 encoded e.firma private key file (`.key`).
+                    The private key must match the certificate.
+                  format: byte
+                  type: string
+                password:
+                  description: |-
+                    The password for the e.firma private key.
+                  type: string
+              required:
+                - cer_file
+                - key_file
+                - password
+      responses:
+        "204":
+          description: "Certificate uploaded successfully."
+        "400":
+          description: Bad Request - Invalid certificate data or mismatched private key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "404":
+          description: Not Found - Entry ID not found or not in a state waiting for certificate upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "422":
+          description: Unprocessable Entity - Certificate validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+        "500":
+          description: Internal Server Error - Failed to process certificate upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+                    type: string
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+
+        Example: `Authorization: Bearer <token>`
