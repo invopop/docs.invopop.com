@@ -1,0 +1,47 @@
+---
+title: "SAT convert CFDI"
+description: "Convert a CFDI document to GOBL format"
+countryCode: "mx"
+appId: "sat-mx"
+schema: "bill/invoice"
+---
+
+```json Example SAT convert CFDI workflow expandable
+{
+  "name": "SAT convert CFDI",
+  "description": "Convert a CFDI document to GOBL format",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "20361430-0cf2-11f1-a7d2-97381b60bbb5",
+      "name": "Import CFDI document",
+      "provider": "sat-mx.import",
+    },
+    {
+      "id": "2b91aca0-0409-11f1-9d9e-5d9a4ee51d56",
+      "name": "Add Signature",
+      "provider": "silo.close"
+    },
+    {
+      "id": "4b288b30-0402-11f1-9d9e-5d9a4ee51d56",
+      "name": "Set Silo Entry State",
+      "provider": "silo.state",
+      "summary": "Set state to `received`{.state .received}",
+      "config": {
+        "state": "received"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "e5f6a7b0-1a2b-11f0-b001-4a5b6c7d8e9f",
+      "name": "Set Silo Entry State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+}
+```

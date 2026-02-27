@@ -1,0 +1,47 @@
+---
+title: "Subscribe party to CFDI import"
+description: "Subscribe a party to periodic CFDI bulk import using the Cron app"
+countryCode: "mx"
+appId: "cron"
+schema: "org/party"
+---
+
+```json Example subscribe party to CFDI import workflow expandable
+{
+  "name": "Subscribe party to CFDI import",
+  "description": "Subscribe a party to periodic CFDI bulk import using the Cron app",
+  "schema": "org/party",
+  "steps": [
+    {
+      "id": "b8c9d0e0-3c4d-11f0-d003-6c7d8e9f0a1b",
+      "name": "Subscribe to Periodic Import",
+      "provider": "cron.subscribe",
+      "summary": "Daily CFDI import",
+      "config": {
+        "workflow_id": "",
+        "interval": "daily"
+      }
+    },
+    {
+      "id": "c9d0e1f0-3c4d-11f0-d003-6c7d8e9f0a1b",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `registered`{.state .registered}",
+      "config": {
+        "state": "registered"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "d0e1f2a0-3c4d-11f0-d003-6c7d8e9f0a1b",
+      "name": "Set State",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+}
+```

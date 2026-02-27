@@ -1,0 +1,70 @@
+---
+title: "Cron"
+description: "Schedule periodic workflow execution for automated data imports and recurring processes."
+keywords: ["cron", "scheduling", "automation", "periodic", "import", "sync"]
+mode: wide
+---
+
+import SubscribeImport from '/snippets/workflows/templates/mx/mx-subscribe-import.mdx';
+
+<Tabs>
+  <Tab title="Description">
+    <Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Cron" icon="https://assets.invopop.com/apps/cron/icon.svg" horizontal>
+				  Periodic workflow execution
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Automation                             |
+				| Scope     | All                                    |
+		</Columns>
+
+    The **Cron app** provides periodic workflow execution capabilities for Invopop. Subscribe any silo entry to a workflow with a specified interval, and Cron handles the scheduling and execution automatically. This replaces the need for apps to build their own polling and scheduling infrastructure.
+
+    The primary use case is automating inbound data flows, such as periodically importing invoices from external systems. For example, the [SW Sapien app](/apps/sw-sapien) uses Cron to schedule daily CFDI bulk imports from Mexico's SAT.
+
+    #### Key features
+
+    - **Subscription-based scheduling:** Subscribe silo entries to workflows with configurable intervals (hourly, daily, and more).
+    - **Automatic execution windows:** Each scheduled job receives `from` and `upto` parameters defining the exact time range to process, so workflows always know which period they cover.
+    - **Centralized infrastructure:** Leverages the Invopop workflow engine for error handling, retry logic, and monitoring instead of requiring each app to build its own scheduling.
+    - **Manual triggers:** Unsubscribe and resubscribe to reset execution, or create one-off jobs directly for special cases.
+    - **Execution tracking:** Maintains a history of executions per subscription to ensure proper interval management.
+  </Tab>
+  <Tab title="Actions">
+    The following workflow actions will be available once you install and enable this app:
+
+    <Card title="Subscribe" icon="https://assets.invopop.com/apps/cron/icon.svg" horizontal>
+      Register a silo entry for periodic workflow execution. Configure the target workflow and the execution interval (for example, daily or hourly). The subscription takes effect immediately and the first job is created at the next scheduled interval.
+    </Card>
+
+    <Card title="Unsubscribe" icon="https://assets.invopop.com/apps/cron/icon.svg" horizontal>
+      Remove a previously created subscription. The workflow will no longer execute periodically for the specified silo entry.
+    </Card>
+  </Tab>
+  <Tab title="Workflows">
+    The Cron app actions are designed to be included as steps within your own workflows. Below is an example of a party workflow that subscribes a party to a periodic import process.
+
+    <AccordionGroup>
+      <Accordion title="Subscribe party to periodic import">
+        Subscribe a party to daily CFDI bulk imports. This workflow is intended to be executed once per party after initial registration. Replace the `workflow_id` with the ID of your import workflow.
+
+        <SubscribeImport />
+      </Accordion>
+    </AccordionGroup>
+
+    <Info>
+      The example above uses a Mexico CFDI import workflow, but the Cron app is not country-specific. Use it with any workflow that benefits from periodic execution.
+    </Info>
+  </Tab>
+</Tabs>
+
+---
+
+<Card title="Participate in our community" icon="square-question" horizontal href="https://community.invopop.com">
+  Ask and answer questions about the Cron App →
+</Card>
