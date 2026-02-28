@@ -8,6 +8,7 @@ import ConvertCFDI from '/snippets/workflows/templates/mx/sat-convert-cfdi.mdx';
 import ImportCFDI from '/snippets/workflows/templates/mx/sw-sapien-import-cfdi.mdx';
 import RegisterParty from '/snippets/workflows/templates/mx/sw-sapien-register-party.mdx';
 import SubscribeImport from '/snippets/workflows/templates/mx/mx-subscribe-import.mdx';
+import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 
 <Warning>
@@ -64,19 +65,23 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
 
   Next, click **Configure** and enter your SW Sapien API credentials:
   - **API Token**: Your SW Sapien Efisco API token.
+
+  <Note>
+    You can obtain your API token from the [SW Sapien portal](https://portal.sw.com.mx/) under **Configuración** → **Credenciales de acceso**.
+  </Note>
 </Step>
 
 <Step title="Connect the Cron app">
   Still in the **Apps** section, locate **Cron** and click **Connect**. No additional configuration is needed at this stage.
 </Step>
 
-<Step title="Set up the CFDI Conversion Workflow">
+<Step title="Set up the CFDI Import Workflow">
   This workflow converts individual CFDI documents to GOBL format. It will be triggered automatically for each downloaded CFDI.
 
 <Tabs>
   <Tab title="Template">
-    <Card iconType="duotone" title="SAT convert CFDI workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-convert-cfdi" cta="Add to my workspace">
-    Convert a CFDI document to GOBL format.
+    <Card iconType="duotone" title="SAT import CFDI workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-convert-cfdi" cta="Add to my workspace">
+    Import a CFDI document and convert it to GOBL format.
     </Card>
   </Tab>
   <Tab title="Code">
@@ -102,20 +107,18 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
     You can extend the conversion workflow with additional steps to suit your needs, such as generating a PDF, sending a [webhook](/guides/webhooks) notification, forwarding the invoice by [email](/apps/email), or storing a copy in [Google Drive](/apps/google-drive).
   </Tip>
 
-  <Note>
+  <Tip>
     Remember the name you give this workflow. You will need to select it by name when configuring the import workflow in the next step.
-  </Note>
-
-
+  </Tip>
 </Step>
 
-<Step title="Set up the CFDI Import Workflow">
+<Step title="Set up the Efisco bulk import CFDIs workflow">
   This workflow uses the SW Sapien app to download CFDIs from SAT and dispatch conversion jobs for each one. It will be executed periodically by the Cron app.
 
 <Tabs>
   <Tab title="Template">
-    <Card iconType="duotone" title="SW Sapien import CFDIs workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sw-sapien-import-cfdi" cta="Add to my workspace">
-    Download CFDIs from SAT via SW Sapien and dispatch conversion jobs.
+    <Card iconType="duotone" title="Efisco bulk import CFDIs workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sw-sapien-import-cfdi" cta="Add to my workspace">
+    Download CFDIs from SAT via SW Sapien and dispatch import CFDI job.
     </Card>
 
     After adding the template, open the **Bulk Import CFDIs via Efisco (Mexico)** step and set the **Import Workflow** field to the CFDI Conversion Workflow created in the previous step.
@@ -142,7 +145,7 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
 </Tabs>
 
   <Note>
-    Remember the name you give this workflow. You will need to select it by name when configuring the subscription workflow in the next step.
+    Remember the name of this workflow. You will need to select it by name when configuring the subscription workflow in the next step.
   </Note>
 </Step>
 
@@ -155,13 +158,13 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
     Subscribe a party to daily CFDI bulk imports.
     </Card>
 
-    After adding the template, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the CFDI Import Workflow created in the previous step.
+    After adding the template, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the bulk import CFDI workflow created in the previous step.
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
     <SubscribeImport />
 
-    After saving, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the CFDI Import Workflow created in the previous step.
+    After saving, open the **Subscribe to Periodic Import** step and set the **Workflow** field to the bulk import CFDI workflow created in the previous step.
   </Tab>
   <Tab title="Build from scratch">
     Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
@@ -171,7 +174,7 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
     The workflow needs these steps:
 
     1. **Subscribe to Periodic Import** - Uses the Cron app. Configure with:
-       - **Workflow**: Select the CFDI Import Workflow created in the previous step.
+       - **Workflow**: Select the bulk import CFDI workflow created in the previous step.
        - **Interval**: Select the desired frequency (for example, `daily`).
     2. **Set State** - To "registered".
 
@@ -220,9 +223,15 @@ With all workflows in place, you can now register parties and start receiving in
   <Step title="Create the party">
     In the left sidebar, go to the **Parties** section and click **Suppliers**.
 
-    Click **+New Supplier** and enter the party's data. At a minimum, provide:
-    - **Name** of the entity
-    - **RFC** (_Registro Federal de Contribuyentes_)
+    Click **+New Supplier** and enter the party's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly. At a minimum, provide:
+
+    - **Name** of the company
+    - **Tax ID Country** with `MX`
+    - **Tax ID Code** with the entity's RFC (_Registro Federal de Contribuyentes_)
+
+    Here is an example supplier for reference:
+
+    <Supplier />
 
     Click **Build**, verify there are no errors, then click **Save**.
   </Step>
@@ -233,7 +242,7 @@ With all workflows in place, you can now register parties and start receiving in
     After it completes, the party's state will change to `Processing` and a registration link will appear in the **Meta** tab of the entry.
   </Step>
 
-  <Step title="Complete the eFirma upload">
+  <Step title="Complete the e.firma (FIEL) upload">
     Open the **Details** window and click on **Meta**. You will see a **Registration Link** with a URL.
 
     <Info>
@@ -282,11 +291,11 @@ If errors occur during any stage, the rescue steps in the corresponding workflow
 
 ### Run the CFDI import manually
 
-For testing purposes, you can trigger the CFDI Import Workflow manually instead of waiting for the Cron app to execute it on schedule.
+For testing purposes, you can trigger the EFisco bulk CFDI import workflow manually instead of waiting for the Cron app to execute it on schedule.
 
 <Steps>
   <Step title="Open the workflow">
-    Navigate to the **Workflows** section in the Console and locate the CFDI Import Workflow you created during setup. Click on it to open its details.
+    Navigate to the **Workflows** section in the Console and locate the build CFDI import workflow you created during setup. Click on it to open its details.
   </Step>
 
   <Step title="Run the workflow">
