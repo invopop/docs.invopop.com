@@ -8,7 +8,7 @@ import ConvertCFDI from '/snippets/workflows/templates/mx/sat-convert-cfdi.mdx';
 import ImportCFDI from '/snippets/workflows/templates/mx/sw-sapien-import-cfdi.mdx';
 import RegisterParty from '/snippets/workflows/templates/mx/sw-sapien-register-party.mdx';
 import SubscribeImport from '/snippets/workflows/templates/mx/mx-subscribe-import.mdx';
-import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
+import Contact from '/snippets/suppliers/mx/sat-supplier.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 
 <Warning>
@@ -96,8 +96,7 @@ Configure your Invopop workspace for receiving CFDI imports by following these s
     The workflow needs these steps:
 
     1. **Import CFDI document** - Uses the SAT Mexico app to convert the CFDI XML to GOBL format.
-    2. **Add Signature** - Signs the envelope to prevent further modifications.
-    3. **Set State** - To "received".
+    2. **Set State** - To "received".
 
     In the **Error Handling** section, add a **Set State** step and select `Error`.
   </Tab>
@@ -221,17 +220,17 @@ With all workflows in place, you can now register parties and start receiving in
 
 <Steps>
   <Step title="Create the party">
-    In the left sidebar, go to the **Parties** section and click **Suppliers**.
+    In the left sidebar, go to the **Parties** section and click **Contacts**.
 
-    Click **+New Supplier** and enter the party's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly. At a minimum, provide:
+    Click **+New Contact** and enter the party's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly. At a minimum, provide:
 
     - **Name** of the company
     - **Tax ID Country** with `MX`
     - **Tax ID Code** with the entity's RFC (_Registro Federal de Contribuyentes_)
 
-    Here is an example supplier for reference:
+    Here is an example contact for reference:
 
-    <Supplier />
+    <Contact />
 
     Click **Build**, verify there are no errors, then click **Save**.
   </Step>
@@ -285,7 +284,7 @@ Once the subscription is active, the [Cron app](/apps/cron) will automatically c
 
 4. **Once the download completes**, the import step retrieves the CFDIs and dispatches a separate conversion job for each one. These conversion jobs will also appear in **Workflows** → **History**.
 
-5. **Each conversion job** runs the CFDI Conversion Workflow, which converts the CFDI XML to [GOBL](https://docs.gobl.org) format, signs the envelope, and marks the document with the state `Received`. The resulting silo entries will appear in the **Invoices** section of the Console.
+5. **Each conversion job** runs the CFDI Conversion Workflow, which converts the CFDI XML to [GOBL](https://docs.gobl.org) format and marks the document with the state `Received`. The resulting silo entries will appear in the **Invoices** section of the Console.
 
 If errors occur during any stage, the rescue steps in the corresponding workflow will set the document state to `Error`, allowing you to identify and resolve issues through the Console or API.
 
