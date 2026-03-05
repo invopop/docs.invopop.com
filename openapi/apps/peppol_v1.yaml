@@ -28,8 +28,8 @@ paths:
         network. Exactly one of `peppol_id` or `vat` must be provided.
 
         When `vat` is used, the service derives the Peppol participant
-        identifier using the country-specific scheme rules (e.g. `9923:` for
-        Austria, `0184:` for Belgium). If no scheme can be determined for
+        identifier using the country-specific scheme rules (e.g. `9920:` for
+        Spain, `0208:` for Belgium). If no scheme can be determined for
         the given country the request will fail with `400 Bad Request`.
 
         A `200` response with `found: false` means the participant ID was
@@ -40,20 +40,20 @@ paths:
           in: query
           description: |-
             Full Peppol participant identifier in `scheme:value` format,
-            e.g. `0009:12345678901234`.
+            e.g. `0002:123456789`.
             Mutually exclusive with `vat`.
           schema:
             type: string
-            example: "0009:12345678901234"
+            example: "0002:123456789"
         - name: vat
           in: query
           description: |-
             VAT number prefixed with the ISO 3166-1 alpha-2 country code,
-            e.g. `FR12345678901234` or `DE123456789`.
+            e.g. `FR123456789` or `DE123456789`.
             Mutually exclusive with `peppol_id`.
           schema:
             type: string
-            example: "FR12345678901234"
+            example: "FR123456789"
       responses:
         "200":
           description: Lookup completed — check `found` to determine network presence.
@@ -65,12 +65,12 @@ paths:
                 found:
                   summary: Participant is registered
                   value:
-                    peppol_id: "0009:12345678901234"
+                    peppol_id: "0002:123456789"
                     found: true
                 not_found:
                   summary: Participant is not registered
                   value:
-                    peppol_id: "0009:12345678901234"
+                    peppol_id: "0002:123456789"
                     found: false
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -132,7 +132,7 @@ components:
           description: |-
             Resolved Peppol participant identifier in `scheme:value` format.
             Populated even when `found` is `false`.
-          example: "0009:12345678901234"
+          example: "0002:123456789"
         found:
           type: boolean
           description: Whether the participant is currently registered in the Peppol network.
