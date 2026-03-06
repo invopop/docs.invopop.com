@@ -19,32 +19,202 @@ servers:
 security:
   - InvopopAuth: []
 paths:
+  /apps/peppol/v1/lookup:
+    get:
+      operationId: lookupParticipant
+      summary: Look up a Peppol participant
+      description: |-
+        Checks whether a company is registered and reachable in the Peppol
+        network. Exactly one of `peppol_id` or `vat` must be provided.
+
+        When `vat` is used, the service derives the Peppol participant
+        identifier using the country-specific scheme rules (e.g. `9920:` for
+        Spain, `0208:` for Belgium). If no scheme can be determined for
+        the given country the request will fail with `400 Bad Request`.
+
+        A `200` response with `found: false` means the participant ID was
+        resolved but is not yet registered in the network — this is **not**
+        an error condition.
+      parameters:
+        - name: peppol_id
+          in: query
+          description: |-
+            Full Peppol participant identifier in `scheme:value` format,
+            e.g. `0002:123456789`.
+            Mutually exclusive with `vat`.
+          schema:
+            type: string
+            example: "0002:123456789"
+        - name: vat
+          in: query
+          description: |-
+            VAT number prefixed with the ISO 3166-1 alpha-2 country code,
+            e.g. `FR123456789` or `DE123456789`.
+            Mutually exclusive with `peppol_id`.
+          schema:
+            type: string
+            example: "FR123456789"
+      responses:
+        "200":
+          description: Lookup completed — check `found` to determine network presence.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LookupResponse"
+              examples:
+                found:
+                  summary: Participant is registered
+                  value:
+                    peppol_id: "0002:123456789"
+                    found: true
+                not_found:
+                  summary: Participant is not registered
+                  value:
+                    peppol_id: "0002:123456789"
+                    found: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /apps/peppol/v1/entry/{silo_entry_id}/ownership:
     post:
-      description: Upload proof of ownership document for company registration in the Peppol network.
+      operationId: uploadOwnership
+      summary: Upload proof of ownership document
+      description: |-
+        Uploads a proof-of-ownership PDF for a company that is being
+        registered in the Peppol network.
+
+        The document must be a valid PDF (`application/pdf`). Once uploaded
+        the service validates the document and, if accepted, completes the
+        registration flow for the silo entry.
+
+        This endpoint is idempotent: uploading a new document for an entry
+        that has already completed registration replaces the previous one
+        and re-triggers completion.
+      parameters:
+        - name: silo_entry_id
+          in: path
+          required: true
+          description: UUID of the Invopop silo entry associated with the company being registered.
+          schema:
+            type: string
+            format: uuid
+            example: "01952667-f2a0-7a66-a3c9-8f4c3c7e5c0b"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              properties:
-                data:
-                  description: |-
-                    Base64 encoded binary data of the ownership document. Must be
-                    of type `application/pdf`. This document proves authorization
-                    to represent the company in Peppol network transactions.
-                  format: byte
-                  type: string
-              required: ["data"]
+              $ref: "#/components/schemas/OwnershipUploadRequest"
       responses:
         "204":
-          description: "No content - Document uploaded and registration completed successfully"
+          description: Document uploaded and registration completed successfully.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
+  schemas:
+    LookupResponse:
+      type: object
+      required: [peppol_id, found]
+      properties:
+        peppol_id:
+          type: string
+          description: |-
+            Resolved Peppol participant identifier in `scheme:value` format.
+            Populated even when `found` is `false`.
+          example: "0002:123456789"
+        found:
+          type: boolean
+          description: Whether the participant is currently registered in the Peppol network.
+          example: true
+
+    OwnershipUploadRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: string
+          format: byte
+          description: |-
+            Base64-encoded binary content of the ownership document.
+            Must be a valid PDF (`application/pdf`). This document proves
+            authorization to represent the company in Peppol network
+            transactions.
+          example: "JVBERi0xLjQK..."
+
+    Error:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        message:
+          type: string
+          description: Human-readable description of the error.
+          example: "peppol_id or vat required"
+
+  responses:
+    BadRequest:
+      description: The request is malformed or missing required parameters.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: error
+            message: "peppol_id or vat required"
+
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: error
+            message: "unauthorized"
+
+    UnprocessableEntity:
+      description: |-
+        The request was well-formed but failed business validation —
+        e.g. the uploaded file is not a valid PDF.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: error
+            message: "ownership file must be a PDF"
+
+    InternalServerError:
+      description: An unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: error
+            message: "internal server error"
+
   securitySchemes:
     InvopopAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: |
-        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+      description: |-
+        Authenticate using a valid Invopop enrollment token in the `Bearer`
+        scheme.
 
         Example: `Authorization: Bearer <token>`
