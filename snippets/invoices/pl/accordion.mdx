@@ -4,6 +4,10 @@ import B2BReverseChargeMin from '/snippets/invoices/pl/ksef-b2b-reverse-charge.m
 import B2BReverseCharge from '/snippets/invoices/pl/ksef-b2b-reverse-charge.mdx';
 import B2BCreditNoteMin from '/snippets/invoices/pl/ksef-b2b-credit-note.min.mdx';
 import B2BCreditNote from '/snippets/invoices/pl/ksef-b2b-credit-note.mdx';
+import B2BPrepaymentMin from '/snippets/invoices/pl/ksef-b2b-prepayment.min.mdx';
+import B2BPrepayment from '/snippets/invoices/pl/ksef-b2b-prepayment.mdx';
+import B2BSettlementMin from '/snippets/invoices/pl/ksef-b2b-settlement.min.mdx';
+import B2BSettlement from '/snippets/invoices/pl/ksef-b2b-settlement.mdx';
 import B2CInvoiceMin from '/snippets/invoices/pl/ksef-b2c-standard.min.mdx';
 import B2CInvoice from '/snippets/invoices/pl/ksef-b2c-standard.mdx';
 
@@ -61,6 +65,42 @@ import B2CInvoice from '/snippets/invoices/pl/ksef-b2c-standard.mdx';
 	<CodeGroup>
 		<B2BCreditNoteMin />
 		<B2BCreditNote />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="B2B Prepayment Invoice (Faktura Zaliczkowa)">
+
+	In this example, we're issuing a prepayment invoice to document an advance payment received before completing the delivery of goods or services.
+
+	Notice:
+
+	- the `$tags` field includes `partial`, which tells the FA_VAT addon to classify this as a `ZAL` (Faktura Zaliczkowa) document type,
+	- the `payment.advances` array records the advance payment details, including the mandatory `date` field and a `percent` of the total,
+	- GOBL automatically calculates the advance amount from the percentage and deducts it from the payable total to produce the `due` amount,
+	- the built version shows `"pl-favat-invoice-type": "ZAL"` automatically set in the tax extensions, and,
+	- after sending this invoice through KSeF, reference the assigned KSeF number in the subsequent settlement invoice.
+
+	<CodeGroup>
+		<B2BPrepaymentMin />
+		<B2BPrepayment />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="B2B Settlement Invoice (Faktura Rozliczeniowa)">
+
+	In this example, we're issuing a settlement invoice to finalize a transaction after one or more advance payments have been made.
+
+	Notice:
+
+	- the `$tags` field includes `settlement`, which tells the FA_VAT addon to classify this as a `ROZ` (Faktura Rozliczeniowa) document type,
+	- the `preceding` field references the original prepayment invoice, including its KSeF number stamp,
+	- the `payment.advances` array records the previously paid advance amount, which GOBL deducts from the total to calculate the remaining `due`,
+	- the line items represent the full value of the delivered goods or services, and,
+	- the built version shows `"pl-favat-invoice-type": "ROZ"` automatically set in the tax extensions.
+
+	<CodeGroup>
+		<B2BSettlementMin />
+		<B2BSettlement />
 	</CodeGroup>
 </Accordion>
 
