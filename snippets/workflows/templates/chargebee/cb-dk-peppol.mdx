@@ -1,0 +1,120 @@
+---
+title: "Chargebee DK E-invoicing"
+description: "Send Peppol BIS invoice through Peppol network to DK customers"
+countryCode: "dk"
+appId: "chargebee"
+schema: "bill/invoice"
+---
+
+<Note>
+  For a full walkthrough including required apps, custom fields, and participant ID setup, see the [Denmark section of the Chargebee guide](/guides/chargebee#denmark).
+</Note>
+
+<Note>
+  Unlike other Peppol countries, this template does not include a **Lookup Participant ID** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
+</Note>
+
+<Note>
+  The **Fixing bank-transfer details** step converts the generic `credit-transfer` payment key to `credit-transfer+sepa`. Denmark requires the more specific SEPA key for Peppol invoices, so this step ensures the payment instructions are valid before the document is sent.
+</Note>
+
+```json Example Chargebee DK E-invoicing workflow expandable
+{
+    "name": "DK E-invoicing",
+    "description": "Send Peppol BIS invoice through Peppol network to DK customers",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "84944c00-16e1-11f1-96ed-bb71a2a9b3a3",
+            "name": "Import Chargebee document",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "7dad54c0-154a-11f0-8028-c1ed648b57b5",
+            "name": "Fixing bank-transfer details",
+            "provider": "silo.modify",
+            "notes": "Adding bank details",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": "if .payment?.instructions?.key == \"credit-transfer\" then\n  .payment.instructions.key = \"credit-transfer+sepa\"\nelse\n  .\nend",
+                "merge_type": "application/jq",
+                "scope": "doc",
+                "sign": false
+            }
+        },
+        {
+            "id": "cfe249c0-1c93-11f1-8e47-3f51862e93e3",
+            "name": "Modify Silo Entry",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "addons": [
+                    "eu-en16931-v2017"
+                ]
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Generate UBL Document",
+            "provider": "ubl.generate",
+            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "config": {
+                "attach_invoice_pdf": false,
+                "doc_type": "bis-invoice-v3",
+                "private": false,
+                "validate_ubl": true
+            }
+        },
+        {
+            "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Send Peppol Document",
+            "provider": "peppol.send"
+        },
+        {
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "c4c34420-16e1-11f1-96ed-bb71a2a9b3a3",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        },
+        {
+            "id": "ccc262a0-16e1-11f1-96ed-bb71a2a9b3a3",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+
+```
