@@ -367,6 +367,10 @@ Find the **Parties** section of the sidebar and click **Suppliers**. Click the *
 
   <Supplier />
 
+<Info>
+  Each supplier must have a unique email address. The email serves as the login for the [Supplier Portal](https://at-pt.invopop.com/portal), so it can only be linked to one supplier. Attempting to register a different supplier with an already-used email will result in an error.
+</Info>
+
 Click **Build**, ensure there are no errors, and click **Save**.
 
 We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
@@ -392,6 +396,11 @@ To complete the registration process, the supplier will need to obtain the crede
 </Step>
 
 <Step title="Provide the Supplier's AT Credentials and Register Series">
+
+<Info>
+  **White-label integration:** If you need to fully integrate this functionality into your own platform, the [AT Portugal API](/api-ref/apps/at-pt) provides programmatic access to manage credentials, register series, and generate SAF-T reports without requiring suppliers to use the Supplier Portal as described below.
+</Info>
+
 Now, the supplier will need to complete the registration process in the Invopop's Supplier Portal:
 
 1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
@@ -408,6 +417,15 @@ Once the series are registered, the supplier will be able to issue documents usi
 </Step>
 
 </Steps>
+
+### Updating Supplier Data
+
+After a supplier has been registered, you may need to update their information over time -- for example, a change of address. Keep in mind that supplier data is used in two different contexts:
+
+- **SAF-T reports** use the data stored in the Supplier Record. To have updated information appear in SAF-T reports, update the Supplier Record directly via the API or the Console. Re-running the registration workflow is not necessary for data-only changes.
+- **Printed PDFs** use the supplier details included in each individual invoice, not from the Supplier Record. Make sure the invoice data is correct at the time of issuance.
+
+If you need to change the supplier's login email for the [Supplier Portal](https://at-pt.invopop.com/portal), update the email in the Supplier Record and re-run the registration workflow so the portal access is updated accordingly.
 
 ### Series Management
 
@@ -427,6 +445,20 @@ When you register series through the Supplier Portal, you're asked to provide a 
 #### Sequence Assignment
 
 Unlike other countries, Portugal regulations do not allow pre-assigning sequence numbers to documents. The sequence number (_i.e._, the document's `code` property) is automatically assigned during the **Record for SAF-T reporting (Portugal)** step in your workflow, following AT regulations. This is why you'll find no `sequence` step in Portugal workflow templates and you should not add one.
+
+#### Series type
+
+Every series registered with the AT has a type that determines its purpose. You must choose one of three types when [registering a series](/api-ref/apps/at-pt/series-register), whether through the Supplier Portal or the API:
+
+| Type | Code | Description |
+| --- | --- | --- |
+| **Normal** | `N` | The standard type for series used in production. Use this type for all real documents with fiscal effect in live workspaces. |
+| **Training**<br/>_(Formação)_ | `F` | For testing and training purposes only. Documents issued under a training series are fictitious and carry no fiscal effect. Use this type in sandbox workspaces when validating your integration before going live. |
+| **Recovery**<br/>_(Recuperação)_ | `R` | A special type for registering documents that were issued manually on paper during a system outage. Portuguese law requires that when the invoicing system is unavailable, issuers continue on paper and then re-enter those documents once the system is restored. This type covers that scenario. |
+
+<Note>
+  The series type is set at registration time and cannot be changed afterward. Make sure to choose the correct type for your use case.
+</Note>
 
 ### Send a document
 

@@ -32,7 +32,7 @@ To issue invoices through KSeF, you will need:
 |-------------|--------------|
 | <Badge color="green">Invopop Sandbox</Badge><br />Test mode | **Test Polish Tax ID (NIP)** <br /> You can generate fake NIPs for testing at [http://generatory.it/](http://generatory.it/). In test mode, a self-signed certificate will be generated automatically, and you can start sending invoices immediately. <br />
 | <Badge color="green">Invopop Sandbox</Badge><br />Demo mode | **Real Polish Tax ID (NIP) and credentials to access the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/)** <br /> Demo mode follows the same registration process as production but operates in the demo environment. |
-| <Badge color="green">Invopop Live</Badge> | **Valid company NIP and credentials to access the [KSeF Portal](https://ksef.mf.gov.pl/)** <br /> You will need to generate a certificate through the KSeF portal. Registration will automatically target the KSeF production environment. |
+| <Badge color="green">Invopop Live</Badge> | **Valid company NIP and credentials to access the [KSeF Portal](https://ap.ksef.mf.gov.pl/)** <br /> You will need to generate a certificate through the KSeF portal. Registration will automatically target the KSeF production environment. |
 
 ## Setup
 
@@ -307,7 +307,7 @@ In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Regi
 
 <Step title="Create the party">
 
-    Use real Polish Tax IDs (NIP) with access to the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) or [KSeF Portal](https://ksef.mf.gov.pl/):
+    Use real Polish Tax IDs (NIP) with access to the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) or [KSeF Portal](https://ap.ksef.mf.gov.pl/):
 
     ```json
     {
@@ -493,10 +493,10 @@ To import a specific invoice from KSeF:
   </Step>
 
   <Step title="Create a job via API">
-    Use the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job):
+    Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post):
 
     ```bash
-    curl -X POST https://api.invopop.com/silo/jobs \
+    curl -X POST https://api.invopop.com/transform/v1/jobs \
       -H "Authorization: Bearer YOUR_API_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
@@ -518,22 +518,22 @@ To import all invoices received within a specific time period:
 
 <Steps>
   <Step title="Determine the date range">
-    Decide the date range you want to sync (from and to dates).
+    Decide the date range you want to sync (from and upto dates).
   </Step>
 
   <Step title="Create a job via API">
-    Use the [Create a Job endpoint](/api-ref/silo/jobs/create-a-job) with your sync workflow:
+    Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post) with your sync workflow:
 
     ```bash
-    curl -X POST https://api.invopop.com/silo/jobs \
+    curl -X POST https://api.invopop.com/transform/v1/jobs \
       -H "Authorization: Bearer YOUR_API_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
         "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
-        "entry_id": "YOUR_PARTY_ENTRY_ID",
+        "silo_entry_id": "YOUR_PARTY_ENTRY_ID",
         "args": {
           "from": "2026-01-01T00:00:00Z",
-          "to": "2026-01-31T23:59:59Z"
+          "upto": "2026-01-31T23:59:59Z"
         }
       }'
     ```

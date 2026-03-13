@@ -1,13 +1,14 @@
 ---
 title: "SAT Mexico"
-description: "Issue CFDI invoices, onboard suppliers, and manage compliant submissions to Mexico's tax authority (SAT)."
-keywords: ["Mexico","sat","cfdi","e-invoicing"]
+description: "Issue and import CFDI invoices, onboard suppliers, and manage compliant submissions to Mexico's tax authority (SAT)."
+keywords: ["Mexico","sat","cfdi","e-invoicing","import"]
 mode: wide
 ---
 
 import PostRegistration from '/snippets/workflows/templates/mx/sat-postregistration.mdx';
 import RegisterSupplier from '/snippets/workflows/templates/mx/sat-register-supplier.mdx';
 import IssueInvoice from '/snippets/workflows/templates/mx/sat-issue-invoice.mdx';
+import ConvertCFDI from '/snippets/workflows/templates/mx/sat-convert-cfdi.mdx';
 import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
 import InvoiceAccordion from '/snippets/invoices/mx/accordion.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
@@ -16,9 +17,13 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
   <Tab title="Description">
     <Columns cols="2">
 			<div class="flex flex-col grow items-center justify-center">
-				<Card title="SAT Mexico" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg"
-				  href="/guides/mx-sat" horizontal>
-				  View implementation guide ›
+				<Card title="Issue invoices" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg"
+				  href="/guides/mx-sat-issuing" horizontal>
+				  Issuing guide ›
+				</Card>
+				<Card title="Receive invoices" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg"
+				  href="/guides/mx-sat-receiving" horizontal>
+				  Receiving guide ›
 				</Card>
 			</div>
 
@@ -30,22 +35,29 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 				| Country   | [Mexico](/compliance/mexico)            |
 		</Columns>
 
-    Invopop's **SAT Mexico app** enables full compliance with Mexico's CFDI e-invoicing framework. Use ready-made workflows to register suppliers, authorize the local PAC, and issue CFDI v4 invoices directly from Invopop. The app integrates with our local provider (SW Sapiens) to sign and stamp documents and deliver them to SAT.
+    Invopop's **SAT Mexico app** enables full compliance with Mexico's CFDI e-invoicing framework. Use ready-made workflows to register suppliers, authorize the local PAC, and issue CFDI v4 invoices directly from Invopop. The app also provides CFDI import capabilities, converting CFDI XML documents to [GOBL](https://docs.gobl.org) format for use in accounts payable and other processing workflows.
 
-    #### Key Features
+    #### Key features
 
-    - **Workflow Automation:** The app makes workflow steps available for post-registration, supplier registration, and issuing invoices through SAT.
-    - **PDF Generation:** Optional PDF creation with configurable layout, locale, and formatting.
+    - **Workflow automation:** The app makes workflow steps available for post-registration, supplier registration, issuing invoices, and importing CFDIs.
+    - **CFDI import:** Convert CFDI XML documents to GOBL format. Combine with the [SW Sapien app](/apps/sw-sapien) to bulk download CFDIs from SAT.
+    - **PDF generation:** Optional PDF creation with configurable layout, locale, and formatting.
     - **PAC authorization:** One-time e.firma (FIEL) sign-off to allow the PAC to stamp and submit CFDIs on your behalf.
     - **CFDI v4 compliance:** Validations and transformations powered by the GOBL library and the `mx-cfdi-v4` addon.
     - **Supplier onboarding:** Collect RFC and fiscal regime code; upload CSD (certificate & key) and activate via a secure registration link.
-    - **White-Label Support:** Invoicing can be performed either under a client's brand (white-label) or directly by the issuing organization, according to operational needs. Make sure to check out our [SAT Mexico Guide](/guides/mx-sat) for instructions on how to issue invoices and onboard suppliers.
+    - **White-label support:** Invoicing can be performed either under a client's brand (white-label) or directly by the issuing organization, according to operational needs.
+
+    Check out our [Issuing invoices guide](/guides/mx-sat-issuing) for instructions on how to issue invoices and onboard suppliers, or the [Receiving invoices guide](/guides/mx-sat-receiving) for importing CFDIs.
   </Tab>
   <Tab title="Actions">
     The following workflow actions will be available once you install and enable this app:
     <Card title="Send to SAT (Mexico)" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" horizontal>
       Send GOBL invoices to the Mexican SAT using the CFDI format.
-      <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 5</div> 
+      <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 5</div>
+    </Card>
+
+    <Card title="Import CFDI" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" horizontal>
+      Convert a CFDI XML document to GOBL format. Accepts a URL pointing to the CFDI file (typically a Spool URL provided by the [SW Sapien app](/apps/sw-sapien)).
     </Card>
 
     <Card title="Add SAT registration link" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" horizontal>
@@ -59,7 +71,7 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
     <AccordionGroup>
       <Accordion title="SAT Mexico post-registration">
         Mark suppliers as `registered` after successful onboarding.
-    
+
         <PostRegistration />
       </Accordion>
       <Accordion title="SAT Mexico register supplier">
@@ -70,6 +82,10 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
       <Accordion title="SAT Mexico issue invoice">
         Issue a CFDI through SAT with optional PDF generation.
         <IssueInvoice />
+      </Accordion>
+      <Accordion title="SAT convert CFDI">
+        Convert a CFDI XML document to GOBL format with PDF generation. Used as the conversion step in the [bulk import flow](/guides/mx-sat-receiving).
+        <ConvertCFDI />
       </Accordion>
     </AccordionGroup>
   </Tab>

@@ -1,0 +1,47 @@
+---
+title: "Subscribe party to CFDI import"
+description: "Subscribe a party to periodic CFDI bulk import using the Cron app"
+countryCode: "mx"
+appId: "cron"
+schema: "org/party"
+---
+
+```json Example subscribe party to CFDI import workflow expandable
+{
+    "name": "Subscribe party to CFDI import",
+    "description": "Subscribe a party to periodic CFDI bulk import using the Cron app",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "2ab3c280-164e-11f1-a769-19319c292fdf",
+            "name": "Subscribe to periodic execution",
+            "provider": "cron.subscribe",
+            "summary": "Hourly → SW Sapien Efisco bulk import CFDIs",
+            "config": {
+                "interval": "hourly",
+                "workflow_id": "f907561b-81c2-4bd5-9199-95638ed60669"
+            }
+        },
+        {
+            "id": "3a99bc90-164e-11f1-a769-19319c292fdf",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "d0e1f2a0-3c4d-11f0-d003-6c7d8e9f0a1b",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

@@ -1,9 +1,113 @@
 ---
 title: "Facturae Guide"
 sidebarTitle: "Facturae"
-description: Issue B2G invoices in Spain.
+description: Generate Facturae XML invoices for B2G in Spain.
 ---
 
-<Note>
-  Coming Soon.
-</Note>
+import ExampleAccordion from '/snippets/invoices/es/facturae-accordion.mdx'
+import FacturaeWorkflow from '/snippets/workflows/templates/es/facturae-invoice.mdx'
+import SpainResources from '/snippets/tables/spain-resources.mdx';
+
+## Introduction
+
+**Facturae** is Spain's official XML invoice format for **Business-to-Government (B2G)** transactions. The current version is **Facturae 3.2.2**, and invoices are submitted to public administrations through the [FACe](https://face.gob.es/) platform.
+
+Facturae is required when invoicing any Spanish public administration body (central government, regional governments, local councils, etc.). Unlike other Spanish tax reporting systems (VERI\*FACTU, SII), Facturae does not require supplier registration — you simply generate the XML and submit it.
+
+## Prerequisites
+
+To generate Facturae invoices, ensure you have:
+
+- An invoice with:
+  - Supplier details (company name, tax ID, full address). Check the [Spanish](https://docs.gobl.org/regimes/es) regime for specifics.
+  - Line items with name, price, and applicable taxes.
+
+## Facturae Setup
+
+To generate Facturae invoices, follow these instructions in the [Invopop Console](https://console.invopop.com):
+
+<Steps>
+<Step title="Connect the Spain app">
+
+1. Navigate to **Configuration** → **Apps**.
+2. Locate **Spain** in the app discovery list.
+3. Click **Connect** to activate.
+
+No additional configuration is needed.
+</Step>
+<Step title="Configure invoice workflow">
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="Facturae Generate Invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-facturae" cta="Add to my workspace">
+    This workflow will generate a Facturae XML document.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <FacturaeWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+
+    First, review our [workflows guide](/guides/features/workflows) to understand the basics.
+
+    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the essential steps:
+
+    1. **Add Sequential Code**: Assigns a sequential code to the invoice.
+    2. **Sign Envelope**: The envelope must be signed before processing.
+    3. **Generate Facturae XML**: Produces the Facturae 3.2.2 XML document.
+  </Tab>
+</Tabs>
+
+</Step>
+</Steps>
+
+## Administrative Centers (DIR3 Codes)
+
+<Info>
+When invoicing Spanish **public administrations** via FACe, you must include three administrative centers identified by their **DIR3 codes**. Each public body publishes these codes in the [DIR3 directory](https://administracionelectronica.gob.es/ctt/dir3).
+</Info>
+
+The three required roles and their corresponding GOBL fields are:
+
+| Facturae Role | Code | GOBL Field |
+|---|---|---|
+| **Oficina Contable** (Accounting Office) | `01` | `customer.identities[]` with `scope: "tax"` |
+| **Órgano Gestor** (Managing Body) | `02` | `delivery.receiver.identities[0]` |
+| **Unidad Tramitadora** (Processing Unit) | `03` | `ordering.buyer.identities[0]` |
+
+See the FACe example below for a complete invoice with all three administrative centers.
+
+## Running
+
+Use the following example GOBL documents to generate Facturae invoices.
+
+<ExampleAccordion />
+
+<Info>
+  In your invoice data, make sure to include the [`es-facturae-v3` addon](https://docs.gobl.org/addons/es-facturae-v3) and set the regime to `ES`.
+</Info>
+
+Once you have saved in Invopop, select <kbd>Run workflow</kbd> and select "Facturae Generate Invoice" from the sidebar.
+
+---
+
+<SpainResources />
+
+<Card title="Spain FAQ"
+  icon="square-question"
+  href="/faq/spain"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Spain →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Spain →
+</Card>

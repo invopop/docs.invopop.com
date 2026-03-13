@@ -44,6 +44,497 @@ sidebarTitle: "FAQ"
 
     This workflow approach ensures ISS is properly added to the GOBL invoice as an informative tax category before submission to the Brazilian tax authority, while avoiding the pricing conflicts that occur when billing platforms try to handle ISS as a standard tax.
   </Accordion>
+
+  <Accordion title="What are the required and optional fields for NF-e invoices in Brazil?">
+
+
+NF-e (`br-nfe-v4`) covers electronic invoices for the circulation of **goods** in Brazil. It maps to two fiscal models:
+
+- **Model 55 — NF-e**: B2B or business-to-government transactions
+- **Model 65 — NFC-e**: B2C consumer transactions (simplified)
+
+#### Notation
+
+- ✅ **Required** — validation will fail if missing
+- ⬜ **Optional** — can be omitted
+- 🔧 **Auto-normalized** — set automatically if not provided
+
+
+
+### Invoice Header
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `$schema` | auto | `https://gobl.org/draft-0/bill/invoice` |
+| `$addons` | ✅ | `["br-nfe-v4"]` |
+| `$tags` | ⬜ | Use `["simplified"]` for NFC-e (model 65) |
+| `uuid` | ⬜ | Auto-generated if absent |
+| `type` | ⬜ | Defaults to `standard` |
+| `series` | ✅ | Pattern: `^(?:0\|[1-9]{1}[0-9]{0,2})$` |
+| `code` | ⬜ | Required to sign the document. |
+| `issue_date` | ✅ | ISO date, e.g. `"2024-11-15"` |
+| `currency` | ✅ | Must be `"BRL"` |
+| `tax` | ✅ | See [Tax Extensions](#2-tax-extensions) |
+| `notes` | ✅ | At least one note with `key: "reason"` required |
+| `lines` | ✅ | At least one line item |
+| `charges` | ⬜ | Document-level charges |
+| `discounts` | ⬜ | Document-level discounts |
+| `supplier` | ✅ | See [Supplier](#3-supplier) |
+| `customer` | ✅ model 55 <br /> ⬜ model 65 | See [Customer](#4-customer) |
+| `payment` | ✅ if not fully paid | See [Payment](#6-payment) |
+| `ordering` | ⬜ | |
+| `delivery` | ⬜ | |
+
+
+
+### Tax Extensions
+
+The `tax` object is **required** and must carry the following extensions:
+
+| Extension | Required | Values |
+| --- | --- | --- |
+| `tax.ext.br-nfe-model` | ✅ | `"55"` (NF-e, B2B) or `"65"` (NFC-e, B2C) |
+| `tax.ext.br-nfe-presence` | ✅ | See table below. Restricted by model. |
+| `tax.ext.br-nfe-regime` | ⬜ | `"1"`=Simples Nacional, `"2"`=Simples Nacional Excess, `"3"`=Normal |
+| `tax.ext.br-nfe-fiscal-incentive` | ⬜ | `"1"`=Has incentive, `"2"`=No incentive |
+
+**`br-nfe-presence` allowed values:**
+
+| Code | Description | NF-e (55) | NFC-e (65) |
+| --- | --- | --- | --- |
+| `0` | N/A | ✅ | ❌ |
+| `1` | In-person | ✅ | ✅ |
+| `2` | Internet | ✅ | ❌ |
+| `3` | Tele-service | ✅ | ❌ |
+| `4` | Home delivery | ❌ | ✅ |
+| `5` | Off-site | ✅ | ❌ |
+| `9` | Others | ✅ | ❌ |
+
+```json
+"tax": {
+  "ext": {
+    "br-nfe-model": "55",
+    "br-nfe-presence": "1"
+  }
+}
+```
+
+
+
+### Notes
+
+At least one note with `key: "reason"` is **required**. It maps to the NF-e `natOp` field (nature of the operation).
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `key` | ✅ | Must be `"reason"` |
+| `text` | ✅ | 1–60 characters |
+
+```json
+"notes": [
+  {
+    "key": "reason",
+    "text": "Venda de mercadoria"
+  }
+]
+```
+
+
+
+### Supplier
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `name` | ✅ | |
+| `tax_id.country` | ✅ | `"BR"` |
+| `tax_id.code` | ✅ | CNPJ (14 digits) or CPF (11 digits), Mod11 validated |
+| `identities[].key: "br-nfe-state-reg"` | ✅ | State Registration (Inscrição Estadual) |
+| `addresses` | ✅ | At least one — see address fields below |
+| `ext.br-ibge-municipality` | ✅ | 7-digit IBGE municipality code, pattern `^\d{7}$` |
+| `emails` | ⬜ | |
+| `telephones` | ⬜ | |
+
+**Address fields:**
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `street` | ✅ | |
+| `num` | ✅ | Street number |
+| `locality` | ✅ | Maps to *bairro* (neighbourhood) |
+| `state` | ✅ | One of 27 Brazilian state codes (see below) |
+| `code` | ✅ | Postal code, pattern `^\d{5}-?\d{3}$` |
+| `region` | ⬜ | Municipality name, e.g. `"Salvador"` |
+| `street_extra` | ⬜ | Complement, e.g. `"Bloco C"` |
+| `country` | ⬜ | Defaults to `"BR"` |
+
+**Valid Brazilian state codes:** AC, AL, AM, AP, BA, CE, DF, ES, GO, MA, MG, MS, MT, PA, PB, PE, PI, PR, RJ, RN, RO, RR, RS, SC, SE, SP, TO
+
+```json
+"supplier": {
+  "name": "Drogaria Vida Saudável Ltda.",
+  "tax_id": { "country": "BR", "code": "55263640000186" },
+  "identities": [
+    { "key": "br-nfe-state-reg", "code": "35503304557308" }
+  ],
+  "addresses": [
+    {
+      "num": "200",
+      "street": "Rua Primeiro de Março",
+      "street_extra": "Torre A",
+      "locality": "Centro",
+      "region": "Rio de Janeiro",
+      "state": "RJ",
+      "code": "20010-000",
+      "country": "BR"
+    }
+  ],
+  "ext": {
+    "br-ibge-municipality": "3304557"
+  }
+}
+```
+
+
+
+###  Customer
+
+#### Model 55 (NF-e): Customer is ✅ Required
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `tax_id.country` | ✅ | `"BR"` |
+| `tax_id.code` | ✅ | CNPJ or CPF |
+| `addresses` | ✅ | At least one — same sub-fields as supplier address |
+| `ext.br-ibge-municipality` | ✅ | Required when addresses are present |
+| `name` | ⬜ | Recommended |
+
+#### Model 65 (NFC-e): Customer is ⬜ Optional
+
+For simplified B2C consumer transactions the customer can be omitted entirely.
+
+
+###  Line Items
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `quantity` | ✅ | |
+| `item.name` | ✅ | |
+| `item.price` | ✅ | Must be zero or positive |
+| `item.key` | ⬜ | `"goods"` or `"services"` |
+| `item.unit` | ⬜ | |
+| `item.ref` | ⬜ | |
+| `item.description` | ⬜ | |
+
+#### Required tax categories per line
+
+| Category | Required | Notes |
+| --- | --- | --- |
+| `ICMS` | ✅ | Imposto sobre Circulação de Mercadorias e Serviços |
+| `PIS` | ✅ | Programa de Integração Social |
+| `COFINS` | ✅ | Contribuição para o Financiamento da Seguridade Social |
+| `IPI` | ⬜ | Imposto sobre Produtos Industrializados |
+
+#### Optional item extensions
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `item.ext.br-nfe-cfop` | ⬜ | 4-digit CFOP (Código Fiscal de Operações e Prestações), pattern `^[1-7]\d{3}$` |
+| `item.identities[].key: "ncm"` | ⬜ | NCM product code (Nomenclatura Comum do Mercosul) |
+| `item.identities[].key: "gtin"` | ⬜ | Product barcode (GTIN) |
+| `item.identities[].key: "gtin+taxable"` | ⬜ | Taxable product GTIN |
+
+```json
+"lines": [
+  {
+    "i": 1,
+    "quantity": "2",
+    "item": {
+      "name": "Caixa de Máscaras Cirúrgicas",
+      "price": "10.00"
+    },
+    "taxes": [
+      { "cat": "ICMS", "percent": "4.0%" },
+      { "cat": "PIS",  "percent": "1.65%" },
+      { "cat": "COFINS", "percent": "7.60%" }
+    ]
+  }
+]
+```
+
+
+### Payment
+
+**Required when the invoice is not fully paid** (i.e. `totals.due > 0`).
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `payment.instructions` | ✅ | Must be present |
+| `payment.instructions.key` | ✅ | See means table below |
+| `payment.instructions.ext.br-nfe-payment-means` | 🔧 | Auto-set from `key`. Must be set manually when `key: "other"` |
+| `payment.advances[].key` | ⬜ | Same keys as instructions |
+| `payment.advances[].ext.br-nfe-payment-means` | 🔧 | Auto-set from key |
+
+**Payment means mapping:**
+
+| GOBL key | NF-e code | Description |
+| --- | --- | --- |
+| `cash` | `01` | Dinheiro |
+| `cheque` | `02` | Cheque |
+| `card` | `03` | Cartão de Crédito |
+| `debit-transfer+debit` | `04` | Cartão de Débito |
+| `credit-transfer` | `18` | Transferência bancária |
+| `online` | `18` | Carteira Digital |
+| `other` | `99` | Outros (set `ext.br-nfe-payment-means` manually) |
+
+```json
+"payment": {
+  "instructions": {
+    "key": "card"
+  }
+}
+```
+
+  </Accordion>
+
+  <Accordion title="What are the required and optional fields for NFS-e invoices in Brazil?">
+
+NFS-e (`br-nfse-v1`) covers electronic service invoices (*Notas Fiscais de Serviços Eletrônicas*) in Brazil. Service invoices are regulated at the **municipal** level, so several fields carry municipality-specific codes. The addon implements the ABRASF national standard (v2.04).
+
+#### Notation
+
+- ✅ **Required** — validation will fail if missing
+- ⬜ **Optional** — can be omitted
+- ❌ **Not supported** — must be absent; validation will fail if present
+- 🔧 **Auto-normalized** — set automatically if not provided
+
+
+
+### Invoice Header
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `$schema` | auto | `https://gobl.org/draft-0/bill/invoice` |
+| `$addons` | ✅ | `["br-nfse-v1"]` |
+| `$tags` | ⬜ | |
+| `uuid` | ⬜ | Auto-generated if absent |
+| `type` | ⬜ | Defaults to `standard` |
+| `series` | ✅ | Any non-empty string |
+| `code` | ⬜ | Required to sign the document. Pattern: `^[1-9][0-9]*$` |
+| `issue_date` | ✅ | ISO date, e.g. `"2024-11-15"` |
+| `currency` | ✅ | Must be `"BRL"` |
+| `tax` | ⬜ | |
+| `notes` | ⬜ | |
+| `lines` | ✅ | At least one line item |
+| `charges` | ❌ | Not supported by NFS-e |
+| `discounts` | ❌ | Not supported by NFS-e |
+| `supplier` | ✅ | See [Supplier](#supplier) |
+| `customer` | ⬜ | See [Customer](#customer) |
+| `payment` | ⬜ | |
+| `ordering` | ⬜ | |
+| `delivery` | ⬜ | |
+
+
+
+### Supplier
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `name` | ✅ | |
+| `tax_id.country` | ✅ | `"BR"` |
+| `tax_id.code` | ✅ | CNPJ (14 digits) or CPF (11 digits), Mod11 validated |
+| `identities[].key: "br-nfse-municipal-reg"` | ✅ | Municipal Registration (Inscrição Municipal) |
+| `identities[].key: "br-nfse-national-reg"` | ⬜ | National Registration |
+| `addresses` | ✅ | At least one — see address fields below |
+| `ext.br-ibge-municipality` | ✅ | 7-digit IBGE municipality code, pattern `^\d{7}$` |
+| `ext.br-nfse-simples` | ✅ | Simples Nacional opt-in status — see values below |
+| `ext.br-nfse-fiscal-incentive` | ✅ | Fiscal incentive status. 🔧 Auto-defaults to `"2"` if absent |
+| `ext.br-nfse-special-regime` | ⬜ | Special tax regime — see values below |
+| `emails` | ⬜ | |
+| `telephones` | ⬜ | |
+
+**Address fields:**
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `street` | ✅ | |
+| `num` | ✅ | Street number |
+| `locality` | ✅ | Maps to *bairro* (neighbourhood) |
+| `state` | ✅ | One of 27 Brazilian state codes (see below) |
+| `code` | ✅ | Postal code, pattern `^\d{5}-?\d{3}$` |
+| `region` | ⬜ | Municipality name, e.g. `"Rio de Janeiro"` |
+| `street_extra` | ⬜ | Complement, e.g. `"Torre A"` |
+| `country` | ⬜ | Defaults to `"BR"` |
+
+**Valid Brazilian state codes:** AC, AL, AM, AP, BA, CE, DF, ES, GO, MA, MG, MS, MT, PA, PB, PE, PI, PR, RJ, RN, RO, RR, RS, SC, SE, SP, TO
+
+**`br-nfse-simples` values:**
+
+| Code | Description |
+| --- | --- |
+| `1` | Opt-in (*Optante*) |
+| `2` | Opt-out (*Não optante*) |
+
+**`br-nfse-fiscal-incentive` values:**
+
+| Code | Description |
+| --- | --- |
+| `1` | Has incentive (*Possui incentivo*) |
+| `2` | Does not have incentive (*Não possui incentivo*) — **default** |
+
+**`br-nfse-special-regime` values:**
+
+| Code | Description |
+| --- | --- |
+| `1` | Municipal micro-enterprise (*Microempresa municipal*) |
+| `2` | Estimated (*Estimativa*) |
+| `3` | Professional Society (*Sociedade de profissionais*) |
+| `4` | Cooperative (*Cooperativa*) |
+| `5` | Single micro-entrepreneur — MEI (*Microempreendedor individual*) |
+| `6` | Micro-enterprise or Small Business — ME/EPP |
+
+```json
+"supplier": {
+  "name": "SaúdeMais Serviços Médicos Ltda.",
+  "tax_id": { "country": "BR", "code": "55263640000186" },
+  "identities": [
+    { "key": "br-nfse-municipal-reg", "code": "45678901234567" }
+  ],
+  "addresses": [
+    {
+      "num": "200",
+      "street": "Rua Primeiro de Março",
+      "street_extra": "Torre A",
+      "locality": "Centro",
+      "region": "Rio de Janeiro",
+      "state": "RJ",
+      "code": "20010-000",
+      "country": "BR"
+    }
+  ],
+  "ext": {
+    "br-ibge-municipality": "3304557",
+    "br-nfse-simples": "1",
+    "br-nfse-fiscal-incentive": "1",
+    "br-nfse-special-regime": "4"
+  }
+}
+```
+
+### Customer
+
+The customer is **optional** for NFS-e. When provided, no additional fields beyond the standard GOBL rules are enforced (name recommended when `tax_id` is set).
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `name` | ⬜ | Recommended if `tax_id` is set |
+| `tax_id.country` | ⬜ | `"BR"` |
+| `tax_id.code` | ⬜ | CNPJ or CPF |
+| `addresses` | ⬜ | |
+| `ext.br-ibge-municipality` | ✅ | Required when addresses are present |
+
+```json
+"customer": {
+  "name": "Construforte Engenharia Ltda.",
+  "tax_id": { "country": "BR", "code": "46602178000103" },
+  "addresses": [
+    {
+      "num": "75",
+      "street": "Avenida Sete de Setembro",
+      "locality": "Centro",
+      "region": "Salvador",
+      "state": "BA",
+      "code": "40060-000",
+      "country": "BR"
+    }
+  ]
+}
+```
+
+
+
+### Line Items
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `quantity` | ✅ | |
+| `item.name` | ✅ | |
+| `item.price` | ✅ | Must be zero or positive |
+| `item.key` | ⬜ | Typically `"services"` |
+| `item.unit` | ⬜ | |
+| `item.ref` | ⬜ | |
+| `item.description` | ⬜ | |
+
+#### Required item extension
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `item.ext.br-nfse-service` | ✅ | Municipality-defined service code (e.g. `"10.5"`). Typically from [Lei Complementar 116/2003](https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp116.htm) |
+
+#### Optional item extensions
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `item.ext.br-nfse-cnae` | ⬜ | CNAE code (National Classification of Economic Activities). Pattern: `^\d{2}[\s\.\-\/]?\d{2}[\s\.\-\/]?\d[\s\.\-\/]?\d{2}$` |
+| `item.ext.br-nfse-operation` | ⬜ | 6-digit operation indicator for IBS/CBS determination. **All-or-none with `tax-status` and `tax-class`** |
+| `item.ext.br-nfse-tax-status` | ⬜ | 3-digit CST (Código de Situação Tributária) for IBS/CBS. **All-or-none** |
+| `item.ext.br-nfse-tax-class` | ⬜ | 6-digit tax classification code for IBS/CBS. **All-or-none** |
+
+<Warning>
+**All-or-none rule:** `br-nfse-operation`, `br-nfse-tax-status`, and `br-nfse-tax-class` must either **all be present** or **all be absent**. Setting only some of them will fail validation.
+</Warning>
+
+#### Required tax categories per line
+
+| Category | Required | Notes |
+| --- | --- | --- |
+| `ISS` | ✅ | Imposto Sobre Serviços |
+
+#### ISS tax extensions
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `taxes[ISS].ext.br-nfse-iss-liability` | ✅ | ISS liability status. 🔧 Defaults to `"1"` if not set |
+| `taxes[ISS].ext.br-ibge-municipality` | ⬜ | Override the municipality where ISS is levied, when it differs from the supplier's |
+
+**`br-nfse-iss-liability` values:**
+
+| Code | Description |
+| --- | --- |
+| `1` | Liable (*Exigível*) — **default** |
+| `2` | Not subject (*Não incidência*) |
+| `3` | Exempt (*Isenção*) |
+| `4` | Export (*Exportação*) |
+| `5` | Immune (*Imunidade*) |
+| `6` | Suspended Judicially (*Suspensa por Decisão Judicial*) |
+| `7` | Suspended Administratively (*Suspensa por Processo Administrativo*) |
+
+```json
+"lines": [
+  {
+    "i": 1,
+    "quantity": "1",
+    "item": {
+      "name": "Consultancy Services",
+      "price": "100.00",
+      "ext": {
+        "br-nfse-service": "10.5",
+        "br-nfse-cnae": "62.01-5-01"
+      }
+    },
+    "taxes": [
+      {
+        "cat": "ISS",
+        "percent": "15%",
+        "ext": {
+          "br-nfse-iss-liability": "1"
+        }
+      }
+    ]
+  }
+]
+```
+
+  </Accordion>
 </AccordionGroup>
 </AccordionGroup>
 
