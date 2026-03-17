@@ -11,7 +11,41 @@ sidebarTitle: "FAQ"
   </Accordion>
   <Accordion title="How do ensure my Peppol participant ID corresponds to BOSA?">
     In Belgium, all Peppol participants are already registered with BOSA, the Belgian Peppol Authority. This means that every Belgian company is automatically part of the Peppol network. To onboard these companies in Invopop, we first migrate their registration from BOSA to our system.
-  </Accordion> 
+  </Accordion>
+
+  <Accordion title="What is the difference between scheme 0208 and 9925 in Belgium?">
+    Belgium uses two Peppol scheme identifiers:
+
+    - **`0208` (KBO/BCE enterprise number)** — This is the **preferred and default** scheme for Belgium. It corresponds to the company's KBO/BCE number (Kruispuntbank van Ondernemingen / Banque-Carrefour des Entreprises), which is the official Belgian business register. Most Belgian companies are registered in Peppol under this scheme.
+    - **`9925` (BE VAT number)** — This is an older, alternative scheme based on the Belgian VAT number. It is typically used by entities that have a Belgian VAT number but are not registered in the KBO/BCE — for example, foreign companies with a Belgian VAT registration.
+
+    **When you should use `0208`:** Always use `0208` as your first choice when sending invoices to Belgian companies. This is the standard identifier and what the vast majority of Belgian businesses are registered under.
+
+    **When `9925` may be needed:** If you get a "receiver not found" error when sending to a Belgian company using `0208`, and you have confirmed the company exists in the [Peppol Directory](https://directory.peppol.eu), check whether they are registered under `9925` instead. This is uncommon but does happen.
+
+    To specify the scheme when sending, include the customer's Peppol inbox in your GOBL document:
+
+    ```json
+    "customer": {
+      "name": "Example Company",
+      "tax_id": {
+        "country": "BE",
+        "code": "0123456789"
+      },
+      "inboxes": [
+        {
+          "key": "peppol",
+          "scheme": "9925",
+          "code": "BE0123456789"
+        }
+      ]
+    }
+    ```
+
+    Note that when using `9925`, the code must include the `BE` prefix (e.g. `BE0123456789`), whereas `0208` uses the raw KBO/BCE number without a prefix.
+
+    <Tip>Use the **Lookup Participant ID** workflow step to verify a recipient's Peppol registration before sending. If a lookup with `0208` fails, try again with `9925`.</Tip>
+  </Accordion>
 
 </AccordionGroup>
 
