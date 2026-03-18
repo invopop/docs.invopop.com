@@ -6,6 +6,10 @@ appId: "chargebee"
 schema: "bill/invoice"
 ---
 
+<Note>
+  For a full walkthrough including required apps, email delivery setup, and custom fields, see the [Germany section of the Chargebee guide](/guides/chargebee#germany).
+</Note>
+
 ```json Example Chargebee ZUGFeRD workflow expandable
 {
     "name": "Chargebee ZUGFeRD",
@@ -27,9 +31,9 @@ schema: "bill/invoice"
             }
         },
         {
-            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
-            "name": "Sign Envelope",
-            "provider": "silo.close"
+            "id": "b913e860-1d43-11f1-a00f-9bd9990c5dfa",
+            "name": "Download PDF",
+            "provider": "chargebee.pdf.download"
         },
         {
             "id": "18910b60-6624-11f0-9087-c716f49f1585",
@@ -40,13 +44,13 @@ schema: "bill/invoice"
                 "addons": [
                     "de-zugferd-v2"
                 ],
-                "allow_invalid_json": false,
-                "data": "",
-                "expr": "",
-                "merge_type": "",
-                "sign": false,
-                "tags": []
+                "sign": false
             }
+        },
+        {
+            "id": "c37c3860-abd0-11ef-a013-91c68ca9f44b",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
         },
         {
             "id": "3548d720-6623-11f0-b3db-e7255a5da07c",
@@ -54,13 +58,15 @@ schema: "bill/invoice"
             "provider": "cii.generate",
             "summary": "ZUGFeRD V2",
             "config": {
-                "doc_type": "zugferd-v2"
+                "attach_invoice_pdf": false,
+                "doc_type": "zugferd-v2",
+                "validate_cii": true
             }
         },
         {
             "id": "8e665990-81a3-11f0-82cb-9160968ac068",
-            "name": "Embed ZUGFeRD/Factur-X XML in PDF",
-            "provider": "xinvoice.embed"
+            "name": "Embed FacturX/ZUGFeRD",
+            "provider": "cii.pdf.embed"
         },
         {
             "id": "c6192a60-abd0-11ef-a013-91c68ca9f44b",
