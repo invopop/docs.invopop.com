@@ -125,9 +125,35 @@ You can also send additional non-mandatory statuses (e.g. `205` Approuvée, `207
 2. **Send via Peppol** — transmits the CDAR to the counterparty over Peppol.
 3. **Forward to PPF** — for mandatory statuses (`210`, `212`), sends the notification to the PPF in the required format.
 
+### Using job arguments
+
+Instead of hardcoding the status in the workflow configuration, you can pass the status details as **job arguments** when creating the job. Arguments take priority over the workflow's configured values, so you can use a single workflow for multiple status types.
+
+The supported arguments are:
+
+| Argument | Description |
+|---|---|
+| `code` | Status code (`200`–`213`). Overrides `status_code` in the workflow config. |
+| `reason-code` | Reason code (e.g. `MONTANTTOTAL_ERR`). Overrides `reason_code` in the workflow config. If omitted, a default reason code is applied based on the status code. |
+| `reason-text` | Optional free-text explanation. Overrides `reason_text` in the workflow config. |
+
+For example, to trigger a _Refusée_ (refused) status using a workflow that is configured with a different default:
+
+```json
+{
+  "args": {
+    "code": "210",
+    "reason-code": "DOUBLON",
+    "reason-text": "Duplicate invoice already processed"
+  }
+}
+```
+
+This approach is useful when you want a single status workflow that can handle multiple status types dynamically, driven by your business logic.
+
 ### Workflow code
 
-The example below is configured for status `207` (En litige / Disputed) with reason code `MONTANTTOTAL_ERR`. Change `status_code` and `reason_code` to match your use case.
+The example below is configured for status `207` (En litige / Disputed) with reason code `MONTANTTOTAL_ERR`. Change `status_code` and `reason_code` to match your use case, or override them at runtime using job arguments as described above.
 
 <Tabs>
   <Tab title="Template">
@@ -159,6 +185,144 @@ The example below is configured for status `207` (En litige / Disputed) with rea
 | `211` | Paiement transmis | Payment transmitted | No |
 | `212` | Encaissée | Cashed/Paid | Yes (manual) |
 | `213` | Rejetée | Rejected by platform | Yes (automatic) |
+
+### Reason codes by status
+
+Each status code accepts specific reason codes. Statuses not listed below (e.g. `205`, `209`, `211`, `212`) do not require a reason code.
+
+<AccordionGroup>
+  <Accordion title="200 — Déposée (Deposited)">
+    | Reason Code | Description |
+    |---|---|
+    | `NON_TRANSMISE` | Destinataire non connecté |
+
+    Default: `NON_TRANSMISE`
+  </Accordion>
+
+  <Accordion title="206 — Partiellement approuvée (Partially Approved)">
+    | Reason Code | Description |
+    |---|---|
+    | `AUTRE` | Autre |
+    | `TX_TVA_ERR` | Taux de TVA erroné |
+    | `MONTANTTOTAL_ERR` | Montant total erroné |
+    | `CALCUL_ERR` | Erreur de calcul de la facture |
+    | `NON_CONFORME` | Mention légale manquante |
+    | `DOUBLON` | Facture en doublon |
+    | `DEST_ERR` | Erreur de destinataire |
+    | `TRANSAC_INC` | Transaction inconnue |
+    | `EMMET_INC` | Émetteur inconnu |
+    | `CONTRAT_TERM` | Contrat terminé |
+    | `DOUBLE_FACT` | Double facture |
+    | `CMD_ERR` | N° de commande incorrect ou manquant |
+    | `ADR_ERR` | Adresse de facturation électronique erronée |
+    | `SIRET_ERR` | SIRET erroné ou absent |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire |
+    | `REF_ERR` | Référence incorrecte |
+    | `PU_ERR` | Prix unitaires incorrects |
+    | `REM_ERR` | Remise erronée |
+    | `QTE_ERR` | Quantité facturée incorrecte |
+    | `ART_ERR` | Article facturé incorrect |
+    | `MODPAI_ERR` | Modalités de paiement incorrectes |
+    | `QUALITE_ERR` | Qualité d'article livré incorrecte |
+    | `LIVR_INCOMP` | Problème de livraison |
+
+    Default: `AUTRE`
+  </Accordion>
+
+  <Accordion title="207 — En litige (Disputed)">
+    | Reason Code | Description |
+    |---|---|
+    | `AUTRE` | Autre |
+    | `TX_TVA_ERR` | Taux de TVA erroné |
+    | `MONTANTTOTAL_ERR` | Montant total erroné |
+    | `CALCUL_ERR` | Erreur de calcul de la facture |
+    | `NON_CONFORME` | Mention légale manquante |
+    | `DOUBLON` | Facture en doublon |
+    | `DEST_ERR` | Erreur de destinataire |
+    | `TRANSAC_INC` | Transaction inconnue |
+    | `EMMET_INC` | Émetteur inconnu |
+    | `CONTRAT_TERM` | Contrat terminé |
+    | `DOUBLE_FACT` | Double facture |
+    | `CMD_ERR` | N° de commande incorrect ou manquant |
+
+    Default: `AUTRE`
+  </Accordion>
+
+  <Accordion title="208 — Suspendue (Suspended)">
+    | Reason Code | Description |
+    |---|---|
+    | `JUSTIF_ABS` | Justificatif absent ou insuffisant |
+    | `SIRET_ERR` | SIRET erroné ou absent |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire |
+    | `REF_ERR` | Référence incorrecte |
+    | `CMD_ERR` | N° de commande incorrect ou manquant |
+    | `ADR_ERR` | Adresse de facturation électronique erronée |
+
+    Default: `JUSTIF_ABS`
+  </Accordion>
+
+  <Accordion title="210 — Refusée (Refused by buyer)">
+    | Reason Code | Description |
+    |---|---|
+    | `COORD_BANC_ERR` | Erreur de coordonnées bancaires |
+    | `TX_TVA_ERR` | Taux de TVA erroné |
+    | `MONTANTTOTAL_ERR` | Montant total erroné |
+    | `CALCUL_ERR` | Erreur de calcul de la facture |
+    | `NON_CONFORME` | Mention légale manquante |
+    | `DOUBLON` | Facture en doublon |
+    | `DEST_ERR` | Erreur de destinataire |
+    | `TRANSAC_INC` | Transaction inconnue |
+    | `EMMET_INC` | Émetteur inconnu |
+    | `CONTRAT_TERM` | Contrat terminé |
+    | `DOUBLE_FACT` | Double facture |
+    | `CMD_ERR` | N° de commande incorrect ou manquant |
+    | `ADR_ERR` | Adresse de facturation électronique erronée |
+    | `SIRET_ERR` | SIRET erroné ou absent |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire |
+    | `REF_ERR` | Référence incorrecte |
+    | `PU_ERR` | Prix unitaires incorrects |
+    | `REM_ERR` | Remise erronée |
+    | `QTE_ERR` | Quantité facturée incorrecte |
+    | `ART_ERR` | Article facturé incorrect |
+    | `MODPAI_ERR` | Modalités de paiement incorrectes |
+    | `QUALITE_ERR` | Qualité d'article livré incorrecte |
+    | `LIVR_INCOMP` | Problème de livraison |
+
+    Default: `TRANSAC_INC`
+  </Accordion>
+
+  <Accordion title="213 — Rejetée (Rejected by platform)">
+    | Reason Code | Description |
+    |---|---|
+    | `REJ_SEMAN` | Rejet pour erreur sémantique |
+    | `REJ_UNI` | Rejet sur contrôle unicité |
+    | `REJ_COH` | Rejet sur contrôle cohérence de données |
+    | `REJ_ADR` | Rejet sur contrôle d'adressage |
+    | `REJ_CONT_B2G` | Rejet sur contrôles métier B2G |
+    | `REJ_REF_PJ` | Rejet sur référence de PJ |
+    | `REJ_ASS_PJ` | Rejet sur erreur d'association de la PJ |
+    | `IRR_VIDE_F` | Contrôle de non vide sur les fichiers du flux |
+    | `IRR_TYPE_F` | Contrôle de type et extension des fichiers |
+    | `IRR_SYNTAX` | Contrôle syntaxique des fichiers du flux |
+    | `IRR_TAILLE_PJ` | Contrôle de taille des PJ |
+    | `IRR_NOM_PJ` | Contrôle du nom des PJ |
+    | `IRR_VID_PJ` | Contrôle de PJ non vide |
+    | `IRR_EXT_DOC` | Contrôle de l'extension des PJ |
+    | `IRR_TAILLE_F` | Contrôle de taille max des fichiers |
+    | `IRR_ANTIVIRUS` | Contrôle anti-virus |
+    | `DEST_INC` | Destinataire inconnu |
+    | `ADR_ERR` | Adresse de facturation électronique erronée |
+    | `DOUBLON` | Facture en doublon |
+    | `CALCUL_ERR` | Erreur de calcul de la facture |
+    | `TX_TVA_ERR` | Taux de TVA erroné |
+    | `MONTANTTOTAL_ERR` | Montant total erroné |
+
+    Default: `REJ_SEMAN`
+  </Accordion>
+</AccordionGroup>
 
 ## Receiving
 
