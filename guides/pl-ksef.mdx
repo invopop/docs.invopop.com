@@ -465,23 +465,30 @@ Once you've configured the import, sync, and registration workflows, the [Cron a
 
 #### Manual import
 
-If you need to import invoices outside of the automatic cron schedule, you can manually trigger imports using the Invopop API.
-
-<Note>
-  Manual import with workflow arguments is only available via API. The Console UI does not currently support passing custom arguments to workflow jobs.
-</Note>
+If you need to import invoices outside of the automatic cron schedule, you can manually trigger imports from the [Console](/guides/workflows#running-from-the-console) or via the API.
 
 **Import a single invoice**
 
-To import a specific invoice from KSeF:
+To import a specific invoice from KSeF, you need:
 
-<Steps>
-  <Step title="Get invoice details from the KSeF portal">
-    - **KSeF Number**: The unique invoice identifier (e.g., `1234567890-20260120-ABCD1234-EF`)
-    - **Supplier NIP**: The Polish Tax ID of the invoice issuer
-  </Step>
+- **KSeF Number**: The unique invoice identifier (e.g., `1234567890-20260120-ABCD1234-EF`)
+- **Supplier NIP**: The Polish Tax ID of the invoice issuer
 
-  <Step title="Create a job via API">
+<Tabs>
+  <Tab title="Console">
+    1. Navigate to **Workflows** and find your **KSeF Import Invoice** workflow
+    2. Click **Run** from the workflow editor or the `...` menu in the workflow list (see [Running from the Console](/guides/workflows#running-from-the-console))
+    3. Leave the document field empty — the import workflow will create a new silo entry automatically
+    4. Fill in the **Arguments**:
+
+    | Key | Value |
+    |-----|-------|
+    | `ksef-number` | `1234567890-20260120-ABCD1234-EF` |
+    | `nip` | `1234567890` |
+
+    5. Click <kbd>Run workflow</kbd>
+  </Tab>
+  <Tab title="API">
     Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post):
 
     ```bash
@@ -496,21 +503,33 @@ To import a specific invoice from KSeF:
         }
       }'
     ```
+  </Tab>
+</Tabs>
 
-    The invoice will be downloaded from KSeF, converted to GOBL, and stored in your silo.
-  </Step>
-</Steps>
+The invoice will be downloaded from KSeF, converted to GOBL, and stored in your silo.
 
 **Import multiple invoices by date range**
 
-To import all invoices received within a specific time period:
+To import all invoices received within a specific time period, you need:
 
-<Steps>
-  <Step title="Determine the date range">
-    Decide the date range you want to sync (from and upto dates).
-  </Step>
+- The **party silo entry** for the supplier whose invoices you want to sync
+- The **date range** (`from` and `upto`) to process
 
-  <Step title="Create a job via API">
+<Tabs>
+  <Tab title="Console">
+    1. Navigate to **Workflows** and find your **KSeF Sync Received Invoices** workflow
+    2. Click **Run** from the workflow editor or the `...` menu in the workflow list
+    3. In the **Select a document** field, search for and select the party (supplier) entry
+    4. Fill in the **Arguments**:
+
+    | Key | Value |
+    |-----|-------|
+    | `from` | `2026-01-01T00:00:00Z` |
+    | `upto` | `2026-01-31T23:59:59Z` |
+
+    5. Click <kbd>Run workflow</kbd>
+  </Tab>
+  <Tab title="API">
     Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post) with your sync workflow:
 
     ```bash
@@ -526,10 +545,10 @@ To import all invoices received within a specific time period:
         }
       }'
     ```
+  </Tab>
+</Tabs>
 
-    The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
-  </Step>
-</Steps>
+The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
 
 <Tip>
   Use single invoice import to bring in a specific invoice immediately after receiving notification from a supplier. Use date range sync to backfill invoices or to import historical invoices from before the cron subscription was active.

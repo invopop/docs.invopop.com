@@ -117,6 +117,63 @@ Workflows in Invopop can be executed through the following methods:
 
 Workflows are executed on _silo entries_ (such as invoices or suppliers), this action creates a _job_. When a job is run, the silo entry will be updated with any changes or attachments generated during processing. The status of a job can be seen in the silo entry's activity tab, or in the **Workflows** → **History** section accessible from the left sidebar.
 
+### Running from the Console
+
+There are three ways to run a workflow from the Console:
+
+#### From a silo entry
+
+While viewing an invoice, supplier, or other silo entry, click <kbd>Run Workflow</kbd> in the top toolbar.
+
+<Frame>
+<img src="/assets/guides/workflow-run-job-from-entry.png" width="100%" alt="Run Workflow button in the silo entry toolbar" />
+</Frame>
+
+This opens a panel where you search for and select the workflow to run. The current entry is used as the document automatically.
+
+<Frame>
+<img src="/assets/guides/workflows-run-selected-entry.png" width="340" alt="Workflow selection panel from a silo entry" />
+</Frame>
+
+Click <kbd>Run Workflow</kbd> to create the job. This method does not support passing arguments — the job runs with the selected entry only.
+
+#### From the workflow editor or list
+
+You can also start a run from the workflow side:
+
+- **From the workflow editor**: Click the **Run** button in the top bar while viewing a workflow.
+
+<Frame>
+<img src="/assets/guides/workflow-run-job-from-editor.png" width="100%" alt="Run button in the workflow editor" />
+</Frame>
+
+- **From the workflow list**: Click the `...` menu on any workflow row and select **Run**.
+
+<Frame>
+<img src="/assets/guides/workflow-run-job-from-table.png" width="100%" alt="Run option in the workflow list menu" />
+</Frame>
+
+Both options open a panel where you configure the job inputs:
+
+<Frame>
+<img src="/assets/guides/workflow-run-select.png" width="340" alt="Run workflow panel with document and arguments fields" />
+</Frame>
+
+- **Select a document**: Search for and select an existing silo entry (invoice, supplier, etc.) to process.
+- **Arguments**: Provide string key-value pairs that will be passed to the workflow steps. The specific keys and values depend on the workflow — for example, a KSeF import workflow might expect a `ksef-number` and `nip` argument.
+
+A job requires **at least one** of these: a document or arguments. You can also provide both. For example, a sync workflow may need a party document selected _and_ date range arguments.
+
+<Frame>
+<img src="/assets/guides/workflow-run-select-filled.png" width="340" alt="Run workflow panel with a document and arguments filled in" />
+</Frame>
+
+Click <kbd>Run workflow</kbd> to create the job.
+
+<Note>
+  When a job is run with arguments only and no document selected, the workflow will typically create a new silo entry or fetch an existing one based on the arguments provided. For example, an import workflow receiving a document identifier as an argument will download the document and create a corresponding silo entry automatically.
+</Note>
+
 ## Error Handling
 
 Any step that causes an error (`KO`) from which the job can't recover, and is not handled through a condition,  will trigger the error handling flow. To enable this section, tap on **Handle Errors** at the bottom of the workflow creation screen, then add steps into this area which you want to execute when the job fails (often times setting the entry's state to `Error` and possibly sending a notification).
