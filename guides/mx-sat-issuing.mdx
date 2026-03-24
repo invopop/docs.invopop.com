@@ -18,6 +18,8 @@ import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
 import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
 import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
+import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
+import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 
 ## Introduction
@@ -276,6 +278,25 @@ Notice:
 <CodeGroup>
 	<B2BInvoiceMin />
 	<B2BInvoice />
+</CodeGroup>
+
+</Accordion>
+
+<Accordion title="B2B Invoice on behalf of a third party (a cuenta de terceros)">
+
+This invoice is used when the **issuer (supplier)** bills the customer **on behalf of another taxpayer** who is the real seller — for example **consignment** sales. The **third party** is identified on each line in the `seller` object (RFC, fiscal regime, address), while `supplier` remains the party issuing the CFDI.
+
+Notice:
+
+- the line `seller` carries the third party’s tax identity and regime so SAT can relate the CFDI to **cuenta de terceros** rules,
+- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates extensions on supplier, customer, and line seller,
+- the minimal `tax.ext` only needs the place of issue; `gobl build` adds document type and payment method (`PPD` in the built example) like other B2B invoices,
+- there are no totals in the minimal version; upload or `gobl build` will compute IVA and totals, and,
+- the built example shows a consignment-style line (`Venta en consignación`) with full tax breakdown.
+
+<CodeGroup>
+	<ThirdPartyInvoiceMin />
+	<ThirdPartyInvoice />
 </CodeGroup>
 
 </Accordion>

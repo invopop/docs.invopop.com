@@ -8,6 +8,8 @@ import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
 import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
 import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
+import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
+import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 
 <AccordionGroup>
 	<Accordion title="B2B invoice (Personas Morales)">
@@ -26,6 +28,25 @@ import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 		<CodeGroup>
 			<B2BInvoiceMin />
 			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2B Invoice on behalf of a third party (a cuenta de terceros)">
+
+		In this example, the **supplier** issues the CFDI to the customer, but the **goods or services belong to another taxpayer**. SAT expects the **third-party seller** to be declared on the line via the `seller` object (for example consignment or commission sales).
+
+		Notice:
+
+		- the minimal version (`sat-third-party.min.mdx`) includes a `seller` on the line with RFC, fiscal regime, and postal code for the party actually selling,
+		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates the document for CFDI 4.0, including third-party line data,
+		- the minimal `tax.ext` only needs the place of issue (`mx-cfdi-issue-place`); `gobl build` fills in other CFDI extensions such as [`mx-cfdi-doc-type`](https://docs.gobl.org/addons/mx-cfdi-v4) and [`mx-cfdi-payment-method`](https://docs.gobl.org/addons/mx-cfdi-v4) (`PPD` in the built example), like other B2B invoices,
+		- there are no totals in the minimal version; running `gobl build` calculates IVA, line sums, and totals,
+		- the built version (`sat-third-party.mdx`) shows the normalized invoice with the third-party seller preserved on the line and full tax breakdown, and,
+		- process it through the SAT workflow so the PAC can stamp the CFDI with the correct third-party relationship.
+
+		<CodeGroup>
+			<ThirdPartyInvoiceMin />
+			<ThirdPartyInvoice />
 		</CodeGroup>
 	</Accordion>
 
