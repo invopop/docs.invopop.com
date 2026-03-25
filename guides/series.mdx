@@ -77,7 +77,6 @@ INV-ES-00001
 
 Create a series via the API using a `PUT` request:
 
-<RequestExample>
 ```bash
 curl -X PUT "https://api.invopop.com/sequence/v1/series/{id}" \
   -H "Authorization: Bearer $INVOPOP_TOKEN" \
@@ -92,9 +91,9 @@ curl -X PUT "https://api.invopop.com/sequence/v1/series/{id}" \
     "description": "Series for Spanish invoice numbering"
   }'
 ```
-</RequestExample>
 
-<ResponseExample>
+Response:
+
 ```json
 {
   "id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
@@ -109,7 +108,6 @@ curl -X PUT "https://api.invopop.com/sequence/v1/series/{id}" \
   "updated_at": "2022-03-03T22:18:50Z"
 }
 ```
-</ResponseExample>
 
 ## Using Series in Workflows
 
@@ -135,28 +133,28 @@ When configuring the **Add Sequential Code** step, you can choose between:
 The **Add Sequential Code** step uses the `sequence.enumerate` provider. When using dynamic series, the step will create a new series with default settings (padding: 6, start: 1) if one doesn't exist.
 </Note>
 
-### Passing a Series ID via Task Arguments
+### Passing a Series ID via Job Arguments
 
-If you need to specify which series to use at runtime — rather than hardcoding it in the workflow configuration — you can pass a `series-id` argument when creating a silo entry. This is useful when different documents in the same workflow should use different pre-created series.
+If you need to specify which series to use at runtime — rather than hardcoding it in the workflow configuration — you can pass a `sequence-series-id` argument when creating a job. This is useful when different documents in the same workflow should use different pre-created series.
 
-To use this feature, include the series UUID in the task's `args` map with the key `series-id`:
+To use this feature, include the series UUID in the job's `args` map with the key `sequence-series-id` when calling the [Create a Job](/api-ref/transform/jobs/create-a-job-post) endpoint:
 
-<RequestExample>
 ```json
 {
+  "workflow_id": "your-workflow-uuid",
+  "silo_entry_id": "your-silo-entry-uuid",
   "args": {
-    "series-id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e"
+    "sequence-series-id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e"
   }
 }
 ```
-</RequestExample>
 
-When `series-id` is provided:
+When `sequence-series-id` is provided:
 
 - It **overrides** any series configured in the workflow step (both dynamic and static).
 - The value must be a valid UUID referencing an existing series created via the API or Console.
 - If the series does not exist, the task will fail with a `"sequence not found"` error — no series will be auto-created.
-- If `series-id` is not provided or is empty, the workflow step falls back to its normal behavior (dynamic or static series from the configuration).
+- If `sequence-series-id` is not provided or is empty, the workflow step falls back to its normal behavior (dynamic or static series from the configuration).
 
 ## Using Series via API
 
@@ -166,7 +164,6 @@ You can also generate sequential codes directly via the API by creating entries 
 
 To generate the next code in a series, create an entry:
 
-<RequestExample>
 ```bash
 curl -X PUT "https://api.invopop.com/sequence/v1/series/{series_id}/entries/{entry_id}" \
   -H "Authorization: Bearer $INVOPOP_TOKEN" \
@@ -178,9 +175,9 @@ curl -X PUT "https://api.invopop.com/sequence/v1/series/{series_id}/entries/{ent
     }
   }'
 ```
-</RequestExample>
 
-<ResponseExample>
+Response:
+
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -196,7 +193,6 @@ curl -X PUT "https://api.invopop.com/sequence/v1/series/{series_id}/entries/{ent
   "updated_at": "2023-01-25T08:04:14.245Z"
 }
 ```
-</ResponseExample>
 
 The `code` field in the response contains the generated sequential code. You can then use this code in your document's `series` field.
 
@@ -204,21 +200,17 @@ The `code` field in the response contains the generated sequential code. You can
 
 Retrieve all series in your workspace:
 
-<RequestExample>
 ```bash
 curl -X GET "https://api.invopop.com/sequence/v1/series" \
   -H "Authorization: Bearer $INVOPOP_TOKEN"
 ```
-</RequestExample>
 
 Fetch a specific series by ID:
 
-<RequestExample>
 ```bash
 curl -X GET "https://api.invopop.com/sequence/v1/series/{series_id}" \
   -H "Authorization: Bearer $INVOPOP_TOKEN"
 ```
-</RequestExample>
 
 ## Best Practices
 
