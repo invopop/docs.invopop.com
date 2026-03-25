@@ -135,6 +135,29 @@ When configuring the **Add Sequential Code** step, you can choose between:
 The **Add Sequential Code** step uses the `sequence.enumerate` provider. When using dynamic series, the step will create a new series with default settings (padding: 6, start: 1) if one doesn't exist.
 </Note>
 
+### Passing a Series ID via Task Arguments
+
+If you need to specify which series to use at runtime — rather than hardcoding it in the workflow configuration — you can pass a `series-id` argument when creating a silo entry. This is useful when different documents in the same workflow should use different pre-created series.
+
+To use this feature, include the series UUID in the task's `args` map with the key `series-id`:
+
+<RequestExample>
+```json
+{
+  "args": {
+    "series-id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e"
+  }
+}
+```
+</RequestExample>
+
+When `series-id` is provided:
+
+- It **overrides** any series configured in the workflow step (both dynamic and static).
+- The value must be a valid UUID referencing an existing series created via the API or Console.
+- If the series does not exist, the task will fail with a `"sequence not found"` error — no series will be auto-created.
+- If `series-id` is not provided or is empty, the workflow step falls back to its normal behavior (dynamic or static series from the configuration).
+
 ## Using Series via API
 
 You can also generate sequential codes directly via the API by creating entries in a series.
