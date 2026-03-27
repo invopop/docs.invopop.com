@@ -137,6 +137,10 @@ The **Add Sequential Code** step uses the `sequence.enumerate` provider. When us
 
 If you need to specify which series to use at runtime — rather than hardcoding it in the workflow configuration — you can pass a `sequence-series-id` argument when creating a job. This is useful when different documents in the same workflow should use different pre-created series.
 
+<Note>
+Your workflow must still include an **Add Sequential Code** step for this argument to take effect. When `sequence-series-id` is provided, the series configuration defined in the step (whether dynamic or static) will be ignored — only the series referenced by the argument will be used.
+</Note>
+
 To use this feature, include the series UUID in the job's `args` map with the key `sequence-series-id` when calling the [Create a Job](/api-ref/transform/jobs/create-a-job-post) endpoint:
 
 ```json
@@ -151,7 +155,8 @@ To use this feature, include the series UUID in the job's `args` map with the ke
 
 When `sequence-series-id` is provided:
 
-- It **overrides** any series configured in the workflow step (both dynamic and static).
+- The workflow must contain an **Add Sequential Code** step — the argument does not add the step for you, it only determines which series the existing step will use.
+- The step's own series configuration (both dynamic and static) is **ignored** in favor of the series specified by the argument.
 - The value must be a valid UUID referencing an existing series created via the API or Console.
 - If the series does not exist, the task will fail with a `"sequence not found"` error — no series will be auto-created.
 - If `sequence-series-id` is not provided or is empty, the workflow step falls back to its normal behavior (dynamic or static series from the configuration).
