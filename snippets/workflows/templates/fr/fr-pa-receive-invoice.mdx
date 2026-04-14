@@ -1,0 +1,90 @@
+---
+title: "France PA receive invoice workflow"
+description: "Receive incoming UBL, CII or Factur-X PDF invoice via Peppol and register it as received through the Plateforme d'Accès system"
+countryCode: "fr"
+appId: "gov-fr"
+schema: "bill/invoice"
+---
+```json France PA receive invoice workflow
+{
+    "name": "France PA receive invoice workflow",
+    "description": "Receive incoming UBL, CII or Factur-X PDF invoice via Peppol and register it as received through the Plateforme d'Accès system",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "db61c3c0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Import Peppol Document",
+            "provider": "peppol.import",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "UBL",
+                    "steps": [
+                        {
+                            "id": "62e94570-8fdb-11f0-a8fb-61ec9e5a76ba",
+                            "name": "Import UBL Document",
+                            "provider": "ubl.import"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "CII",
+                    "steps": [
+                        {
+                            "id": "6480ae50-8fdb-11f0-a8fb-61ec9e5a76ba",
+                            "name": "Import UN/CEFACT CII Document",
+                            "provider": "cii.import"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "PDF",
+                    "steps": [
+                        {
+                            "id": "26ba4f80-1e2a-11f1-8bfb-2beaa1df60f0",
+                            "name": "Import PDF (FacturX)",
+                            "provider": "cii.pdf.import"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "fdfc81a0-6e23-11f0-913b-5732f966b346",
+            "name": "Set Folder",
+            "provider": "silo.folder",
+            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+            "config": {
+                "folder": "expenses"
+            }
+        },
+        {
+            "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
+            "name": "Record Invoice",
+            "provider": "gov-fr.invoice.record"
+        },
+        {
+            "id": "dd14a3e0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e109d2e0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

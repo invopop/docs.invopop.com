@@ -5,6 +5,8 @@ description: Send compliant e-invoices through France's PA system via Peppol and
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
+import RegisterWorkflow from '/snippets/workflows/templates/fr/fr-pa-register.mdx';
+import ReceiveInvoiceWorkflow from '/snippets/workflows/templates/fr/fr-pa-receive-invoice.mdx';
 import SendInvoiceWorkflow from '/snippets/workflows/templates/fr/fr-pa-send-invoice.mdx';
 import SendStatusWorkflow from '/snippets/workflows/templates/fr/fr-pa-send-status.mdx';
 
@@ -31,59 +33,102 @@ To use the France PA integration, you will need:
 
 | | |
 |------|------------|
-| **Annuaire** | The French e-invoicing directory where parties must be registered to participate in regulated e-invoicing flows. |
+| **Annuaire** | The French e-invoicing directory where parties must be registered to participate in regulated e-invoicing flows. Not to be confused with the Peppol Directory. |
 | **PPF** | Portail Public de Facturation — the French government system that receives mandatory invoice data and lifecycle updates. Invopop handles all communications with the PPF automatically. |
-| **Regulated Flow** | An invoice exchange where both the sender and receiver are registered in the annuaire. These follow the complete French e-invoicing process including Peppol transmission and PPF reporting. |
-| **Non-Regulated Flow** | An invoice exchange where only one party is registered in the annuaire. Invoices are stored for e-reporting to the PPF but may not be transmitted via Peppol. |
-| **E-Reporting** | France requires two types: **real-time reporting** for B2B national (regulated) flows via F1 format; and **periodic reporting** for non-regulated flows and B2C transactions. |
+| **Regulated Flow** | An invoice exchange where both the sender and receiver are registered in the Directory. These follow the complete French e-invoicing process including Peppol transmission and PPF reporting. |
+| **Non-Regulated Flow** | An invoice exchange where only one party is registered in the Directory. Invoices are stored for e-reporting to the PPF but may not be transmitted via Peppol. |
+| **E-Reporting** | Periodic reporting to the PPF covering non-regulated flows and B2C transactions.|
 | **CDAR** | Cross Domain Acknowledgement and Response. The format used for lifecycle status updates ("cycle de vie") in France, communicated between parties and to the PPF. |
-| **F1 Invoice** | Simplified UBL format used for e-reporting to the PPF for regulated flows. Generated automatically by Invopop. |
+| **Fifth Corner** | The tax authority in the Peppol exchange model. Corners 1–4 are sender, sender's PA, receiver's PA, and receiver; the fifth corner is the tax authority that receives a copy of the invoice for regulated flows. In France this is the PPF. |
+| **F1 Invoice** | Simplified UBL format used to forward the invoice to the fifth corner (the tax authority, i.e. the PPF) for regulated flows. Part of e-invoicing, not e-reporting. Generated automatically by Invopop. |
 
-## Registration workflow
+## E-Invoicing
 
-The registration process prepares parties to send and receive invoices in France. It builds on the standard [Peppol registration workflow](/guides/features/peppol) with additional French-specific steps.
+### Annuaire registration
 
-<Steps>
+The _annuaire_ is France's national directory of e-invoicing endpoints. It records every registered company and their PA (Invopop, in this case), so that the tax administration knows how to route regulated e-invoicing flows.
 
-<Step title="Approval">
-Standard approval process to verify party details and authorization.
-</Step>
+Registering in the annuare enables parties (companies) to send and receive invoices in France. Behind the scenes, it extends the standard [Peppol registration workflow](/guides/peppol) with one additional French-specific step to register the party in the Annuaire.
 
-<Step title="Register in Annuaire">
-Register the party in the annuaire (French e-invoicing directory) under Invopop's name. Required for the party to participate in French e-invoicing.
-</Step>
+<Note>
+  Peppol registration in France always enables **both sending and receiving**. Once a party is listed in the Annuaire, it must be reachable to receive invoices. There is no send-only option.
+</Note>
 
-<Step title="Register for Peppol">
-Complete standard Peppol registration. Invopop uses Peppol as the designated method for sending and receiving invoices in the French PA system.
-</Step>
+#### How it works
 
-<Step title="Enable Reporting">
-  <Badge color="green">Optional</Badge>
-Enable e-reporting for the party to comply with French tax reporting requirements.
-</Step>
+1. **Register Party for Approval** — submits the party details for Invopop review.
+2. **Set state to Processing** — marks the party as awaiting approval.
+3. **Wait for Approval** — pauses until the party passes the approval check.
+4. **Register Party** — registers the party in the French Directory (`gov-fr.party.register`). This is the France-specific step added on top of the base Peppol flow.
+5. **Register Peppol Party** — registers the party on the Peppol network with the `france` document group, enabled for sending and receiving via SMP/SML/Peppol.
+6. **Set state to Registered** — marks the party as fully onboarded.
 
-</Steps>
+<Info>
+  If you want to understand the base Peppol onboarding this workflow is built on, see the [Peppol registration guide](/guides/peppol). The France PA workflow is the same flow plus the **Register Party (France)** step before the Peppol registration step.
+</Info>
 
-## Sending workflow
+#### Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
+      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+### Invoice formats
+
+The French PA specification lists five accepted invoice formats. UBL and CII each have a base version and an extended version (adding extra fields for French-specific requirements), and Factur-X rounds out the list. In practice, the three base formats cover essentially all real-world exchanges, and Invopop supports sending _and_ receiving all three:
+
+| Format | Description |
+|---|---|
+| **UBL** | XML invoice based on the Peppol France CIUS. The default format used across the Peppol network and the one we recommend for all outgoing flows. An extended UBL variant also exists but is rarely needed. |
+| **CII** | UN/CEFACT Cross Industry Invoice — another XML format, semantically equivalent to UBL and required by some counterparties (particularly in cross-border and automotive/industrial contexts). An extended CII variant is also accepted. |
+| **Factur-X** | Hybrid PDF/A-3 with an embedded CII XML payload. Human-readable on top, machine-readable underneath. Common with buyers who want a visual invoice alongside the structured data. Factur-X is a joint Franco-German standard (identical to [ZUGFeRD](/guides/de-ubl)) aligned with the European Norm EN 16931. |
+
+<Info>
+  **We recommend sending as UBL.** It's the native Peppol France CIUS format, has the widest receiver support, and is the cleanest to validate. Choose CII or Factur-X only when a specific counterparty requires it.
+</Info>
+
+The underlying invoice is always the **same GOBL document with the `fr-ctc-flow2-v1` add-on**. The format is only an addition at the end of the workflow — switching format is a configuration change, not a data-model change. That means:
+
+- You author and validate one GOBL invoice.
+- The workflow's generation step produces the chosen format (UBL, CII, or Factur-X).
+- Incoming invoices in any of the three formats are converted back into the same GOBL representation for you to consume.
+
+### Sending
+
+#### Invoices
 
 <Warning>
   The workflow steps below are subject to change. We are working on new methods of handling events for a more global use case. This example is functional today, but expect refinements before the September 2026 mandate.
 </Warning>
 
-The sending workflow records the invoice for France PA compliance, transmits it via Peppol, and then forwards it to the PPF. The same workflow handles both French and non-French invoices — the France-specific steps are automatically skipped when the sender is not registered in the annuaire.
+The sending workflow records the invoice for France PA compliance, transmits it via Peppol, and then forwards it to the PPF.
 
-### How it works
+<Note>
+  This workflow is for **B2B regulated flows**. The `gov-fr.invoice.record` step validates this up-front and will reject the invoice if it doesn't meet the criteria (e.g. if the receiver is not registered in the Annuaire).
+
+  For mixed traffic, run a Annuaire lookup step and `if-else` statements earlier in the workflow and branch non-regulated invoices into the periodic e-reporting path instead.
+</Note>
+
+##### How it works
 
 1. **Set state to Processing** — marks the job as in progress.
 2. **Sign the envelope** — locks the GOBL document against further modification.
-3. **Record Invoice (France)** — registers the invoice with the France PA system. Determines whether this is a regulated or non-regulated flow based on annuaire registration status of both parties.
+3. **Record Invoice** — validates SIRENs, checks both parties against the Annuaire, and records the invoice.
 4. **Generate UBL Document** — produces a Peppol France CIUS–compliant UBL invoice or credit note.
 5. **Send via Peppol** — transmits the invoice to the receiver's PA platform over the Peppol network.
 6. **Set state to Sent** — marks successful Peppol delivery.
-7. **Forward to PPF** — sends the F1 invoice and the mandatory _déposée_ (deposited) status to the government data concentrator. For non-regulated flows, records the invoice for periodic reporting instead.
+7. **Forward to PPF** — sends the F1 invoice and the mandatory _déposée_ (deposited) status to the PPF (the fifth corner).
 8. **Set state to Completed** — marks full completion including PPF reporting.
 
-### Workflow code
+##### Workflow code
 
 <Tabs>
   <Tab title="Template">
@@ -97,10 +142,10 @@ The sending workflow records the invoice for France PA compliance, transmits it 
   </Tab>
 </Tabs>
 
-## Status update workflow
+#### Status
 
 <Warning>
-  The workflow steps below are subject to change. We are working on new methods of handling events for a more global use case. This example is functional today, but expect refinements before the September 2026 mandate.
+  **Status is moving to a first-class GOBL document.** Today a status update is a CDAR XML attached to the originating invoice; we are designing a dedicated GOBL document so lifecycle statuses become standalone documents with their own schema. The workflow below is functional and safe to use now — expect the steps and job arguments to change once the new GOBL status document is released.
 </Warning>
 
 France requires mandatory lifecycle status updates to be reported to the PPF for B2B national invoices. You must implement workflows for the two statuses that are your responsibility:
@@ -119,13 +164,13 @@ The following statuses are handled **automatically** by Invopop and do not requi
 
 You can also send additional non-mandatory statuses (e.g. `205` Approuvée, `207` En litige) for lifecycle tracking. The status workflow below handles all of these.
 
-### How it works
+##### How it works
 
 1. **Generate Status (France)** — creates a CDAR document with the specified status code and reason code. The `status_code`, `reason_code`, and optional `reason_text` are configured per workflow or passed as job arguments.
 2. **Send via Peppol** — transmits the CDAR to the counterparty over Peppol.
 3. **Forward to PPF** — for mandatory statuses (`210`, `212`), sends the notification to the PPF in the required format.
 
-### Using job arguments
+##### Using job arguments
 
 Instead of hardcoding the status in the workflow configuration, you can pass the status details as **job arguments** when creating the job. Arguments take priority over the workflow's configured values, so you can use a single workflow for multiple status types.
 
@@ -151,7 +196,7 @@ For example, to trigger a _Refusée_ (refused) status using a workflow that is c
 
 This approach is useful when you want a single status workflow that can handle multiple status types dynamically, driven by your business logic.
 
-### Workflow code
+##### Workflow code
 
 The example below is configured for status `207` (En litige / Disputed) with reason code `MONTANTTOTAL_ERR`. Change `status_code` and `reason_code` to match your use case, or override them at runtime using job arguments as described above.
 
@@ -171,7 +216,7 @@ The example below is configured for status `207` (En litige / Disputed) with rea
   We recommend creating a separate workflow for each mandatory status type (paid, refused) with the appropriate code pre-configured, rather than a single generic workflow. This keeps your operational runbooks simple and reduces the risk of sending the wrong code.
 </Info>
 
-### Available status codes
+##### Available status codes
 
 | Code | French | English | Mandatory to PPF |
 |---|---|---|---|
@@ -186,7 +231,7 @@ The example below is configured for status `207` (En litige / Disputed) with rea
 | `212` | Encaissée | Cashed/Paid | Yes (manual) |
 | `213` | Rejetée | Rejected by platform | Yes (automatic) |
 
-### Reason codes by status
+##### Reason codes by status
 
 Each status code accepts specific reason codes. Statuses not listed below (e.g. `205`, `209`, `211`, `212`) do not require a reason code.
 
@@ -324,9 +369,93 @@ Each status code accepts specific reason codes. Statuses not listed below (e.g. 
   </Accordion>
 </AccordionGroup>
 
-## Receiving
+### Receiving
 
-Receiving invoices and incoming status updates via Peppol is supported by the France app, but documentation is not yet available. It will be published ahead of the September 2026 mandate.
+Incoming invoices and incoming status updates (CDAR) both arrive over the same Peppol transport. The following example shows how invoices are received and processed.
+
+Incoming documents arrive via Peppol in one of the three supported formats (UBL, CII, or Factur-X PDF). The receive workflow branches on the detected format, imports it into the shared GOBL representation, records it against the France PA system as an incoming invoice, and files it in the `Invoices · Expenses` folder.
+
+##### How it works
+
+1. **Import Peppol Document** — receives the inbound Peppol payload and branches on the detected format code:
+   - `UBL` → **Import UBL Document** (`ubl.import`) converts the UBL XML to GOBL.
+   - `CII` → **Import UN/CEFACT CII Document** (`cii.import`) converts the CII XML to GOBL.
+   - `PDF` → **Import PDF (Factur-X)** (`cii.pdf.import`) extracts the embedded CII and converts it to GOBL.
+2. **Set Folder** — files the invoice under `Invoices · Expenses`.
+3. **Record Invoice** — validates SIRENs, checks both parties against the Annuaire, resolves _your_ registered party as the customer (or supplier if self-billed), and guards against duplicates.
+4. **Set state to Registered** — marks the incoming invoice as successfully received.
+
+##### Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA receive invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" cta="Add to my workspace">
+      Imports an incoming Peppol invoice (UBL, CII, or Factur-X PDF) and records it against the France PA system.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <ReceiveInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+## Reporting
+
+### Registration
+
+Reporting is done at the **SIREN** level, not at the party or invoice level. Before a party can submit any reports, it must be registered for reporting so Invopop has an internal SIREN-keyed record to attach all subsequent reports to.
+
+Registration has two requirements:
+
+1. **Record a SIREN.** Send the party along with its SIREN. Invopop stores an internal record keyed by that SIREN, which all later invoice and payment reports will be attached to and aggregated under for submission to the PPF.
+2. **Select a reporting cadence.** Periodic reporting is submitted on a fixed schedule tied to the party's VAT regime. **Invoice/transaction** data and **payment** data have separate schedules — choose the cadence that matches the party's regime for each.
+
+   The schedules are identical for the Quarterly Actual, Simplified VAT, and Non-Established Taxpayer regimes. Only the **Monthly Actual Regime** differs: invoice/transaction data is reported in ten-day periods, while payments are reported monthly.
+
+   **Invoice and transaction data**
+
+   | VAT Regime | Period | Submit to PPF | PPF → Tax Authorities |
+   |---|---|---|---|
+   | **Monthly Actual Regime** | Ten-day periods: 1st–10th, 11th–20th, 21st–month end | 10 days after the period ends (20th of current month, end of current month, 10th of following month) | 1st ten-day: 21st at 08:00 · 2nd ten-day: 1st of following month at 08:00 · 3rd ten-day: 11th of following month at 08:00 |
+   | **Quarterly Actual Regime** | Monthly | 10th of the following month | 11th of the following month at 08:00 |
+   | **Simplified VAT Taxation Regime** | Monthly | Between the 25th and 30th of the following month | 1st of the second following month at 08:00 |
+   | **Non-Established Taxpayer VAT Regime** | Bimonthly (every two calendar months) | Between the 25th and 30th of the following month | 1st of the second following month at 08:00 |
+
+   **Payment data**
+
+   | VAT Regime | Period | Submit to PPF | PPF → Tax Authorities |
+   |---|---|---|---|
+   | **Monthly Actual Regime** | Monthly | 10th of the following month | 11th of the following month at 08:00 |
+   | **Quarterly Actual Regime** | Monthly | 10th of the following month | 11th of the following month at 08:00 |
+   | **Simplified VAT Taxation Regime** | Monthly | Between the 25th and 30th of the following month | 1st of the second following month at 08:00 |
+   | **Non-Established Taxpayer VAT Regime** | Bimonthly (every two calendar months) | Between the 25th and 30th of the following month | 1st of the second following month at 08:00 |
+
+Once both are in place, the party is ready to report invoices and payments (see the following sections).
+
+<Warning>
+  Invoice and payment reports are GOBL documents that use the **`fr-ctc-flow10-v1`** add-on (distinct from the `fr-ctc-flow2-v1` add-on used for e-invoicing). The Flow 10 add-on is still under development and some fields are not yet finalized — expect breaking changes until it is released.
+</Warning>
+
+#### How reporting works
+
+Once a party is registered, Invopop drives reporting automatically:
+
+- **Automatic regular reports.** For each registered SIREN, Invopop aggregates all invoices and payments sent to the reporting workflow during the current period and submits the report to the PPF on the configured cadence. No manual trigger is required — if the data is there by the deadline, the report goes out.
+- **Corrective reports.** You can also trigger a corrective report to fix an error in a previously submitted report. This is the path to use when, for example, an invoice was reported with a wrong amount (a missing zero, a typo) or the wrong transaction was included, and you need to amend a prior period rather than only adjusting future filings.
+
+Both invoice and payment reporting share this model.
+
+### Report an invoice
+
+To report an invoice, send it to a **reporting workflow**. The workflow stores the invoice against the registered SIREN; Invopop then builds and submits the periodic report to the PPF on the cadence selected at registration, and triggers a corrective report whenever one is needed.
+
+The invoice must use the `fr-ctc-flow10-v1` add-on (Flow 10), which extends the standard GOBL invoice with the fields required for French e-reporting.
+
+### Report a payment
+
+Payment reporting follows the same pattern as invoice reporting: send the payment document to a reporting workflow, Invopop stores it against the registered SIREN, and payment data is included in the periodic (and, when needed, corrective) report at the selected cadence.
+
+Payments also use the `fr-ctc-flow10-v1` add-on.
 
 ---
 
