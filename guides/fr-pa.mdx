@@ -33,7 +33,7 @@ To use the France PA integration, you will need:
 
 | | |
 |------|------------|
-| **Directory** (annuaire) | The French e-invoicing directory where parties must be registered to participate in regulated e-invoicing flows. Not to be confused with the Peppol Directory. |
+| **Annuaire** | The French e-invoicing directory where parties must be registered to participate in regulated e-invoicing flows. Not to be confused with the Peppol Directory. |
 | **PPF** | Portail Public de Facturation — the French government system that receives mandatory invoice data and lifecycle updates. Invopop handles all communications with the PPF automatically. |
 | **Regulated Flow** | An invoice exchange where both the sender and receiver are registered in the Directory. These follow the complete French e-invoicing process including Peppol transmission and PPF reporting. |
 | **Non-Regulated Flow** | An invoice exchange where only one party is registered in the Directory. Invoices are stored for e-reporting to the PPF but may not be transmitted via Peppol. |
@@ -44,18 +44,14 @@ To use the France PA integration, you will need:
 
 ## E-Invoicing
 
-### Registration — Directory (annuaire)
+### Annuaire registration
 
-The _annuaire_ is France's national directory of e-invoicing endpoints. It records every registered party along with the PA (Plateforme Agréée) responsible for handling their invoices, so that senders know where to route invoices and the tax administration knows who is in scope for regulated e-invoicing flows.
+The _annuaire_ is France's national directory of e-invoicing endpoints. It records every registered company and their PA (Invopop, in this case), so that the tax administration knows how to route regulated e-invoicing flows.
 
-<Note>
-  From here on we refer to the annuaire simply as **the Directory**. This is _not_ the same as the [Peppol Directory](https://directory.peppol.eu/) — the Peppol Directory is an international lookup of Peppol participants, while the French Directory is the annuaire maintained by the French tax administration and used to determine whether a flow is regulated.
-</Note>
-
-The registration process prepares parties to send and receive invoices in France. It extends the standard [Peppol registration workflow](/guides/peppol) with one additional French-specific step to register the party in the Directory.
+Registering in the annuare enables parties (companies) to send and receive invoices in France. Behind the scenes, it extends the standard [Peppol registration workflow](/guides/peppol) with one additional French-specific step to register the party in the Annuaire.
 
 <Note>
-  Peppol registration always enables **both sending and receiving**. Once a party is listed in the Directory, it must be reachable to receive invoices — there is no send-only option.
+  Peppol registration in France always enables **both sending and receiving**. Once a party is listed in the Annuaire, it must be reachable to receive invoices. There is no send-only option.
 </Note>
 
 #### How it works
@@ -76,7 +72,7 @@ The registration process prepares parties to send and receive invoices in France
 <Tabs>
   <Tab title="Template">
     <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
-      Registers a party in the French Directory and on the Peppol network for sending and receiving invoices.
+      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
     </Card>
   </Tab>
   <Tab title="Code">
@@ -99,7 +95,7 @@ The French PA specification lists five accepted invoice formats. UBL and CII eac
   **We recommend sending as UBL.** It's the native Peppol France CIUS format, has the widest receiver support, and is the cleanest to validate. Choose CII or Factur-X only when a specific counterparty requires it.
 </Info>
 
-Regardless of which format goes over the wire, the underlying invoice is always the **same GOBL document with the `fr-ctc-flow2-v1` add-on**. The format is only a wrapping step at the end of the workflow — switching format is a configuration change, not a data-model change. That means:
+The underlying invoice is always the **same GOBL document with the `fr-ctc-flow2-v1` add-on**. The format is only an addition at the end of the workflow — switching format is a configuration change, not a data-model change. That means:
 
 - You author and validate one GOBL invoice.
 - The workflow's generation step produces the chosen format (UBL, CII, or Factur-X).
@@ -116,16 +112,16 @@ Regardless of which format goes over the wire, the underlying invoice is always 
 The sending workflow records the invoice for France PA compliance, transmits it via Peppol, and then forwards it to the PPF.
 
 <Note>
-  This workflow is for **B2B regulated flows**. The `gov-fr.invoice.record` step validates this up-front and will reject the invoice if it doesn't meet the criteria (e.g. if the receiver is not registered in the Directory).
+  This workflow is for **B2B regulated flows**. The `gov-fr.invoice.record` step validates this up-front and will reject the invoice if it doesn't meet the criteria (e.g. if the receiver is not registered in the Annuaire).
 
-  For mixed traffic, run a Directory lookup step and `if-else` statements earlier in the workflow and branch non-regulated invoices into the periodic e-reporting path instead.
+  For mixed traffic, run a Annuaire lookup step and `if-else` statements earlier in the workflow and branch non-regulated invoices into the periodic e-reporting path instead.
 </Note>
 
 ##### How it works
 
 1. **Set state to Processing** — marks the job as in progress.
 2. **Sign the envelope** — locks the GOBL document against further modification.
-3. **Record Invoice** — validates SIRENs, checks both parties against the Directory, and records the invoice.
+3. **Record Invoice** — validates SIRENs, checks both parties against the Annuaire, and records the invoice.
 4. **Generate UBL Document** — produces a Peppol France CIUS–compliant UBL invoice or credit note.
 5. **Send via Peppol** — transmits the invoice to the receiver's PA platform over the Peppol network.
 6. **Set state to Sent** — marks successful Peppol delivery.
@@ -386,8 +382,8 @@ Incoming documents arrive via Peppol in one of the three supported formats (UBL,
    - `CII` → **Import UN/CEFACT CII Document** (`cii.import`) converts the CII XML to GOBL.
    - `PDF` → **Import PDF (Factur-X)** (`cii.pdf.import`) extracts the embedded CII and converts it to GOBL.
 2. **Set Folder** — files the invoice under `Invoices · Expenses`.
-3. **Record Invoice** — the same `gov-fr.invoice.record` provider as the sending workflow, but run with `direction: "incoming"`. It validates SIRENs, checks both parties against the Directory, resolves _your_ registered party as the customer (or supplier if self-billed), and guards against duplicates.
-4. **Set state to Registered** — marks the incoming invoice as successfully ingested.
+3. **Record Invoice** — validates SIRENs, checks both parties against the Annuaire, resolves _your_ registered party as the customer (or supplier if self-billed), and guards against duplicates.
+4. **Set state to Registered** — marks the incoming invoice as successfully received.
 
 ##### Workflow code
 
