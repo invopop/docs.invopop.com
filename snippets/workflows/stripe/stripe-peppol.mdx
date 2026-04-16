@@ -1,0 +1,142 @@
+---
+title: "Stripe sync and send via Peppol"
+description: "Send a Peppol BIS invoice through Peppol network from Stripe"
+appId: "stripe"
+schema: "bill/invoice"
+---
+
+```json Example Stripe to Peppol Workflow
+{
+    "name": "Stripe sync and send via Peppol",
+    "description": "Send a Peppol BIS invoice through Peppol network from Stripe",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ab0b8c40-d4e7-11f0-9e5d-e1650cc9a3d1",
+            "name": "Import data from Stripe",
+            "provider": "stripe.import"
+        },
+        {
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dcb86010-d4e7-11f0-9bd8-c3ca8212c614",
+            "name": "Add Supplier Peppol ID",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "merge_type": "application/jq",
+                "scope": "doc",
+                "jq": ".supplier.inboxes =\n(\n  (.supplier.inboxes // []) as $inboxes\n  |\n  if ($inboxes | any(.key == \"peppol\")) then\n    $inboxes\n  else\n    $inboxes + [\n      {\n        key: \"peppol\",\n        \"scheme\": \"\",\n        \"code\": \"\"\n      }\n    ]\n  end\n)\n"
+            }
+        },
+        {
+            "id": "00e00280-d66f-11f0-8fc4-ff91328c62f5",
+            "name": "Add Purchase Order Number",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": "if (.ordering.code == null) and ((.ordering.purchases // [])[0].code == null) then \n.ordering.purchases[0].code = \"NA\"\nend",
+                "merge_type": "application/jq",
+                "scope": "doc"
+            }
+        },
+        {
+            "id": "b54b7000-d779-11f0-8eaf-79de543fb8d0",
+            "name": "Move negative line items to discounts",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": ". as $doc\n|\n# Select lines that are negative\n($doc.lines | map(select(.item.price|tonumber < 0))) as $neg\n|\n# Select lines that are positive\n($doc.lines | map(select(.item.price|tonumber >= 0))) as $pos\n|\n# Convert negative lines to discount entries\n($neg | map({\n    reason: .item.name,\n    amount: ((.total|tonumber) * -1 | tostring),\n    taxes: .taxes\n})) as $discounts\n|\n$doc\n| .lines = $pos\n| .discounts = $discounts\n",
+                "merge_type": "application/jq",
+                "scope": "doc"
+            }
+        },
+        {
+            "id": "896013d0-d515-11f0-a832-01ce614dcba6",
+            "name": "Include Payment Means when empty",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "addons": [
+                    "eu-en16931-v2017"
+                ],
+                "jq": "if (.payment.instructions // null) == null then\n  .\nelse\n  (\n\n    . as $doc\n    | .payment |= (\n        . // {}\n        |\n        .instructions.key |= (split(\"+\")[0])\n        |\n        .terms //= {\n          due_dates: [\n            {\n              date: (\n                $doc.issue_date\n                | strptime(\"%Y-%m-%d\")\n                | .[1] += 1      # add 1 month\n                | mktime\n                | strftime(\"%Y-%m-%d\")\n              ),\n              percent: \"100%\"\n            }\n          ]\n        }\n    )\n\n    # ↑↑↑ end of modifications ↑↑↑\n  )\nend\n",
+                "merge_type": "application/jq",
+                "scope": "doc"
+            }
+        },
+        {
+            "id": "6c96aac0-d4e8-11f0-9bd8-c3ca8212c614",
+            "name": "Lookup Participant ID",
+            "provider": "peppol.lookup",
+            "summary": "Lookup customer",
+            "config": {
+                "party": "customer"
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Generate UBL Document",
+            "provider": "ubl.generate",
+            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "config": {
+                "doc_type": "bis-invoice-v3",
+                "private": false
+            }
+        },
+        {
+            "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Send Peppol Document",
+            "provider": "peppol.send"
+        },
+        {
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "97ced0a0-d4e8-11f0-985d-3b44fe520da3",
+            "name": "Send Email",
+            "provider": "email.send",
+            "summary": "",
+            "config": {
+                "add_invoice_customer": false,
+                "add_invoice_supplier": false,
+                "add_party": false,
+                "attach": "",
+                "body": "VGhpcyBpbnZvaWNlICh7ey5mdWxsX2NvZGV9fSkgZmFpbGVkIHdpdGggZXJyb3I6IHt7LmZhdWx0c319",
+                "connection_id": "default",
+                "subject": "The invoice failed - check invopop",
+                "zip_attachments": false
+            }
+        },
+        {
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

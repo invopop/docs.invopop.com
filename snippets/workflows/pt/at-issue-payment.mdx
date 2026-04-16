@@ -1,0 +1,78 @@
+---
+title: "AT issue payment"
+description: "Issue a payment in Portugal and generate PDF"
+countryCode: "pt"
+appId: "at-pt"
+schema: "bill/payment"
+---
+
+```json Example AT issue payment workflow
+{
+  "name": "Issue AT payment",
+  "description": "Issue a payment in Portugal and generate PDF",
+  "schema": "bill/payment",
+  "steps": [
+    {
+      "id": "6f884d90-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "76f194b0-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Record for SAF-T reporting (Portugal)",
+      "provider": "at-pt.record"
+    },
+    {
+      "id": "93795a50-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Generate PDF (Original)",
+      "provider": "pdf",
+      "summary": "Portuguese - A4",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "hide_promo": true,
+        "label": "Original",
+        "layout": "A4",
+        "locale": "pt",
+        "logo_height": 40,
+        "watermark": ""
+      }
+    },
+    {
+      "id": "ce7c50c0-9d55-11f0-b3a4-87562f21f508",
+      "name": "Generate PDF (Duplicate)",
+      "provider": "pdf",
+      "summary": "Portuguese - A4",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "label": "Duplicado",
+        "layout": "A4",
+        "locale": "pt",
+        "logo_height": 40,
+        "watermark": "",
+        "duplicate": true
+      }
+    },
+    {
+      "id": "7a708240-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "805bdbf0-f2b9-11ef-acb2-cd64e858247e",
+      "name": "Set State",
+      "provider": "silo.state",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+}
+```
