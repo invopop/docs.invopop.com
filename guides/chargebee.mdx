@@ -200,6 +200,13 @@ Belgium uses the Peppol network for e-invoicing, which became mandatory in Janua
     </Card>
   </Tab>
   <Tab title="Code">
+    <Note>
+      For a full walkthrough including required apps, custom fields, and participant ID setup, see the [Belgium section of the Chargebee guide](/guides/chargebee#belgium).
+    </Note>
+
+    <Note>
+      The **Lookup Participant ID** step automatically looks up your customer's Peppol participant ID from the Peppol network at the time the invoice is processed. If you have already set the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) on your customers in Chargebee, Invopop will use that value directly and you can remove this step.
+    </Note>
     <PeppolExample />
   </Tab>
 </Tabs>
@@ -245,6 +252,17 @@ If you do want to use automatic lookup for some customers, you can add the looku
     </Card>
   </Tab>
   <Tab title="Code">
+    <Note>
+  For a full walkthrough including required apps, custom fields, and participant ID setup, see the [Denmark section of the Chargebee guide](/guides/chargebee#denmark).
+    </Note>
+
+    <Note>
+      Unlike other Peppol countries, this template does not include a **Lookup Participant ID** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
+    </Note>
+
+    <Note>
+      The **Fixing bank-transfer details** step converts the generic `credit-transfer` payment key to `credit-transfer+sepa`. Denmark requires the more specific SEPA key for Peppol invoices, so this step ensures the payment instructions are valid before the document is sent.
+    </Note>
     <DKPeppolExample />
   </Tab>
 </Tabs>
@@ -335,7 +353,17 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
     <Tip>
       Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate the inbox and ordering code fields across all your public sector customers before going live.
     </Tip>
+    <Note>
+      For a full walkthrough including required apps, bank details, Leitweg-ID setup, and custom fields, see the [Germany section of the Chargebee guide](/guides/chargebee#germany).
+    </Note>
 
+    <Note>
+      The **Adding bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added on a per-customer basis. If you don't need to include payment instructions in your invoices, you can remove this step entirely.
+    </Note>
+
+    <Note>
+      The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that X-Rechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
+    </Note>
     <XRechnungExample />
   </Tab>
 </Tabs>
