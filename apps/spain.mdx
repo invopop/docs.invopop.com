@@ -1,7 +1,7 @@
 ---
 title: "Spain"
 description: "Manage all Spanish tax-agency integrations."
-keywords: ['sii', 'lookup']
+keywords: ['sii', 'lookup', 'ticketbai']
 mode: wide
 ---
 
@@ -10,40 +10,52 @@ import ReceivedWorkflow from '/snippets/workflows/templates/es/sii-record-receiv
 import RegisterWorkflow from '/snippets/workflows/templates/es/sii-register.mdx';
 import UnregisterWorkflow from '/snippets/workflows/templates/es/sii-unregister.mdx';
 import FacturaeWorkflow from '/snippets/workflows/templates/es/facturae-invoice.mdx';
+import TicketBAIInvoiceWorkflow from '/snippets/workflows/templates/es/ticketbai-invoice.mdx';
+import TicketBAICancelWorkflow from '/snippets/workflows/templates/es/ticketbai-cancel.mdx';
+import TicketBAISupplierRegistration from '/snippets/workflows/templates/es/ticketbai-supplier-registration.mdx';
+import TicketBAIUnregister from '/snippets/workflows/templates/es/ticketbai-unregister.mdx';
 import InvoiceAccordion from '/snippets/invoices/es/sii-accordion.mdx';
+import TicketBAIInvoiceAccordion from '/snippets/invoices/es/ticketbai-accordion.mdx';
 import CreditNote from '/snippets/invoices/es/sii-credit-note.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/sii-corrective.mdx';
 import FacturaeAccordion from '/snippets/invoices/es/facturae-accordion.mdx';
 import Supplier from '/snippets/suppliers/es/company.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
-<Note>We're progressively moving towards a country-based approach to our apps, which is why you will find these steps under the "Spain" app. You can expect our current TicketBAI and VERI\*FACTU functionality to be grouped under this app in the future. We will ensure no changes will be required for your existing workflows.</Note>
+<Note>We're progressively moving towards a country-based approach to our apps, which is why you will find these steps under the "Spain" app. You can expect our current VERI\*FACTU functionality to be grouped under this app in the future. We will ensure no changes will be required for your existing workflows.</Note>
 
 <Tabs>
 	<Tab title="Description">
-		<Columns cols="2">
+		<Columns cols="3">
 			<div>
-			<Card title="TicketBAI Invoicing Guide" icon="https://assets.invopop.com/apps/ticketbai/icon.svg"
-			  href="/guides/ticketbai-sii" horizontal>
-			   View guide ›
-			</Card>
-			<Card title="TicketBAI Supplier Guide" icon="https://assets.invopop.com/apps/ticketbai/icon.svg"
-			  href="/guides/ticketbai-sii" horizontal>
-			   View guide ›
-			</Card>
-			<Card title="SII Invoicing Guide" icon="https://assets.invopop.com/apps/sii/icon.svg"
-			  href="/guides/es-sii" horizontal>
-			   View guide ›
-			</Card>
-			<Card title="SII Supplier Guide" icon="https://assets.invopop.com/apps/sii/icon.svg"
-			  href="/guides/es-sii-supplier" horizontal>
-			   View guide ›
-			</Card>
-			<Card title="Facturae Guide" icon="https://assets.invopop.com/apps/facturae/icon.svg"
+
+					<Card horizontal title="TicketBAI Invoicing" icon="https://assets.invopop.com/apps/ticketbai/icon.svg"
+					  href="/guides/es-ticketbai">
+					   View guide ›
+					</Card>
+				<Card title="SII Invoicing" icon="https://assets.invopop.com/apps/sii/icon.svg"
+				  href="/guides/es-sii" horizontal>
+				   View guide ›
+				</Card>
+
+
+			<Card title="Facturae" icon="https://assets.invopop.com/apps/facturae/icon.svg"
 			  href="/guides/es-facturae" horizontal>
 			   View guide ›
 			</Card>
-			<Card title="Spanish Tax ID Lookup Guide" icon="https://assets.invopop.com/apps/gov-es/icon.svg"
+
+			</div>
+			<div>
+					<Card horizontal title="TicketBAI Suppliers" icon="https://assets.invopop.com/apps/ticketbai/icon.svg"
+					  href="/guides/es-ticketbai-supplier">
+					   View guide ›
+					</Card>
+				<Card title="SII Suppliers" icon="https://assets.invopop.com/apps/sii/icon.svg"
+				  href="/guides/es-sii-supplier" horizontal>
+				   View guide ›
+				</Card>
+
+			<Card title="Tax ID Lookup" icon="https://assets.invopop.com/apps/gov-es/icon.svg"
 			  href="/guides/es-lookup" horizontal>
 			   View guide ›
 			</Card>
@@ -57,38 +69,21 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 				| Country   | [Spain](/compliance/spain)             |
 		</Columns>
 
-	Invopop's **Spain app** provides comprehensive integration with Spanish tax agencies, centralizing all compliance requirements for electronic invoicing and tax reporting in Spain. This unified app includes tax ID verification through the AEAT census, invoice reporting via SII (Suministro Inmediato de Información), and will progressively incorporate TicketBAI, VERI*FACTU, and other Spanish e-invoicing systems to provide a complete solution for Spanish tax compliance.
+	Invopop's **Spain app** provides comprehensive integration with Spanish tax agencies, centralizing all compliance requirements for electronic invoicing and tax reporting in Spain. This unified app includes tax ID verification through the AEAT census, TicketBAI invoicing for the Basque Country, invoice reporting via SII (Suministro Inmediato de Información), and will progressively incorporate VERI\*FACTU and other Spanish e-invoicing systems to provide a complete solution for Spanish tax compliance.
 
-	**AEAT Lookup key features**
+	| Feature | TicketBAI | SII |
+	|---|---|---|
+	| **Scope** | Basque Country (Álava, Gipuzkoa, Bizkaia) | Rest of Spain (AEAT) |
+	| **Workflow automation** | Issue invoices and onboard suppliers | Report invoices and onboard suppliers |
+	| **Compliant documents** | XML generation and PDF with QR codes | Invoice reporting to AEAT via SII API ([with limitations](#limitations)) |
+	| **Supplier registration** | Registration wizard and agreement signing | Registration wizard and agreement signing |
+	| **White-label** | Issue on behalf of clients or directly | Report on behalf of clients or directly |
+	| **Tax ID verification** | Via AEAT Lookup | Via AEAT Lookup |
 
-	1. **Tax ID verification:** Verify that NIF/CIF tax IDs exist in the AEAT census for both companies and individuals.
-	2. **Name matching:** For individuals, confirm that the provided name matches the tax ID on record with AEAT.
-	3. **Name normalization:** Automatically update party names to the official AEAT format, ensuring consistency across your system.
-	4. **Workflow integration:** Add verification steps to both invoice and party workflows to validate data at the right time.
-	5. **Flexible configuration:** Configure which parties to verify in invoice workflows (supplier, customer, or both).
-
-	Make sure to check out our [Spanish Tax ID Lookup guide](/guides/es-lookup) for instructions on how to set up and use these verification steps in your workflows.
-
-    Invopop's ** app** is designed to support full compliance with the TicketBAI foral tax agencies e-invoicing regulation. It provides endpoints and workflows for invoice generation, enabling businesses and intermediaries to issue e-invoices in accordance with Spanish law and also the local tax agencies.
-
-	**TicketBAI key features**
-
-	1. **Workflow Automation:** this app makes several workflow actions available to issue invoices and onboard suppliers.
-	2. **Legally compliant PDF invoices:** TicketBAI requires QR codes to consult the status of a document with the local tax agency. This app will automatically generate compliant PDF invoices.
-	3. **TicketBAI XML generation:** this app will generate a legally compliant XML which is included as an attachment in the Silo Entry and sent to the tax agency when issuing an invoice.
-	4. **White-Label:** the process allows issuance on behalf of clients (white-label) or directly as an organization, according to user needs.
-
-
-	Make sure to check out our [TicketBAI implementation guide](/guides/countries/es-ticketbai) for instructions on how to issue invoices.
-
-	**SII key features**
-
-	1. **Workflow Automation:** This app makes several workflow actions available to report invoices and onboard suppliers.
-	2. **SII Reporting:** Invoices are reported directly to the AEAT through the SII system API, ensuring compliance with Spanish tax reporting requirements for issued and received invoice registries (with [limitations](#limitations)).
-	3. **Supplier Registration & Verification:** This app will generate a registration link where suppliers will upload their identity documents and sign an agreement to report invoices under their name (also available through the API).
-	4. **White-Label:** The process allows reporting on behalf of clients (white-label) or directly as an organization, according to user needs.
-
-	Make sure to check out our [SII Onboarding guide](/guides/es-sii-supplier) and [SII Invoicing guide](/guides/es-sii) for instructions on how to set up and use these actions in your workflows.
+	Check out the guides below to get started:
+	- [TicketBAI invoicing guide](/guides/es-ticketbai) · [TicketBAI supplier onboarding](/guides/es-ticketbai-supplier)
+	- [SII invoicing guide](/guides/es-sii) · [SII supplier onboarding](/guides/es-sii-supplier)
+	- [Spanish Tax ID Lookup guide](/guides/es-lookup) · [Facturae guide](/guides/es-facturae)
 	</Tab>
 
 	<Tab title="Limitations">
@@ -154,6 +149,31 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 			Convert GOBL invoices into Spanish Facturae 3.2.2 XML files.
 		</Card>
 
+		TicketBAI actions
+		<Card title="Send TicketBAI (Spain)" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Convert GOBL Invoices into TicketBAI XML format and send to the tax agency in Spain.
+		</Card>
+		<Card title="Generate TicketBAI (Spain)" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Generate a TicketBAI XML document from a GOBL invoice.
+		</Card>
+		<Card title="Cancel TicketBAI Invoice" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+		  Send a cancel request for a previously sent TicketBAI invoice.
+		</Card>
+		<Card title="Register with TicketBAI" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+			Register TicketBAI parties before issuing invoices on their behalf.
+		</Card>
+		<Card title="Wait for Upload TicketBAI" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+			Block the job while waiting for the end-user to complete their registration steps.
+		</Card>
+		<Card title="Wait for Approval TicketBAI" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+			Wait for approval that the uploaded documentation is correct.
+		</Card>
+		<Card title="Unregister with TicketBAI" icon="https://assets.invopop.com/apps/ticketbai/icon.svg" horizontal>
+			Disables a previously registered party from issuing invoices.
+		</Card>
+
 		SII actions
 		<Card title="Record Issued Invoice with SII" icon="https://assets.invopop.com/apps/sii/icon.svg" horizontal>
 			<div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 2</div>
@@ -183,6 +203,26 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 	</Tab>
 
 	<Tab title="Workflows">
+
+	TicketBAI invoice workflows
+	<AccordionGroup>
+		<Accordion title="TicketBAI issue invoice">
+			<TicketBAIInvoiceWorkflow />
+		</Accordion>
+		<Accordion title="TicketBAI cancel invoice">
+			<TicketBAICancelWorkflow />
+		</Accordion>
+	</AccordionGroup>
+
+	TicketBAI party workflows
+	<AccordionGroup>
+		<Accordion title="TicketBAI register party">
+			<TicketBAISupplierRegistration />
+		</Accordion>
+		<Accordion title="TicketBAI unregister party">
+			<TicketBAIUnregister />
+		</Accordion>
+	</AccordionGroup>
 
 	Facturae workflows
 	<AccordionGroup>
@@ -220,6 +260,10 @@ import SpainResources from '/snippets/tables/spain-resources.mdx';
 				<Supplier />
 			</Accordion>
 		</AccordionGroup>
+
+		TicketBAI example documents
+
+		<TicketBAIInvoiceAccordion />
 
 		Facturae example documents
 

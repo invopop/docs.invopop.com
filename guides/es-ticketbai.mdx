@@ -5,6 +5,7 @@ description: Issue invoices in the Basque Country with TicketBAI.
 ---
 
 import WorkflowExample from '/snippets/workflows/templates/es/ticketbai-invoice.mdx'
+import CancelInvoice from '/snippets/workflows/templates/es/ticketbai-cancel.mdx'
 import InvoiceAccordion from '/snippets/invoices/es/ticketbai-accordion.mdx'
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 
@@ -22,9 +23,9 @@ The implementation timeline for TicketBAI varies across the three provinces:
 
 Invopop will automatically convert [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) into the TicketBAI format, including the required "chaining", and will send them to the correct tax authority.
 
-### Sandbox vs Live
 
-| | Sandbox | Live |
+
+| - | Sandbox | Live |
 |---|---|---|
 | **Supplier** | Can use test name `HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr` and test NIF `A99805194` | Real company in Basque Country required |
 | **Supplier registration** | Required (automated acceptance/rejection) | Required (signed agreement with invoicing provider, manual process outside Invopop) |
@@ -44,9 +45,9 @@ In order to register a supplier and issue invoices, you will need:
 
 <Info>
   TicketBAI requires all suppliers to sign an agreement with their invoicing
-  provider explicitly granting permission to represent them. This is currently a
-  manual process performed outside of Invopop. For more details, contact
-  [support](email:support@invopop.com).
+  provider explicitly granting permission to represent them. See the
+  [TicketBAI Supplier Onboarding Guide](/guides/es-ticketbai-supplier) for
+  detailed instructions on how to register suppliers.
 </Info>
 
 ## Setup
@@ -112,6 +113,49 @@ No further configuration is required.
 
 </Steps>
 
+## Cancel an Invoice
+
+TicketBAI also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
+
+Different from a credit note or a corrective, canceling an invoice doesn't produce a second document, which means you don't have a paper to hand to your customer to show the cancellation. That's why, if the invoice has been handed to the customer, we recommend issuing a credit note instead.
+
+<Steps>
+  <Step title="Add a cancel invoice workflow (only once)">
+    To cancel an invoice, you need a workflow with the _Cancel invoice_ step. You can start with the template below.
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-cancel" cta="Add to my workspace">
+          This workflow will cancel a TicketBAI document.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <CancelInvoice />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "VERI\*FACTU Cancel Invoice".
+
+        We recommend adding the following steps:
+
+        1. **Cancel invoice** - Cancels the TicketBAI document.
+        2. **Set State** - select _Void_ in the step configuration. This will set the state of the invoice to `Void`.
+        3. In the Error Handling area, **Set State** - select `Error` in the step configuration.
+
+        Add any additional steps you may need, and save the new workflow.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Send to cancellation workflow">
+    To cancel an invoice, simply send it to the VERI\*FACTU cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
+
+    The invoice's status will change to `Void` when the workflow completes successfully.
+  </Step>
+</Steps>
+
 ## Running
 
 Invopop uses the [GOBL](https://docs.gobl.org) framework for sending and storing invoices to be sent to TicketBAI. In this section we provide example GOBL documents that you can copy and customize.
@@ -149,7 +193,7 @@ Invopop will try to assign these automatically if not explicitly provided.
   arrow="true"
   horizontal
 >
-  Find answers to frequently asked questions about invoicing in Spain →
+  Frequently asked questions about TicketBAI invoicing in Spain →
 </Card>
 
 <Card title="Participate in our community"
@@ -158,5 +202,5 @@ Invopop will try to assign these automatically if not explicitly provided.
   arrow="true"
   horizontal
 >
-  Ask and answer questions about invoicing in Spain →
+  Ask and answer questions about TicketBAI invoicing in Spain →
 </Card>
