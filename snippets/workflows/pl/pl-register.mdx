@@ -1,0 +1,61 @@
+---
+title: "Register party in KSeF"
+description: "Set up a supplier in KSeF for e-invoicing"
+countryCode: "pl"
+appId: "gov-pl"
+schema: "org/party"
+---
+
+```json Example Register supplier for KSeF workflow
+{
+    "name": "Register for KSeF",
+    "description": "Register a party in KSeF",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "f6ca2240-fb6b-11f0-b2f4-37a8eb8f9eb9",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "f7315970-fb74-11f0-8137-27e02839a7ca",
+            "name": "Register for KSeF",
+            "provider": "gov-pl.register"
+        },
+        {
+            "id": "3166cb10-fdba-11f0-a562-870ebfef62f3",
+            "name": "Wait for KSeF Certificate Upload",
+            "provider": "gov-pl.wait.upload"
+        },
+        {
+            "id": "a1b2c3d0-fb75-11f0-b567-89abcdef0123",
+            "name": "Subscribe to periodic KSeF sync",
+            "provider": "cron.subscribe"
+        },
+        {
+            "id": "f0b45d30-fb6b-11f0-b2f4-37a8eb8f9eb9",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "ebf99440-fb6b-11f0-b2f4-37a8eb8f9eb9",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
