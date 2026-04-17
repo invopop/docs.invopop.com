@@ -1,0 +1,61 @@
+---
+title: "VERI*FACTU supplier registration"
+description: "Enables suppliers to register for VERI*FACTU invoice generation"
+countryCode: "es"
+appId: "verifactu"
+schema: "org/party"
+---
+
+```json Example VERI*FACTU supplier registration
+{
+    "name": "VERI*FACTU supplier registration",
+    "description": "Enables suppliers to register for VERI*FACTU invoice generation",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Register with VERI*FACTU",
+            "provider": "verifactu.register"
+        },
+        {
+            "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for Upload VERI*FACTU",
+            "provider": "verifactu.wait.upload"
+        },
+        {
+            "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for Approval VERI*FACTU",
+            "provider": "verifactu.wait.approval"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "76c13260-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

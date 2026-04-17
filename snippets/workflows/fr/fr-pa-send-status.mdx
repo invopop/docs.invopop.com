@@ -1,0 +1,38 @@
+---
+title: "France PA send status workflow"
+description: "Generate and forward a lifecycle status update (CDAR) via Peppol and PPF"
+countryCode: "fr"
+appId: "gov-fr"
+schema: "bill/invoice"
+---
+```json France PA send status workflow
+{
+    "name": "Send state",
+    "description": "Generate and forward a lifecycle status update (CDAR) via Peppol and PPF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "e600d990-16f5-11f1-86ba-d13d91b4f398",
+            "name": "Generate Status (France)",
+            "provider": "gov-fr.status.generate",
+            "summary": "Generate 207 status (MONTANTTOTAL_ERR)",
+            "config": {
+                "reason_code": "MONTANTTOTAL_ERR",
+                "reason_text": "",
+                "status_code": "207"
+            }
+        },
+        {
+            "id": "eb002590-16f5-11f1-86ba-d13d91b4f398",
+            "name": "Send Peppol Document",
+            "provider": "peppol.send"
+        },
+        {
+            "id": "ef5500c0-16f5-11f1-86ba-d13d91b4f398",
+            "name": "Forward Status to PPF",
+            "provider": "gov-fr.status.forward"
+        }
+    ],
+    "rescue": []
+}
+```
