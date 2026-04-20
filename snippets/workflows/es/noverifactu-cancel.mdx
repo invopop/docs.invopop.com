@@ -1,0 +1,56 @@
+---
+title: "NO VERI*FACTU cancel invoice"
+description: "Generate, sign, and store a NO VERI*FACTU cancellation record"
+countryCode: "es"
+appId: "gov-es"
+schema: "bill/invoice"
+---
+
+```json Example NO VERI*FACTU cancel workflow with states expandable
+{
+    "name": "NO VERI*FACTU cancel invoice",
+    "description": "Generate, sign, and store a NO VERI*FACTU cancellation record",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000005",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "9f500280-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Generate NO VERI*FACTU Cancellation Record (Spain)",
+            "provider": "gov-es.noverifactu.generate.cancel"
+        },
+        {
+            "id": "a6eeb180-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Record for NO VERI*FACTU (Spain)",
+            "provider": "gov-es.noverifactu.record"
+        },
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000003",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000004",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

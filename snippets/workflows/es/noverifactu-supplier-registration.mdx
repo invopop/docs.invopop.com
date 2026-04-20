@@ -1,0 +1,94 @@
+---
+title: "NO VERI*FACTU supplier registration"
+description: "Register a supplier for NO VERI*FACTU, generate the start-of-mode event, and subscribe to periodic summary events"
+countryCode: "es"
+appId: "gov-es"
+schema: "org/party"
+---
+
+```json Example NO VERI*FACTU supplier registration expandable
+{
+    "name": "NO VERI*FACTU supplier registration",
+    "description": "Register a supplier for NO VERI*FACTU, generate the start-of-mode event, and subscribe to periodic summary events",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "c21b4130-3a65-11f1-a475-db4c42dd4e99",
+            "name": "Set Silo Entry State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            },
+            "next": []
+        },
+        {
+            "id": "78e845e0-3ca3-11f1-90b7-0d81b4010093",
+            "name": "Register for NO VERI*FACTU (Spain)",
+            "provider": "gov-es.noverifactu.register",
+            "next": []
+        },
+        {
+            "id": "8857fe80-3ca3-11f1-90b7-0d81b4010093",
+            "name": "Build NO VERI*FACTU Status (Spain)",
+            "provider": "gov-es.noverifactu.build.status",
+            "next": [],
+            "summary": "Build status: 01 - Start of NO VERI*FACTU mode",
+            "config": {
+                "event_type": "01"
+            }
+        },
+        {
+            "id": "d16d34a0-3a91-11f1-a472-21be9722e465",
+            "name": "Create a Job",
+            "provider": "transform.job.create",
+            "summary": "Send to NO VERI*FACTU process event (bill/status)",
+            "config": {
+                "silo_entry_meta_key": "",
+                "workflow_id": ""
+            },
+            "next": []
+        },
+        {
+            "id": "03cb3000-3a92-11f1-a472-21be9722e465",
+            "name": "Subscribe to Periodic Execution",
+            "provider": "cron.subscribe",
+            "summary": "Every 6 hours → no workflow",
+            "config": {
+                "workflow_id": "",
+                "interval": "hourly",
+                "factor": 6
+            },
+            "next": []
+        },
+        {
+            "id": "c3d4e5f0-0003-11f1-a000-000000000002",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            },
+            "next": []
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c3d4e5f0-0003-11f1-a000-000000000005",
+            "name": "Unregister supplier",
+            "provider": "gov-es.noverifactu.unregister",
+            "next": []
+        },
+        {
+            "id": "c3d4e5f0-0003-11f1-a000-000000000006",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `rejected`{.state .rejected}",
+            "config": {
+                "state": "rejected"
+            },
+            "next": []
+        }
+    ]
+}
+```

@@ -1,0 +1,75 @@
+---
+title: "NO VERI*FACTU unregister supplier"
+description: "Unsubscribe from summary events, unregister a NO VERI*FACTU supplier, and generate the end-of-mode event"
+countryCode: "es"
+appId: "gov-es"
+schema: "org/party"
+---
+
+```json Example NO VERI*FACTU unregister supplier expandable
+{
+    "name": "NO VERI*FACTU unregister supplier",
+    "description": "Unsubscribe from summary events, unregister a NO VERI*FACTU supplier, and generate the end-of-mode event",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "d4e5f6a0-0004-11f1-a000-000000000007",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "3e4bd770-3a92-11f1-a472-21be9722e465",
+            "name": "Unsubscribe from Periodic Execution",
+            "provider": "cron.unsubscribe"
+        },
+        {
+            "id": "f46dfa20-3ca3-11f1-90b7-0d81b4010093",
+            "name": "Build NO VERI*FACTU Status (Spain)",
+            "provider": "gov-es.noverifactu.build.status",
+            "summary": "Build status: 02 - End of NO VERI*FACTU mode",
+            "config": {
+                "event_type": "02"
+            }
+        },
+        {
+            "id": "343c2870-3a92-11f1-a472-21be9722e465",
+            "name": "Create a Job",
+            "provider": "transform.job.create",
+            "summary": "Send to NO VERI*FACTU process event (bill/status)",
+            "config": {
+                "silo_entry_meta_key": "",
+                "workflow_id": ""
+            }
+        },
+        {
+            "id": "d4e5f6a0-0004-11f1-a000-000000000001",
+            "name": "Unregister supplier",
+            "provider": "gov-es.noverifactu.unregister"
+        },
+        {
+            "id": "d4e5f6a0-0004-11f1-a000-000000000004",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "d4e5f6a0-0004-11f1-a000-000000000006",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
