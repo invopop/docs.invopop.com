@@ -1,0 +1,47 @@
+---
+title: "NO VERI*FACTU summary event (cron)"
+description: "Build and process a NO VERI*FACTU summary event every 6 hours"
+countryCode: "es"
+appId: "gov-es"
+schema: "org/party"
+---
+
+```json Example NO VERI*FACTU summary event cron workflow expandable
+{
+    "name": "NO VERI*FACTU summary event",
+    "description": "Build and process a NO VERI*FACTU summary event every 6 hours",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "f6a7b8c0-0006-11f1-a000-000000000001",
+            "name": "Build NO VERI*FACTU Status (Spain)",
+            "provider": "gov-es.noverifactu.build.status",
+            "summary": "Build status: 10 - Summary event",
+            "config": {
+                "event_type": "10"
+            }
+        },
+        {
+            "id": "4f527c60-3a95-11f1-a472-21be9722e465",
+            "name": "Create a Job",
+            "provider": "transform.job.create",
+            "summary": "Send to NO VERI*FACTU process event (bill/status)",
+            "config": {
+                "silo_entry_meta_key": "",
+                "workflow_id": ""
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "f6a7b8c0-0006-11f1-a000-000000000003",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

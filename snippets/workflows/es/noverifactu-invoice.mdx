@@ -1,0 +1,92 @@
+---
+title: "NO VERI*FACTU issue invoice"
+description: "Generate, sign, and store a NO VERI*FACTU invoice record locally, then generate PDF"
+countryCode: "es"
+appId: "gov-es"
+schema: "bill/invoice"
+---
+
+```json Example NO VERI*FACTU invoice workflow with states expandable
+{
+    "name": "NO VERI*FACTU issue invoice",
+    "description": "Generate, sign, and store a NO VERI*FACTU invoice record locally, then generate PDF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000001",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            },
+            "next": []
+        },
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000002",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NoVerifactu · 000001",
+            "config": {
+                "name": "NoVerifactu",
+                "padding": 6,
+                "start": 1
+            },
+            "next": []
+        },
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000003",
+            "name": "Sign Envelope",
+            "provider": "silo.close",
+            "next": []
+        },
+        {
+            "id": "5bb35ae0-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Generate NO VERI*FACTU Invoice Record (Spain)",
+            "provider": "gov-es.noverifactu.generate.invoice",
+            "next": []
+        },
+        {
+            "id": "64c2d7f0-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Record for NO VERI*FACTU (Spain)",
+            "provider": "gov-es.noverifactu.record",
+            "next": []
+        },
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000006",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Spanish - A4",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "layout": "A4",
+                "locale": "es",
+                "logo_height": 60
+            },
+            "next": []
+        },
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000007",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            },
+            "next": []
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000008",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            },
+            "next": []
+        }
+    ]
+}
+```

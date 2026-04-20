@@ -1,0 +1,83 @@
+---
+title: "NO VERI*FACTU process event"
+description: "Generate, sign, and store a NO VERI*FACTU event record"
+countryCode: "es"
+appId: "gov-es"
+schema: "bill/status"
+---
+
+```json Example NO VERI*FACTU event processing workflow expandable
+{
+    "name": "NO VERI*FACTU process event",
+    "description": "Generate, sign, and store a NO VERI*FACTU event record",
+    "schema": "bill/status",
+    "steps": [
+        {
+            "id": "e5f6a7b0-0005-11f1-a000-000000000004",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "bbf19740-3a6b-11f1-9a44-6748aa5d4a91",
+            "name": "Modify Silo Entry",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": ".series //= \"NVF\"",
+                "merge_type": "application/jq",
+                "scope": "doc"
+            }
+        },
+        {
+            "id": "a1b2c3d0-0001-11f1-a000-000000000002",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NoVerifactu · 000001",
+            "config": {
+                "name": "NoVerifactu",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "e5f6a7b0-0005-11f1-a000-000000000006",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "f8df5470-3c97-11f1-8c73-6dd226144d30",
+            "name": "Generate NO VERI*FACTU Event Record (Spain)",
+            "provider": "gov-es.noverifactu.generate.event"
+        },
+        {
+            "id": "050b05a0-3c98-11f1-8c73-6dd226144d30",
+            "name": "Record for NO VERI*FACTU (Spain)",
+            "provider": "gov-es.noverifactu.record"
+        },
+        {
+            "id": "e5f6a7b0-0005-11f1-a000-000000000005",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e5f6a7b0-0005-11f1-a000-000000000003",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
