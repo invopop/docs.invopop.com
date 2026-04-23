@@ -1,0 +1,239 @@
+---
+title: "NO VERI*FACTU Onboarding Guide"
+sidebarTitle: "NO VERI*FACTU Onboarding"
+description: "Register and manage suppliers in Spain with NO VERI*FACTU."
+---
+
+import SupplierRegistration from '/snippets/workflows/es/noverifactu-supplier-registration.mdx';
+import UnregisterExample from '/snippets/workflows/es/noverifactu-unregister.mdx';
+import EventWorkflow from '/snippets/workflows/es/noverifactu-event.mdx';
+import SummaryEventWorkflow from '/snippets/workflows/es/noverifactu-summary-event.mdx';
+import SupplierAccordion from '/snippets/suppliers/es/accordion.mdx';
+import SpainResources from '/snippets/tables/spain-resources.mdx';
+
+
+## Introduction
+
+NO VERI\*FACTU is one of the two compliance modalities defined by Spain's Real Decreto 1007/2023 for Computerized Billing Systems (SIF). Unlike VERI\*FACTU, where invoicing records are sent to the AEAT in real time, in NO VERI\*FACTU mode records are **digitally signed and stored locally** — they are only submitted to the AEAT upon explicit requirement.
+
+This guide walks you through the process of registering suppliers for NO VERI\*FACTU, including:
+
+1. Setting up the necessary workflows.
+2. Registering suppliers via the API.
+3. How automatic event generation works.
+
+<Note>
+NO VERI\*FACTU supplier registration does not require an agreement signing process or identity verification. Registration is immediate upon execution.
+</Note>
+
+## Set-up
+
+<Steps>
+  <Step title="Connect the Spain and Cron apps">
+    1. Go to **Configuration** → **Apps** in the [Console](https://console.invopop.com).
+    2. Find **Spain** in the app list and click **Connect** to activate it.
+    3. Find **Cron** in the app list and click **Connect** to activate it.
+
+    No additional configuration is needed. The [Cron app](/apps/cron) handles the periodic generation of summary events every 6 hours, as required by the regulation.
+  </Step>
+
+  <Step title="Create the event processing workflow">
+    Before setting up the other workflows, you need a workflow to process event records. This workflow is used by the registration, unregistration, and summary event workflows to generate and store signed event XML records.
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="NO VERI*FACTU event processing workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-event" cta="Add to my workspace">
+          This workflow generates and stores signed event records.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Status workflow](https://console.invopop.com/redirect/workflows/new?template=empty-status) code view.
+
+        <EventWorkflow />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose a status document workflow as the base. Then name the workflow with a descriptive label such as "NO VERI\*FACTU Process Event".
+
+        The new workflow will need the following steps:
+
+        1. **Set State** — select "Processing".
+        2. **Sign Envelope** — signs the GOBL envelope.
+        3. **Generate Event Record** — generates and digitally signs the event XML from the `bill.Status` document.
+        4. **Store Record** — persists the signed event record in the database.
+        5. **Set State** — select "Registered".
+
+        In the Error Handling area, add the **Set State** action and select `Error`.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Create the summary event workflow">
+    The regulation requires a summary event (event type `10`) to be generated every 6 hours the system has been operational. Create this workflow so that suppliers can be subscribed to it during registration.
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="NO VERI*FACTU summary event workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-summary-event" cta="Add to my workspace">
+          This workflow generates and processes a summary event.
+        </Card>
+
+        After adding the template, open the **Process Event** step and set the **Workflow** field to the event processing workflow created in the previous step.
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <SummaryEventWorkflow />
+
+        After pasting the code, switch to the form view, open the **Process Event** step and set the **Workflow** field to the event processing workflow created in the previous step.
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
+
+        1. **Build Summary Event** — configured with event type `10` ("Summary event"). Aggregates invoicing and event record counts, tax totals, and references for the period since the last summary.
+        2. **Process Event** — creates a job to process the summary event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow created in the previous step.
+
+        In the Error Handling section, add the **Set State** action and select `Error`.
+      </Tab>
+    </Tabs>
+
+    <Note>You won't need to run this workflow manually. The registration workflow automatically will subscribe each supplier to periodic execution of this workflow using the [Cron app](/apps/cron). When a supplier is unregistered, the unregistration workflow will unsubscribe them.</Note>
+  </Step>
+
+  <Step title="Create a supplier registration workflow">
+    Create a new workflow for registering suppliers. This workflow registers the supplier, generates the mandatory "Start of NO VERI\*FACTU mode" event (event type `01`), and subscribes the supplier to periodic summary event generation every 6 hours.
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="NO VERI*FACTU supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-supplier-registration" cta="Add to my workspace">
+          This workflow registers a supplier, generates the start-of-mode event, and subscribes to periodic summary events.
+        </Card>
+
+        After adding the template, open the **Process Event** step and set the **Workflow** field to the event processing workflow. Then open the **Subscribe to summary event cron** step and set the **Workflow** field to the summary event workflow.
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <SupplierRegistration />
+
+        After pasting the code, switch to the form view. Open the **Process Event** step and set the **Workflow** field to the event processing workflow. Then open the **Subscribe to summary event cron** step and set the **Workflow** field to the summary event workflow.
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "NO VERI\*FACTU Supplier Registration".
+
+        The new workflow will need to perform the following steps:
+
+        1. **Set State** — select "Processing".
+        2. **Register supplier** — registers the supplier for NO VERI\*FACTU mode. Registration is immediate (auto-approved).
+        3. **Build Start Event** — configured with event type `01` ("Start of NO VERI\*FACTU mode"). Builds a `bill.Status` document and uploads it as a silo entry.
+        4. **Process Event** — creates a job to process the event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow.
+        5. **Subscribe to summary event cron** — uses the [Cron app](/apps/cron) to subscribe the supplier to periodic execution every 6 hours. Set the **Workflow** field to the **NO VERI\*FACTU summary event** workflow.
+        6. **Set State** — select "Registered".
+
+        In the Error Handling area, add the following steps:
+
+        1. **Unregister supplier** — clears the registration.
+        2. **Set State** — select `Rejected`.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Create a supplier unregistration workflow">
+    Create a workflow for unregistering suppliers. This workflow unsubscribes the supplier from the periodic summary event cron, removes the NO VERI\*FACTU registration, and generates the mandatory "End of NO VERI\*FACTU mode" event (event type `02`).
+
+    <Tabs>
+      <Tab title="Template">
+        <Card title="NO VERI*FACTU unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-unregister" cta="Add to my workspace">
+          This workflow unsubscribes from summary events, unregisters a supplier, and generates the end-of-mode event.
+        </Card>
+
+        After adding the template, open the **Process Event** step and set the **Workflow** field to the event processing workflow.
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterExample />
+
+        After pasting the code, switch to the form view, open the **Process Event** step and set the **Workflow** field to the event processing workflow.
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
+
+        1. **Set State** — select "Processing".
+        2. **Unsubscribe from summary event cron** — uses the [Cron app](/apps/cron) to remove the periodic summary event subscription for this supplier.
+        3. **Unregister supplier** — clears the NO VERI\*FACTU registration state.
+        4. **Build End Event** — configured with event type `02` ("End of NO VERI\*FACTU mode"). Builds a `bill.Status` document and uploads it as a silo entry.
+        5. **Process Event** — creates a job to process the event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow.
+        6. **Set State** — select `Void`.
+
+        In the Error Handling section, add the **Set State** action and select `Error`.
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Register a Supplier
+
+Whether you issue invoices on behalf of third parties ([white label](/guides/white-label)) or under your own name, the registration process is the same.
+
+<Steps>
+  <Step title="Upload a supplier">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier [party](https://docs.gobl.org/draft-0/org/party). Required fields are company `name` and `tax_id`.
+
+    <SupplierAccordion />
+
+    Set the `folder` to `suppliers` to have the party appear in this section. It should appear with an `Empty` status unless set otherwise.
+  </Step>
+
+  <Step title="Send the supplier to the registration workflow">
+
+    * **Via API** — Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint using the `ID`s of the **silo entry** and **supplier registration workflow**.
+    * **Via Console** — From the Silo Entry select "Run workflow" and select the **NO VERI\*FACTU supplier registration workflow**.
+
+    The supplier's status will change to `Registered` immediately upon successful completion. Unlike VERI\*FACTU, there is no agreement signing step or approval waiting period.
+  </Step>
+</Steps>
+
+<Info>A party can be simultaneously registered in both VERI\*FACTU and NO VERI\*FACTU, as each modality uses distinct meta keys to track registration state. This means integrators can offer both modalities to different suppliers within the same workspace.</Info>
+
+## Unregister a Supplier
+
+Unregistering a supplier revokes their NO VERI\*FACTU invoice issuing privileges and generates the required "End of NO VERI\*FACTU mode" event. You might need to unregister a supplier because they are no longer your client, they are switching to VERI\*FACTU mode, or because of a change in their Tax ID.
+
+Send the supplier's silo entry to the **NO VERI\*FACTU unregister supplier** workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. The supplier's status will change to `Void` when the workflow completes.
+
+## Automatic Event Generation
+
+NO VERI\*FACTU requires the system to automatically detect and record certain events. The following events are generated automatically by the workflows described in this guide:
+
+| Event | Type | When Generated |
+|-------|------|----------------|
+| Start of NO VERI\*FACTU mode | `01` | When a supplier is registered via the registration workflow |
+| End of NO VERI\*FACTU mode | `02` | When a supplier is unregistered via the unregistration workflow |
+| Summary event | `10` | Every 6 hours, triggered automatically by the [Cron app](/apps/cron) subscription created during registration |
+
+All event records are digitally signed and stored with the same integrity guarantees as invoicing records. The event processing workflow (`generate.event` → `record`) handles the XML generation, digital signing, and storage for all event types.
+
+---
+
+<SpainResources />
+
+<Card title="Spain FAQ"
+  icon="square-question"
+  href="/faq/spain"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in Spain →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Spain →
+</Card>
