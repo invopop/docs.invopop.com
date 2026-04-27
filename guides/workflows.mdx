@@ -33,7 +33,10 @@ A workflow is composed of two main areas:
 Both flows are composed by _steps_ which can contain _conditions_.
 
 * **Steps** are action performed with the entry being processed, such as sending the document to a tax authority, generating a PDF, or sending a notification to the customer or issuer.
-* **Conditions** determine the logic that directs how a workflow proceeds. They evaluate the _status_ and _code_ outcome of a given step, and if there's a match, it will execute the steps contained within that condition. If the status of a condition is `KO`, the _error handling flow_ won't be executed as this would be a _handled error_.
+* **Conditions** determine the logic that directs how a workflow proceeds when there's not an error. They evaluate the _status_ and _code_ outcome of a given step, and if there's a match, it will execute the steps contained within that condition. Conditions are often used in the "If / Else" step but can be used to handle non-error responses from other steps.
+* **Exceptions** when a step returns a `KO`, the workflow will continue in the error handling flow by default. However, sometimes you need to handle an error differently from the rest, and adding an exception will prevent the workflow from continuing on the error handling flow, allowing you to handle that case specifically.  
+
+
 
 
 ## How to create a Workflow
@@ -55,20 +58,18 @@ Add steps to your new workflow by tapping on the **+ Add step** button and selec
 
 The "developer mode" <img src="/assets/guides/workflow-switcher.png" alt="Developer mode switch" className="inline-block m-0 w-14" /> switch at the top right of the canvas can be used to display the JSON representation of the workflow. This makes it easy to copy and paste workflows from examples or other workspaces. Make sure to return to the visual editor view to ensure the document is validated.
 
-## Creating conditions
+## Creating conditions and exceptions
 
-Conditions create blocks that execute when a given _status_ and _code_ (optional) match the response of a workflow step. There are two status signals (`OK` and `KO`) plus `Any`, which matches regardless of the status.
+**Conditions** create blocks that execute when a given _code_ matches the response of a workflow step, without an error. There are two status signals (`OK` and `KO`) plus `Any`, which matches regardless of the status.
 
-* **OK**: when a workflow step completes as expected.
-* **KO**: when there was an error in the step's execution.
-* **Any**: will match both `OK` and `KO`.
+**Exceptions** create blocks that execute when a `KO` es returned from a workflow step, and has an optional _code_ to further narrow down the exception condition.
 
-Codes are generally text or numbers returned by providers. Only some steps will return codes along with their status signals. For example, the _Send VERI*FACTU (Spain)_ step will return the error code as [specified by the AEAT](https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties) along with the `KO` status signal. Since GOBL already handles many of the validations in tax authorities lists, we recommend only implementing conditions which happen in your workflow with certain regularity and which should be handled automatically.
+**Codes** are generally text or numbers returned by providers. Only some steps will return codes along with their status signals. For example, the _Send VERI*FACTU (Spain)_ step will return the error code as [specified by the AEAT](https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties) along with the `KO` status signal. Since GOBL already handles many of the validations in tax authorities lists, we recommend only implementing conditions which happen in your workflow with certain regularity and which should be automated.
 
 As an example, we will handle the case where a supplier is not registered in the taxpayer census by the AEAT:
 
 <Steps>
-  <Step title="Add a condition on the step">
+  <Step title="Add a condition or exception on the step">
     On the desired step, click on the menu button `...` and select **Add condition**.
     <Frame>
       <img
@@ -79,7 +80,7 @@ As an example, we will handle the case where a supplier is not registered in the
       />
     </Frame>
   </Step>
-  <Step title="Configure the condition">
+  <Step title="Configure the condition or exception">
     <Frame>
       <img
         src="/assets/guides/workflow-add-condition-match.png"
@@ -88,11 +89,7 @@ As an example, we will handle the case where a supplier is not registered in the
         noZoom
       />
     </Frame>
-    Configure the matching conditions in the popover:
-
-    1. **Status**: `KO`.
-    2. **Code**: `4107` (Tax ID not identified in the taxpayer census).
-    2. **End workflow here**: `✔` (the workflow will stop executing after this block).
+    Configure the matching conditions in the popover
   </Step>
   <Step title="Add an action to the condition block">
     <Frame>
@@ -103,7 +100,7 @@ As an example, we will handle the case where a supplier is not registered in the
         noZoom
       />
     </Frame>
-    Click on "Select an action" and handle the condition as you wish. In this case, we are choosing to send a Slack message (e.g. for manual intervention).
+    Click on "Select an action" and handle the condition as you wish. In this workflow, we have added an If / Else step that reads the country of a customer, returning `true` or `false`, and then performing the required lookup for each type of customer (AEAT for Spanish cusomters and VIES lookup for EU ones), then, if the tax id is not found, the error is handled by sending a webhook.
   </Step>
 </Steps>
 
