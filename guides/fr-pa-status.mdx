@@ -7,6 +7,10 @@ description: Send and receive lifecycle status updates (CDAR) for B2B invoices.
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import SendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
 
+<Note>
+  Lifecycle status updates on domestic B2B invoices — accepted, paid, refused, disputed. Statuses are exchanged between PAs over Peppol, with mandatory codes also forwarded to the PPF.
+</Note>
+
 <Warning>
   Status is moving to a first-class GOBL document. Today it is a CDAR XML attached to the originating invoice; the next iteration makes it a standalone document with its own schema. Workflow steps and job arguments will change before the September 2026 mandate.
 </Warning>
@@ -212,6 +216,143 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
 | `213` Rejetée | `CALCUL_ERR` | Erreur de calcul de la facture | |
 | `213` Rejetée | `TX_TVA_ERR` | Taux de TVA erroné | |
 | `213` Rejetée | `MONTANTTOTAL_ERR` | Montant total erroné | |
+
+### Reason codes
+
+Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `211`, `212`) do not require one. Defaults are applied when `reason-code` is omitted.
+
+<AccordionGroup>
+  <Accordion title="200 — Déposée (Deposited)">
+    **Mandatory to PPF:** Yes (automatic)
+
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `NON_TRANSMISE` | Destinataire non connecté | ✓ |
+  </Accordion>
+
+
+  <Accordion title="206 — Partiellement approuvée (Partially Approved)">
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `AUTRE`<Tooltip headline="Default" tip="Applied when reason-code is omitted"><Badge color="green" size="sm">*</Badge></Tooltip> | Autre | ✓ |
+    | `TX_TVA_ERR` | Taux de TVA erroné | |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | |
+    | `NON_CONFORME` | Mention légale manquante | |
+    | `DOUBLON` | Facture en doublon | |
+    | `DEST_ERR` | Erreur de destinataire | |
+    | `TRANSAC_INC` | Transaction inconnue | |
+    | `EMMET_INC` | Émetteur inconnu | |
+    | `CONTRAT_TERM` | Contrat terminé | |
+    | `DOUBLE_FACT` | Double facture | |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | |
+    | `SIRET_ERR` | SIRET erroné ou absent | |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+    | `REF_ERR` | Référence incorrecte | |
+    | `PU_ERR` | Prix unitaires incorrects | |
+    | `REM_ERR` | Remise erronée | |
+    | `QTE_ERR` | Quantité facturée incorrecte | |
+    | `ART_ERR` | Article facturé incorrect | |
+    | `MODPAI_ERR` | Modalités de paiement incorrectes | |
+    | `QUALITE_ERR` | Qualité d'article livré incorrecte | |
+    | `LIVR_INCOMP` | Problème de livraison | |
+  </Accordion>
+
+  <Accordion title="207 — En litige (Disputed)">
+
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `AUTRE` | Autre | ✓ |
+    | `TX_TVA_ERR` | Taux de TVA erroné | |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | |
+    | `NON_CONFORME` | Mention légale manquante | |
+    | `DOUBLON` | Facture en doublon | |
+    | `DEST_ERR` | Erreur de destinataire | |
+    | `TRANSAC_INC` | Transaction inconnue | |
+    | `EMMET_INC` | Émetteur inconnu | |
+    | `CONTRAT_TERM` | Contrat terminé | |
+    | `DOUBLE_FACT` | Double facture | |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | |
+  </Accordion>
+
+  <Accordion title="208 — Suspendue (Suspended)">
+    **Mandatory to PPF:** No
+
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `JUSTIF_ABS` | Justificatif absent ou insuffisant | ✓ |
+    | `SIRET_ERR` | SIRET erroné ou absent | |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+    | `REF_ERR` | Référence incorrecte | |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | |
+  </Accordion>
+
+
+  <Accordion title="210 — Refusée (Refused by buyer)">
+    **Mandatory to PPF:** Yes (manual)
+
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `TRANSAC_INC` | Transaction inconnue | ✓ |
+    | `COORD_BANC_ERR` | Erreur de coordonnées bancaires | |
+    | `TX_TVA_ERR` | Taux de TVA erroné | |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | |
+    | `NON_CONFORME` | Mention légale manquante | |
+    | `DOUBLON` | Facture en doublon | |
+    | `DEST_ERR` | Erreur de destinataire | |
+    | `EMMET_INC` | Émetteur inconnu | |
+    | `CONTRAT_TERM` | Contrat terminé | |
+    | `DOUBLE_FACT` | Double facture | |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | |
+    | `SIRET_ERR` | SIRET erroné ou absent | |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+    | `REF_ERR` | Référence incorrecte | |
+    | `PU_ERR` | Prix unitaires incorrects | |
+    | `REM_ERR` | Remise erronée | |
+    | `QTE_ERR` | Quantité facturée incorrecte | |
+    | `ART_ERR` | Article facturé incorrect | |
+    | `MODPAI_ERR` | Modalités de paiement incorrectes | |
+    | `QUALITE_ERR` | Qualité d'article livré incorrecte | |
+    | `LIVR_INCOMP` | Problème de livraison | |
+  </Accordion>
+
+
+  <Accordion title="213 — Rejetée (Rejected by platform)">
+
+    | Reason code | Description | Default |
+    |---|---|---|
+    | `REJ_SEMAN` | Rejet pour erreur sémantique | ✓ |
+    | `REJ_UNI` | Rejet sur contrôle unicité | |
+    | `REJ_COH` | Rejet sur contrôle cohérence de données | |
+    | `REJ_ADR` | Rejet sur contrôle d'adressage | |
+    | `REJ_CONT_B2G` | Rejet sur contrôles métier B2G | |
+    | `REJ_REF_PJ` | Rejet sur référence de PJ | |
+    | `REJ_ASS_PJ` | Rejet sur erreur d'association de la PJ | |
+    | `IRR_VIDE_F` | Contrôle de non vide sur les fichiers du flux | |
+    | `IRR_TYPE_F` | Contrôle de type et extension des fichiers | |
+    | `IRR_SYNTAX` | Contrôle syntaxique des fichiers du flux | |
+    | `IRR_TAILLE_PJ` | Contrôle de taille des PJ | |
+    | `IRR_NOM_PJ` | Contrôle du nom des PJ | |
+    | `IRR_VID_PJ` | Contrôle de PJ non vide | |
+    | `IRR_EXT_DOC` | Contrôle de l'extension des PJ | |
+    | `IRR_TAILLE_F` | Contrôle de taille max des fichiers | |
+    | `IRR_ANTIVIRUS` | Contrôle anti-virus | |
+    | `DEST_INC` | Destinataire inconnu | |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | |
+    | `DOUBLON` | Facture en doublon | |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | |
+    | `TX_TVA_ERR` | Taux de TVA erroné | |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | |
+  </Accordion>
+</AccordionGroup>
 
 ---
 
