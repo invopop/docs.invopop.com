@@ -1,0 +1,86 @@
+---
+title: "France PA — registration"
+sidebarTitle: "Registration"
+description: Register a party in the French Annuaire and on the Peppol network.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import RegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
+import DeregisterWorkflow from '/snippets/workflows/fr/fr-pa-deregister.mdx';
+
+Each party — a SIREN — is registered once. The workflow signs the contract, records the party in the Annuaire, opens a reporting register, and publishes the party on the Peppol network. After it completes, the party can both send and receive invoices and is ready to start recording transactions for reporting.
+
+The Annuaire requires every entry to be receive-capable, so there is no send-only option. Internally the workflow extends the standard [Peppol registration](/guides/peppol) with a French Annuaire step and the reporting register.
+
+## How it works
+
+<Steps>
+  <Step title="Sign Contract">
+    Kicks off the contract signature flow with the party. The job pauses here until the party returns the signed agreement.
+  </Step>
+  <Step title="Set State → processing">
+    Moves the silo entry into a visible "in progress" state so operator dashboards reflect that registration is underway.
+  </Step>
+  <Step title="Wait for Approval">
+    Pauses until Invopop's KYC review of the signed contract clears.
+  </Step>
+  <Step title="Register in Annuaire">
+    Submits the party's SIREN to the French national directory so other PAs can route invoices to it.
+  </Step>
+  <Step title="Register Reporter">
+    Opens a reporting record keyed by SIREN and stores the cadence chosen during onboarding. See [reporting](/guides/fr-pa-reporting#registration) for the cadence options.
+  </Step>
+  <Step title="Register Peppol Party">
+    Publishes the party in SMP/SML with the `france` document group, enabling Peppol-level routing for sending and receiving.
+  </Step>
+  <Step title="Set State → registered">
+    Marks the party as fully onboarded.
+  </Step>
+</Steps>
+
+## Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
+      Registers a party in the Annuaire, on the Peppol network, and as a reporter.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+## Deregistration
+
+When a party stops trading or moves to another platform, run a deregistration workflow. The two steps remove the party from the Annuaire and close out its reporting register.
+
+<Steps>
+  <Step title="Disable in Annuaire">
+    Removes the inbox from the French directory and disables the party on Peppol so no further invoices are routed to it.
+  </Step>
+  <Step title="Disable Reporter">
+    Closes the reporting register so no more periodic reports are generated for this SIREN.
+  </Step>
+</Steps>
+
+<Note>
+  Deregistration does not delete historical reports already submitted to the PPF.
+</Note>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA deregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-deregister" cta="Add to my workspace">
+      Removes a party from the Annuaire and stops periodic reporting.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
+    <DeregisterWorkflow />
+  </Tab>
+</Tabs>
+
+---
+
+<FranceResources />
