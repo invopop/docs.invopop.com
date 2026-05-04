@@ -1,0 +1,218 @@
+---
+title: "France PA — lifecycle status"
+sidebarTitle: "Status"
+description: Send and receive lifecycle status updates (CDAR) for B2B invoices.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import SendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
+
+<Warning>
+  Status is moving to a first-class GOBL document. Today it is a CDAR XML attached to the originating invoice; the next iteration makes it a standalone document with its own schema. Workflow steps and job arguments will change before the September 2026 mandate.
+</Warning>
+
+France requires lifecycle status updates on B2B national invoices to be reported to the PPF. Two statuses are your responsibility to send — `212` Encaissée (paid) and `210` Refusée (refused). The other two mandatory codes (`200` Déposée and `213` Rejetée) are emitted automatically by Invopop, so you do not need a workflow for them.
+
+## Sending
+
+A status workflow records the status against the originating invoice, generates a CDAR XML payload, transmits it to the counterparty's PA over Peppol, and — for the two mandatory statuses — forwards a copy to the PPF.
+
+### How it works
+
+<Steps>
+  <Step title="Record Status">
+    Stores the status against the originating invoice in the local PA database. The `status_code` and `reason_code` come from the workflow config or from job arguments at runtime.
+  </Step>
+  <Step title="Generate CDAR">
+    Uses the CII app to produce a CDAR XML envelope from the recorded status.
+  </Step>
+  <Step title="Send Peppol Document">
+    Transmits the CDAR to the counterparty's PA over the Peppol network.
+  </Step>
+  <Step title="Forward Status to PPF">
+    For the two mandatory statuses (`210` and `212`), forwards the CDAR to the PPF. Non-mandatory statuses skip this step.
+  </Step>
+</Steps>
+
+### Job arguments
+
+Pass status details as job arguments to use one workflow for multiple status types. Arguments take priority over workflow config.
+
+| Argument | Description |
+|---|---|
+| `code` | Status code (`200`–`213`). |
+| `reason-code` | Reason code (e.g. `MONTANTTOTAL_ERR`). Defaults by status code if omitted. |
+| `reason-text` | Optional free-text explanation. |
+
+```json
+{
+  "args": {
+    "code": "210",
+    "reason-code": "DOUBLON",
+    "reason-text": "Duplicate invoice already processed"
+  }
+}
+```
+
+<Info>
+  Use one workflow per mandatory status (paid, refused) with the code pre-configured, rather than a single generic workflow. Keeps runbooks simple.
+</Info>
+
+### Workflow code
+
+The example below is configured for `207` (En litige) with reason `MONTANTTOTAL_ERR`. Override `status_code` / `reason_code` per workflow or via job arguments.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA send status workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-status" cta="Add to my workspace">
+      Generates and forwards a CDAR status update via Peppol and the PPF.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
+    <SendStatusWorkflow />
+  </Tab>
+</Tabs>
+
+## Receiving
+
+Incoming statuses arrive over the same Peppol transport as invoices. Peppol's format detection identifies them as CDAR, the CII app imports them into GOBL, and the result is recorded against the originating invoice.
+
+<Steps>
+  <Step title="Import Peppol Document">
+    Receives the inbound Peppol payload and detects that it is a CDAR status update rather than an invoice.
+  </Step>
+  <Step title="Import UN/CEFACT CII Document">
+    Converts the CDAR XML into a GOBL representation.
+  </Step>
+  <Step title="Record Status">
+    Files the status under the originating invoice in the local PA database.
+  </Step>
+</Steps>
+
+## Deriving a status from an invoice
+
+The **Build Status from Invoice** step creates a new silo entry with a status payload pre-filled from an existing invoice. The new entry can then trigger the **Send status** workflow. Use this when the events that drive a status — payment captured, dispute raised — live alongside invoices in your system, and you want to avoid building a CDAR payload from scratch.
+
+```mermaid
+flowchart LR
+    I[Invoice] --> B[Build Status from Invoice]
+    B -->|new silo entry| N[Create Job]
+    N -..-> S[Send status workflow]
+```
+
+## Status codes
+
+| Code | French | English | Mandatory to PPF |
+|---|---|---|---|
+| `200` | Déposée | Deposited | Yes (automatic) |
+| `205` | Approuvée | Accepted | No |
+| `206` | Partiellement approuvée | Partially Approved | No |
+| `207` | En litige | Disputed | No |
+| `208` | Suspendue | Suspended | No |
+| `209` | Complétée | Completed | No |
+| `210` | Refusée | Refused by buyer | Yes (manual) |
+| `211` | Paiement transmis | Payment transmitted | No |
+| `212` | Encaissée | Cashed/Paid | Yes (manual) |
+| `213` | Rejetée | Rejected by platform | Yes (automatic) |
+
+## Reason codes
+
+Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `211`, `212`) do not require one. Defaults are applied when `reason-code` is omitted.
+
+| Status | Reason code | Description | Default |
+|---|---|---|---|
+| `200` Déposée | `NON_TRANSMISE` | Destinataire non connecté | ✓ |
+| `206` Partiellement approuvée | `AUTRE` | Autre | ✓ |
+| `206` Partiellement approuvée | `TX_TVA_ERR` | Taux de TVA erroné | |
+| `206` Partiellement approuvée | `MONTANTTOTAL_ERR` | Montant total erroné | |
+| `206` Partiellement approuvée | `CALCUL_ERR` | Erreur de calcul de la facture | |
+| `206` Partiellement approuvée | `NON_CONFORME` | Mention légale manquante | |
+| `206` Partiellement approuvée | `DOUBLON` | Facture en doublon | |
+| `206` Partiellement approuvée | `DEST_ERR` | Erreur de destinataire | |
+| `206` Partiellement approuvée | `TRANSAC_INC` | Transaction inconnue | |
+| `206` Partiellement approuvée | `EMMET_INC` | Émetteur inconnu | |
+| `206` Partiellement approuvée | `CONTRAT_TERM` | Contrat terminé | |
+| `206` Partiellement approuvée | `DOUBLE_FACT` | Double facture | |
+| `206` Partiellement approuvée | `CMD_ERR` | N° de commande incorrect ou manquant | |
+| `206` Partiellement approuvée | `ADR_ERR` | Adresse de facturation électronique erronée | |
+| `206` Partiellement approuvée | `SIRET_ERR` | SIRET erroné ou absent | |
+| `206` Partiellement approuvée | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+| `206` Partiellement approuvée | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+| `206` Partiellement approuvée | `REF_ERR` | Référence incorrecte | |
+| `206` Partiellement approuvée | `PU_ERR` | Prix unitaires incorrects | |
+| `206` Partiellement approuvée | `REM_ERR` | Remise erronée | |
+| `206` Partiellement approuvée | `QTE_ERR` | Quantité facturée incorrecte | |
+| `206` Partiellement approuvée | `ART_ERR` | Article facturé incorrect | |
+| `206` Partiellement approuvée | `MODPAI_ERR` | Modalités de paiement incorrectes | |
+| `206` Partiellement approuvée | `QUALITE_ERR` | Qualité d'article livré incorrecte | |
+| `206` Partiellement approuvée | `LIVR_INCOMP` | Problème de livraison | |
+| `207` En litige | `AUTRE` | Autre | ✓ |
+| `207` En litige | `TX_TVA_ERR` | Taux de TVA erroné | |
+| `207` En litige | `MONTANTTOTAL_ERR` | Montant total erroné | |
+| `207` En litige | `CALCUL_ERR` | Erreur de calcul de la facture | |
+| `207` En litige | `NON_CONFORME` | Mention légale manquante | |
+| `207` En litige | `DOUBLON` | Facture en doublon | |
+| `207` En litige | `DEST_ERR` | Erreur de destinataire | |
+| `207` En litige | `TRANSAC_INC` | Transaction inconnue | |
+| `207` En litige | `EMMET_INC` | Émetteur inconnu | |
+| `207` En litige | `CONTRAT_TERM` | Contrat terminé | |
+| `207` En litige | `DOUBLE_FACT` | Double facture | |
+| `207` En litige | `CMD_ERR` | N° de commande incorrect ou manquant | |
+| `208` Suspendue | `JUSTIF_ABS` | Justificatif absent ou insuffisant | ✓ |
+| `208` Suspendue | `SIRET_ERR` | SIRET erroné ou absent | |
+| `208` Suspendue | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+| `208` Suspendue | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+| `208` Suspendue | `REF_ERR` | Référence incorrecte | |
+| `208` Suspendue | `CMD_ERR` | N° de commande incorrect ou manquant | |
+| `208` Suspendue | `ADR_ERR` | Adresse de facturation électronique erronée | |
+| `210` Refusée | `TRANSAC_INC` | Transaction inconnue | ✓ |
+| `210` Refusée | `COORD_BANC_ERR` | Erreur de coordonnées bancaires | |
+| `210` Refusée | `TX_TVA_ERR` | Taux de TVA erroné | |
+| `210` Refusée | `MONTANTTOTAL_ERR` | Montant total erroné | |
+| `210` Refusée | `CALCUL_ERR` | Erreur de calcul de la facture | |
+| `210` Refusée | `NON_CONFORME` | Mention légale manquante | |
+| `210` Refusée | `DOUBLON` | Facture en doublon | |
+| `210` Refusée | `DEST_ERR` | Erreur de destinataire | |
+| `210` Refusée | `EMMET_INC` | Émetteur inconnu | |
+| `210` Refusée | `CONTRAT_TERM` | Contrat terminé | |
+| `210` Refusée | `DOUBLE_FACT` | Double facture | |
+| `210` Refusée | `CMD_ERR` | N° de commande incorrect ou manquant | |
+| `210` Refusée | `ADR_ERR` | Adresse de facturation électronique erronée | |
+| `210` Refusée | `SIRET_ERR` | SIRET erroné ou absent | |
+| `210` Refusée | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | |
+| `210` Refusée | `REF_CT_ABSENT` | Référence contractuelle nécessaire | |
+| `210` Refusée | `REF_ERR` | Référence incorrecte | |
+| `210` Refusée | `PU_ERR` | Prix unitaires incorrects | |
+| `210` Refusée | `REM_ERR` | Remise erronée | |
+| `210` Refusée | `QTE_ERR` | Quantité facturée incorrecte | |
+| `210` Refusée | `ART_ERR` | Article facturé incorrect | |
+| `210` Refusée | `MODPAI_ERR` | Modalités de paiement incorrectes | |
+| `210` Refusée | `QUALITE_ERR` | Qualité d'article livré incorrecte | |
+| `210` Refusée | `LIVR_INCOMP` | Problème de livraison | |
+| `213` Rejetée | `REJ_SEMAN` | Rejet pour erreur sémantique | ✓ |
+| `213` Rejetée | `REJ_UNI` | Rejet sur contrôle unicité | |
+| `213` Rejetée | `REJ_COH` | Rejet sur contrôle cohérence de données | |
+| `213` Rejetée | `REJ_ADR` | Rejet sur contrôle d'adressage | |
+| `213` Rejetée | `REJ_CONT_B2G` | Rejet sur contrôles métier B2G | |
+| `213` Rejetée | `REJ_REF_PJ` | Rejet sur référence de PJ | |
+| `213` Rejetée | `REJ_ASS_PJ` | Rejet sur erreur d'association de la PJ | |
+| `213` Rejetée | `IRR_VIDE_F` | Contrôle de non vide sur les fichiers du flux | |
+| `213` Rejetée | `IRR_TYPE_F` | Contrôle de type et extension des fichiers | |
+| `213` Rejetée | `IRR_SYNTAX` | Contrôle syntaxique des fichiers du flux | |
+| `213` Rejetée | `IRR_TAILLE_PJ` | Contrôle de taille des PJ | |
+| `213` Rejetée | `IRR_NOM_PJ` | Contrôle du nom des PJ | |
+| `213` Rejetée | `IRR_VID_PJ` | Contrôle de PJ non vide | |
+| `213` Rejetée | `IRR_EXT_DOC` | Contrôle de l'extension des PJ | |
+| `213` Rejetée | `IRR_TAILLE_F` | Contrôle de taille max des fichiers | |
+| `213` Rejetée | `IRR_ANTIVIRUS` | Contrôle anti-virus | |
+| `213` Rejetée | `DEST_INC` | Destinataire inconnu | |
+| `213` Rejetée | `ADR_ERR` | Adresse de facturation électronique erronée | |
+| `213` Rejetée | `DOUBLON` | Facture en doublon | |
+| `213` Rejetée | `CALCUL_ERR` | Erreur de calcul de la facture | |
+| `213` Rejetée | `TX_TVA_ERR` | Taux de TVA erroné | |
+| `213` Rejetée | `MONTANTTOTAL_ERR` | Montant total erroné | |
+
+---
+
+<FranceResources />
