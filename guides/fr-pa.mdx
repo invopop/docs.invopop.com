@@ -145,30 +145,39 @@ The sending workflow records the invoice for France PA compliance, transmits it 
 #### Status
 
 <Warning>
-  **Status is moving to a first-class GOBL document.** Today a status update is a CDAR XML attached to the originating invoice; we are designing a dedicated GOBL document so lifecycle statuses become standalone documents with their own schema. The workflow below is functional and safe to use now — expect the steps and job arguments to change once the new GOBL status document is released.
+Today, a status update is a CDAR XML file attached to the original invoice. We're redesigning this so lifecycle statuses become standalone GOBL documents. The workflow below works correctly and is safe to use now, but the steps and job arguments will change once the new GOBL status document is released.
 </Warning>
 
-France requires mandatory lifecycle status updates to be reported to the PPF for B2B national invoices. You must implement workflows for the two statuses that are your responsibility:
+France requires mandatory lifecycle status updates to be reported to the PPF for B2B national invoices. You must implement workflows to report the two manual statuses that you're responsible for reporting:
 
-| Status | Code | Trigger |
-|---|---|---|
-| **Encaissée** (cashed/paid) | `212` | Invoice has been paid |
-| **Refusée** (refused by buyer) | `210` | Buyer refuses the invoice (business rejection) |
+| Status | Code | Trigger |  Context |
+|---|---|---|---|
+| **Encaissée**<br /> Cashed/paid | `212` | Invoice has been paid | <Icon icon="inbox-out" iconType="light" />Sending |
+| **Refusée**<br /> Refused by buyer | `210` | Buyer refuses the invoice (business rejection) | <Icon icon="inbox-in" iconType="light" />Receiving |
 
 The following statuses are handled **automatically** by Invopop and do not require a workflow:
 
-| Status | Code | When |
-|---|---|---|
-| **Déposée** (deposited) | `200` | Sent automatically when the invoice is created |
-| **Rejetée** (rejected by platform) | `213` | Sent automatically on processing failure |
+| Status | Code | Trigger (automatic) | Context |
+|---|---|---|---|
+| **Déposée**<br />Deposited | `200` | Invoice has been created | <Icon icon="inbox-out" iconType="light" />Sending
+| **Rejetée**<br />Rejected by platform | `213` | Incoming invoice processing failure | <Icon icon="inbox-in" iconType="light" />Receiving 
 
 You can also send additional non-mandatory statuses (e.g. `205` Approuvée, `207` En litige) for lifecycle tracking. The status workflow below handles all of these.
 
 ##### How it works
 
-1. **Generate Status (France)** — creates a CDAR document with the specified status code and reason code. The `status_code`, `reason_code`, and optional `reason_text` are configured per workflow or passed as job arguments.
-2. **Send via Peppol** — transmits the CDAR to the counterparty over Peppol.
-3. **Forward to PPF** — for mandatory statuses (`210`, `212`), sends the notification to the PPF in the required format.
+<Steps>
+  <Step title="Generate Status (France)">
+    Creates a CDAR document with the specified status code and reason code. The `status_code`, `reason_code`, and optional `reason_text` are configured per workflow or passed as job arguments.
+  </Step>
+  <Step title="Send via Peppol">
+    Transmits the CDAR to the counterparty over Peppol.
+  </Step>
+  <Step title="Forward to PPF">
+    For mandatory statuses (`210`, `212`), sends the notification to the PPF in the required format.
+  </Step>
+</Steps>
+
 
 ##### Using job arguments
 
