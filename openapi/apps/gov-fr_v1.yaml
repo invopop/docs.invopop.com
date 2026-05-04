@@ -1,0 +1,299 @@
+# OpenAPI gov-fr v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points for the France app, including lookups against
+    the PPF Annuaire (French e-invoicing directory).
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: France Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-fr/v1/directory/siren/{siren}:
+    get:
+      operationId: lookupDirectoryBySIREN
+      summary: Look up directory entries by SIREN
+      description: |-
+        Returns all entries from the PPF Annuaire that
+        match the given French SIREN. A company may have several entries 
+        so the response is always a list.
+
+        Only available to **live** workspaces. Sandbox workspaces receive
+        `403 Forbidden`.
+      parameters:
+        - name: siren
+          in: path
+          required: true
+          description: 9-digit French SIREN identifier of the company to look up.
+          schema:
+            type: string
+            example: "123456789"
+      responses:
+        "200":
+          description: Lookup completed. `count` may be `0` if the SIREN is not present in the directory.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SIRENLookupResponse"
+              examples:
+                found:
+                  summary: SIREN present in the directory
+                  value:
+                    siren: "123456789"
+                    count: 1
+                    results:
+                      - id_instance: "1020993"
+                        siren: "123456789"
+                        siret: ""
+                        routing_code: "ROUTE123"
+                        platform_id: "0431"
+                        nature: "M"
+                        identifier: "269909452"
+                        suffix: ""
+                        start_date: "20251227"
+                        end_date: ""
+                        effective_end_date: "20280402"
+                        created_at: "2026-01-15T10:00:00Z"
+                        updated_at: "2026-01-15T10:00:00Z"
+                not_found:
+                  summary: SIREN not in the directory
+                  value:
+                    siren: "999999999"
+                    count: 0
+                    results: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/directory/identifier/{identifier}:
+    get:
+      operationId: lookupDirectoryByIdentifier
+      summary: Look up directory entries by electronic address
+      description: |-
+        Returns all entries from the PPF Annuaire that
+        match the given electronic address identifier (the value used to
+        route invoices to a party in France represented by an inbox in Invopop).
+
+        Only available to **live** workspaces. Sandbox workspaces receive
+        `403 Forbidden`.
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          description: |-
+            Electronic address identifier as registered in the Annuaire,
+            typically in `scheme:value` form (e.g. `0009:123456789`).
+          schema:
+            type: string
+            example: "0009:123456789"
+      responses:
+        "200":
+          description: Lookup completed. `count` may be `0` if no entry uses this identifier.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierLookupResponse"
+              examples:
+                found:
+                  summary: Identifier present in the directory
+                  value:
+                    identifier: "0009:123456789"
+                    count: 1
+                    results:
+                      - id_instance: "1020994"
+                        siren: "269909452"
+                        siret: ""
+                        routing_code: "ROUTE123"
+                        platform_id: "0431"
+                        nature: "M"
+                        identifier: "269909452_suffixe1"
+                        suffix: "suffixe1"
+                        start_date: "20251227"
+                        end_date: ""
+                        effective_end_date: "20280402"
+                        created_at: "2026-01-15T10:00:00Z"
+                        updated_at: "2026-01-15T10:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    DirectoryEntry:
+      type: object
+      description: |-
+        Single entry in the PPF Annuaire. Each entry
+        represents one registered electronic address for a SIREN/SIRET.
+      properties:
+        id_instance:
+          type: string
+          description: Unique instance identifier from the PPF export.
+          example: "1020993"
+        siren:
+          type: string
+          description: 9-digit French SIREN of the company.
+          example: "269909452"
+        siret:
+          type: string
+          description: 14-digit French SIRET of the establishment, when applicable.
+          example: ""
+        routing_code:
+          type: string
+          description: Routing code used by the PPF to deliver invoices.
+          example: "ROUTE123"
+        platform_id:
+          type: string
+          description: 4-digit identifier of the PA platform that registered the entry.
+          example: "0431"
+        nature:
+          type: string
+          description: Single-letter code for the nature of the entry as classified by the Annuaire.
+          example: "M"
+        identifier:
+          type: string
+          description: |-
+            Electronic address identifier used for routing. Typically the SIREN,
+            optionally with a `_suffix` qualifier when multiple addresses exist
+            for the same company.
+          example: "269909452"
+        suffix:
+          type: string
+          description: Optional suffix qualifying the identifier.
+          example: "suffixe1"
+        start_date:
+          type: string
+          description: Date from which this entry is active in the Annuaire, as `YYYYMMDD`.
+          example: "20251227"
+        end_date:
+          type: string
+          description: Scheduled end date of the entry as `YYYYMMDD`, when set.
+          example: ""
+        effective_end_date:
+          type: string
+          description: Effective end date as `YYYYMMDD`, once the entry has been deactivated.
+          example: "20280402"
+        created_at:
+          type: string
+          format: date-time
+          description: When this entry was first stored in the local mirror.
+          example: "2026-01-15T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When this entry was last refreshed from a PPF export.
+          example: "2026-01-15T10:00:00Z"
+
+    SIRENLookupResponse:
+      type: object
+      required: [siren, count, results]
+      properties:
+        siren:
+          type: string
+          description: SIREN that was queried.
+          example: "123456789"
+        count:
+          type: integer
+          description: Number of directory entries returned.
+          example: 1
+        results:
+          type: array
+          description: Matching directory entries. Empty when the SIREN is not in the Annuaire.
+          items:
+            $ref: "#/components/schemas/DirectoryEntry"
+
+    IdentifierLookupResponse:
+      type: object
+      required: [identifier, count, results]
+      properties:
+        identifier:
+          type: string
+          description: Electronic address identifier that was queried.
+          example: "0009:123456789"
+        count:
+          type: integer
+          description: Number of directory entries returned.
+          example: 1
+        results:
+          type: array
+          description: Matching directory entries. Empty when the identifier is not in the Annuaire.
+          items:
+            $ref: "#/components/schemas/DirectoryEntry"
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable description of the error.
+          example: "missing siren parameter"
+
+  responses:
+    BadRequest:
+      description: The request is malformed or missing required parameters.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "missing siren parameter"
+
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "missing enrollment"
+
+    Forbidden:
+      description: |-
+        The directory API is only available to live workspaces. Calls made
+        with a sandbox enrollment are rejected.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "directory API is only available for live workspaces"
+
+    InternalServerError:
+      description: An unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "internal server error"
+
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Authenticate using a valid Invopop enrollment token in the `Bearer`
+        scheme.
+
+        Example: `Authorization: Bearer <token>`
