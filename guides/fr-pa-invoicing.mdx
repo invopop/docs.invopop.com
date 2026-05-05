@@ -1,0 +1,118 @@
+---
+title: "France PA — invoicing"
+sidebarTitle: "Invoicing"
+description: Send and receive B2B invoices over Peppol with automatic PPF reporting.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
+import ReceiveInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
+
+<Note>
+  E-invoicing in France applies domestic B2B invoicing where both parties are registered in the Annuaire. For B2C, cross-border, or any flow where one party is not in the Annuaire, use the [reporting flow](/guides/fr-pa-reporting) instead.
+</Note>
+
+The France PA invoicing flow covers **regulated B2B exchanges** — both parties registered in the Annuaire. The same GOBL document drives both sides: a single invoice with the `fr-ctc-flow2-v1` add-on, generated as the format negotiated with the receiver. On receipt, any of the accepted formats is converted back to that same representation.
+
+## Formats
+
+The PA specification accepts five formats. In practice the three base formats below cover essentially all real-world traffic, and Invopop supports both sending and receiving on all three.
+
+| Format | Notes |
+|---|---|
+| **UBL** | Peppol France CIUS — recommended default. Native Peppol format with the widest receiver support. |
+| **CII** | UN/CEFACT XML, semantically equivalent to UBL. Common in cross-border and industrial contexts. |
+| **Factur-X** | Hybrid PDF/A-3 with embedded CII. Identical to [ZUGFeRD](/guides/de-ubl) and aligned with EN 16931. |
+
+Switching format is a workflow-config change rather than a data-model change — you author and validate one GOBL invoice, and the workflow's generation step produces whichever format the counterparty expects.
+
+## Sending
+
+The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver's PA over Peppol, and forwards the F1 copy to the PPF as the fifth corner.
+
+The **Record Invoice** step validates SIRENs and checks both parties against the Annuaire. Invoices where either side is missing are rejected — branch non-regulated traffic into the [reporting flow](/guides/fr-pa-reporting) upstream of this workflow.
+
+### How it works
+
+<Steps>
+  <Step title="Set State → processing">
+    Moves the invoice into a visible "in progress" state for operator dashboards.
+  </Step>
+  <Step title="Add Signature">
+    Locks the GOBL envelope so downstream steps work against an immutable document.
+  </Step>
+  <Step title="Record Invoice">
+    Validates SIRENs, checks both parties against the Annuaire, and stores the invoice in the local PA database.
+  </Step>
+  <Step title="Generate UBL Document">
+    Produces a Peppol France CIUS UBL invoice or credit note. Swap for **Generate CII Document** if the receiver requires CII, or **Generate PDF (Factur-X)** for hybrid PDF.
+  </Step>
+  <Step title="Send Peppol Document">
+    Transmits the generated document to the receiver's PA over the Peppol network.
+  </Step>
+  <Step title="Set State → sent">
+    Marks Peppol delivery as successful.
+  </Step>
+  <Step title="Forward Invoice to PPF">
+    Generates the simplified F1 invoice and forwards it, along with the mandatory `200` _déposée_ status, to the PPF.
+  </Step>
+  <Step title="Set State → completed">
+    Marks the full e-invoicing flow — Peppol delivery and PPF reporting — as complete.
+  </Step>
+</Steps>
+
+### Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" cta="Add to my workspace">
+      Records and sends a France-compliant invoice via Peppol and the PPF.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+## Receiving
+
+The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
+
+### How it works
+
+<Steps>
+  <Step title="Import Peppol Document">
+    Pulls the inbound payload from Peppol and branches on the detected format:
+    - `UBL` → **Import UBL Document** converts the UBL XML to GOBL.
+    - `CII` → **Import UN/CEFACT CII Document** converts the CII XML to GOBL.
+    - `PDF` → **Import PDF (Factur-X)** extracts the embedded CII and converts it to GOBL.
+  </Step>
+  <Step title="Set Folder → expenses">
+    Files the invoice under the `Invoices · Expenses` folder so it lands in the right place for accounting workflows.
+  </Step>
+  <Step title="Record Invoice">
+    Validates SIRENs, resolves your registered party as the customer (or supplier in self-billing flows), and guards against duplicate processing.
+  </Step>
+  <Step title="Set State → registered">
+    Marks the incoming invoice as successfully received.
+  </Step>
+</Steps>
+
+### Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA receive invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" cta="Add to my workspace">
+      Imports an incoming Peppol invoice (UBL, CII, or Factur-X) and records it.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
+    <ReceiveInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+---
+
+<FranceResources />

@@ -1,35 +1,34 @@
 ---
-title: "PA (Plateforme Agréée) Guide"
-sidebarTitle: "Plateforme Agréée (PA)"
-description: Send compliant e-invoices through France's PA system via Peppol and PPF
+title: "PA (Plateforme Agréée) guide"
+sidebarTitle: "Overview"
+description: France's PA system — concepts, readiness, and links to the four implementation guides.
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
-import RegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
-import ReceiveInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
-import SendInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
-import SendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
 
-## Introduction
+Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) (PA) under the DGFiP mandate. This page is the entry point to the four France PA implementation guides — [registration](/guides/fr-pa-registration), [invoicing](/guides/fr-pa-invoicing), [status](/guides/fr-pa-status), and [reporting](/guides/fr-pa-reporting).
+
+## Prerequisites
+
+- An Invopop workspace with the **Peppol** and **France** apps enabled.
+- French company details, including SIREN/SIRET.
+- A clear view of your invoicing flows (B2B, B2C, domestic, cross-border) — this drives which sub-guides apply.
 
 <Warning>
-  The workflow steps and API used in this guide are subject to change. We are actively working on new approaches to event handling for a more global use case. The examples here are functional and can be used today, but expect updates before the September 2026 mandate.
+  The France PA implementation is on a moving target. Action names, GOBL add-ons, and workflow shapes will keep changing until the September 2026 mandate. Each sub-guide flags its own readiness — see the matrix below.
 </Warning>
 
-France handles e-invoicing through approved PA (_Plateforme Agréée_) platforms as part of its electronic invoicing reform. Invopop is an officially approved PA platform, as listed on the [French government's official list of approved platforms](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees).
+## Readiness
 
-Invopop is _Plateforme Agréée_ (Approved Platform) by the French tax administration, meaning we have successfully provided all necessary documentation for the registration procedure and passed the technical compliance verification.
+| Capability | Status | Notes |
+|---|---|---|
+| Annuaire registration | <Badge color="green">Available</Badge> | Self-serve KYC in development |
+| Send invoices (UBL, CII, Factur-X) | <Badge color="green">Available</Badge> | API may change before Sept 2026 |
+| Receive invoices | <Badge color="green">Available</Badge> | API may change before Sept 2026 |
+| Lifecycle status | <Badge color="blue">Beta</Badge> | Moving to a first-class GOBL document |
+| E-reporting (Flow 10) | <Badge color="yellow">In development</Badge> | `fr-ctc-flow10-v1` add-on not yet released |
 
-### Prerequisites
-
-To use the France PA integration, you will need:
-
-- **Invopop workspace** with the Peppol and France apps enabled.
-- **French company registration details** including SIREN/SIRET numbers.
-- **Understanding of your invoicing flows** (B2B, B2C, domestic, cross-border) to plan registration and reporting requirements.
-- **Business processes for status updates** to implement the mandatory lifecycle status workflow.
-
-## Key Concepts
+## Key concepts
 
 | | |
 |------|------------|
@@ -465,6 +464,7 @@ The invoice must use the `fr-ctc-flow10-v1` add-on (Flow 10), which extends the 
 Payment reporting follows the same pattern as invoice reporting: send the payment document to a reporting workflow, Invopop stores it against the registered SIREN, and payment data is included in the periodic (and, when needed, corrective) report at the selected cadence.
 
 Payments also use the `fr-ctc-flow10-v1` add-on.
+
 
 ---
 
