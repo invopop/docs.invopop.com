@@ -13,9 +13,16 @@ schema: "org/party"
     "schema": "org/party",
     "steps": [
         {
+            "id": "74b9cf20-da92-11f0-864b-8d842f7d4ab2",
+            "name": "Verify Spanish Tax ID (NIF/CIF)",
+            "provider": "gov-es.lookup.verify"
+        },
+        {
             "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
             "name": "Register with VERI*FACTU",
-            "provider": "verifactu.register"
+            "provider": "verifactu.register",
+            "next": [],
+            "notes": "Register a party before issuing invoices"
         },
         {
             "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
@@ -24,12 +31,16 @@ schema: "org/party"
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
                 "state": "processing"
-            }
+            },
+            "next": [],
+            "notes": "Label the silo entry as 'Processing'"
         },
         {
             "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
             "name": "Wait for Upload VERI*FACTU",
-            "provider": "verifactu.wait.upload"
+            "provider": "verifactu.wait.upload",
+            "next": [],
+            "notes": "Block the job while waiting for the end-user to complete their registration steps."
         },
         {
             "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
@@ -38,23 +49,34 @@ schema: "org/party"
             "summary": "Set state to `registered`{.state .registered}",
             "config": {
                 "state": "registered"
-            }
+            },
+            "next": [],
+            "notes": "The party has issuing entitlement, so label as 'Registered'"
         },
         {
             "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
             "name": "Wait for Approval VERI*FACTU",
-            "provider": "verifactu.wait.approval"
+            "provider": "verifactu.wait.approval",
+            "next": [],
+            "notes": "Pending verification of uploaded documentation"
         }
     ],
     "rescue": [
         {
-            "id": "76c13260-66d7-11f0-a392-dfb6c99d6698",
+            "id": "4be625f0-da6d-11f0-864b-8d842f7d4ab2",
+            "name": "Unregister VERI*FACTU",
+            "provider": "verifactu.unregister",
+            "notes": "Disables a previously registered party from issuing invoices."
+        },
+        {
+            "id": "535bf030-da6d-11f0-864b-8d842f7d4ab2",
             "name": "Set State",
             "provider": "silo.state",
-            "summary": "Set state to `error`{.state .error}",
+            "summary": "Set state to `rejected`{.state .rejected}",
             "config": {
-                "state": "error"
-            }
+                "state": "rejected"
+            },
+            "notes": "Label the silo entry as 'Rejected'"
         }
     ]
 }
