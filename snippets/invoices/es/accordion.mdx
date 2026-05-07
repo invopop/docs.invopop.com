@@ -18,6 +18,8 @@ import CreditNoteInvoice from '/snippets/invoices/es/verifactu-credit-note.mdx';
 import CreditNoteInvoiceMin from '/snippets/invoices/es/verifactu-credit-note.min.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
 import ReplacementInvoiceMin from '/snippets/invoices/es/verifactu-replacement.min.mdx';
+import IEETInvoice from '/snippets/invoices/es/verifactu-ieet.mdx';
+import IEETInvoiceMin from '/snippets/invoices/es/verifactu-ieet.min.mdx';
 
 
 <AccordionGroup>
@@ -163,6 +165,21 @@ import ReplacementInvoiceMin from '/snippets/invoices/es/verifactu-replacement.m
 
   <Accordion title="Replacement invoice (factura de canje)">
     <ReplacementInvoiceMin />
+  </Accordion>
+
+  <Accordion title="B2C Hotel + IEET (Catalonia tourist tax)">
+    The Catalan tourist tax (IEET, *Impost sobre les Estades en Establiments Turístics*) is a regional tax administered by the Agència Tributària de Catalunya — not the AEAT — so it is **not** classified as a tax in the VERI\*FACTU record. Hotels declare it directly to the Generalitat through the quarterly Modelo 950.
+
+    Model the IEET as a document-level [`charge`](https://docs.gobl.org/draft-0/bill/invoice#charge) with `key: "tax"`. This keeps it outside the VAT base (Art. 35 of Llei 5/2017 requires it to be shown separately from the consideration) and lets it flow into the invoice's `ImporteTotal` for VERI\*FACTU without being reported as a tax category.
+
+    <Note>
+      Do not model the IEET as a `VAT` tax line — it is a fixed amount per night, not a percentage, and should not be reported to the AEAT. The `reason` field on the charge is what appears on the guest's invoice, so include the establishment type, location, nights, and rate for a clear breakdown.
+    </Note>
+
+    <CodeGroup>
+      <IEETInvoiceMin />
+      <IEETInvoice />
+    </CodeGroup>
   </Accordion>
 
 </AccordionGroup>
