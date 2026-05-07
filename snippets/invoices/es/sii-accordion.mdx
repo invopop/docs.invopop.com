@@ -14,6 +14,8 @@ import B2BExemptE1InvoiceMin from '/snippets/invoices/es/sii-exempt-E1.min.mdx';
 import B2BExemptE1Invoice from '/snippets/invoices/es/sii-exempt-E1.mdx';
 import B2COneStopShopInvoiceMin from '/snippets/invoices/es/sii-b2c-oss.min.mdx';
 import B2COneStopShopInvoice from '/snippets/invoices/es/sii-b2c-oss.mdx';
+import IEETInvoiceMin from '/snippets/invoices/es/sii-ieet.min.mdx';
+import IEETInvoice from '/snippets/invoices/es/sii-ieet.mdx';
 
 <AccordionGroup>
 	<Accordion title="B2C Standard Invoice">
@@ -184,6 +186,24 @@ import B2COneStopShopInvoice from '/snippets/invoices/es/sii-b2c-oss.mdx';
 		<CodeGroup>
 			<B2COneStopShopInvoiceMin />
 			<B2COneStopShopInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="B2C Hotel + IEET (Catalonia tourist tax)">
+
+		The Catalan tourist tax (IEET, *Impost sobre les Estades en Establiments Turístics*) is a regional tax administered by the Agència Tributària de Catalunya — not the AEAT — so it is **not** reported as a tax to SII. Hotels declare it directly to the Generalitat through the quarterly Modelo 950.
+
+		Notice:
+
+		- model the IEET as a document-level [`charge`](https://docs.gobl.org/draft-0/bill/invoice#charge) with `key: "tax"`, which keeps it out of the VAT base while still appearing as a separate line on the guest's invoice as required by Art. 35 of Llei 5/2017,
+		- do not model the IEET as a `VAT` tax line — it is a fixed amount per night, not a percentage, and the AEAT does not collect it,
+		- the `reason` field on the charge is what the guest sees on the invoice; include the establishment type, location, nights, and rate so the breakdown is unambiguous,
+		- accommodation is invoiced with reduced VAT (10%) on the room base; the IEET charge is added on top of `total_with_tax` to produce `payable`,
+		- the quarterly Modelo 950 to the Generalitat is independent of individual invoices, but structuring the IEET as a typed charge lets hotels query their GOBL invoices for the data they need to file it.
+
+		<CodeGroup>
+			<IEETInvoiceMin />
+			<IEETInvoice />
 		</CodeGroup>
 	</Accordion>
 </AccordionGroup>
