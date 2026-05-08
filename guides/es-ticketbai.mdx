@@ -46,9 +46,39 @@ In order to register a supplier and issue invoices, you will need:
 <Info>
   TicketBAI requires all suppliers to sign an agreement with their invoicing
   provider explicitly granting permission to represent them. See the
-  [TicketBAI Supplier Onboarding Guide](/guides/es-ticketbai-supplier) for
+  [TicketBAI supplier onboarding guide](/guides/es-ticketbai-supplier) for
   detailed instructions on how to register suppliers.
 </Info>
+
+### Bizkaia individual suppliers (LROE Modelo 140)
+
+Self-employed individuals (_autónomos_) issuing invoices in Bizkaia report through the LROE _Modelo 140_ register, which requires every invoice to declare an economic activity code (_epígrafe_). You must add the [`es-tbai-bi-activity`](https://docs.gobl.org/addons/es-tbai-v1#activity-code-bizkaia) extension to the supplier when:
+
+- the supplier's tax ID is a personal one (DNI or NIE), not a company NIF, and,
+- the [`es-tbai-region`](https://docs.gobl.org/addons/es-tbai-v1#region-code) extension resolves to `BI` (Bizkaia).
+
+The value must be a valid Bizkaia _epígrafe_ from the [official LROE list](https://www.batuz.eus/fitxategiak/batuz/lroe/batuz_lroe_lista_epigrafes_v1_0_4.xlsx) (1 to 7 digits). Companies (_personas jurídicas_) file through _Modelo 240_ and do not need this extension.
+
+```json Supplier with activity code
+"supplier": {
+  "name": "Ane Etxebarria",
+  "tax_id": {
+    "country": "ES",
+    "code": "12345678Z"
+  },
+  "ext": {
+    "es-tbai-bi-activity": "722300"
+  },
+  "addresses": [
+    {
+      "locality": "Bilbo",
+      "region": "Bizkaia",
+      "code": "48003",
+      "country": "ES"
+    }
+  ]
+}
+```
 
 ## Setup
 
