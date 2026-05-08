@@ -2,6 +2,8 @@ import B2CInvoiceMin from '/snippets/invoices/it/sdi-b2c.min.mdx';
 import B2CInvoice from '/snippets/invoices/it/sdi-b2c.mdx';
 import B2BInvoiceMin from '/snippets/invoices/it/sdi-b2b.min.mdx';
 import B2BInvoice from '/snippets/invoices/it/sdi-b2b.mdx';
+import B2GInvoiceMin from '/snippets/invoices/it/sdi-b2g.min.mdx';
+import B2GInvoice from '/snippets/invoices/it/sdi-b2g.mdx';
 import StampDutyInvoiceMin from '/snippets/invoices/it/sdi-stamp-duty.min.mdx';
 import StampDutyInvoice from '/snippets/invoices/it/sdi-stamp-duty.mdx';
 import B2BAdditionalMin from '/snippets/invoices/it/sdi-b2b-additional.min.mdx';
@@ -18,12 +20,11 @@ import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
 
 		Notice:
 
-		- the minimal version (`sdi-b2c.min.mdx`) contains only the essential fields required to create the invoice,
-		- the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon ensures the document will be validated using the SDI (Sistema di Interscambio) rules built into the [GOBL](https://docs.gobl.org) library,
-		- customer details may be simplified for B2C transactions as per Italian requirements,
-		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
-		- the built version (`sdi-b2c.mdx`) shows the normalized document with calculated totals, line item sums, IVA (VAT) breakdowns, and automatically generated fields, and,
-		- make sure to process it with the SDI workflow to transmit the invoice to the Italian tax authority.
+	- `"$tags": ["b2g"]`  scenario will set the `it-sdi-format` to FPA12 (vs. FPR12 default for private parties) and the document type to TD01. 
+	- The recipient Codice Univoco for PA goes in customer.inboxes with key `it-sdi-code`. 
+	- The customer tax_id for a PA entity is the Codice Fiscale (11 digits for the example _Comune di Roma_).
+	- RF01 ordinary fiscal regime on the supplier, required by FatturaPA.
+	- Example has CIG/CUP codes for public tender or funded project (not required otherwise.
 
 		<CodeGroup>
 			<B2CInvoiceMin />
@@ -47,6 +48,25 @@ import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
 		<CodeGroup>
 			<B2BInvoiceMin />
 			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+		<Accordion title="B2G Invoice">
+
+		In this example, we're issuing a B2G invoice from an Italian supplier to the italian Government.
+
+		Notice:
+
+		- both supplier and customer have their Partita IVA (VAT number) and Codice Fiscale properly specified,
+		- the minimal version contains only essential fields; `gobl build` handles all calculations,
+		- when running `gobl build`, the system automatically calculates totals, applies IVA rates, and normalizes the document according to SDI requirements,
+		- the built version shows all calculated fields including tax breakdowns, line totals, payment terms, and final amounts,
+		- the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon validates the document structure for B2B transactions, and,
+		- the invoice will be transmitted through the SDI system and delivered to the customer's designated channel.
+
+		<CodeGroup>
+			<B2GInvoiceMin />
+			<B2GInvoice />
 		</CodeGroup>
 	</Accordion>
 
