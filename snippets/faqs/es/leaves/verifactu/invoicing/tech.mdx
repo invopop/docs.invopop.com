@@ -1,0 +1,46 @@
+<AccordionGroup>
+  <Accordion title="What is the VERI*FACTU chain?">
+    VERI\*FACTU requires every request to be linked with a fingerprint or hash. During the "Generate VERI\*FACTU" and "Cancel VERI\*FACTU" actions, Invopop will automatically find the last request made for the same supplier, and incorporate the chained data into the new request.
+
+    Its important to understand the VERI\*FACTU focuses on requests, and not individual documents; a single invoice may have multiple entries in the chain if it has been processed multiple times due to incorrect details, cancellations, or substitutions.
+
+    Invopop guarantees the chain is never broken using database transactions and retries in the case of collisions.
+  </Accordion>
+  <Accordion title="What are the most common errors when submitting invoices to VERI*FACTU?">
+    The most common errors are related to format issues or invalid extensions, which are already handled in Invopop through the [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon validations. These prevent most of the typical problems before they reach the submission stage.
+
+    Among the errors that aren't yet validated on our side, the five most frequent ones are:
+
+    * `4104: Error en la cabecera: el valor del campo NIF del bloque ObligadoEmision no está identificado.` → The issuer's name must match what's registered for that NIF (tax ID).
+    * `4102: El XML no cumple el esquema. Falta informar campo obligatorio.` → Usually occurs when a required field is missing in the XML, often within the Desglose (taxes) section.
+    * `1110: El NIF no está identificado en el censo de la AEAT.` → The provided NIF (tax ID) isn't found in the AEAT registry (often due to typos or testing data).
+    * `3000: Registro de facturación duplicado.` → Triggered when issuing the same invoice series/code twice.
+    * `2001: El NIF del bloque Destinatarios no está identificado en el censo de la AEAT.` → Similar to 1110, but applies to the NIF (tax ID) of the customer.
+  </Accordion>
+  <Accordion title="In my VERI*FACTU's XML, DescripcionOperacion is being populated with line item descriptions, how do I change this?">
+    You can set your own description using the notes object in the invoice. The key used for the description needs to be set to general. For example:
+
+    ```
+     "notes": [
+            {
+                "key": "general",
+                "text": "This will appear as DescripcionOperacion"
+            }
+        ]
+    ```
+
+    We generate a default description if the note is not provided which is what you are currently seeing. This default description will neatly cut off before it reaches a length of 500 characters as that is the limit the AEAT imposes.
+  </Accordion>
+  <Accordion title="What $tags are supported in GOBL with the 'es-verifactu-v1' addon?">
+    | Key | Text |
+    |-----|------|
+    | `reverse-charge` | Reverse Charge / Inversión del sujeto pasivo. |
+    | `simplified-scheme` | Factura expedida por contribuyente en régimen simplificado. |
+    | `self-billed` | Facturación por el destinatario. |
+    | `travel-agency` | Régimen especial de las agencias de viajes. |
+    | `second-hand-goods` | Régimen especial de los bienes usados. |
+    | `art` | Régimen especial de los objetos de arte. |
+    | `antiques` | Régimen especial de las antigüedades y objetos de colección. |
+    | `cash-basis` | Régimen especial del criterio de caja. |
+  </Accordion>
+</AccordionGroup>

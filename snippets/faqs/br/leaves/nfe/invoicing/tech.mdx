@@ -1,0 +1,102 @@
+<AccordionGroup>
+  <Accordion title="What are the required and optional fields for NF-e invoices in Brazil?">
+    NF-e (`br-nfe-v4`) covers electronic invoices for the circulation of **goods** in Brazil. It maps to two fiscal models:
+
+    - **Model 55 — NF-e**: B2B or business-to-government transactions
+    - **Model 65 — NFC-e**: B2C consumer transactions (simplified)
+
+    #### Notation
+
+    - ✅ **Required** — validation will fail if missing
+    - ⬜ **Optional** — can be omitted
+    - 🔧 **Auto-normalized** — set automatically if not provided
+
+    ### Invoice Header
+
+    | Field | Required | Notes |
+    | --- | --- | --- |
+    | `$schema` | auto | `https://gobl.org/draft-0/bill/invoice` |
+    | `$addons` | ✅ | `["br-nfe-v4"]` |
+    | `$tags` | ⬜ | Use `["simplified"]` for NFC-e (model 65) |
+    | `uuid` | ⬜ | Auto-generated if absent |
+    | `type` | ⬜ | Defaults to `standard` |
+    | `series` | ✅ | Pattern: `^(?:0\|[1-9]{1}[0-9]{0,2})$` |
+    | `code` | ⬜ | Required to sign the document. |
+    | `issue_date` | ✅ | ISO date, e.g. `"2024-11-15"` |
+    | `currency` | ✅ | Must be `"BRL"` |
+    | `tax` | ✅ | See Tax Extensions |
+    | `notes` | ✅ | At least one note with `key: "reason"` required |
+    | `lines` | ✅ | At least one line item |
+    | `charges` | ⬜ | Document-level charges |
+    | `discounts` | ⬜ | Document-level discounts |
+    | `supplier` | ✅ | See Supplier |
+    | `customer` | ✅ model 55 <br /> ⬜ model 65 | See Customer |
+    | `payment` | ✅ if not fully paid | See Payment |
+    | `ordering` | ⬜ | |
+    | `delivery` | ⬜ | |
+
+    ### Tax Extensions
+
+    | Extension | Required | Values |
+    | --- | --- | --- |
+    | `tax.ext.br-nfe-model` | ✅ | `"55"` (NF-e, B2B) or `"65"` (NFC-e, B2C) |
+    | `tax.ext.br-nfe-presence` | ✅ | See table below. Restricted by model. |
+    | `tax.ext.br-nfe-regime` | ⬜ | `"1"`=Simples Nacional, `"2"`=Simples Nacional Excess, `"3"`=Normal |
+    | `tax.ext.br-nfe-fiscal-incentive` | ⬜ | `"1"`=Has incentive, `"2"`=No incentive |
+
+    **`br-nfe-presence` allowed values:**
+
+    | Code | Description | NF-e (55) | NFC-e (65) |
+    | --- | --- | --- | --- |
+    | `0` | N/A | ✅ | ❌ |
+    | `1` | In-person | ✅ | ✅ |
+    | `2` | Internet | ✅ | ❌ |
+    | `3` | Tele-service | ✅ | ❌ |
+    | `4` | Home delivery | ❌ | ✅ |
+    | `5` | Off-site | ✅ | ❌ |
+    | `9` | Others | ✅ | ❌ |
+
+    ```json
+    "tax": {
+      "ext": {
+        "br-nfe-model": "55",
+        "br-nfe-presence": "1"
+      }
+    }
+    ```
+
+    ### Notes
+
+    At least one note with `key: "reason"` is **required**. It maps to the NF-e `natOp` field (nature of the operation).
+
+    ### Supplier
+
+    | Field | Required | Notes |
+    | --- | --- | --- |
+    | `name` | ✅ | |
+    | `tax_id.country` | ✅ | `"BR"` |
+    | `tax_id.code` | ✅ | CNPJ (14 digits) or CPF (11 digits), Mod11 validated |
+    | `identities[].key: "br-nfe-state-reg"` | ✅ | State Registration (Inscrição Estadual) |
+    | `addresses` | ✅ | At least one |
+    | `ext.br-ibge-municipality` | ✅ | 7-digit IBGE municipality code |
+
+    ### Customer (Model 55 — required, Model 65 — optional)
+
+    | Field | Required | Notes |
+    | --- | --- | --- |
+    | `tax_id.country` | ✅ | `"BR"` |
+    | `tax_id.code` | ✅ | CNPJ or CPF |
+    | `addresses` | ✅ | |
+    | `ext.br-ibge-municipality` | ✅ | Required when addresses are present |
+
+    ### Line items
+
+    Required tax categories per line: `ICMS`, `PIS`, `COFINS`. `IPI` is optional.
+
+    Optional item extensions: `item.ext.br-nfe-cfop`, `item.identities[].key: "ncm" | "gtin" | "gtin+taxable"`.
+
+    ### Payment
+
+    Required when the invoice is not fully paid. Must include `payment.instructions.key`. Payment-means mapping is auto-set unless `key: "other"`.
+  </Accordion>
+</AccordionGroup>
