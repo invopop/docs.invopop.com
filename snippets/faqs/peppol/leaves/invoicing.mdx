@@ -1,0 +1,29 @@
+  <Accordion title="What should we do if the customer doesn't belong to the Peppol network?">
+    In countries where Peppol is the standard but not mandatory, you may still need to issue an e-invoice when the recipient isn't on the network. Both parties can agree on an alternative transfer method, but the invoice must still be EN16931 compliant.
+
+    Recommended approach:
+    - Set up a separate workflow that generates the XML without the send-Peppol-document step
+    - Or reuse your existing workflow without the customer Peppol ID — the send step is automatically skipped
+    - Fetch the generated XML and deliver it through the agreed channel, typically email
+  </Accordion>
+
+  <Accordion title="How do I handle B2C invoices in Peppol?">
+    B2C invoices typically lack the structured customer information required for Peppol delivery, and most consumers don't have inboxes. Use a conditional workflow:
+
+    1. Add an **If/Else** step that checks for a customer inbox using `count(customer.inboxes, true) > 0`.
+    2. On the `false` branch, generate a PDF and email it to the customer, then stop the flow.
+
+    This routes B2B invoices through Peppol while keeping a smooth path for consumers.
+  </Accordion>
+
+  <Accordion title="How do I handle 'Receiver Not Found' errors?">
+    If a job fails with `KO` and `receiver not found in the peppol network`, treat it like an invalid email address — the recipient simply isn't reachable on Peppol. Add the **Lookup Participant ID** step (ideally in a separate validation workflow run against customer data) so you catch missing IDs before generating the invoice.
+  </Accordion>
+
+  <Accordion title="Should I set the `$regime` field when using Peppol?">
+    No. The regime is automatically derived from the supplier's settings, which is the recommended approach for Peppol — leave it unset on the document.
+  </Accordion>
+
+  <Accordion title="Where do I find Peppol GOBL documentation?">
+    See the [`oasis-ubl-v2`](https://docs.gobl.org/addons/oasis-ubl-v2) addon and the [Peppol app reference](/apps/peppol) for required fields, supported document types, and Participant ID schemes.
+  </Accordion>

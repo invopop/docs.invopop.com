@@ -1,0 +1,52 @@
+  <Accordion title="How do I import received invoices from suppliers?">
+    Invopop automatically imports received invoices through a polling service:
+
+    1. **Configure polling interval** during party registration (hourly, daily, weekly, or monthly)
+    2. **Set up the sync workflow** to query KSeF for new invoices
+    3. **Configure the import workflow** to convert FA(3) XML to GOBL format
+    4. **Link the workflows** in the Poland app configuration
+
+    The system automatically checks KSeF at your chosen interval and imports any new invoices to your configured folder.
+
+    **For manual import**, use the API to trigger import jobs with specific KSeF numbers or date ranges. See the [Import Received Invoices](/guides/pl-ksef#import-received-invoices) section in the guide.
+  </Accordion>
+
+  <Accordion title="Can I import historical invoices or backfill missed invoices?">
+    Yes. You can manually trigger a sync workflow to import invoices from a specific date range using the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post).
+
+    Pass the `from` and `upto` date parameters to sync all invoices received within that period:
+
+    ```json
+    {
+      "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
+      "entry_id": "YOUR_PARTY_ENTRY_ID",
+      "args": {
+        "from": "2026-01-01T00:00:00Z",
+        "upto": "2026-01-31T23:59:59Z"
+      }
+    }
+    ```
+
+    This is useful for backfilling invoices after a polling outage or importing historical data before enabling automatic polling.
+  </Accordion>
+
+  <Accordion title="How do I know if my automatic invoice import is working?">
+    Check these indicators:
+
+    1. **Polling configuration**: Verify the polling interval is set in your party registration workflow configuration
+    2. **App configuration**: Confirm the Poland app has your sync workflow configured
+    3. **Recent imports**: Check the "Invoices · Expenses" folder for newly imported invoices
+    4. **Job logs**: Review job logs in the Console for sync and import workflow executions
+    5. **Error notifications**: Set up email or Slack notifications in your workflow error handling to alert you of failures
+
+    <Tip>
+      Test the import by manually triggering the sync workflow with a date range that includes known received invoices.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="What format do received KSeF invoices arrive in?">
+    FA(3) XML conforming to the Ministry of Finance schema. Each invoice carries a unique KSeF reference (numer KSeF) plus the issuer's signature and a QR code linking to the public verification page.
+  </Accordion>
+  <Accordion title="How does Invopop convert received Polish invoices into GOBL?">
+    Inbound FA(3) XMLs are parsed via [`gobl.favat`](https://github.com/invopop/gobl). Tax rates, line items, and parties map onto GOBL fields; the original signed XML is preserved as a silo entry attachment.
+  </Accordion>
