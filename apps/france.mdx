@@ -1,0 +1,200 @@
+---
+title: "France"
+description: "Manage all French e-invoicing flows — Plateforme Agréée (B2B, B2C)"
+keywords: ['france', 'pa', 'plateforme agréée',  'ppf', 'annuaire', 'factur-x', 'fr']
+mode: wide
+---
+
+import PaSendInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
+import PaReceiveInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
+import PaRegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
+import PaDeregisterWorkflow from '/snippets/workflows/fr/fr-pa-deregister.mdx';
+import PaSendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
+import FacturxWorkflow from '/snippets/workflows/fr/facturx-invoice.mdx';
+import PeppolAccordion from '/snippets/invoices/fr/peppol-accordion.mdx';
+import FacturxAccordion from '/snippets/invoices/fr/facturx-accordion.mdx';
+import Supplier from '/snippets/suppliers/fr/company.mdx';
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import FAQ from '/snippets/faqs/fr/composers/app-france.mdx';
+
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div>
+				<br />
+				<Card horizontal title="PA (Plateforme Agréée) Guide" icon="https://assets.invopop.com/flags/fr.svg" href="/guides/fr-pa">
+					View guide ›
+				</Card>
+			</div>
+
+			|           |                                        |
+			|-----------|----------------------------------------|
+			| Developer | [Invopop](https://invopop.com)         |
+			| Category  | Government                             |
+			| Scope     | B2B, B2G                               |
+			| Country   | [France](/compliance/france)           |
+		</Columns>
+
+		Invopop's **France app** centralises every French e-invoicing flow — domestic B2B via the **Plateforme Agréée (PA)** model. Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) under the DGFiP mandate.
+
+		**Key features**
+
+		* Domestic B2B invoicing and B2C/cross-border via e-reporting.
+		* French format support: UBL (Peppol France CIUS), CII, Factur-X.
+		* Annuaire (French Directory) supplier registration.
+
+
+		Check out the guides below to get started:
+		- [PA overview](/guides/fr-pa) · [Registration](/guides/fr-pa-registration) · [Invoicing](/guides/fr-pa-invoicing) · [Status](/guides/fr-pa-status) · [Reporting](/guides/fr-pa-reporting)
+	</Tab>
+
+	<Tab title="Limitations">
+
+		### Plateforme Agréée scope
+
+		<Note>The PA implementation is being actively developed. Action names, GOBL add-ons, and workflows can change before the 1 September 2026 mandate, especially items marked `Beta` or `In development`.</Note>
+
+		| Capability | Status | Notes |
+		|---|---|---|
+		| Annuaire registration | <Badge color="green">Available</Badge> | Self-serve KYC in development |
+		| Send invoices (UBL, CII, Factur-X) | <Badge color="green">Available</Badge> | API may change before Sept 2026 |
+		| Receive invoices | <Badge color="green">Available</Badge> | API may change before Sept 2026 |
+		| Lifecycle status (CDAR) | <Badge color="blue">Beta</Badge> | Moving to a first-class GOBL document |
+		| E-reporting (Flow 10) | <Badge color="yellow">In development</Badge> | `fr-ctc-flow10-v1` add-on not yet released |
+
+	</Tab>
+
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app.
+
+		Plateforme Agréée — registration
+		<Card title="Register in Annuaire" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Register a party in the French Annuaire so they can issue and receive regulated e-invoices.
+		</Card>
+		<Card title="Register Peppol party" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Register the party on the Peppol network for transport.
+		</Card>
+		<Card title="Register reporter" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Enable the party for periodic e-reporting to the PPF.
+		</Card>
+		<Card title="Disable in Annuaire" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Remove a party's Annuaire registration.
+		</Card>
+		<Card title="Disable reporter" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Disable a party's e-reporting registration.
+		</Card>
+
+		Plateforme Agréée — invoicing
+		<Card title="Record invoice" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			<div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+			Record the invoice in the directory ahead of transmission and PPF reporting.
+		</Card>
+		<Card title="Generate UBL document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			<div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+			Generate a Peppol France CIUS UBL invoice or credit note from a GOBL document.
+		</Card>
+		<Card title="Generate CII document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Generate a UN/CEFACT CII XML document from a GOBL invoice.
+		</Card>
+		<Card title="Send Peppol document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			<div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+			Send the generated document over the Peppol network to the buyer's PA.
+		</Card>
+		<Card title="Forward invoice to PPF" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Forward the simplified F1 invoice to the PPF as the fifth corner.
+		</Card>
+		<Card title="Import Peppol document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Import an inbound Peppol document into the workflow.
+		</Card>
+		<Card title="Import UBL document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Parse an inbound UBL document into a GOBL invoice.
+		</Card>
+		<Card title="Import CII document" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Parse an inbound UN/CEFACT CII document into a GOBL invoice.
+		</Card>
+		<Card title="Import Factur-X PDF" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Extract the embedded CII XML from a Factur-X PDF/A-3 and parse it into GOBL.
+		</Card>
+
+		Plateforme Agréée — status
+		<Card title="Generate CDAR" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Build a Cross Domain Acknowledgement and Response document for lifecycle status updates.
+		</Card>
+		<Card title="Record status" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Persist a lifecycle status update in the directory.
+		</Card>
+		<Card title="Forward status to PPF" icon="https://assets.invopop.com/apps/peppol/icon.svg" horizontal>
+			Forward a lifecycle status to the PPF for regulated flows.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+
+		Plateforme Agréée — invoicing
+		<AccordionGroup>
+			<Accordion title="PA send invoice">
+				<PaSendInvoiceWorkflow />
+			</Accordion>
+			<Accordion title="PA receive invoice">
+				<PaReceiveInvoiceWorkflow />
+			</Accordion>
+			<Accordion title="PA send status">
+				<PaSendStatusWorkflow />
+			</Accordion>
+			<Accordion title="Factur-X invoice">
+				<FacturxWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Plateforme Agréée — party
+		<AccordionGroup>
+			<Accordion title="PA register party">
+				<PaRegisterWorkflow />
+			</Accordion>
+			<Accordion title="PA deregister party">
+				<PaDeregisterWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+	</Tab>
+
+	<Tab title="Documents">
+		<AccordionGroup>
+			<Accordion title="Supplier">
+				<Supplier />
+			</Accordion>
+		</AccordionGroup>
+
+		Plateforme Agréée example invoices
+
+		<PeppolAccordion />
+
+		Factur-X example invoices
+
+		<FacturxAccordion />
+
+
+		Copy and paste these documents into the [GOBL builder](https://build.gobl.org) in order to preview and verify them.
+	</Tab>
+
+</Tabs>
+
+## FAQ
+
+<FAQ />
+
+More answers in our [France FAQ](/faq/france) section
+
+---
+
+<FranceResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the France app →
+</Card>
