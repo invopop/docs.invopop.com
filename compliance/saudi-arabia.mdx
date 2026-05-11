@@ -2,14 +2,17 @@
 title: "Invoicing compliance in Saudi Arabia"
 sidebarTitle: "Compliance"
 description: "Saudi Arabia's ZATCA FATOORA e-invoicing obligations for business and consumer transactions"
-icon: "transporter-empty"
 ---
 
-<Note>Invopop support for Saudi Arabia (ZATCA) is expected to be ready in the second quarter of 2026. For early-access enquiries, contact us at [support@invopop.com](mailto:support@invopop.com).</Note>
+<Note>Invopop support for Saudi Arabia (ZATCA) is expected to be ready June 1st 2026. For early-access enquiries, contact us at [support@invopop.com](mailto:support@invopop.com).</Note>
 
 ## Executive summary
 
-Saudi Arabia mandates electronic invoicing through the **FATOORA** system, operated by the **ZATCA** (Zakat, Tax and Customs Authority). All resident VAT-registered taxpayers must issue invoices and credit/debit notes in a structured XML format from a compliant solution, and — under Phase 2 — must connect that solution to the ZATCA platform. The system splits flows by counterparty: **standard tax invoices** (B2B, B2G) follow a clearance model, where ZATCA must cryptographically stamp the document before it can be shared with the buyer; **simplified tax invoices** (B2C) follow a reporting model, where the document is issued at the point of sale and reported to ZATCA within 24 hours. The system was introduced in phases starting December 2021, with Phase 2 rolling out to taxpayers in waves by VAT-taxable revenue threshold.
+Saudi Arabia mandates electronic invoicing through the **FATOORA** system, operated by **ZATCA** (Zakat, Tax and Customs Authority). All VAT-registered taxpayers must issue invoices in XML format from a compliant solution that connects to ZATCA. 
+
+**Standard tax invoices** (B2B, B2G) follow a clearance model, where ZATCA digitally stamps the document before it's shared with the buyer.
+
+**Simplified tax invoices** (B2C) follow a reporting model, where the document is issued at the point of sale and reported to ZATCA within 24 hours.
 
 | | |
 |---|---|
@@ -22,7 +25,9 @@ Saudi Arabia mandates electronic invoicing through the **FATOORA** system, opera
 
 ## The ZATCA FATOORA system
 
-ZATCA is the tax and customs authority in Saudi Arabia. FATOORA is the e-invoicing platform that VAT-registered taxpayers use to clear standard tax invoices in real time and to report simplified tax invoices within 24 hours of issuance. The invoice is an XML document built on the UBL 2.1 standard with ZATCA-specific extensions, cryptographically stamped by the issuer's solution (an E-invoice Generation Solution, or EGS) using an X.509 certificate issued by ZATCA during onboarding (the CSID — Cryptographic Stamp Identifier).
+ZATCA is the tax and customs authority in Saudi Arabia. FATOORA is the e-invoicing platform that VAT-registered taxpayers use to clear standard tax invoices in real time and to report simplified tax invoices within 24 hours of issuance. 
+
+The invoice is an XML document built on the UBL 2.1 standard with ZATCA-specific extensions, cryptographically stamped by Invopop using the supplier's X.509 certificate issued by ZATCA.
 
 The scope covers all **resident VAT-registered taxable persons** in the Kingdom, plus any third party issuing invoices on their behalf. Non-resident taxable persons are out of scope.
 
@@ -30,10 +35,10 @@ The scope covers all **resident VAT-registered taxable persons** in the Kingdom,
 
 | Type | Counterparty | Flow | Invopop coverage |
 |---|---|---|:---:|
-| Standard tax invoice | B2B, B2G | Clearance (real-time stamp by ZATCA before sharing with buyer) | Q2 2026 |
-| Simplified tax invoice | B2C | Reporting (issued at point of sale, reported to ZATCA within 24h) | Q2 2026 |
-| Credit note | Any | Same flow as the invoice it corrects | Q2 2026 |
-| Debit note | Any | Same flow as the invoice it corrects | Q2 2026 |
+| Standard tax invoice | B2B, B2G | Clearance (real-time stamp by ZATCA before sharing with buyer) | June 1st 2026 |
+| Simplified tax invoice | B2C | Reporting (issued at point of sale, reported to ZATCA within 24h) | June 1st 2026 |
+| Credit note | Any | Same flow as the invoice it corrects | June 1st 2026 |
+| Debit note | Any | Same flow as the invoice it corrects | June 1st 2026 |
 
 <AccordionGroup>
   <Accordion title="Standard tax invoice (B2B, B2G)">
@@ -51,8 +56,8 @@ The scope covers all **resident VAT-registered taxable persons** in the Kingdom,
   <Accordion title="Credit and debit notes">
     Issued invoices cannot be cancelled or edited after issuance. Corrections are made through:
 
-    - **Credit notes** — reduce the value of a previously issued invoice (returns, post-sale discounts, corrections).
-    - **Debit notes** — increase the value of a previously issued invoice.
+    - **Credit notes**: reduce the value of a previously issued invoice (returns, post-sale discounts, corrections).
+    - **Debit notes**: increase the value of a previously issued invoice.
 
     Notes must reference the original invoice's number, date and the reason for correction. They flow through the same clearance or reporting channel as the document type they correct.
   </Accordion>
@@ -63,17 +68,17 @@ The scope covers all **resident VAT-registered taxable persons** in the Kingdom,
 ZATCA introduced e-invoicing in two phases.
 
 <AccordionGroup>
-  <Accordion title="Phase 1 — Generation (from 4 December 2021)">
+  <Accordion title="Phase 1: invoice generation (since 2021)">
     Mandatory for all VAT-registered residents since 4 December 2021. Required taxpayers to:
 
     - Issue invoices and notes in a structured electronic format from a compliant solution.
     - Stop issuing handwritten or manually edited invoices.
     - Include a QR code on simplified tax invoices.
 
-    Phase 1 did not require integration with ZATCA's platform — the obligation was to generate compliant electronic documents and store them.
+    Phase 1 did not require integration with ZATCA's platform, the obligation was to generate compliant electronic documents and store them.
   </Accordion>
 
-  <Accordion title="Phase 2 — Integration (from 1 January 2023)">
+  <Accordion title="Phase 2: Integration (from 2023)">
     The integration phase started on 1 January 2023 and is rolling out to taxpayers in **waves** based on their VAT-taxable revenue. In addition to Phase 1 requirements, Phase 2 introduces:
 
     - Integration of the issuer's solution with the FATOORA platform via API.
@@ -90,40 +95,6 @@ ZATCA introduced e-invoicing in two phases.
     | 24 | > SAR 375,000 | 2022, 2023 or 2024 | 30 June 2026 |
 
     Wave 24 effectively brings every VAT-registered business under the mandatory VAT registration threshold (SAR 375,000) into scope. ZATCA notifies taxpayers in each wave at least six months before their go-live date.
-  </Accordion>
-</AccordionGroup>
-
-### Technical building blocks
-
-<AccordionGroup>
-  <Accordion title="Format and structure">
-    Invoices, credit notes and debit notes are **UBL 2.1 XML** documents that follow ZATCA's *Electronic Invoice XML Implementation Standard*, with KSA-specific extensions. Simplified invoices may additionally be presented to the buyer as a PDF/A-3 with the XML embedded.
-  </Accordion>
-
-  <Accordion title="QR code">
-    Every document carries a Base64-encoded **TLV** (tag-length-value) QR code.
-
-    - **Phase 1**: five tags — seller name, seller VAT registration number, timestamp, invoice total (VAT inclusive), VAT total.
-    - **Phase 2**: nine tags — the original five plus the invoice hash, the cryptographic stamp, the public key, and (for standard invoices) ZATCA's signature.
-
-    The QR is mandatory on simplified invoices in Phase 1 and on all documents from Phase 2.
-  </Accordion>
-
-  <Accordion title="UUID, ICV and PIH">
-    Each document carries three identifiers that secure the integrity of the invoicing chain:
-
-    - **UUID** — a 128-bit unique identifier generated by the issuer's solution for each document.
-    - **ICV (Invoice Counter Value)** — a monotonically increasing counter per solution. Values cannot be reused or skipped.
-    - **PIH (Previous Invoice Hash)** — the hash of the immediately previous document issued by the same solution, forming a tamper-evident chain.
-  </Accordion>
-
-  <Accordion title="Cryptographic stamping (CSID)">
-    During Phase 2 onboarding, the taxpayer's E-invoice Generation Solution (EGS) is provisioned with an X.509 certificate from ZATCA — the **CSID (Cryptographic Stamp Identifier)**. The solution uses the CSID to:
-
-    - Apply an **ECDSA digital signature** over the document hash (the cryptographic stamp), ensuring integrity and non-repudiation.
-    - Authenticate to ZATCA's clearance and reporting APIs.
-
-    For standard invoices, ZATCA adds its own clearance stamp on top of the issuer's stamp before returning the cleared document. For simplified invoices, the issuer's stamp alone is sufficient at point of sale.
   </Accordion>
 </AccordionGroup>
 
