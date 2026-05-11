@@ -49,3 +49,29 @@
   <Accordion title="Where do I find Poland-specific GOBL documentation?">
     See the [Poland tax regime in GOBL](https://docs.gobl.org/regimes/pl) for tax categories and NIP rules. The [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) addon documents the FA(3) schema fields required for KSeF.
   </Accordion>
+
+  <Accordion title='How do I set the unit of measure (jednostka miary) on a line item, like "szt." or "usł."?'>
+    Polish invoicing law requires a unit of measure for every line, and KSeF maps it to the `P_8A` field on each `FaWiersz`. Invopop supports two ways to populate it:
+
+    1. **Canonical unit code on `Item.Unit`** — preferred when the unit exists in the GOBL unit catalogue or as a UN/ECE Recommendation 20 code. For example, `Item.Unit: "H87"` (piece) or `Item.Unit: "KGM"` (kilogram). The gobl.ksef converter emits the UN/ECE code directly into `P_8A`.
+    2. **Free-form label on `Item.Meta["unit-label"]`** — use this for Polish abbreviations that do not match a canonical code, such as `"szt."` (sztuka — piece), `"usł."` (usługa — service), `"kpl."` (komplet — set) or `"opak."` (opakowanie — package). The value is passed through to `P_8A` unchanged, so the supplier's exact wording is preserved on the KSeF XML.
+
+    Example line item using a free-form label:
+
+    ```json
+    {
+      "item": {
+        "name": "Konsultacja prawna",
+        "price": "200.00",
+        "meta": {
+          "unit-label": "usł."
+        }
+      },
+      "quantity": "1"
+    }
+    ```
+
+    <Note>
+      When an inbound KSeF invoice contains a `P_8A` value that is not a recognised GOBL or UN/ECE code, gobl.ksef preserves the original string under `Item.Meta["unit-label"]` so round-trips do not lose the supplier's wording. `Item.Unit` is only populated when the value validates as a canonical code.
+    </Note>
+  </Accordion>
