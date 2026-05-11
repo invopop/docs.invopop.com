@@ -221,6 +221,34 @@ If you want to specify a Peppol ID manually for a particular customer (or overri
 | ----- | ------------ | ---------------- | ------- |
 | Peppol Participant ID | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0208:0123456789` |
 
+#### Worked example
+
+B2B invoice from a Belgian supplier to a Belgian customer; Peppol ID resolved automatically from the BCE.
+
+**Setup.** Customer in Chargebee has its BCE in the billing address; no Peppol custom field.
+
+<Steps>
+  <Step title="Invoice generated">
+    Chargebee fires `invoice_generated` and posts to the Invopop webhook.
+  </Step>
+  <Step title="Imported into GOBL">
+    Import writes a GOBL invoice with `customer.tax_id = { country: "BE", code: "0987654321" }`.
+  </Step>
+  <Step title="Participant ID resolved">
+    **Lookup Participant ID** returns `0208:0987654321` and writes it to `customer.inboxes`.
+  </Step>
+  <Step title="PDF attached, UBL sent">
+    The Chargebee PDF is attached, OASIS UBL is generated, and **Send Peppol** delivers both.
+  </Step>
+  <Step title="Chargebee updated">
+    Success comment posted on the invoice.
+  </Step>
+</Steps>
+
+If the BCE is missing the lookup fails. Set `cf_gobl_customer_inbox_peppol` on the customer and **Run Again**.
+
+{/* TODO: screenshot of Belgian customer record in Chargebee with BCE highlighted */}
+
 ---
 
 ### 🇩🇰 Denmark
@@ -279,6 +307,31 @@ Since there is no automatic lookup, the Peppol Participant ID must be set on eac
 
 The workflow includes one Denmark-specific step: **Fixing bank-transfer details**. If Chargebee sends a `credit-transfer` payment instruction on the invoice, this step automatically converts it to `credit-transfer+sepa`. Plain `credit-transfer` is not accepted in Denmark — the more specific SEPA variant is required. If the invoice has no payment instructions, the step is skipped. That's the only difference from a standard Peppol workflow.
 
+#### Worked example
+
+B2B invoice from a Danish supplier to a Danish customer whose Peppol ID is a GLN, with a `credit-transfer` payment instruction.
+
+**Setup.** Customer has `cf_gobl_customer_inbox_peppol = 0088:5790000435968`. Back-populate Danish customers with [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) before going live.
+
+<Steps>
+  <Step title="Imported">
+    GOBL invoice arrives with `payment.instructions.key = "credit-transfer"`.
+  </Step>
+  <Step title="SEPA key applied">
+    **Fixing bank-transfer details** rewrites it to `credit-transfer+sepa`.
+  </Step>
+  <Step title="UBL sent">
+    OASIS UBL is generated and **Send Peppol** routes it to `0088:5790000435968`.
+  </Step>
+  <Step title="Chargebee updated">
+    Success comment posted.
+  </Step>
+</Steps>
+
+If the inbox custom field is missing, Send Peppol fails with no participant ID. Set it and **Run Again**.
+
+{/* TODO: screenshot of Danish customer record in Chargebee with GLN custom field set */}
+
 ---
 
 ### 🇩🇪 Germany
@@ -317,6 +370,26 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
     The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. No per-customer configuration is required beyond having a valid German supplier set up in Invopop.
 
     <ZUGFeRDExample />
+
+    #### Worked example
+
+    B2B invoice from a German supplier to a German business customer, delivered as a hybrid PDF over Chargebee's email.
+
+    **Setup in Chargebee.** `SEND_EINVOICE_NOTIFICATION` enabled, customer has `cf_invopop_include = true`, invoice and credit-note email notifications on.
+
+    <Steps>
+      <Step title="Imported">
+        Import writes the GOBL invoice. Bank details ride along in the Chargebee PDF template.
+      </Step>
+      <Step title="ZUGFeRD XML generated and embedded">
+        The Chargebee PDF is downloaded, ZUGFeRD CII XML is generated, and the XML is embedded to produce a hybrid PDF.
+      </Step>
+      <Step title="Sent">
+        The hybrid PDF replaces the Chargebee PDF and Chargebee emails it to the customer.
+      </Step>
+    </Steps>
+
+    {/* TODO: screenshot of the hybrid PDF preview in Chargebee */}
   </Tab>
   <Tab title="X-Rechnung (B2G)">
     <Card title="Chargebee X-Rechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" cta="Add to my workspace">
@@ -364,6 +437,31 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
       The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that X-Rechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
     </Note>
     <XRechnungExample />
+
+    #### Worked example
+
+    B2G invoice from a German supplier to a public authority with a Leitweg-ID, routed over Peppol.
+
+    **Setup in Chargebee.** On the customer: `cf_gobl_customer_inbox_peppol = 0204:991-12345678-06`. On the subscription: the Leitweg-ID set as the PO number. On the workflow: your IBAN in the **Adding bank details** step.
+
+    <Steps>
+      <Step title="Imported">
+        GOBL invoice arrives with the PO carrying the Leitweg-ID and no bank details.
+      </Step>
+      <Step title="Bank details added">
+        **Adding bank details** writes your IBAN into `payment.instructions`.
+      </Step>
+      <Step title="PO promoted to ordering code">
+        **Map PO to ordering code** moves the Leitweg-ID from `ordering.identities[0].code` to `ordering.code`.
+      </Step>
+      <Step title="X-Rechnung generated and sent">
+        The CII XML is built and validated, then **Send Peppol** delivers it to `0204:991-12345678-06`.
+      </Step>
+    </Steps>
+
+    If the Leitweg-ID is missing, validation fails before sending. Set the PO or `cf_gobl_ordering` on the subscription, then **Run Again**.
+
+    {/* TODO: screenshot of customer record with the three required custom fields */}
   </Tab>
 </Tabs>
 
