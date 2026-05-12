@@ -27,6 +27,35 @@
     Adjust your GOBL customer block (or equivalent) accordingly and re-run the workflow.
   </Accordion>
 
+  <Accordion title="Why does recording fail with 'advances: amount: must be no less than 0'?">
+    When recording an invoice with advance payments in Portugal, you may see an error similar to:
+
+    > `payment: (advances: (0: (amount: must be no less than 0.).).)`
+
+    **What it means:** The Portuguese SAF-T schema (`pt-saft-v1`) requires every advance payment amount on an invoice to be zero or positive. Negative advances are not accepted by the AT.
+
+    **What to do:**
+
+    - Use a **credit note** to reverse a previous advance rather than recording a negative advance on a new invoice.
+    - Check the `payment.advances[].amount` field on your GOBL document and confirm each entry is greater than or equal to `0`.
+
+    Example of a valid advance block:
+
+    ```json
+    {
+      "payment": {
+        "advances": [
+          {
+            "date": "2026-05-12",
+            "description": "Deposit received",
+            "amount": "100.00"
+          }
+        ]
+      }
+    }
+    ```
+  </Accordion>
+
   <Accordion title="Where do I find Portugal-specific GOBL documentation?">
     See the [Portugal tax regime in GOBL](https://docs.gobl.org/regimes/pt) for tax categories, NIF rules, and AT-specific extensions. The [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon documents fields required by the SAF-T schema.
   </Accordion>
