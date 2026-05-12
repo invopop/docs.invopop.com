@@ -1,5 +1,5 @@
     <Accordion title="What invoice types are commonly used in Argentina?">
-    Factura A (B2B between Responsables Inscriptos), Factura B (consumers and exempt entities), Factura C (Monotributistas to anyone) and Factura E (exports). Type is determined by the issuer's tax regime and the customer's classification — Invopop selects the right one automatically when both are set.
+    Factura A (B2B between Responsables Inscriptos), Factura B (consumers and exempt entities), Factura C (Monotributistas to anyone), Factura E (exports), and Factura T (tourism services to non-resident tourists). Type is determined by the issuer's tax regime and the customer's classification — Invopop selects the right one automatically when both are set.
   </Accordion>
     <Accordion title="How are ARCA invoices delivered?">
     Most ARCA-cleared invoices are delivered as PDFs with the CAE printed on them, though the underlying XML is also available on request. Invopop can convert the XML into [GOBL](https://docs.gobl.org) for downstream processing; PDF-only documents need OCR or manual capture.
@@ -36,8 +36,21 @@
     - **wsfev1**: For invoices A, B, C, and M without item detail
     - **wsmtxca**: For invoices A and B with item details
     - **wsfexv1**: For type E (export) invoices
+    - **wsct**: For type T (tourism) invoices issued to non-resident tourists
 
     Invopop integrates with these services to automatically submit your invoices to ARCA and receive CAE authorization codes in real time.
+  </Accordion>
+
+  <Accordion title="What is Factura T and when do I use it?">
+    Factura T is a tourism invoice issued under WSCT (Web Service Comprobante T) for accommodation and travel services sold to non-resident tourists. It enables VAT refunds for foreign visitors under Argentina's tourism regime.
+
+    Use Factura T when:
+
+    - The customer is a non-resident tourist or a foreign or local travel agency acting on their behalf.
+    - The service is hotel accommodation (with or without breakfast) or a related tourism item.
+    - You issue under the general 21% VAT rate.
+
+    On the GOBL document, set `tax.ext.ar-arca-doc-type` to `195` (Invoice T), `196` (Debit Note T), or `197` (Credit Note T), declare the issuer-receiver relationship in `tax.ext.ar-arca-tourism-type`, and tag each line with `taxes[].ext.ar-arca-tourism-item`.
   </Accordion>
 
   <Accordion title="What happens if ARCA rejects my invoice?">
