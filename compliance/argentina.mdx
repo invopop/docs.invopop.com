@@ -93,6 +93,29 @@ E-reporting in Argentina is fully integrated into the electronic invoicing syste
     | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
 
   </Accordion>
+
+  <Accordion title="Comprobante T (tourism sector, tax-free sales to non-residents)">
+
+    Comprobante T (Factura T, Nota de Débito T, Nota de Crédito T) is used by hotels and resident travel agencies to document tourism services sold to non-resident tourists or non-resident travel agencies under Argentina's *régimen de reintegro de IVA al turismo extranjero*. These documents are submitted through the dedicated **WSCT (Web Service Comprobante T)** rather than the general WSFE service.
+
+    |            |             |
+    |------------|-------------|
+    | **Models** | B2B, B2C (non-resident recipients) |
+    | **Format** | XML (ARCA WSCT schema) |
+    | **Infrastructure** | [ARCA WSCT](https://www.afip.gob.ar) |
+    | **Model** | Clearance continuous transaction control (CTC) |
+    | **Code** | 195 (Invoice T), 196 (Debit Note T), 197 (Credit Note T) |
+    | **Scope & Deadline** | Mandatory for tourism operators issuing tax-free invoices to non-residents |
+    | **Agency** | [ARCA](https://www.afip.gob.ar) |
+    | **Invopop Support** | Available - [ARCA Supplier onboarding](/guides/ar-arca-suppliers), [ARCA Invoices](/guides/ar-arca-invoices) |
+
+    Each Comprobante T must declare:
+
+    - The **issuer-receiver relationship** (`ar-arca-tourism-type`), with values such as direct accommodation to a non-resident tourist, accommodation to a resident or non-resident travel agency, or travel-agency-to-travel-agency operations.
+    - A **tourism item code** (`ar-arca-tourism-item`) on every line — for example hotel with breakfast, hotel without breakfast, or surplus.
+    - The customer's address (required by WSCT) and a VAT rate of 21% on every line.
+
+  </Accordion>
 </AccordionGroup>
 
 ## E-reporting
@@ -123,6 +146,7 @@ E-reporting is fully integrated into Argentina's electronic invoicing system rat
     | **B** | IVA Registered | Final consumers; IVA exempt; non-responsible; Monotributo; "Non-categorized" |
     | **C** | IVA Non-Registered, IVA Exempt, Monotributo | Anyone |
     | **E** | Any obligated subject | Foreign importers (export operations, including special customs area) |
+    | **T** | Tourism operators (hotels, resident travel agencies) | Non-resident tourists and non-resident travel agencies |
 
     Each letter class uses an **independent numbering sequence**.  
 </Accordion>
@@ -208,6 +232,7 @@ E-reporting is fully integrated into Argentina's electronic invoicing system rat
     - **wsfev1** (Web Service de Factura Electrónica V1): For invoices A, B, C, and M without item detail, supporting CAE and CAEA
     - **wsmtxca** (Web Service Factura Electrónica): For invoices A and B with item details, supporting CAE and CAEA
     - **wsfexv1** (Web Service de Factura Electrónica de Exportación V1): For type E (export) invoices
+    - **wsct** (Web Service Comprobante T): For type T (tourism) invoices issued to non-resident tourists and non-resident travel agencies
 
     Authentication requires the WSAA (Webservice de Autenticación y Autorización) to obtain a Ticket de Acceso (TA), which uses an X.509 digital certificate issued by ARCA's Certifying Authority.
 
