@@ -142,6 +142,79 @@ The code is a numeric value of up to seven digits. It is required for individual
 }
 ```
 
+## VAT regime key
+
+TicketBAI requires every invoice line to report a `ClaveRegimenIvaOpTrascendencia` code that classifies the VAT regime or operation type. Set the [`es-tbai-regime`](https://docs.gobl.org/addons/es-tbai-v1#ticketbai-vat-regime-key) extension on a tax combo to control this value explicitly. The most common codes are:
+
+| Code | Description |
+|------|-------------|
+| `01` | General regime operation |
+| `02` | Export |
+| `03` | Used goods, art, antiques and collectibles |
+| `05` | Travel agencies |
+| `07` | Cash accounting |
+| `17` | OSS or IOSS |
+| `51` | Equivalence surcharge |
+| `52` | Simplified VAT regime |
+| `53` | Operations by or for entities without a permanent establishment |
+
+If you do not set the extension, GOBL assigns a default based on the line context:
+
+| Combo context | Regime code |
+|---|---|
+| Tax key is `export` | `02` |
+| Combo carries an equivalence surcharge | `51` |
+| Invoice has the `simplified-scheme` tag | `52` |
+| Otherwise | `01` |
+
+```json Tax combo with explicit regime
+"taxes": [
+  {
+    "cat": "VAT",
+    "rate": "standard",
+    "ext": {
+      "es-tbai-regime": "17"
+    }
+  }
+]
+```
+
+See the [TicketBAI extension reference](https://docs.gobl.org/addons/es-tbai-v1#ticketbai-vat-regime-key) for the complete list of values.
+
+## Customer identity type
+
+When a customer has no tax identifier (for example, a foreign individual paying with a passport), TicketBAI expects the document type to be reported under the `IDOtro` element with an `IDType` code from the L7 list. The [`es-tbai-identity-type`](https://docs.gobl.org/addons/es-tbai-v1#identity-type-code) extension on a party identity carries that code.
+
+Prefer the customer's tax ID where possible — GOBL maps it automatically:
+
+- Spanish tax IDs map to the `NIF` field.
+- EU tax IDs map to `IDOtro` with code `02` (NIF-VAT / VIES).
+- Non-EU tax IDs map to `IDOtro` with code `04` (foreign identity document).
+
+For other identity documents, set the identity `key` and GOBL fills in the extension:
+
+| Identity key | Extension code | Document |
+|---|---|---|
+| `passport` | `03` | Passport |
+| `foreign` | `04` | Foreign identity document |
+| `resident` | `05` | Spanish resident foreigner identity card |
+| `other` | `06` | Other identity document |
+
+```json Customer with a passport
+"customer": {
+  "name": "Jane Smith",
+  "identities": [
+    {
+      "key": "passport",
+      "country": "GB",
+      "code": "123456789"
+    }
+  ]
+}
+```
+
+After normalization the identity carries `"ext": { "es-tbai-identity-type": "03" }`.
+
 ## Cancel an Invoice
 
 TicketBAI also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
