@@ -42,7 +42,74 @@ Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.
 | **Fifth Corner** | The tax authority in the Peppol exchange model. Corners 1–4 are sender, sender's PA, receiver's PA, and receiver; the fifth corner is the tax authority that receives a copy of the invoice for regulated flows. In France this is the PPF. |
 | **F1 Invoice** | Simplified UBL format used to forward the invoice to the fifth corner (the tax authority, i.e. the PPF) for regulated flows. Part of e-invoicing, not e-reporting. Generated automatically by Invopop. |
 
-## Plateforme Agréée guides
+## E-Invoicing
+
+### Annuaire registration
+
+The _annuaire_ is France's national directory of e-invoicing endpoints. It records every registered company and their PA (Invopop, in this case), so that the tax administration knows how to route regulated e-invoicing flows.
+
+Registering in the annuaire enables parties (companies) to send and receive invoices in France. Behind the scenes, it extends the standard [Peppol registration workflow](/guides/peppol) with one additional French-specific step to register the party in the Annuaire.
+
+You can query the Annuaire directly to check whether a party is registered before sending an invoice — useful for branching regulated vs. non-regulated flows. See the API reference for [lookup by SIREN](/api-ref/apps/gov-fr/lookup-siren) and [lookup by electronic address](/api-ref/apps/gov-fr/lookup-identifier).
+
+<Note>
+  Peppol registration in France always enables **both sending and receiving**. Once a party is listed in the Annuaire, it must be reachable to receive invoices. There is no send-only option.
+</Note>
+
+#### How it works
+
+1. **Register Party for Approval** — submits the party details for Invopop review.
+2. **Set state to Processing** — marks the party as awaiting approval.
+3. **Wait for Approval** — pauses until the party passes the approval check.
+4. **Register Party** — registers the party in the French Directory (`gov-fr.party.register`). This is the France-specific step added on top of the base Peppol flow.
+5. **Register Peppol Party** — registers the party on the Peppol network with the `france` document group, enabled for sending and receiving via SMP/SML/Peppol.
+6. **Set state to Registered** — marks the party as fully onboarded.
+
+<Info>
+  If you want to understand the base Peppol onboarding this workflow is built on, see the [Peppol registration guide](/guides/peppol). The France PA workflow is the same flow plus the **Register Party (France)** step before the Peppol registration step.
+</Info>
+
+#### Workflow code
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
+      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+### Invoice formats
+
+The French PA specification lists five accepted invoice formats. UBL and CII each have a base version and an extended version (adding extra fields for French-specific requirements), and Factur-X rounds out the list. In practice, the three base formats cover essentially all real-world exchanges, and Invopop supports sending _and_ receiving all three:
+
+| Format | Description |
+|---|---|
+| **UBL** | XML invoice based on the Peppol France CIUS. The default format used across the Peppol network and the one we recommend for all outgoing flows. An extended UBL variant also exists but is rarely needed. |
+| **CII** | UN/CEFACT Cross Industry Invoice — another XML format, semantically equivalent to UBL and required by some counterparties (particularly in cross-border and automotive/industrial contexts). An extended CII variant is also accepted. |
+| **Factur-X** | Hybrid PDF/A-3 with an embedded CII XML payload. Human-readable on top, machine-readable underneath. Common with buyers who want a visual invoice alongside the structured data. Factur-X is a joint Franco-German standard (identical to [ZUGFeRD](/guides/de-ubl)) aligned with the European Norm EN 16931. |
+
+<Info>
+  **We recommend sending as UBL.** It's the native Peppol France CIUS format, has the widest receiver support, and is the cleanest to validate. Choose CII or Factur-X only when a specific counterparty requires it.
+</Info>
+
+The underlying invoice is always the **same GOBL document with the `fr-ctc-flow2-v1` add-on**. The format is only an addition at the end of the workflow — switching format is a configuration change, not a data-model change. That means:
+
+- You author and validate one GOBL invoice.
+- The workflow's generation step produces the chosen format (UBL, CII, or Factur-X).
+- Incoming invoices in any of the three formats are converted back into the same GOBL representation for you to consume.
+
+### Sending
+
+#### Invoices
+
+<Warning>
+  The workflow steps below are subject to change. We are working on new methods of handling events for a more global use case. This example is functional today, but expect refinements before the September 2026 mandate.
+</Warning>
 
 The four sub-guides correspond to the workflows you will wire together. Most of these depend on Invopop's [Peppol](/apps/peppol), [UBL](/apps/oasis-ubl), and [CII](/apps/uncefact-cii) apps for transport and format conversion.
 
