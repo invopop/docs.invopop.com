@@ -1,0 +1,57 @@
+  <Accordion title="What's the workflow for issuing NFS-e invoices?">
+    Build a GOBL invoice with the `br-nfse-v1` addon and send it through the Issue NFS-e workflow. Until the federal NFS-e (DPS) takes over in 2026, Invopop routes per-municipality — the workflow handles the underlying API differences transparently.
+  </Accordion>
+
+  <Accordion title="How do I configure Chargebee or Stripe imports for Brazilian invoices with ISS?">
+    Billing platforms like Chargebee and Stripe are not aware of ISS particularities and tend to wrongly treat ISS as a typical tax included in the price. This causes `invalid-prices-include` errors during import because that pricing model is not compatible with how ISS works for NFS-e.
+
+    The correct setup is:
+    1. **Do not configure ISS as a tax** in your billing platform (Chargebee, Stripe, etc.).
+    2. Prices in your billing platform should already be the **final public prices** with ISS embedded.
+    3. Add a **Modify Silo Entry** step to your import workflow that injects the ISS tax with the desired percentage into the GOBL invoice.
+
+    This workflow approach ensures ISS is properly added to the GOBL invoice as an informative tax category before submission to the Brazilian tax authority, while avoiding the pricing conflicts that occur when billing platforms try to handle ISS as a standard tax.
+  </Accordion>
+  <Accordion title="What are the required and optional fields for NFS-e invoices in Brazil?">
+    NFS-e (`br-nfse-v1`) covers electronic service invoices (*Notas Fiscais de Serviços Eletrônicas*) in Brazil. Service invoices are regulated at the **municipal** level, so several fields carry municipality-specific codes. The addon implements the ABRASF national standard (v2.04).
+
+    ### Invoice Header
+
+    | Field | Required | Notes |
+    | --- | --- | --- |
+    | `$addons` | ✅ | `["br-nfse-v1"]` |
+    | `series` | ✅ | Any non-empty string |
+    | `code` | ⬜ | Required to sign the document |
+    | `issue_date` | ✅ | ISO date |
+    | `currency` | ✅ | Must be `"BRL"` |
+    | `lines` | ✅ | At least one line item |
+    | `charges` | ❌ | Not supported by NFS-e |
+    | `discounts` | ❌ | Not supported by NFS-e |
+    | `supplier` | ✅ | See Supplier |
+
+    ### Supplier
+
+    | Field | Required | Notes |
+    | --- | --- | --- |
+    | `name` | ✅ | |
+    | `tax_id.country` | ✅ | `"BR"` |
+    | `tax_id.code` | ✅ | CNPJ or CPF |
+    | `identities[].key: "br-nfse-municipal-reg"` | ✅ | Municipal Registration |
+    | `addresses` | ✅ | |
+    | `ext.br-ibge-municipality` | ✅ | 7-digit IBGE municipality code |
+    | `ext.br-nfse-simples` | ✅ | `"1"` opt-in, `"2"` opt-out |
+    | `ext.br-nfse-fiscal-incentive` | ✅ | `"1"` has incentive, `"2"` does not (default) |
+    | `ext.br-nfse-special-regime` | ⬜ | Special regime values |
+
+    ### Customer
+
+    Optional. When provided, `ext.br-ibge-municipality` is required if addresses are present.
+
+    ### Line items
+
+    Required item extension: `item.ext.br-nfse-service` (municipality service code).
+
+    Optional item extensions: `item.ext.br-nfse-cnae`, plus the all-or-none trio `item.ext.br-nfse-{operation,tax-status,tax-class}`.
+
+    Required tax category per line: `ISS`. ISS extension `taxes[ISS].ext.br-nfse-iss-liability` defaults to `"1"` (Liable).
+  </Accordion>

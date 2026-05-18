@@ -1,0 +1,77 @@
+  <Accordion title="What happens when I send an invoice to a foreign recipient?">
+    International (cross-border) invoices are handled just like domestic invoices in KSeF:
+
+    - The invoice is created in GOBL with the foreign recipient's details
+    - It's converted to FA(3) XML format and submitted to KSeF
+    - KSeF validates and clears the invoice, assigning a unique KSeF ID
+    - The invoice is registered in the KSeF system
+
+    However, since foreign recipients cannot access KSeF, you must deliver the invoice through other channels (email, EDI, etc.). Include the KSeF QR code in the delivery for verification purposes.
+  </Accordion>
+
+  <Accordion title="What's the difference between test, demo, and production environments?">
+    **Test mode** (sandbox only): Uses self-signed certificates generated automatically by Invopop. Perfect for quick testing without accessing the KSeF portal. Invoices are not sent to real KSeF servers.
+
+    **Demo mode** (sandbox only): Connects to the official [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/). Requires manual certificate generation, simulating the full production flow in a safe test environment.
+
+    **Production mode** (live workspace): Connects to the live [KSeF Portal](https://ap.ksef.mf.gov.pl/). Requires valid company credentials and certificates. All invoices are submitted to the official KSeF system.
+
+    <Tip>
+      Use test mode for initial integration testing, then switch to demo mode when you're ready to simulate the real certificate flow before going live.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="What KSeF applications and portals are available?">
+    Official KSeF applications:
+    - [KSeF Taxpayer Application](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/bezplatne-narzedzie-wersja-produkcyjna/) – the main portal with all functionalities
+    - [KSeF Mobile Application](https://ksef.podatki.gov.pl/aplikacja-podatnika-ksef-i-inne-narzedzia/aplikacja-mobilna-ksef/) – a mobile app for on-the-go access
+    - [e-mikrofirma](https://login.mf.gov.pl/Account/Select?ReturnUrl=%2Fconnect%2Fauthorize%2Fcallback%3Fclient_id%3D09e2877e-702a-4e27-8818-9472ca964c0a%26redirect_uri%3Dhttps%253A%252F%252Furzadskarbowy.gov.pl%26response_type%3Dcode%26scope%3Dprofile%2520openid%2520DataHub.UserAccess%2520eFormsClientApi.UserAccess%2520ChatApi.UserAccess%2520offline_access%26state%3D8f196c7682654d0da49b42bfc9045e51%26code_challenge%3DSIwxyxXJpAzUgzrMW96UIH9vNc6P0-dkdc7l482AWQA%26code_challenge_method%3DS256) – a simplified portal aimed at micro-entrepreneurs
+
+    For testing:
+    - [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) – demo environment for testing
+  </Accordion>
+  <Accordion title="How do I configure my workspace for Polish invoicing?">
+    Install the KSeF Poland app, register your supplier (Test, Demo, or Production environment), and run invoices through the Send Invoice workflow. Each environment requires its own NIP and certificate setup.
+  </Accordion>
+
+  <Accordion title='I get a "failed to create session (Status 403 Forbidden)" error when sending an invoice to KSeF. What does it mean?'>
+    This error means the uploaded KSeF certificate does not have the required permissions to issue invoices. This typically happens when the certificate was uploaded by someone who is not the company administrator and only has limited permissions granted by the main company account.
+
+    The KSeF certificate uploaded to Invopop must belong to either:
+    - The **company account** directly logged into KSeF, or
+    - An entity that has both **InvoiceRead** and **InvoiceWrite** permissions (managed within KSeF)
+
+    To resolve this, you have two options:
+
+    1. **Grant permissions in KSeF**: The company admin (or whoever has direct access to the KSeF company account) grants `InvoiceRead` and `InvoiceWrite` permissions to the user who uploaded the certificate to Invopop. This can be done from the [KSeF application portal](https://ap.ksef.mf.gov.pl/) and requires no further action in Invopop (no need to unregister/register).
+    2. **Re-register with a new certificate**: Unregister the supplier in Invopop and register it again using a certificate generated from the main KSeF company account (or another account with the required permissions).
+  </Accordion>
+  <Accordion title="Where do I find Poland-specific GOBL documentation?">
+    See the [Poland tax regime in GOBL](https://docs.gobl.org/regimes/pl) for tax categories and NIP rules. The [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) addon documents the FA(3) schema fields required for KSeF.
+  </Accordion>
+
+  <Accordion title='How do I set the unit of measure (jednostka miary) on a line item, like "szt." or "usł."?'>
+    Polish invoicing law requires a unit of measure for every line, and KSeF maps it to the `P_8A` field on each `FaWiersz`. Invopop supports two ways to populate it:
+
+    1. **Canonical unit code on `Item.Unit`** — preferred when the unit exists in the GOBL unit catalogue or as a UN/ECE Recommendation 20 code. For example, `Item.Unit: "H87"` (piece) or `Item.Unit: "KGM"` (kilogram). The gobl.ksef converter emits the UN/ECE code directly into `P_8A`.
+    2. **Free-form label on `Item.Meta["unit-label"]`** — use this for Polish abbreviations that do not match a canonical code, such as `"szt."` (sztuka — piece), `"usł."` (usługa — service), `"kpl."` (komplet — set) or `"opak."` (opakowanie — package). The value is passed through to `P_8A` unchanged, so the supplier's exact wording is preserved on the KSeF XML.
+
+    Example line item using a free-form label:
+
+    ```json
+    {
+      "item": {
+        "name": "Konsultacja prawna",
+        "price": "200.00",
+        "meta": {
+          "unit-label": "usł."
+        }
+      },
+      "quantity": "1"
+    }
+    ```
+
+    <Note>
+      When an inbound KSeF invoice contains a `P_8A` value that is not a recognised GOBL or UN/ECE code, gobl.ksef preserves the original string under `Item.Meta["unit-label"]` so round-trips do not lose the supplier's wording. `Item.Unit` is only populated when the value validates as a canonical code.
+    </Note>
+  </Accordion>

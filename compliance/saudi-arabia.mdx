@@ -1,11 +1,170 @@
 ---
 title: "Invoicing compliance in Saudi Arabia"
 sidebarTitle: "Compliance"
-description: "Saudi Arabia's e-invoicing and e-reporting obligations for consumer, business and government transactions"
-icon: "transporter-empty"
+description: "Saudi Arabia's ZATCA FATOORA e-invoicing obligations for business and consumer transactions"
 ---
 
-<Note>Invopop support for Saudi Arabia is expected to be ready in the second quarter of 2026 (ZATCA). For inquiries, contact us at [support@invopop.com](mailto:support@invopop.com).</Note>
+<Note>Invopop support for Saudi Arabia (ZATCA) is expected to be ready June 1st 2026. For early-access enquiries, contact us at [support@invopop.com](mailto:support@invopop.com).</Note>
+
+## Executive summary
+
+Saudi Arabia mandates electronic invoicing through the **FATOORA** system, operated by **ZATCA** (Zakat, Tax and Customs Authority). All VAT-registered taxpayers must issue invoices in XML format from a compliant solution that connects to ZATCA. 
+
+**Standard tax invoices** (B2B, B2G) follow a clearance model, where ZATCA digitally stamps the document before it's shared with the buyer.
+
+**Simplified tax invoices** (B2C) follow a reporting model, where the document is issued at the point of sale and reported to ZATCA within 24 hours.
+
+| | |
+|---|---|
+| **Scope** | B2B, B2C, B2G |
+| **Format** | UBL 2.1 XML with KSA extensions |
+| **Models** | Clearance (standard invoices) + Reporting within 24h (simplified invoices) |
+| **Agency** | [ZATCA](https://zatca.gov.sa) |
+| **System** | FATOORA |
+| **Invopop addon** | Expected Q2 2026 |
+
+## The ZATCA FATOORA system
+
+ZATCA is the tax and customs authority in Saudi Arabia. FATOORA is the e-invoicing platform that VAT-registered taxpayers use to clear standard tax invoices in real time and to report simplified tax invoices within 24 hours of issuance. 
+
+The invoice is an XML document built on the UBL 2.1 standard with ZATCA-specific extensions. In the clearance flow it is cryptographically stamped by ZATCA itself. In the reporting flow the stamp is applied by Invopop using the supplier's X.509 certificate issued by ZATCA.
+
+The scope covers all **resident VAT-registered taxable persons** in the Kingdom, plus any third party issuing invoices on their behalf. Non-resident taxable persons are out of scope.
+
+### Document types
+
+| Type | Counterparty | Flow | Invopop coverage |
+|---|---|---|:---:|
+| Standard tax invoice | B2B, B2G | Clearance (real-time stamp by ZATCA before sharing with buyer) | June 1st 2026 |
+| Simplified tax invoice | B2C | Reporting (issued at point of sale, reported to ZATCA within 24h) | June 1st 2026 |
+| Credit note | Any | Same flow as the invoice it corrects | June 1st 2026 |
+| Debit note | Any | Same flow as the invoice it corrects | June 1st 2026 |
+
+<AccordionGroup>
+  <Accordion title="Standard tax invoice (B2B, B2G)">
+    Required for transactions where the buyer is a VAT-registered business or a government entity. Carries the full set of mandatory fields, including the buyer's name, address, and VAT registration number.
+
+    Standard invoices follow the **clearance model**: the issuer's solution submits the XML to ZATCA in real time; ZATCA validates, applies its own cryptographic stamp, and returns the cleared invoice. Only the cleared document is legally valid and shareable with the buyer.
+  </Accordion>
+
+  <Accordion title="Simplified tax invoice (B2C)">
+    Used for transactions with end consumers. The buyer's VAT details are not required and the field set is reduced.
+
+    Simplified invoices follow the **reporting model**: the issuer's solution signs and delivers the invoice to the buyer immediately at the point of sale, then **reports** it to ZATCA within 24 hours. The buyer receives the invoice without waiting for ZATCA to acknowledge it.
+  </Accordion>
+
+  <Accordion title="Credit and debit notes">
+    Issued invoices cannot be cancelled or edited after issuance. Corrections are made through:
+
+    - **Credit notes**: reduce the value of a previously issued invoice (returns, post-sale discounts, corrections).
+    - **Debit notes**: increase the value of a previously issued invoice.
+
+    Notes must reference the original invoice's number, date and the reason for correction. They flow through the same clearance or reporting channel as the document type they correct.
+  </Accordion>
+</AccordionGroup>
+
+### Implementation phases
+
+ZATCA introduced e-invoicing in two phases.
+
+<AccordionGroup>
+  <Accordion title="Phase 1: invoice generation (since 2021)">
+    Mandatory for all VAT-registered residents since 4 December 2021. Required taxpayers to:
+
+    - Issue invoices and notes in a structured electronic format from a compliant solution.
+    - Stop issuing handwritten or manually edited invoices.
+    - Include a QR code on simplified tax invoices.
+
+    Phase 1 did not require integration with ZATCA's platform, the obligation was to generate compliant electronic documents and store them.
+  </Accordion>
+
+  <Accordion title="Phase 2: Integration (from 2023)">
+    The integration phase started on 1 January 2023 and is rolling out to taxpayers in **waves** based on their VAT-taxable revenue. In addition to Phase 1 requirements, Phase 2 introduces:
+
+    - Integration of the issuer's solution with the FATOORA platform via API.
+    - Cryptographic stamping with a ZATCA-issued certificate (CSID).
+    - Real-time clearance of standard invoices and 24-hour reporting of simplified invoices.
+    - An expanded QR code carrying the seller's VAT registration number, cryptographic signature and invoice hash.
+    - UBL 2.1 XML in line with ZATCA's *Electronic Invoice XML Implementation Standard*.
+
+    Onboarding has progressed through waves at descending revenue thresholds. The most recent announcements:
+
+    | Wave | VAT-taxable revenue threshold | Reference year(s) | Integration deadline |
+    |---|---|---|---|
+    | 23 | > SAR 750,000 | 2022, 2023 or 2024 | 31 March 2026 |
+    | 24 | > SAR 375,000 | 2022, 2023 or 2024 | 30 June 2026 |
+
+    Wave 24 effectively brings every VAT-registered business under the mandatory VAT registration threshold (SAR 375,000) into scope. ZATCA notifies taxpayers in each wave at least six months before their go-live date.
+  </Accordion>
+</AccordionGroup>
+
+## Compliance
+
+<AccordionGroup>
+  <Accordion title="Legally required invoice content">
+    From ZATCA's *Detailed Guidelines for E-Invoicing* and the *E-Invoicing Implementation Resolution*:
+
+    **Standard tax invoice (B2B, B2G)**
+
+    - Seller name, address, VAT registration number, and one of the following identities: MOMRAH, MHRSD, 700, MISA or Commercial Registration number.
+    - Buyer name, address, and either a VAT registration number or one of the following identities: Tax Identification Number, Commercial Registration number, MOMRAH, MHRSD, 700, MISA, National ID, GCC, Iqama Number or Passport ID.
+    - Invoice issue date and supply date if different.
+    - Sequential invoice number and UUID.
+    - Line-item description, quantity, unit price and any discounts.
+    - VAT rate and VAT amount per line.
+    - VAT-exclusive subtotal, VAT total and VAT-inclusive total, expressed in SAR.
+    - QR code with the eight Phase 2 TLV tags.
+    - Invoice Counter Value (ICV) and Previous Invoice Hash (PIH).
+    - ZATCA's clearance stamp.
+
+    **Simplified tax invoice (B2C)**
+
+    The simplified invoice carries a reduced field set: seller details, issue date, line items, VAT breakdown, totals in SAR, QR code, UUID, ICV, PIH and the issuer's cryptographic stamp. Buyer details are not required, except in specific cases set by the VAT Implementing Regulation.
+
+    Source: [ZATCA E-Invoicing](https://zatca.gov.sa/en/E-Invoicing/Pages/default.aspx).
+  </Accordion>
+
+  <Accordion title="Currency">
+    Invoices are issued in **Saudi Riyal (SAR)**. Foreign-currency invoices are permitted, but the VAT amount must also be shown in SAR, converted using the SAMA (Saudi Central Bank) exchange rate on the supply date.
+  </Accordion>
+
+  <Accordion title="VAT rates">
+    Saudi Arabia's standard VAT rate is **15%**, in force since 1 July 2020 (raised from the original 5%).
+
+    - **Standard rate**: 15% — applies to most goods and services.
+    - **Zero-rated**: exports outside the GCC, qualifying international transport, qualifying medicines and medical equipment, investment-grade gold, silver and platinum (≥99% purity), private education and healthcare, and the supply of qualified military goods.
+    - **Exempt**: certain margin-based financial services and residential real-estate rentals.
+
+    Source: [ZATCA VAT rules and regulations](https://zatca.gov.sa/en/RulesRegulations/VAT/Pages/default.aspx).
+  </Accordion>
+
+  <Accordion title="Cancellations and corrections">
+    Issued invoices cannot be cancelled or edited once they have been cleared (standard) or reported (simplified). Any correction must be made by issuing a **credit note** (reduction) or **debit note** (increase) that references the original invoice's number, date and reason for correction.
+
+    Notes follow the same clearance or reporting flow as the document type they correct.
+  </Accordion>
+
+  <Accordion title="Archival period">
+    The VAT Implementing Regulation requires invoices and supporting records to be retained for **at least 6 years** from the end of the relevant tax period. Records must be **stored within Saudi Arabia**; digital archives must reside on servers located in the Kingdom, and originals must not be deleted or altered.
+  </Accordion>
+
+  <Accordion title="Who must comply">
+    The obligation applies to all **resident taxable persons** registered for VAT in Saudi Arabia, including any third party issuing invoices on their behalf (e.g. billing service providers).
+
+    Non-resident taxable persons are out of scope of the e-invoicing mandate, even where they are otherwise registered for VAT.
+  </Accordion>
+</AccordionGroup>
+
+## Reference documents
+
+ZATCA publishes the full regulatory and technical specification on its e-invoicing site:
+
+- [E-Invoicing landing page](https://zatca.gov.sa/en/E-Invoicing/Pages/default.aspx)
+- [Roll-out phases](https://zatca.gov.sa/en/E-Invoicing/Introduction/Pages/Roll-out-phases.aspx)
+- [E-Invoicing Implementation Resolution](https://zatca.gov.sa/en/E-Invoicing/Introduction/LawsAndRegulations/Documents/E-Invoicing%20Implementation%20Resolution_EN.pdf)
+- [Detailed Guidelines for E-Invoicing](https://zatca.gov.sa/en/E-Invoicing/Introduction/Guidelines/Documents/E-Invoicing_Detailed__Guideline.pdf)
+- [Electronic Invoice XML Implementation Standard](https://zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_XML_Implementation_Standard_%20vF.pdf)
+- [Electronic Invoice Security Features Implementation Standards](https://zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_Security_Features_Implementation_Standards_vF.pdf)
 
 ---
 

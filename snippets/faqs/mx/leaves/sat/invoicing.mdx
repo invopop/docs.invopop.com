@@ -1,0 +1,82 @@
+  <Accordion title="Do I have to issue B2C invoices in Mexico?">
+    Purchases under $100 mxn don't need to be issued, but they need to be registered in the global CFDI. Often issuing all invoices will simplify your operation.
+  </Accordion>
+
+  <Accordion title="Does Invopop support the white label (B2B2B) model in Mexico?">
+    Yes. We must obtain a the supplier's CSD (digtial seal) and credentials to issue invoices in that company's name. We are especially powerful and simple for this. Read more in our [white label use case](/guides/white-label).
+  </Accordion>
+
+  <Accordion title="Can I issue a PPD invoice through Invopop?">
+    Yes. The `mx-cfdi-v4` addon supports both PUE and PPD on the original invoice. What is **not** automated is the issuance of the subsequent payment receipts (REPs / Pago / complemento de pago) that must be emitted as payments are collected. If your operation regularly issues PPD invoices, you will need a separate mechanism for the REP lifecycle.
+  </Accordion>
+
+  <Accordion title="My customer paid late and now I have to cancel and re-issue?">
+    Yes, if the original was issued as PUE and payment is not received by the last day of the issuance month, rule 2.7.1.32 RMF requires cancelling the original and re-issuing as PPD with `FormaPago = 99`, then issuing REPs as payments come in. This is calendar-driven, not payment-event-driven, and it surprises most non-Mexican implementations. The conservative approach is to issue PPD whenever there is any uncertainty about same-month payment.
+  </Accordion>
+
+  <Accordion title="What happens if I miss the REP deadline?">
+    REPs must be issued by the fifth calendar day of the month following payment receipt (rule 2.7.1.35 RMF). Missing the deadline does not invalidate the underlying invoice, but it prevents the customer from deducting the expense in the correct period and exposes the issuer to fines. This is a recurring source of friction and the reason customers will sometimes refuse to accept cancellations from a supplier with poor REP discipline.
+  </Accordion>
+  
+  <Accordion title="How do I configure my workspace for Mexican invoicing?">
+    Install the SAT Mexico app (uses SW Sapien as PAC) plus the SW Sapien app for credentials. Onboard each issuing supplier with their CSD certificate and `mx-cfdi-issue-place`. Run invoices through the Issue CFDI workflow.
+  </Accordion>
+
+  <Accordion title="Where can I find the mapping of GOBL fields to CFDI?">
+    The library that transforms GOBL into CFDI documents is publicly available as an open-source project and can be found at [github.com/invopop/gobl.cfdi](https://github.com/invopop/gobl.cfdi).
+
+    For further details on how GOBL prepares data for conversion, see the [Mexico Tax Regime](https://github.com/invopop/gobl/blob/main/regimes/mx/README.md).
+  </Accordion>
+
+  <Accordion title="The PAC keeps rejecting my invoice with a postal code error">
+    The most common cause is a mismatch between the receiver's postal code in the CFDI and the postal code SAT has on file for that RFC. Resolution: ask the customer for their CIF (Constancia de Situación Fiscal) and use the postal code printed there, exactly. Secondary causes:
+
+    - The postal code is real but not yet in `c_CodigoPostal`. Use the closest catalog code from the place of issuance.
+    - The receiver is `XAXX010101000` or `XEXX010101000` and `DomicilioFiscalReceptor` differs from `LugarExpedicion`. They must be equal for generic RFCs.
+    - The branch issuing the document is configured with the matriz's postal code instead of its own.
+  </Accordion>
+
+  <Accordion title="How do I issue invoices with the 8% tax rate in border zones?">
+    In Mexico, a reduced VAT rate of 8% applies to transactions in border zones (northern and southern border regions). To successfully issue invoices with this rate, **both** of the following conditions must be met:
+
+    1. The supplier's RFC must be enabled by the SAT to invoice with the reduced rate in border zones.
+    2. Both the `mx-cfdi-issue-place` field and the customer's postal code (when included) must correspond to border zones.
+
+    If either condition is not met, the SAT will reject the invoice with an error.
+  </Accordion>
+
+  <Accordion title="What does the CFDI40999 error mean and how do I resolve it?">
+    CFDI40999 is a generic "unclassified error" returned by the SAT when no other, more specific error code applies. This error can have multiple causes.
+
+    A common scenario is invoicing in border zones with the reduced 8% VAT rate. If you receive this error in that context, verify:
+
+    1. **RFC registration**: The supplier's RFC must be registered in the taxpayers registry for the appropriate border region tax incentive. Without this registration, the SAT will reject all invoices with the reduced rate. See [SAT's registration requirements and procedures](https://www.sat.gob.mx/minisitio/EstimulosFiscalesFronteraNorteSur/) for more information.
+    2. **Issue place postal code**: The [`mx-cfdi-issue-place`](https://docs.gobl.org/addons/mx-cfdi-v4#place-of-issue) field must contain a postal code from a municipality within a border zone.
+    3. **Tax rate**: Ensure you're applying the correct percentage (typically 8%) for the border zone.
+
+    If the error persists after verifying these points, or you're getting this error for other reasons, please reach out to our support team.
+  </Accordion>
+
+  <Accordion title="Why does my customer's UsoCFDI keep getting rejected?">
+    The UsoCFDI must be allowed for the receiver's `RegimenFiscal`. The catalog defines the valid combinations; not every code works for every régimen. For example, D01–D10 (personal deductions) are only valid for individuals, never for legal entities. RESICO contributors (régimen 626) have a restricted set. When in doubt, default to `S01` (Sin efectos fiscales) — it is always valid but produces a non-deductible invoice for the receiver. Always ask the customer which UsoCFDI they need before issuing.
+  </Accordion>
+
+  <Accordion title="How does Invopop handle time zones for Mexican invoices?">
+    By default, Invopop uses Mexico City's time zone (UTC-6) when automatically setting the [`issue_date`](https://docs.gobl.org/draft-0/bill/invoice#issue-date) and [`issue_time`](https://docs.gobl.org/draft-0/bill/invoice#issue-time) fields. However, the SAT validates these fields based on the time zone of the postal code specified in [`mx-cfdi-issue-place`](https://docs.gobl.org/addons/mx-cfdi-v4#place-of-issue).
+
+    If the issuing location is in a different time zone, the SAT may reject the invoice with an error indicating the timestamp is in the future, as it only allows up to 5 minutes ahead of the local time.
+
+    To avoid this, explicitly set `issue_date` and `issue_time` in your GOBL invoice using the local time zone of the issuing location when operating outside Mexico City's time zone.
+  </Accordion>
+
+  <Accordion title="My foreign-currency invoice is failing validation">
+    For non-MXN invoices, `TipoCambio` must be present and use the FIX rate published by Banxico in the DOF the day prior to the operation (Article 20 CFF, Article 56 Ley Aduanera). Common errors:
+
+    - Using the day-of rate instead of the prior day's.
+    - Quoting the inverse (USD per MXN instead of MXN per USD).
+    - Setting `TipoCambio` on an MXN invoice (it must be 1 or absent).
+    - Rounding inconsistently between line totals and document totals — Anexo 20 has specific rounding rules.
+  </Accordion>
+  <Accordion title="Where do I find Mexico-specific GOBL documentation?">
+    See the [Mexico tax regime in GOBL](https://docs.gobl.org/regimes/mx) for tax categories, RFC structure, and CFDI extensions. The [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon documents required fields including UsoCFDI, RegimenFiscal, and place-of-issue.
+  </Accordion>

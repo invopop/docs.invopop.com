@@ -1,6 +1,6 @@
 ---
 title: "TicketBAI Invoicing Guide"
-sidebarTitle: "TicketBAI invoicing"
+sidebarTitle: "Invoicing"
 description: Issue invoices in the Basque Country with TicketBAI.
 ---
 
@@ -8,6 +8,7 @@ import WorkflowExample from '/snippets/workflows/es/ticketbai-invoice.mdx'
 import CancelInvoice from '/snippets/workflows/es/ticketbai-cancel.mdx'
 import InvoiceAccordion from '/snippets/invoices/es/ticketbai-accordion.mdx'
 import SpainResources from '/snippets/tables/spain-resources.mdx';
+import FAQ from '/snippets/faqs/es/composers/guide-ticketbai-invoicing.mdx';
 
 ## Introduction
 
@@ -113,6 +114,34 @@ No further configuration is required.
 
 </Steps>
 
+## Bizkaia activity code for individuals
+
+Individual suppliers (_autónomos_) issuing invoices in Bizkaia must report through the LROE Modelo 140 register, which requires an economic activity code (_epígrafe_). Set the [`es-tbai-bi-activity`](https://docs.gobl.org/addons/es-tbai-v1#activity-code-bizkaia) extension on the supplier with the appropriate code from the [Batuz LROE list of activity codes](https://www.batuz.eus/fitxategiak/batuz/lroe/batuz_lroe_lista_epigrafes_v1_0_4.xlsx).
+
+The code is a numeric value of up to seven digits. It is required for individual issuers in Bizkaia and is not used by organisations (which file through Modelo 240).
+
+```json Supplier with Bizkaia activity code
+"supplier": {
+  "name": "Maria Garcia",
+  "tax_id": {
+    "country": "ES",
+    "code": "12345678Z"
+  },
+  "addresses": [
+    {
+      "street": "San Frantzisko",
+      "locality": "Bilbo",
+      "region": "Bizkaia",
+      "code": "48003",
+      "country": "ES"
+    }
+  ],
+  "ext": {
+    "es-tbai-bi-activity": "6201"
+  }
+}
+```
+
 ## Cancel an Invoice
 
 TicketBAI also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
@@ -183,18 +212,15 @@ Invopop will try to assign these automatically if not explicitly provided.
 </Tip>
 <InvoiceAccordion />
 
+## FAQ
+
+<FAQ />
+
+More available in our [Spain FAQ](/faq/spain) section
+
 ---
 
 <SpainResources />
-
-<Card title="Spain FAQ"
-  icon="square-question"
-  href="/faq/spain"
-  arrow="true"
-  horizontal
->
-  Frequently asked questions about TicketBAI invoicing in Spain →
-</Card>
 
 <Card title="Participate in our community"
   icon="forumbee"

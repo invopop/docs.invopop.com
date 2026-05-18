@@ -11,6 +11,7 @@ import SendInvoiceWorkflow from '/snippets/workflows/pl/pl-send.mdx';
 import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 import ImportInvoiceWorkflow from '/snippets/workflows/pl/pl-import.mdx';
 import SyncInvoicesWorkflow from '/snippets/workflows/pl/pl-sync.mdx';
+import FAQ from '/snippets/faqs/pl/composers/guide-ksef-invoicing.mdx';
 
 ## Introduction
 
@@ -38,7 +39,7 @@ The table below summarizes which components are needed for each use case:
 | Send invoice workflow | ✓ | ✓ |
 | Import invoice workflow | — | ✓ |
 | Sync invoices workflow | — | ✓ |
-| Registration workflow | [Send](#send-only) | [Send & receive](#send--receive) |
+| Registration workflow | [Send](#setup-for-sending-invoices) | [Send & receive](#setup-for-sending-and-receiving-invoices) |
 
 
 
@@ -59,7 +60,14 @@ To issue invoices through KSeF, you will need:
 
 ## Setup
 
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com). If you only need to **send** invoices, you can skip the steps marked as "receive only".
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com). Choose the path that matches your use case:
+
+- [Setup for sending invoices](#setup-for-sending-invoices) — issue invoices through KSeF on behalf of your suppliers.
+- [Setup for sending and receiving invoices](#setup-for-sending-and-receiving-invoices) — issue invoices and automatically import invoices received by your suppliers.
+
+### Setup for sending invoices
+
+Follow these steps to configure Invopop to issue invoices through KSeF.
 
 <Steps>
 
@@ -75,15 +83,9 @@ All of the following steps must be carried out from the [Invopop Console](https:
 The initial connection requires no configuration.
 </Step>
 
-<Step title="Connect the Cron app (receive only)">
-  1. Navigate to **Configuration** → **Apps**
-  2. Find **Cron** in the app discovery list
-  3. Click **Connect** to activate
+<Step title="Configure the invoice sending workflow">
 
-  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
-</Step>
-
-<Step title="Configure invoice sending workflow">
+This workflow signs the GOBL document, converts it to FA(3) XML, and submits it to KSeF.
 
 <Tabs>
   <Tab title="Template">
@@ -114,9 +116,124 @@ The initial connection requires no configuration.
 
 </Step>
 
-<Step title="Configure invoice import workflow (receive only)">
+<Step title="Configure the party registration workflow">
 
-This workflow imports individual invoices from KSeF when they are received. It is automatically triggered by the sync workflow for each invoice found.
+This workflow registers a supplier in KSeF so you can issue invoices on their behalf.
+
+<Frame>
+  <img
+    width="400"
+    src="/assets/guides/pl-register-config.png"
+    alt="Choose KSeF environment (Test or Demo)"
+  />
+</Frame>
+
+In **Sandbox** the **Register Party in KSeF** step allows you to configure the environment:
+
+- **Test**: Self-signed certificate generated automatically, no manual steps required.
+- **Demo**: Requires manual certificate generation from the demo portal.
+
+<Info>Test is more convenient while Demo is more accurate simulating the production environment. It is convenient to create two workflows configured differently to easily switch between the Demo and Test options.</Info>
+
+In **live workspaces** no configuration is available, all suppliers are registered in the KSeF production environment.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="KSeF party registration workflow (send)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" cta="Add to my workspace">
+      Registers a party (supplier) with the KSeF system for sending invoices.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <Note>
+      The template uses test mode by default (for sandbox). To use demo mode in sandbox, add `"config": {"environment": "demo"}` to the **Register for KSeF** step. In Invopop production, the workflow automatically targets the KSeF production environment.
+    </Note>
+
+    <PartyRegistrationSendWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Register Party (Send)".
+
+    The new workflow will need to perform these steps:
+
+    1. **Set state** - To `Processing`
+    2. **Register party in KSeF (Poland)** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
+    3. **Wait for KSeF certificate upload** - Waits for the supplier to generate and upload their KSeF certificate (automatically skipped in test mode)
+    4. **Set state** - To `Registered`
+
+    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+### Setup for sending and receiving invoices
+
+Follow these steps to configure Invopop to both issue invoices through KSeF **and** automatically import invoices received by your suppliers. The Cron app periodically triggers a sync workflow that checks KSeF for new invoices and creates import jobs for each one found.
+
+<Steps>
+
+<Step title="Connect the Poland app">
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Poland** in the app discovery list
+  3. Click **Connect** to activate
+
+<Frame>
+<img width="354" src="/assets/guides/gov-pl-connect.png" alt="Connect KSeF app" />
+</Frame>
+
+The initial connection requires no configuration.
+</Step>
+
+<Step title="Connect the Cron app">
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Cron** in the app discovery list
+  3. Click **Connect** to activate
+
+  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
+</Step>
+
+<Step title="Configure the invoice sending workflow">
+
+This workflow signs the GOBL document, converts it to FA(3) XML, and submits it to KSeF.
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="KSeF send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-send" cta="Add to my workspace">
+      Signs and converts the [GOBL](https://docs.gobl.org) document into the FA(3) XML format and sends it to KSeF.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <SendInvoiceWorkflow />
+  </Tab>
+  <Tab title="Build from scratch">
+    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
+
+    1. **Set state** - To `Processing`
+    2. **Add sequential code** - Add the desired sequence for your invoices
+    3. **Sign envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications
+    4. **Generate FA(3) XML** - Generates the FA(3) XML
+    5. **Send FA(3) XML to KSeF** - Sends the FA(3) XML to KSeF
+    6. **Set state** - To `Sent`
+
+    In the **Error handling** section, add a **Set state** step with the state set to `Error` to capture and flag failed submissions.
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the invoice import workflow">
+
+This workflow imports an individual invoice from KSeF when it is received. It is automatically triggered by the sync workflow (configured in the next step) for each invoice found.
 
 <Tabs>
   <Tab title="Template">
@@ -154,11 +271,11 @@ This workflow imports individual invoices from KSeF when they are received. It i
 
 </Step>
 
-<Step title="Configure invoice sync workflow (receive only)">
+<Step title="Configure the invoice sync workflow">
 
-This workflow syncs all received invoices for a party within a specific time range. It creates import jobs for each invoice found.
+This workflow syncs all received invoices for a party within a specific time range. It creates an import job for each invoice found, using the import workflow you configured in the previous step.
 
-Configure the **Sync received invoices from KSeF** step to reference the import workflow you created in the previous step. The sync workflow will create a job for each invoice and send it to the import workflow.
+Configure the **Sync received invoices from KSeF** step to reference the import workflow created in the previous step.
 
 <Frame>
   <img
@@ -167,7 +284,6 @@ Configure the **Sync received invoices from KSeF** step to reference the import 
     alt="Configure the workflow that all invoices will be sent to"
   />
 </Frame>
-
 
 <Tabs>
   <Tab title="Template">
@@ -197,12 +313,9 @@ Configure the **Sync received invoices from KSeF** step to reference the import 
 
 </Step>
 
-<Step title="Configure party registration workflow">
+<Step title="Configure the party registration workflow">
 
-There are two registration workflow templates depending on your use case:
-
-- **Send only**: Registers the party in KSeF so you can issue invoices on their behalf. Does not require the Cron app.
-- **Send & receive**: Registers the party and subscribes them to periodic invoice imports via the [Cron app](/apps/cron). Requires the import and sync workflows configured in the previous steps.
+This workflow registers a supplier in KSeF and subscribes them to periodic invoice imports via the [Cron app](/apps/cron). The Cron subscription step periodically triggers the sync workflow to check for new invoices.
 
 <Frame>
   <img
@@ -212,61 +325,20 @@ There are two registration workflow templates depending on your use case:
   />
 </Frame>
 
-  In **Sandbox** the **Register Party in KSeF** step allows you to configure the environment:
+In **Sandbox** the **Register Party in KSeF** step allows you to configure the environment:
 
-  - **Test**: Self-signed certificate generated automatically, no manual steps required
-  - **Demo**: Requires manual certificate generation from the demo portal.
+- **Test**: Self-signed certificate generated automatically, no manual steps required.
+- **Demo**: Requires manual certificate generation from the demo portal.
 
-  <Info>Test is more convenient while Demo is more accurate simulating the production environment. It is convenient to create two workflows configured differently to easily switch between the Demo and Test options.</Info>
+<Info>Test is more convenient while Demo is more accurate simulating the production environment. It is convenient to create two workflows configured differently to easily switch between the Demo and Test options.</Info>
 
-  In **live workspaces** no configuration is available, all suppliers are registered in the KSeF production environment.
-
-#### Send only
-
-Use this template if you only need to **send** invoices through KSeF.
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF party registration workflow (send)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" cta="Add to my workspace">
-      Registers a party (supplier) with the KSeF system for sending invoices.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-
-    <Note>
-      The template uses test mode by default (for sandbox). To use demo mode in sandbox, add `"config": {"environment": "demo"}` to the **Register for KSeF** step. In Invopop production, the workflow automatically targets the KSeF production environment.
-    </Note>
-
-    <PartyRegistrationSendWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Register Party (Send)".
-
-    The new workflow will need to perform these steps:
-
-    1. **Set state** - To `Processing`
-    2. **Register party in KSeF (Poland)** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
-    3. **Wait for KSeF certificate upload** - Waits for the supplier to generate and upload their KSeF certificate (automatically skipped in test mode)
-    4. **Set state** - To `Registered`
-
-    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
-  </Tab>
-</Tabs>
-
-#### Send & receive
-
-Use this template if you also need to **receive** invoices from KSeF. This template includes a Cron subscription step that periodically triggers the sync workflow to check for new invoices.
+In **live workspaces** no configuration is available, all suppliers are registered in the KSeF production environment.
 
 <Tabs>
   <Tab title="Template">
     <Card iconType="duotone" title="KSeF party registration workflow (receive)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register-receive" cta="Add to my workspace">
       Registers a party (supplier) with the KSeF system and subscribes them to periodic invoice imports.
     </Card>
-
-    After adding the template, open the **Subscribe to periodic KSeF sync** step and set the **Workflow** field to the sync workflow created in the previous step and the **Interval** to your preferred frequency.
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
@@ -276,8 +348,6 @@ Use this template if you also need to **receive** invoices from KSeF. This templ
     </Note>
 
     <PartyRegistrationReceiveWorkflow />
-
-    After pasting the code, switch to the form view, open the **Subscribe to periodic KSeF sync** step and set the **Workflow** field to the sync workflow and the **Interval** to your preferred frequency.
   </Tab>
   <Tab title="Build from scratch">
     Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
@@ -295,6 +365,23 @@ Use this template if you also need to **receive** invoices from KSeF. This templ
     Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
   </Tab>
 </Tabs>
+
+#### Configure the cron step to start syncing invoices to Invopop
+
+After adding the workflow (regardless of how you created it), open the **Subscribe to periodic KSeF sync** step and configure the two fields below. This is what tells the [Cron app](/apps/cron) which workflow to run and how often.
+
+1. **Workflow** — select the **KSeF Sync Received Invoices** workflow you created in the previous step. The Cron app will trigger this workflow on each tick.
+2. **Interval** — choose how often KSeF should be checked for new invoices (for example, every hour or every day). Pick a frequency that matches how quickly you need received invoices to appear in Invopop.
+
+Once configured, the step should look like this:
+
+<Frame>
+  <img
+    width="500"
+    src="/assets/guides/pl-config-cron.png"
+    alt="Configured Subscribe to periodic KSeF sync step showing the selected sync workflow and interval"
+  />
+</Frame>
 
 </Step>
 
@@ -638,18 +725,15 @@ Detailed information about the FA(3)-specific extensions and validations can be 
 
 You can also use the [GOBL Builder](https://build.gobl.org) to create custom invoices with the Polish regime and FA(3) addon.
 
+## FAQ
+
+<FAQ />
+
+More available in our [Poland FAQ](/faq/poland) section
+
 ---
 
 <PolandResources />
-
-<Card title="Poland FAQ"
-  icon="square-question"
-  href="/faq/poland"
-  arrow="true"
-  horizontal
->
-  Find answers to frequently asked questions about invoicing in Poland →
-</Card>
 
 <Card title="Participate in our community"
   icon="forumbee"
