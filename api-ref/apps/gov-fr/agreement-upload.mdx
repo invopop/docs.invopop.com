@@ -3,6 +3,6 @@ title: "Upload signed agreement"
 openapi: "POST /apps/gov-fr/v1/entry/{silo_entry_id}/agreement"
 ---
 
-Submits the customer's signed agreement together with the chosen signing method. Two methods are supported: `esignature` validates an electronically-signed (PAdES) PDF cryptographically against the EU Trusted List; `identity` accepts a hand-signed PDF and defers verification to Invopop's approval service — uploaded identity images are required first.
+Stores the customer's signed PDF on the silo entry together with the chosen signature method. Two methods are accepted: `esignature` (PAdES — validated cryptographically against the EU Trusted List) and `identity` (hand-signed — verification deferred to Invopop's approval service, requires identity images uploaded via `POST /identity` first).
 
-Side-effects: the signed PDF is attached to the silo entry, the approval decision is recorded, and the queued `contract.wait.approval` task is poked so the onboarding workflow can continue.
+This call only persists the document. Call `POST /confirm` afterwards to mark the submission complete and let the onboarding workflow proceed.

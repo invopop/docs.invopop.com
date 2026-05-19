@@ -137,80 +137,15 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/entry/{silo_entry_id}/party:
-    get:
-      operationId: fetchEntryParty
-      summary: Fetch the draft party for a silo entry
-      description: |-
-        Returns the draft `Party` associated with the silo entry, including
-        any signer details and contact information collected so far. Used
-        by onboarding UIs to prefill the edit form.
-
-        The returned object always carries the SIREN read from the silo
-        entry envelope; customer-editable fields (signer, email, name
-        override) may be empty until they have been submitted via `PATCH`.
-      parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
-      responses:
-        "200":
-          description: Draft party returned.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Party"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-    patch:
-      operationId: updateEntryParty
-      summary: Update the draft party for a silo entry
-      description: |-
-        Applies a partial update to the draft `Party`. Only the fields
-        present in the request body are modified; omitting a field leaves
-        its current value untouched.
-
-        Rejected with `400` once the party has been approved — approved
-        parties are immutable.
-      parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PartyPatch"
-      responses:
-        "200":
-          description: Updated draft party.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Party"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
   /apps/gov-fr/v1/entry/{silo_entry_id}/agreement:
     get:
       operationId: fetchEntryAgreement
       summary: Download the unsigned agreement PDF
       description: |-
         Returns the unsigned mandate PDF that the signer must review and
-        sign. The PDF is generated on the fly from the current draft
-        `Party` — call `PATCH /party` first if any signer details still
-        need to be filled in.
+        sign. The PDF is generated on the fly from the silo entry's draft
+        party; the call fails with `422` when any required party or signer
+        field is missing from the silo envelope.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       responses:
@@ -235,22 +170,19 @@ paths:
       operationId: uploadEntryAgreement
       summary: Upload the signed agreement
       description: |-
-        Submits the customer's signed agreement together with the chosen
-        signing method.
+        Stores the customer's signed PDF on the silo entry together with
+        the chosen signature method. This call only persists the document
+        — it does not record an approval decision. Call `POST /confirm`
+        afterwards to mark the submission as complete.
 
-        Two methods are accepted:
+        Two signature methods are accepted:
 
         - `esignature` — the PDF was signed electronically (PAdES). The
           signature is validated cryptographically against the EU Trusted
           List.
         - `identity` — the PDF was signed by hand. The customer must also
-          upload identity images via `POST /identity` before this call;
+          upload identity images via `POST /identity` before confirming;
           verification is delegated to Invopop's approval service.
-
-        Side-effects: the signed PDF is attached to the silo entry, the
-        approval decision is recorded, and the queued
-        `contract.wait.approval` task is poked so the onboarding workflow
-        can continue.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       requestBody:
@@ -261,7 +193,7 @@ paths:
               $ref: "#/components/schemas/AgreementSubmit"
       responses:
         "204":
-          description: Signed agreement accepted.
+          description: Signed agreement stored.
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -281,15 +213,16 @@ paths:
       summary: Upload an identity document image
       description: |-
         Stores one face of the signer's identity document as an attachment
-        on the silo entry. Required before submitting the agreement when
-        `method=identity`.
+        on the silo entry. Required before confirming when
+        `signature=identity` was used on the agreement upload.
 
         Call once per `view`:
 
         - `front` + `back` for an ID card (CNI, titre de séjour).
         - `page` for a passport.
 
-        Re-uploading the same `view` overwrites the previous image.
+        Re-uploading the same `view` overwrites the previous image. The
+        MIME type is detected from the bytes — clients do not send it.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       requestBody:
@@ -312,47 +245,32 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/entry/{silo_entry_id}/approval:
-    get:
-      operationId: fetchEntryApproval
-      summary: Get the current approval status
+  /apps/gov-fr/v1/entry/{silo_entry_id}/confirm:
+    post:
+      operationId: confirmEntry
+      summary: Confirm the onboarding submission
       description: |-
-        Returns the latest approval decision for the silo entry. Three
-        possible states:
+        Marks the customer's submission as complete. Records the decision
+        in silo meta and pokes the queued `agreement.wait.approval` task
+        so the onboarding workflow can continue.
 
-        - `204 No Content` — the customer has uploaded their documents
-          but no decision has been recorded yet.
-        - `200 OK` with `approved: true` — the onboarding was accepted;
-          the party is now eligible for `directory.register`.
-        - `200 OK` with `approved: false` — the onboarding was rejected;
-          `notes` carries the reason.
+        Must be called after `POST /agreement` (and `POST /identity` when
+        the signature method was `identity`).
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       responses:
-        "200":
-          description: A decision has been recorded.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PartyStatus"
-              examples:
-                approved:
-                  summary: Onboarding accepted
-                  value:
-                    approved: true
-                rejected:
-                  summary: Onboarding rejected
-                  value:
-                    approved: false
-                    notes: "Identity document unreadable"
         "204":
-          description: Documents uploaded but no decision recorded yet.
+          description: Submission confirmed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -468,118 +386,11 @@ components:
           items:
             $ref: "#/components/schemas/DirectoryEntry"
 
-    Party:
-      type: object
-      description: |-
-        Draft or approved party record collected during gov-fr onboarding.
-        One `Party` per SIREN per workspace.
-      properties:
-        siren:
-          type: string
-          description: 9-digit French SIREN of the company. Read-only.
-          example: "269909452"
-        name:
-          type: string
-          description: |-
-            Legal name of the party. Denormalized from the directory entry
-            whose inbox matches the SIREN; can be overridden via `PATCH`.
-          example: "Boulangerie Dupont SARL"
-        signer_given_name:
-          type: string
-          description: Given name (prénom) of the natural person signing the mandate.
-          example: "Marie"
-        signer_surname:
-          type: string
-          description: Family name (nom) of the signer.
-          example: "Dupont"
-        signer_role:
-          type: string
-          description: |-
-            Signer's role within the company (e.g. `Président`, `Gérant`).
-            Maps to the `Fonction` field on the PPF designation form.
-          example: "Gérant"
-        signer_id:
-          type: string
-          description: |-
-            Signer's national identifier (CNI, passport, etc.) — recorded
-            so we can audit who personally signed the mandate.
-          example: "123456789012"
-        email:
-          type: string
-          format: email
-          description: Single contact email for this onboarding.
-          example: "marie.dupont@example.com"
-        approval:
-          description: |-
-            Persistent record that the onboarding was accepted. `null`
-            means the party is still a draft.
-          oneOf:
-            - type: "null"
-            - $ref: "#/components/schemas/Approval"
-
-    PartyPatch:
-      type: object
-      description: |-
-        Partial update for a draft `Party`. Only the fields included in
-        the request body are modified. SIREN is read-only and cannot be
-        changed via this endpoint.
-      properties:
-        name:
-          type: string
-          example: "Boulangerie Dupont SARL"
-        signer_given_name:
-          type: string
-          example: "Marie"
-        signer_surname:
-          type: string
-          example: "Dupont"
-        signer_role:
-          type: string
-          example: "Gérant"
-        signer_id:
-          type: string
-          example: "123456789012"
-        email:
-          type: string
-          format: email
-          example: "marie.dupont@example.com"
-
-    Approval:
-      type: object
-      description: Approval record stamped on a `Party` when onboarding is accepted.
-      required: [approved_at]
-      properties:
-        approved_at:
-          type: string
-          format: date-time
-          description: When the approval was recorded.
-          example: "2026-02-10T09:14:00Z"
-        notes:
-          type: string
-          description: Free-form context from the validator or reviewer.
-          example: "Verified by ops"
-
-    PartyStatus:
-      type: object
-      description: |-
-        Decision payload returned by `GET /approval` once the validator
-        has reached a verdict.
-      required: [approved]
-      properties:
-        approved:
-          type: boolean
-          description: Whether the onboarding was accepted.
-          example: true
-        notes:
-          type: string
-          description: Free-form context from the validator (most useful on rejection).
-          example: ""
-
     AgreementSubmit:
       type: object
-      required: [method, data]
+      required: [signature, data]
       properties:
-        method:
+        signature:
           type: string
           description: |-
             How the customer signed the agreement.
@@ -614,11 +425,7 @@ components:
           description: |-
             Base64-encoded binary of the image. Must be `image/jpeg` or
             `image/png`, maximum 10 MB. Text on the document should be
-            clearly legible.
-        mime:
-          type: string
-          description: Explicit MIME type of the image. Inferred from `data` when omitted.
-          example: "image/jpeg"
+            clearly legible. The MIME type is detected from the bytes.
 
     Error:
       type: object
