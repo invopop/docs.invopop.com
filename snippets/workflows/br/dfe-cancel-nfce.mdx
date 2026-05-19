@@ -1,0 +1,51 @@
+---
+title: "Cancel NFC-e invoice"
+description: "Cancel an NFC-e consumer invoice via PlugNotas"
+countryCode: "br"
+appId: "nfe-br"
+schema: "bill/invoice"
+---
+
+```json Example Cancel NFC-e invoice workflow
+{
+    "name": "Cancel NFC-e invoice",
+    "description": "Cancel an NFC-e consumer invoice via PlugNotas",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "5e63dc30-535e-11f1-aba1-0fa2408cece2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "71238320-535e-11f1-aba1-0fa2408cece2",
+            "name": "Cancel NFC-e",
+            "provider": "nfe-br.cancel.nfce"
+        },
+        {
+            "id": "65aa8020-535e-11f1-aba1-0fa2408cece2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "6b3199c0-535e-11f1-aba1-0fa2408cece2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
