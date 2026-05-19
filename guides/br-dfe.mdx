@@ -6,6 +6,8 @@ description: Issue Documentos Fiscais Eletrônicos in Brazil
 
 import ServiceWorkflow from '/snippets/workflows/br/dfe-service-invoice.mdx'
 import ConsumerWorkflow from '/snippets/workflows/br/dfe-consumer-invoice.mdx'
+import CancelNFSeWorkflow from '/snippets/workflows/br/dfe-cancel-nfse.mdx'
+import CancelNFCeWorkflow from '/snippets/workflows/br/dfe-cancel-nfce.mdx'
 import PostRegistrationFlow from '/snippets/workflows/br/dfe-postregistration.mdx'
 import RegisterSupplier from '/snippets/workflows/br/dfe-register-supplier.mdx'
 import Supplier from '/snippets/suppliers/br/dfe-supplier.mdx'
@@ -220,6 +222,78 @@ Follow one of the methods below and ensure to **Save** and **Publish** the workf
   </Tabs>
 </Step>
 
+<Step title="Prepare NFS-e Cancel Workflow">
+
+<Info>
+  You can skip this step if you're not interested in cancelling NFS-e documents.
+</Info>
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="DF-e cancel service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfse" cta="Add to my workspace">
+      This workflow will cancel a previously sent NFS-e invoice in Brazil.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <CancelNFSeWorkflow />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Cancel NFS-e invoice".
+
+      The new workflow will need to perform these steps:
+
+      - **Set State** - to `Processing`.
+      - **Cancel NFS-e**.
+      - **Set State** - to `Void`.
+
+      Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+    </Tab>
+  </Tabs>
+</Step>
+
+<Step title="Prepare NFC-e Cancel Workflow">
+
+<Info>
+  You can skip this step if you're not interested in cancelling NFC-e documents.
+</Info>
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="DF-e cancel consumer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfce" cta="Add to my workspace">
+      This workflow will cancel a previously sent NFC-e invoice in Brazil.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <CancelNFCeWorkflow />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Cancel NFC-e invoice".
+
+      The new workflow will need to perform these steps:
+
+      - **Set State** - to `Processing`.
+      - **Cancel NFC-e**.
+      - **Set State** - to `Void`.
+
+      Finally, in the Error Handling area, add the **Set State** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+    </Tab>
+  </Tabs>
+</Step>
+
 </Steps>
 
 ## Running
@@ -277,6 +351,36 @@ In production, the actual XML file sent to the tax authority and the actual PDF 
 </Info>
 
 <ExampleAccordion />
+
+### Cancel an invoice
+
+If you need to cancel a document that has already been sent to the tax authority, you can use the cancel workflows created during setup. Run the appropriate cancel workflow — NFS-e or NFC-e — over the silo entry you want to cancel. On success, the entry will be set to `Void`.
+
+<Info>
+  NFS-e cancellations are subject to the rules of each municipality. Some require a specific cancellation code. NFC-e cancellations must be requested within the cancellation window set by the originating state.
+</Info>
+
+#### Configuration
+
+Both cancel actions accept optional parameters that control the cancellation request. They can be set as a default on the workflow step (via the step's configuration page in the Console) or overridden per job by passing them as arguments when [creating the job via the API](/api-ref/transform/jobs/create-a-job-put).
+
+| Parameter | Step config field | Job argument | Applies to | Notes |
+|---|---|---|---|---|
+| Cancellation reason | `reason` | `nfe-br-cancel-reason` | NFS-e and NFC-e | Free-text reason for the cancellation. For NFC-e, must be at least 15 characters if provided. Defaults to the system default when omitted. |
+| Cancellation code | `code` | `nfe-br-cancel-code` | NFS-e only | Municipality-specific cancellation code, for example `9` for "Outros" in the National NFS-e system. Defaults to the system default when omitted. |
+
+Job arguments take precedence over the step configuration. To pass them when creating a job via the API:
+
+```json
+{
+  "workflow_id": "...",
+  "silo_entry_id": "...",
+  "args": {
+    "nfe-br-cancel-reason": "Cancelamento a pedido do Prestador",
+    "nfe-br-cancel-code": "9"
+  }
+}
+```
 
 ## FAQ
 
