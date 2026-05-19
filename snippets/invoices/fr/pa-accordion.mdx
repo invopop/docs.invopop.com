@@ -1,0 +1,75 @@
+import B2BMin from '/snippets/invoices/fr/pa-b2b.min.mdx';
+import B2B from '/snippets/invoices/fr/pa-b2b.mdx';
+import CreditNoteMin from '/snippets/invoices/fr/pa-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/fr/pa-credit-note.mdx';
+import AdvanceMin from '/snippets/invoices/fr/pa-advance.min.mdx';
+import Advance from '/snippets/invoices/fr/pa-advance.mdx';
+import InternationalMin from '/snippets/invoices/fr/pa-b2b-international.min.mdx';
+import International from '/snippets/invoices/fr/pa-b2b-international.mdx';
+
+<AccordionGroup>
+
+	<Accordion title="PA B2B invoice (domestic)">
+
+		A regulated B2B invoice between two French parties, both registered in the Annuaire. The [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1) add-on drives validation for the PA e-invoicing flow.
+
+		Notice:
+
+		- both parties carry a `SIREN` identity with `iso-scheme-id` `0002` and a `peppol` inbox under scheme `0225` so the workflow can route via Peppol,
+		- `fr-ctc-billing-mode` `B7` marks this as a standard B2B invoice; `untdid-document-type` `380` confirms the commercial invoice type,
+		- the `payment`, `payment-method`, and `payment-term` notes carry the French legal-mention text (penalty clauses, late-payment terms, early-payment discount), each tagged with the appropriate UNTDID 4451 subject code,
+		- `ordering.code` records the customer's purchase order reference.
+
+		<CodeGroup>
+			<B2BMin />
+			<B2B />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B credit note">
+
+		A credit note that partially cancels a previously issued PA invoice. The `preceding` array references the original invoice by series, code, and issue date.
+
+		Notice:
+
+		- `type` is `credit-note` and `untdid-document-type` is `381` (commercial credit note),
+		- the `preceding` block makes the link to the original invoice explicit — required for PA matching at the PPF.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B advance payment invoice">
+
+		An advance (down-payment) invoice — used when a payment is collected before the final goods or services are delivered.
+
+		Notice:
+
+		- `fr-ctc-billing-mode` is `B1` (advance / down payment) and `untdid-document-type` is `386`,
+		- the final invoice issued at delivery normally references this advance to net it off the total.
+
+		<CodeGroup>
+			<AdvanceMin />
+			<Advance />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA cross-border B2B invoice (FR → DE)">
+
+		A French supplier invoicing a customer in another EU member state. Cross-border B2B is **not** transmitted via the PA e-invoicing flow — it falls under [e-reporting](/guides/fr-pa-reporting) instead — but the same GOBL document is used as the source of truth for both.
+
+		Notice:
+
+		- the customer carries a DE tax ID and a generic email inbox rather than a Peppol address,
+		- VAT is `exempt` with the `untdid-tax-category` `K` and `cef-vatex` `VATEX-EU-IC` to mark the intra-community supply,
+		- once the [`fr-ctc-flow10-v1`](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on is released, this document will additionally feed the periodic e-report to the PPF.
+
+		<CodeGroup>
+			<InternationalMin />
+			<International />
+		</CodeGroup>
+	</Accordion>
+
+</AccordionGroup>
