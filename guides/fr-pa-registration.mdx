@@ -9,12 +9,12 @@ import RegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-supplier.mdx';
 
 <Note>
-  Registration is required for any French SIREN that will issue, receive, or report transactions through Invopop as its Plateforme Agréée. Registration is a prerequisite for all flows: invoicing, status, and reporting.
+  Registration is required for any French SIREN that will issue or receive invoices through Invopop as its Plateforme Agréée. It is a prerequisite for the invoicing and status flows.
 </Note>
 
-Each party (a SIREN) is registered once. The workflow signs the contract, records the party in the Annuaire, opens a reporting register, and publishes the party on the Peppol network. After it completes, the party can both send and receive invoices and is ready to start recording transactions for reporting.
+Each party (a SIREN) is registered once. The workflow submits the party for approval, registers it in the French Annuaire, and publishes it on the Peppol network. After it completes, the party can both send and receive invoices.
 
-The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with a French Annuaire step and the reporting register.
+The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with one French-specific step (`gov-fr.party.register`) before the Peppol registration.
 
 ## How it works
 
@@ -23,20 +23,17 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 </Frame>
 
 <Steps>
-  <Step title="Sign Contract">
-    Kicks off the contract signature flow with the party. The job pauses here until the party returns the signed agreement.
+  <Step title="Register Party for Approval">
+    Submits the party details for Invopop's KYC review.
   </Step>
   <Step title="Set State → processing">
     Moves the silo entry into a visible "in progress" state so operator dashboards reflect that registration is underway.
   </Step>
   <Step title="Wait for Approval">
-    Pauses until Invopop's KYC review of the signed contract clears.
+    Pauses until the party passes the approval check.
   </Step>
-  <Step title="Register in Annuaire">
-    Submits the party's SIREN to the French national directory so other PAs can route invoices to it.
-  </Step>
-  <Step title="Register Reporter">
-    Opens a reporting record keyed by SIREN and stores the cadence chosen during onboarding. See [reporting](/guides/fr-pa-reporting#registration) for the cadence options.
+  <Step title="Register Party">
+    Submits the party's SIREN to the French Annuaire so other PAs can route invoices to it (`gov-fr.party.register`).
   </Step>
   <Step title="Register Peppol Party">
     Publishes the party in SMP/SML with the `france` document group, enabling Peppol-level routing for sending and receiving.
@@ -51,7 +48,7 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 <Tabs>
   <Tab title="Template">
     <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
-      Registers a party in the Annuaire, on the Peppol network, and as a reporter.
+      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
     </Card>
   </Tab>
   <Tab title="Code">
@@ -63,25 +60,11 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 ## Unregistration
 
 <Warning>
-  Our unregistration workflow will be available soon
+  Our unregistration workflow will be available soon. It will remove the party from the Annuaire and disable it on Peppol so no further invoices are routed to it.
 </Warning>
 
-When a party stops trading or moves to another platform, run an unregistration workflow. The workflow steps remove the party from the Annuaire, Peppol and close out its reporting register.
-
-<Steps>
-  <Step title="Unregister in Annuaire">
-    Removes the inbox from the French directory.
-  </Step>
-  <Step title="Disable Reporter">
-    Closes the reporting register so no more periodic reports are generated for this SIREN.
-  </Step>
-  <Step title="Unregister in Peppol">
-    disables the party on Peppol so no further invoices are routed to it.
-  </Step>
-</Steps>
-
 <Note>
-  Unregistering does not delete historical reports already submitted to the PPF.
+  Unregistering does not delete historical data already submitted to the PPF.
 </Note>
 
 ## FAQ
