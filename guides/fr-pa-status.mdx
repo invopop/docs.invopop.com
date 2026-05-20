@@ -20,22 +20,19 @@ France requires lifecycle status updates on B2B national invoices to be reported
 
 ## Sending
 
-A status workflow records the status against the originating invoice, generates a CDAR XML payload, transmits it to the counterparty's PA over Peppol, and — for the two mandatory statuses — forwards a copy to the PPF.
+A status workflow generates a CDAR XML payload against the originating invoice, transmits it to the counterparty's PA over Peppol, and — for the two mandatory statuses — forwards a copy to the PPF.
 
 ### How it works
 
 <Steps>
-  <Step title="Record Status">
-    Stores the status against the originating invoice in the local PA database. The `status_code` and `reason_code` come from the workflow config or from job arguments at runtime.
-  </Step>
-  <Step title="Generate CDAR">
-    Uses the CII app to produce a CDAR XML envelope from the recorded status.
+  <Step title="Generate Status (France)">
+    Records the status against the originating invoice and produces the CDAR XML payload in a single step (`gov-fr.status.generate`). The `status_code` and `reason_code` come from the workflow config or from job arguments at runtime.
   </Step>
   <Step title="Send Peppol Document">
     Transmits the CDAR to the counterparty's PA over the Peppol network.
   </Step>
   <Step title="Forward Status to PPF">
-    For the two mandatory statuses (`210` and `212`), forwards the CDAR to the PPF. Non-mandatory statuses skip this step.
+    For the two mandatory statuses (`210` and `212`), forwards the CDAR to the PPF (`gov-fr.status.forward`). Non-mandatory statuses skip this step.
   </Step>
 </Steps>
 
@@ -90,8 +87,8 @@ Incoming statuses arrive over the same Peppol transport as invoices. Peppol's fo
   <Step title="Import UN/CEFACT CII Document">
     Converts the CDAR XML into a GOBL representation.
   </Step>
-  <Step title="Record Status">
-    Files the status under the originating invoice in the local PA database.
+  <Step title="Generate Status (France)">
+    Files the status under the originating invoice in the local PA database (`gov-fr.status.generate`).
   </Step>
 </Steps>
 

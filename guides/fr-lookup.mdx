@@ -1,0 +1,92 @@
+---
+title: "Lookup in the French directory"
+sidebarTitle: "Directory lookup"
+description: "Check whether a SIREN or electronic address is registered in the French Directory (Annuaire) before issuing or receiving invoices."
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+
+## Introduction
+
+Verifying that a party is registered in the French Annuaire before issuing or receiving an invoice reduces rejections and lets you branch regulated vs. non-regulated flows correctly. This guide shows how to query the PPF Annuaire so you can:
+
+- Verify that a SIREN is registered as a sender or receiver in the Annuaire.
+- Resolve the electronic address used to route invoices to a given party.
+- Branch invoice and party workflows between regulated e-invoicing and the [e-reporting flow](/guides/fr-pa-reporting).
+
+## Prerequisites
+
+* A live workspace (Lookup will error with `403 Forbidden` in Sandbox).
+* Within Console, make sure you have connected the **France** app.
+
+
+## Console support
+
+Add the **Lookup in Directory** step to your `invoice`, `party` or `status` workflows. 
+
+In the invoice workflow, the step can be configured to lookup suppliers and customers. The job will fail if no matching entry is found, and you can handle the exception any way you want (usually routing to non-regulated flow).
+
+<Frame caption="Configure the Lookup in Directory step for invoices">
+  <img
+    width="400"
+    src="/assets/guides/fr-lookup-config.png"
+    alt="Configure the Lookup in Directory step for invoices"
+  />
+</Frame>
+
+## API support
+
+### Look up by SIREN
+
+Use this endpoint when you have the French legal identifier of a company and want to know whether it is reachable through the Annuaire.
+
+A SIREN may have multiple entries (one per registered SIRET / electronic address), so the response is always a list. An empty `results` array means the SIREN is not currently registered in the Annuaire.
+
+The following outcomes are possible:
+
+| Status | Result | Flow type | Action |
+|---|---|---|---|
+| Party is registered | Returns one or more entries | **Regulated** | Route via Peppol; PPF expects a copy through the [PA send invoice workflow](/guides/fr-pa-invoicing#sending) |
+| Party is not registered | Returns an empty list | **Non-regulated** | Route through the [e-reporting flow](/guides/fr-pa-reporting) instead of Peppol |
+
+## Look up by electronic address
+
+Use this endpoint when you already have the electronic address (the value used to route invoices in France, typically in `scheme:value` form) and want to confirm it resolves to a registered entry. This is useful when a counterparty supplies their routing identifier directly rather than just a SIREN.
+
+The behaviour mirrors the SIREN lookup:
+
+- **Identifier is registered**: returns the matching entry.
+- **Identifier is unknown**: returns an empty list. The address cannot be used as a Peppol routing target for regulated flows.
+
+See the [API reference for lookup by electronic address](/api-ref/apps/gov-fr/lookup-identifier) for the full request and response shape.
+
+## Using lookups in workflows
+
+The typical pattern is to call the lookup endpoint from your own systems **before** triggering an invoice workflow, and then choose which workflow to fire:
+
+- **Both parties registered** → run the [PA send invoice workflow](/guides/fr-pa-invoicing#sending), which transmits over Peppol and forwards the F1 copy to the PPF.
+- **One or both parties unregistered** → run the [e-reporting recording workflow](/guides/fr-pa-reporting#recording) so the transaction is reported to the PPF on the next periodic submission.
+
+This keeps the **Record Invoice** step in the send workflow from rejecting non-regulated traffic.
+
+---
+
+<FranceResources />
+
+<Card title="France FAQ"
+  icon="square-question"
+  href="/faq/france"
+  arrow="true"
+  horizontal
+>
+  Find answers to frequently asked questions about invoicing in France →
+</Card>
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in France →
+</Card>
