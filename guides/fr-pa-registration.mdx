@@ -6,15 +6,16 @@ description: Register a party in the French Annuaire and on the Peppol network.
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import RegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
+import UnregisterWorkflow from '/snippets/workflows/fr/fr-pa-unregister.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-supplier.mdx';
 
 <Note>
   Registration is required for any French SIREN that will issue or receive invoices through Invopop as its Plateforme Agréée. It is a prerequisite for the invoicing and status flows.
 </Note>
 
-Each party (a SIREN) is registered once. The workflow submits the party for approval, registers it in the French Annuaire, and publishes it on the Peppol network. After it completes, the party can both send and receive invoices.
+Each party (a SIREN) is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, and publishes it on the Peppol network. After it completes, the party can both send and receive invoices.
 
-The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with one French-specific step (`gov-fr.party.register`) before the Peppol registration.
+The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with French-specific steps (`gov-fr.directory.register`) before the Peppol registration.
 
 ## How it works
 
@@ -23,17 +24,20 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 </Frame>
 
 <Steps>
-  <Step title="Register Party for Approval">
-    Submits the party details for Invopop's KYC review.
+  <Step title="Sign agreement for France">
+    Generates the French PA mandate so the party can authorise Invopop to act on its behalf (`gov-fr.agreement.sign`).
   </Step>
   <Step title="Set State → processing">
     Moves the silo entry into a visible "in progress" state so operator dashboards reflect that registration is underway.
   </Step>
-  <Step title="Wait for Approval">
-    Pauses until the party passes the approval check.
+  <Step title="Wait for French agreement upload">
+    Pauses until the signed agreement is uploaded and accepted (`gov-fr.agreement.wait.approval`).
   </Step>
-  <Step title="Register Party">
-    Submits the party's SIREN to the French Annuaire so other PAs can route invoices to it (`gov-fr.party.register`).
+  <Step title="Set State → completed">
+    Marks the agreement step as completed before the directory and Peppol registrations run.
+  </Step>
+  <Step title="Register Party in Directory">
+    Submits the party's SIREN to the French Annuaire so other PAs can route invoices to it (`gov-fr.directory.register`).
   </Step>
   <Step title="Register Peppol Party">
     Publishes the party in SMP/SML with the `france` document group, enabling Peppol-level routing for sending and receiving.
@@ -42,8 +46,6 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
     Marks the party as fully onboarded.
   </Step>
 </Steps>
-
-## Workflow code
 
 <Tabs>
   <Tab title="Template">
@@ -59,9 +61,31 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 
 ## Unregistration
 
-<Warning>
-  Our unregistration workflow will be available soon. It will remove the party from the Annuaire and disable it on Peppol so no further invoices are routed to it.
-</Warning>
+Run the unregister workflow to revoke a party's registrations when it should no longer issue or receive invoices through Invopop.
+
+<Steps>
+  <Step title="Unregister Peppol Party">
+    Disables the party in SMP/SML so Peppol traffic no longer routes to it (`peppol.register` with `disable: true`).
+  </Step>
+  <Step title="Unregister from Directory">
+    Removes the party from the French Annuaire (`gov-fr.directory.disable`).
+  </Step>
+  <Step title="Set State → void">
+    Marks the party as unregistered.
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="France PA unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-unregister" cta="Add to my workspace">
+      Revokes Peppol and Annuaire registrations so the party can no longer issue or receive invoices.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
 
 <Note>
   Unregistering does not delete historical data already submitted to the PPF.
