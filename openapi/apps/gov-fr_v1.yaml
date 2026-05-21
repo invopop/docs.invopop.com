@@ -137,7 +137,154 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/gov-fr/v1/entry/{silo_entry_id}/agreement:
+    get:
+      operationId: fetchEntryAgreement
+      summary: Download the unsigned agreement PDF
+      description: |-
+        Returns the unsigned mandate PDF that the signer must review and
+        sign. The PDF is generated on the fly from the silo entry's draft
+        party; the call fails with `422` when any required party or signer
+        field is missing from the silo envelope.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: PDF stream of the agreement, served inline.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      operationId: uploadEntryAgreement
+      summary: Upload the signed agreement
+      description: |-
+        Stores the customer's signed PDF on the silo entry together with
+        the chosen signature method. This call only persists the document
+        — it does not record an approval decision. Call `POST /confirm`
+        afterwards to mark the submission as complete.
+
+        Two signature methods are accepted:
+
+        - `esignature` — the PDF was signed electronically (PAdES). The
+          signature is validated cryptographically against the EU Trusted
+          List.
+        - `identity` — the PDF was signed by hand. The customer must also
+          upload identity images via `POST /identity` before confirming;
+          verification is delegated to Invopop's approval service.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgreementSubmit"
+      responses:
+        "204":
+          description: Signed agreement stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/entry/{silo_entry_id}/identity:
+    post:
+      operationId: uploadEntryIdentity
+      summary: Upload an identity document image
+      description: |-
+        Stores one face of the signer's identity document as an attachment
+        on the silo entry. Required before confirming when
+        `signature=identity` was used on the agreement upload.
+
+        Call once per `view`:
+
+        - `front` + `back` for an ID card (CNI, titre de séjour).
+        - `page` for a passport.
+
+        Re-uploading the same `view` overwrites the previous image. The
+        MIME type is detected from the bytes — clients do not send it.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityUpload"
+      responses:
+        "204":
+          description: Identity image stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/entry/{silo_entry_id}/confirm:
+    post:
+      operationId: confirmEntry
+      summary: Confirm the onboarding submission
+      description: |-
+        Marks the customer's submission as complete. Records the decision
+        in silo meta and pokes the queued `agreement.wait.approval` task
+        so the onboarding workflow can continue.
+
+        Must be called after `POST /agreement` (and `POST /identity` when
+        the signature method was `identity`).
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "204":
+          description: Submission confirmed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
+  parameters:
+    SiloEntryID:
+      name: silo_entry_id
+      in: path
+      required: true
+      description: ID of the `org.Party` silo entry being onboarded.
+      schema:
+        type: string
+        example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
   schemas:
     DirectoryEntry:
       type: object
@@ -239,6 +386,47 @@ components:
           items:
             $ref: "#/components/schemas/DirectoryEntry"
 
+    AgreementSubmit:
+      type: object
+      required: [signature, data]
+      properties:
+        signature:
+          type: string
+          description: |-
+            How the customer signed the agreement.
+
+              - `esignature` - Signed electronically (PAdES). The PDF
+                signature is validated against the EU Trusted List.
+              - `identity` - Signed by hand and accompanied by uploaded
+                identity images. Verification is delegated to Invopop's
+                approval service.
+          enum: ["esignature", "identity"]
+        data:
+          type: string
+          format: byte
+          description: Base64-encoded binary of the signed PDF agreement. Must be `application/pdf`.
+
+    IdentityUpload:
+      type: object
+      required: [view, data]
+      properties:
+        view:
+          type: string
+          description: |-
+            Which face of the identity document this image represents.
+
+              - `front` - Front of an ID card (recto).
+              - `back` - Back of an ID card (verso).
+              - `page` - Photo page of a passport.
+          enum: ["front", "back", "page"]
+        data:
+          type: string
+          format: byte
+          description: |-
+            Base64-encoded binary of the image. Must be `image/jpeg` or
+            `image/png`, maximum 10 MB. Text on the document should be
+            clearly legible. The MIME type is detected from the bytes.
+
     Error:
       type: object
       required: [error]
@@ -277,6 +465,27 @@ components:
             $ref: "#/components/schemas/Error"
           example:
             error: "directory API is only available for live workspaces"
+
+    NotFound:
+      description: The referenced silo entry or party could not be found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "silo entry not found"
+
+    UnprocessableEntity:
+      description: |-
+        The request is well-formed but cannot be processed — for example
+        the agreement PDF cannot be generated because the draft party is
+        incomplete, or the uploaded signature failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "draft party is missing signer details"
 
     InternalServerError:
       description: An unexpected server-side error occurred.
