@@ -1,0 +1,67 @@
+---
+title: "DF-e issue product invoice (NF-e)"
+description: "Issue NF-e invoices in Brazil"
+countryCode: "br"
+appId: "nfe-br"
+schema: "bill/invoice"
+---
+
+```json Example DF-e issue product invoice (NF-e) workflow
+{
+    "name": "DF-e issue product invoice (NF-e)",
+    "description": "Issue a NF-e invoice in Brazil",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "9ba5d6c8-f64a-4140-aa49-0b529231264e",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "14a8175e-5902-493b-b0d3-005f96da870a",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NF-e · 1",
+            "config": {
+                "name": "NF-e",
+                "padding": 1,
+                "start": 1
+            }
+        },
+        {
+            "id": "810fbb98-6370-4104-8d49-9cdd6a4ca157",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "796486be-0dae-4b07-ae52-34f4793ebeee",
+            "name": "Send NF-e (Brazil)",
+            "provider": "nfe-br.send.nfe"
+        },
+        {
+            "id": "8bfd4fba-8e99-42f6-953f-7a967b6c1f74",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "157750d1-3284-4f40-add4-24b1cbcacc1d",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
