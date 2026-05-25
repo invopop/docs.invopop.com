@@ -1,0 +1,51 @@
+---
+title: "Cancel NF-e invoice"
+description: "Cancel an NF-e product invoice via PlugNotas"
+countryCode: "br"
+appId: "nfe-br"
+schema: "bill/invoice"
+---
+
+```json Example Cancel NF-e invoice workflow
+{
+    "name": "Cancel NF-e invoice",
+    "description": "Cancel an NF-e product invoice via PlugNotas",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "66252078-732d-4c87-a0a5-859d1dc4ef53",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "e7ef1042-3c51-48e6-b4d9-9cec74a09489",
+            "name": "Cancel NF-e",
+            "provider": "nfe-br.cancel.nfe"
+        },
+        {
+            "id": "9c1f3a20-732d-4c87-a0a5-859d1dc4ef53",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a4d82b10-732d-4c87-a0a5-859d1dc4ef53",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
