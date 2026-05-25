@@ -1,0 +1,60 @@
+---
+title: "France send document for reporting"
+description: "Generates and sends a France e-reporting transaction report"
+countryCode: "fr"
+appId: "gov-fr"
+schema: "org/party"
+---
+```json France send document for reporting workflow
+{
+    "name": "France send document for reporting",
+    "description": "Generates and sends a France e-reporting transaction report",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "98f7aba6-8008-455d-a620-90f2bf80bf49",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "888e98ad-785b-4dc4-b610-8cf39cce9157",
+            "name": "Generate document for reporting",
+            "provider": "gov-fr.reporting.generate",
+            "summary": "Generate Transactions report (seller)",
+            "config": {
+                "flux_kind": "tx",
+                "role": "seller"
+            }
+        },
+        {
+            "id": "066eac4a-a9c2-486c-aa30-a3d6f49d7582",
+            "name": "Send document for reporting",
+            "provider": "gov-fr.reporting.send"
+        },
+        {
+            "id": "e5990ba3-6696-4ebe-b29a-14acd307c864",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "437ed708-bf87-491e-8447-5096ad4017c2",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
