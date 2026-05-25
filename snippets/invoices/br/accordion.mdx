@@ -4,6 +4,8 @@ import ServiceInvoiceRTCMin from '/snippets/invoices/br/dfe-service-invoice-rtc.
 import ServiceInvoiceRTC from '/snippets/invoices/br/dfe-service-invoice-rtc.mdx';
 import ConsumerInvoiceMin from '/snippets/invoices/br/dfe-consumer-invoice.min.mdx';
 import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
+import ProductInvoiceMin from '/snippets/invoices/br/dfe-product-invoice.min.mdx';
+import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 
 <AccordionGroup>
 	<Accordion title="Example B2B service invoice (NFS-e)">
@@ -16,7 +18,7 @@ import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
 		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
 		- ISS percentage is provided explicitly as it varies depending on the municipality and type of service,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "Issue NFS-e" workflow created during setup.
+		- make sure to process it with the "DF-e issue service invoice (NFS-e)" workflow created during setup.
 
 		<CodeGroup>
 			<ServiceInvoiceMin />
@@ -38,18 +40,38 @@ import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
 		</CodeGroup>
 	</Accordion>
 
+	<Accordion title="Example B2B product invoice (NF-e)">
+
+		In this example, we're issuing a simple product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
+
+		Notice:
+
+		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon without the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `55` (NF-e),
+		- the customer is required for NF-e and must include a full address with the [`br-ibge-municipality`](https://docs.gobl.org/addons/br-nfe-v4#municipality-code) extension,
+		- each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation,
+		- item identities are used to provide the NCM (Mercosur Common Nomenclature) product code,
+		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
+		- there are no totals or calculations; all these will be made automatically when uploading, and,
+		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+
+		<CodeGroup>
+			<ProductInvoiceMin />
+			<ProductInvoice />
+		</CodeGroup>
+	</Accordion>
+
 	<Accordion title="Example B2C consumer invoice (NFC-e)">
 
 		In this example, we're issuing a simple consumer invoice (NFC-e) from a Brazilian supplier.
 
 		Notice:
 
-		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon; this ensures the document will be validated using the NF-e/NFC-e rules built into the [GOBL](https://docs.gobl.org) library,
+		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
 		- the customer is optional and in this example we've omitted it,
 		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
 		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "Issue NFC-e" workflow created during setup.
+		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
 
 		<CodeGroup>
 			<ConsumerInvoiceMin />
