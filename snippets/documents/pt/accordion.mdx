@@ -2,6 +2,14 @@ import ATB2BInvoiceMin from '/snippets/invoices/pt/at-b2b.min.mdx';
 import ATB2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
 import DeliveryMin from '/snippets/deliveries/pt/delivery.min.mdx';
 import Delivery from '/snippets/deliveries/pt/delivery.mdx';
+import ReturnMin from '/snippets/deliveries/pt/return.min.mdx';
+import Return from '/snippets/deliveries/pt/return.mdx';
+import WaybillGlobalMin from '/snippets/deliveries/pt/waybill-global.min.mdx';
+import WaybillGlobal from '/snippets/deliveries/pt/waybill-global.mdx';
+import DeliveryFromGlobalMin from '/snippets/deliveries/pt/delivery-from-global.min.mdx';
+import DeliveryFromGlobal from '/snippets/deliveries/pt/delivery-from-global.mdx';
+import ReturnFromGlobalMin from '/snippets/deliveries/pt/return-from-global.min.mdx';
+import ReturnFromGlobal from '/snippets/deliveries/pt/return-from-global.mdx';
 import PaymentMin from '/snippets/payments/pt/payment.min.mdx';
 import Payment from '/snippets/payments/pt/payment.mdx';
 
@@ -42,6 +50,69 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 		<CodeGroup>
 			<DeliveryMin />
 			<Delivery />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT return guide">
+
+		A return guide (_Guia de Devolução_) records goods being returned to the supplier — for example, defective items, unsold stock, or any other scenario where previously delivered goods are sent back.
+
+		Notice:
+
+		- the [`pt-saft-movement-type`](https://docs.gobl.org/addons/pt-saft-v1#movement-type) extension is set explicitly to `GD` (Guia de Devolução),
+		- the `series` follows the `GD ` prefix convention and must be registered through the Supplier Portal, and,
+		- the flow of goods is reversed compared to a delivery note: the `customer` is the party returning the goods, and the `supplier` is the one receiving them back.
+
+		<CodeGroup>
+			<ReturnMin />
+			<Return />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT global waybill">
+
+		For shipments where the specific recipient is not known upfront — for example, multi-stop delivery runs — issuers can emit a global waybill (_Guia de Transporte Global_) to cover the goods in transport.
+
+		Notice:
+
+		- the document `type` is set to `waybill`, which the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon normalizes to the [`pt-saft-movement-type`](https://docs.gobl.org/addons/pt-saft-v1#movement-type) extension `GT` (Guia de Transporte),
+		- the `series` follows the `GT ` prefix convention required by the AT and must be registered through the Supplier Portal, and,
+		- the `customer` field is omitted: when no customer is provided on a `GT`, the SAF-T submission auto-fills the AT-prescribed generic entry _Consumidor final_ with NIF `999999990` and address _Desconhecido_.
+
+		<CodeGroup>
+			<WaybillGlobalMin />
+			<WaybillGlobal />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT delivery from global waybill">
+
+		Once the recipient of part of the goods covered by a global waybill is known, a concrete document — typically a `GR` (Guia de Remessa) — must be issued with the full transaction details, including the `customer` and a cross-reference back to the originating `GT` so the AT can correlate both records.
+
+		Notice:
+
+		- the `customer` is now populated with the actual recipient of the goods, and,
+		- the `preceding` array carries one entry with the `series`, `code`, and `issue_date` of the originating `GT`.
+
+		<CodeGroup>
+			<DeliveryFromGlobalMin />
+			<DeliveryFromGlobal />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT return from global waybill">
+
+		A return can also be linked back to a global waybill — for example, when surplus goods that were not delivered to any customer come back to the depot at the end of a delivery run.
+
+		Notice:
+
+		- as in the standalone return guide, the `pt-saft-movement-type` extension is set explicitly to `GD`,
+		- the `preceding` array references the originating `GT`, and,
+		- the `customer` is omitted, since the goods are returning to the issuer's own depot rather than to a specific party.
+
+		<CodeGroup>
+			<ReturnFromGlobalMin />
+			<ReturnFromGlobal />
 		</CodeGroup>
 	</Accordion>
 
