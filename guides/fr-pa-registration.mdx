@@ -16,6 +16,17 @@ Each party (a SIREN) is registered once. The workflow signs the contract, record
 
 The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with a French Annuaire step and the reporting register.
 
+## Routing identifiers
+
+The Annuaire identifies recipients by an **electronic address**, not by SIREN alone. The routing identifier is carried on the registered party as an inbox with scheme `0225` (the FRCTC electronic address scheme), and its `code` is validated to start with the party's SIREN. A single SIREN can have several entries — typically one per inbox, where an inbox may correspond to an establishment, a department, or a different PA. Codes follow one of these patterns:
+
+- `SIREN` — routes to the company as a whole.
+- `SIREN_SIRET` — routes to a specific establishment within the company.
+- `SIREN_SIRET_ROUTINGCODE` — routes to a specific target inside an establishment (e.g. a department or downstream system).
+- `SIREN_SUFFIX` — a custom-suffixed inbox, used when a SIREN needs several addresses without distinct SIRETs.
+
+By default the workflow registers the party under its `SIREN` identifier. When a sender looks the party up using only its VAT ID, the lookup step picks the simplest available identifier — `SIREN` first, then `SIREN_SIRET`, and so on — so the company-wide address is preferred whenever it exists.
+
 ## How it works
 
 <Steps>
