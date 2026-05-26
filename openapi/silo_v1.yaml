@@ -28,23 +28,27 @@ paths:
           example: invoices
           title: Folder
           type: string
-      - description: The starting date and time for retrieving results in descending
-          order, formatted as an ISO timestamp.
+      - description: Starting date and time for retrieving results, formatted as an
+          ISO timestamp. Treated as the upper bound when descending (the default)
+          or the lower bound when ascending.
         in: query
         name: created_at
         schema:
-          description: The starting date and time for retrieving results in descending
-            order, formatted as an ISO timestamp.
+          description: Starting date and time for retrieving results, formatted as
+            an ISO timestamp. Treated as the upper bound when descending (the default)
+            or the lower bound when ascending.
           example: "2023-08-02T00:00:00.000Z"
           title: Created At
           type: string
       - description: The position marker from the previous result's next_cursor property,
-          used for pagination.
+          used for pagination. Must be used with the same ascending value as the call
+          that produced it.
         in: query
         name: cursor
         schema:
           description: The position marker from the previous result's next_cursor
-            property, used for pagination.
+            property, used for pagination. Must be used with the same ascending value
+            as the call that produced it.
           title: Cursor
           type: string
       - description: The maximum number of entries to return in a single page of results.
@@ -56,13 +60,13 @@ paths:
           example: 20
           title: Limit
           type: integer
-      - description: When true, results are returned in ascending order instead of
-          descending.
+      - description: When true, results are returned in ascending order (oldest first)
+          instead of the default descending order (newest first).
         in: query
         name: ascending
         schema:
-          description: When true, results are returned in ascending order instead
-            of descending.
+          description: When true, results are returned in ascending order (oldest
+            first) instead of the default descending order (newest first).
           title: Ascending
           type: boolean
       responses:
@@ -1023,7 +1027,8 @@ components:
     SiloEntryCollection:
       properties:
         created_at:
-          description: Date from which results are provided in descending order.
+          description: Starting date for results. Acts as the upper bound when descending
+            (the default) or the lower bound when ascending.
           example: "2025-05-01T00:00:00.000Z"
           title: Created At
           type: string
@@ -1043,7 +1048,8 @@ components:
           title: Limit
           type: integer
         list:
-          description: Array of entries sorted by creation time in descending order.
+          description: Array of entries sorted by creation time, descending by default
+            or ascending when requested.
           items:
             $ref: '#/components/schemas/SiloEntry'
           nullable: true
