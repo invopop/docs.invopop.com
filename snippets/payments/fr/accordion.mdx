@@ -5,16 +5,16 @@ import IntlEU from '/snippets/payments/fr/intl-eu.mdx';
 
 <AccordionGroup>
 
-	<Accordion title="Domestic B2C payment (Flow 10.4)">
+	<Accordion title="Domestic B2C payment">
 
-		A cashed-in receipt from a domestic B2C transaction. Flow 10.4 aggregates by `(date, currency)` and is rate-agnostic at the bucket level, so the tax breakdown lives directly on each line rather than on a referenced invoice.
+		A cashed-in receipt from a domestic B2C transaction. Domestic B2C payments aggregate by `(date, currency)` and are rate-agnostic at the bucket level, so the tax breakdown lives directly on each line rather than on a referenced invoice.
 
 		Notice:
 
 		- `type` is `receipt` and `method.key` `credit-transfer` records how the money was received,
-		- no `customer` is set — Flow 10.4 doesn't need counterparty identification,
-		- `lines[i].document` is omitted on purpose: a line without a `document` reference is what classifies the payment as B2C (10.4); a line with one would route it to intl B2B (10.2) instead,
-		- `lines[i].tax.categories[...].rates[...]` carries the VAT base/percent/amount directly so the bucket's `<TaxPercent>` / `<Amount>` come out right in the report.
+		- no `customer` is set — domestic B2C payments don't need counterparty identification,
+		- `lines[i].document` is omitted on purpose: a line without a `document` reference is what classifies the payment as domestic B2C; a line with one would route it to international B2B instead,
+		- `lines[i].tax.categories[...].rates[...]` carries the VAT base, percent and amount directly on each line, since domestic B2C buckets aggregate by `(date, currency)` and don't reference an underlying invoice.
 
 		<CodeGroup>
 			<B2CMin />
@@ -22,16 +22,15 @@ import IntlEU from '/snippets/payments/fr/intl-eu.mdx';
 		</CodeGroup>
 	</Accordion>
 
-	<Accordion title="Intl B2B payment (Flow 10.2)">
+	<Accordion title="International B2B payment">
 
-		A cross-border B2B payment settling a previously issued invoice — here, Bistrot Lyon SAS cashing in from German customer Müller GmbH. Flow 10.2 reports per-payment detail and requires the counterparty identification plus a link to the underlying invoice.
+		A cross-border B2B payment settling a previously issued invoice — here, Bistrot Lyon SAS cashing in from German customer Müller GmbH. International B2B payments report per-payment detail and require the counterparty identification plus a link to the underlying invoice.
 
 		Notice:
 
 		- `customer` is populated with the foreign counterparty (DE tax ID),
-		- `lines[i].document` references the invoice being settled by `code` and `issue_date` — this is both how `gov-fr.reporting.record` classifies the payment as 10.2 and how GOBL allocates the cashed amount across the original invoice's tax rates,
-		- if the referenced invoice had mixed VAT rates and this payment only partially settles it, GOBL splits the cash proportionally across rates at calculation time — you don't write that math,
-		- TT-95 / TT-99 amounts in the resulting Flux 10.2 XML come straight out of that allocation, in EUR (FX-converted from the payment currency if different).
+		- `lines[i].document` references the invoice being settled by `code` and `issue_date` — this is both how `gov-fr.reporting.record` classifies the payment as international B2B and how GOBL allocates the cashed amount across the original invoice's tax rates,
+		- if the referenced invoice had mixed VAT rates and this payment only partially settles it, GOBL splits the cash proportionally across rates at calculation time — you don't write that math.
 
 		<CodeGroup>
 			<IntlEUMin />
