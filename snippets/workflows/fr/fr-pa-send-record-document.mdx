@@ -1,0 +1,74 @@
+---
+title: "Record and send through Peppol and PPF or record for reporting",
+description: "Checks if both parties are registered in the Annuaire and branches on e-invoicing or e-reporting flow",
+countryCode: "fr"
+appId: "gov-fr"
+schema: "bill/invoice"
+---
+```json France PA directory invoice and record workflow
+{
+    "name": "Record and send through Peppol and PPF or record for reporting",
+    "description": "Checks if both parties are registered in the Annuaire and branches on e-invoicing or e-reporting flow",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "019e74cb-0001-7000-0000-000000000001",
+            "name": "Mark processing",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "0f922610-5deb-11f1-a65f-6b69c249bc34",
+            "name": "Lookup document in Directory",
+            "provider": "gov-fr.directory.lookup",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "found",
+                    "steps": [
+                        {
+                            "id": "019e74cb-0002-7000-0000-000000000002",
+                            "name": "Record a document for einvoicing",
+                            "provider": "gov-fr.directory.record"
+                        },
+                        {
+                            "id": "407ecad0-5e72-11f1-82b2-4d1e6d092169",
+                            "name": "Send document",
+                            "provider": "peppol.send"
+                        },
+                        {
+                            "id": "019e74cb-0003-7000-0000-000000000003",
+                            "name": "Forward Invoice to PPF",
+                            "provider": "gov-fr.directory.forward"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "not-found",
+                    "steps": [
+                        {
+                            "id": "19f3ecb0-5deb-11f1-a65f-6b69c249bc34",
+                            "name": "Record document for Reporting",
+                            "provider": "gov-fr.reporting.record"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "019e74cb-0004-7000-0000-000000000004",
+            "name": "Mark completed",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
+        }
+    ],
+    "rescue": []
+}
+```
