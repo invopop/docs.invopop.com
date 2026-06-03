@@ -26,7 +26,12 @@ Add the **Lookup in Directory** step to your `invoice`, `party` or `status` work
 
 In the invoice workflow, the step can be configured to lookup suppliers and customers. The job will fail if no matching entry is found, and you can handle the exception any way you want (usually routing to non-regulated flow).
 
-When a match is found, the step writes the resolved `0225` electronic address back onto the looked-up party (supplier or customer for invoices and payments, or the root party for standalone party documents). Downstream steps in the workflow can then route the document without having to repeat the lookup.
+When a match is found, the step writes the resolved routing details back onto the looked-up party (supplier or customer for invoices and payments, or the root party for standalone party documents):
+
+- The `0225` electronic address is added to the party's `inboxes`, so downstream steps can route the document without repeating the lookup.
+- If the SIREN was derived from the party's French VAT tax ID or SIRET rather than supplied as an explicit identity, it is also added as a SIREN identity on the party. Existing identities (including SIRET) are preserved.
+
+If the party is already addressed or already carries a SIREN identity, the step leaves those values untouched.
 
 <Frame caption="Configure the Lookup in Directory step for invoices">
   <img
