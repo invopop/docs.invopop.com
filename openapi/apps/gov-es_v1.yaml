@@ -163,6 +163,88 @@ paths:
       responses:
         "202":
           description: "No content"
+  /apps/gov-es/v1/lookup:
+    post:
+      x-mint:
+        mcp:
+          enabled: true
+          name: verify-gov-es-tax-id
+          description: Verify a Spanish tax ID (NIF/CIF) against the AEAT census.
+      description: |-
+        Verify a Spanish tax ID (NIF/CIF) against the AEAT census. The endpoint
+        always reports whether AEAT identified the tax ID. When `correct` is
+        `true` and the tax ID is identified, the official name registered with
+        AEAT is also returned.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tax_id:
+                  description: Spanish tax ID (NIF/CIF) to verify against AEAT.
+                  type: string
+                  example: "B98602031"
+                name:
+                  description: |-
+                    Name to check against the tax ID. For individuals AEAT
+                    verifies that the name matches the tax ID on record; for
+                    companies the name is not required to confirm the tax ID
+                    exists.
+                  type: string
+                  example: "Provide One SL"
+                correct:
+                  description: |-
+                    When `true` and the tax ID is identified, the response also
+                    includes the official `name` as registered with AEAT.
+                  type: boolean
+                  default: false
+              required: ["tax_id"]
+      responses:
+        "200":
+          description: The verification completed and the result is reported in the body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identified:
+                    description: Whether AEAT identified the tax ID.
+                    type: boolean
+                  name:
+                    description: |-
+                      Official name registered with AEAT. Only present when
+                      `correct` was `true` in the request and the tax ID was
+                      identified.
+                    type: string
+        "400":
+          description: Bad Request - The request body could not be parsed or `tax_id` was empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+        "422":
+          description: Unprocessable Entity - The tax ID could not be verified (invalid or unverifiable input).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+        "500":
+          description: Internal Server Error - The upstream AEAT lookup failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
   /apps/gov-es/v1/entry/{silo_entry_id}/{system}/confirm:
     post:
       description: Confirm that the upload process has completed.
