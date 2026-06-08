@@ -5,6 +5,48 @@ sidebarTitle: "Overview"
 mode: "center"
 ---
 
+<Update label="June 8, 2026" description="Weekly update" tags={["France", "Brazil", "Portugal", "Spain", "Peppol"]}>
+
+## New features
+
+**France Annuaire directory lookup API.** New `gov-fr` endpoints let you query the official Annuaire directly from Invopop to check whether a company (SIREN) or a specific routing identifier is registered, and on which Plateforme Agréée. Use this to branch regulated vs. non-regulated invoicing flows before sending. See the [SIREN lookup](/api-ref/apps/gov-fr/lookup-siren) and [identifier lookup](/api-ref/apps/gov-fr/lookup-identifier) reference, plus the new [Annuaire lookup guide](/guides/fr-lookup).
+
+**France PA registration & lifecycle endpoints.** Six new endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}` cover party fetch/update, agreement fetch/upload, identity upload, and approval — mirroring the patterns used by VERI\*FACTU and `gov-es`. This makes registration and lifecycle management of French e-invoicing parties scriptable end to end. Start with the [France PA registration guide](/guides/fr-pa-registration).
+
+**France PA invoice & payment examples.** Reference GOBL examples added for the four main PA Flow 2 shapes (domestic B2B, credit note, advance / down-payment, cross-border FR→DE intra-community) and a non-French supplier issuing through Chorus Pro. Two Flow 10 e-reporting payment examples (domestic B2C and international FR→DE B2B) are also wired into the France app. See the [France app](/apps/france) and the [Chorus Pro app](/apps/choruspro-france).
+
+**Multi-PDP routing for France.** A single SIREN can now be registered with multiple routing identifiers in the Annuaire — one per Plateforme Agréée or inbox — so some invoices can be received through Invopop while others go elsewhere (e.g. a travel-and-expense tool). The Annuaire supports `SIREN`, `SIREN_SIRET`, `SIREN_SIRET_ROUTINGCODE`, and `SIREN_SUFFIX` electronic-address formats. See the [France FAQ](/faq/france).
+
+**Brazil NF-e and cancellation flows.** Initial coverage for Brazil's Nota Fiscal Eletrônica (NF-e) has shipped, including a dedicated NF-e app page, product-invoice examples, and a cancellation workflow snippet. NFC-e and NFS-e cancellation workflows are also available. See the [DF-e Brazil app](/apps/documentos-fiscais-electronicos-brazil) and the [DF-e guide](/guides/br-dfe).
+
+**Portugal global & return invoices.** New guides and examples for Portugal's *fatura global* (consolidated periodic invoice) and *guia de devolução* (return document), plus refreshed InvoiceXpress register-supplier and issue-invoice workflow snippets. See the [AT Portugal app](/apps/at-portugal) and the [PT AT guide](/guides/pt-at).
+
+**Germany ZUGFeRD helper.** A new helper covers the ZUGFeRD `BR-FX-EN-04` validation rule, smoothing out a recurring source of rejections when generating Factur-X / ZUGFeRD documents.
+
+## Updates
+
+**Peppol validation refreshed.** The Peppol validation engine has been bumped to `phive-rules` 4.3.5 (released 2026-05-28), picking up the latest Peppol BIS 3 and PINT releases and bringing OIOUBL schematron registrations in line with ERST's production schematron 1.17.1 (live since 2026-05-18). See the [Peppol app](/apps/peppol).
+
+**Peppol self-billing fix-up.** Outbound Peppol BIS3 self-billed invoices and credit notes have been bumped to the `:2026.3` rule set so they validate against the current `phive-rules` (`:2025.3` has been dropped upstream). No action required from senders.
+
+**Poland KSeF line completion dates.** Per-line completion dates can now be mapped onto KSeF invoice lines, useful for invoices where line items have distinct delivery/service dates. The KSeF connector also retries transient submission failures more reliably. See the [Poland app](/apps/poland) and the [KSeF guide](/guides/pl-ksef).
+
+**Italy FatturaPA on GOBL v0.403.** The SDI Italy connector has been upgraded to GOBL v0.403, adopting the new immutable `tax.Extensions` API and the `pay.Advance` → `pay.Record` rename shipped last week. See the [SDI Italy app](/apps/sdi-italy).
+
+## Bug fixes
+
+**Spain TicketBAI — `S2` exemption routing.** `es-tbai-exemption=S2` (reverse charge) now correctly produces `Sujeta/NoExenta` with `TipoNoExenta=S2`, instead of an invalid `Sujeta/Exenta` block with `CausaExencion=S2` (only `E1–E6` are valid). `VT` and `IE` exemptions now route to `NoSujeta` alongside `OT` and `RL`. See the [TicketBAI invoicing guide](/guides/es-ticketbai).
+
+**Spain TicketBAI — foreign tax IDs (Batuz).** Foreign tax IDs reported in `IDOtro` are now prefixed with the country code (e.g. `DE311355971` with `CodigoPais=DE`), fixing Batuz `B4_2000013` "formato erróneo" rejections for VIES-valid intra-community VATs.
+
+**Spain TicketBAI — non-EU customers (Batuz).** Non-EU customer tax IDs are now routed to `IDType=04` (foreign tax / registration document) instead of `IDType=02` (NIF-VAT), fixing Batuz rejections for non-EU customers (e.g. Mexico). EU membership is resolved per GOBL locales, so post-Brexit `GB` correctly maps to `04`.
+
+**Spain TicketBAI — line totals exclude retained taxes.** Per-line `ImporteTotal` no longer includes IRPF or other retained taxes, fixing a mismatch with `ImporteTotalFactura` and TicketBAI error `5015` on Gipuzkoa and Araba submissions.
+
+**Spain TicketBAI — simplified invoices for foreign customers.** Simplified invoices now handle foreign and missing customer country values correctly, fixing rejection edge cases.
+
+</Update>
+
 <Update label="May 13, 2026" description="GOBL builder update" tags={["Argentina", "Spain"]}>
 
 ## New features
