@@ -63,6 +63,8 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
 
 After the workflow reaches **Wait for French agreement upload**, the party sits in <Badge color="yellow">processing</Badge> until the PA mandate is signed. **This step is manual and required** — the party cannot be accepted, registered in the Annuaire, or published on Peppol until it is done.
 
+### Sign in Console
+
 The agreement form is surfaced as a link on the party itself:
 
 <Steps>
@@ -77,7 +79,23 @@ The agreement form is surfaced as a link on the party itself:
   </Step>
 </Steps>
 
-Once the signed agreement is submitted and accepted, **Wait for French agreement upload** resolves and the workflow continues to the directory and Peppol registration steps, ending in <Badge color="purple">registered</Badge>.
+### Sign through the API
+
+You can also complete the agreement programmatically — useful when you embed the onboarding in your own product instead of sending the signer to the Invopop form. Once the workflow has paused at **Wait for French agreement upload**:
+
+  1. [Download the unsigned agreement PDF](/api-ref/apps/gov-fr/agreement-fetch) `GET /apps/gov-fr/v1/entry/{silo_entry_id}/agreement`<br />
+    The mandate PDF is generated from the party's data for the signer to review and sign.
+
+  2. [Upload the signed agreement](/api-ref/apps/gov-fr/agreement-upload) `POST /apps/gov-fr/v1/entry/{silo_entry_id}/agreement`<br />
+    Send the signed PDF together with the signature method: `esignature` for an electronic (PAdES) signature, or `identity` for a handwritten one.
+
+  3. [Upload identity images](/api-ref/apps/gov-fr/identity-upload) `POST /apps/gov-fr/v1/entry/{silo_entry_id}/identity`<br />
+    Only required when the signature method is `identity`. Upload one image per view: `front` and `back` for an ID card, or `page` for a passport.
+
+  4. [Confirm the submission](/api-ref/apps/gov-fr/confirm) `POST /apps/gov-fr/v1/entry/{silo_entry_id}/confirm`<br />
+    Marks the submission as complete and wakes the waiting workflow task.
+
+Whichever way the agreement is signed, once it is submitted and accepted, **Wait for French agreement upload** resolves and the workflow continues to the directory and Peppol registration steps, ending in <Badge color="purple">registered</Badge>.
 
 <Note>
   If you don't open the Meta tab and sign the agreement, the party stays in <Badge color="yellow">processing</Badge> indefinitely — it is never automatically accepted.
