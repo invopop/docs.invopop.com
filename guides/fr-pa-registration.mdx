@@ -31,7 +31,7 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
     Moves the silo entry into a visible "in progress" state so operator dashboards reflect that registration is underway.
   </Step>
   <Step title="Wait for French agreement upload">
-    Pauses until the signed agreement is uploaded and accepted (`gov-fr.agreement.wait.approval`).
+    Pauses until the signed agreement is uploaded and accepted (`gov-fr.agreement.wait.approval`). This is a **manual gate** — the party stays in <Badge color="yellow">processing</Badge> and the workflow does not advance until someone opens the agreement form and signs it. See [Complete the agreement](#complete-the-agreement) below.
   </Step>
   <Step title="Set State → completed">
     Marks the agreement step as completed before the directory and Peppol registrations run.
@@ -58,6 +58,30 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
     <RegisterWorkflow />
   </Tab>
 </Tabs>
+
+## Complete the agreement
+
+After the workflow reaches **Wait for French agreement upload**, the party sits in <Badge color="yellow">processing</Badge> until the PA mandate is signed. **This step is manual and required** — the party cannot be accepted, registered in the Annuaire, or published on Peppol until it is done.
+
+The agreement form is surfaced as a link on the party itself:
+
+<Steps>
+  <Step title="Open the party entry">
+    In Console, open the party (silo entry) that the register workflow is running on.
+  </Step>
+  <Step title="Go to the Meta tab">
+    Open the **Meta** tab. The **Sign agreement for France** step publishes an agreement link there (meta key `approval-link`).
+  </Step>
+  <Step title="Open and sign the agreement form">
+    Click the link to open the French PA agreement form. Review the mandate that authorises Invopop to act as the party's Plateforme Agréée, sign it, and submit.
+  </Step>
+</Steps>
+
+Once the signed agreement is submitted and accepted, **Wait for French agreement upload** resolves and the workflow continues to the directory and Peppol registration steps, ending in <Badge color="purple">registered</Badge>.
+
+<Note>
+  If you don't open the Meta tab and sign the agreement, the party stays in <Badge color="yellow">processing</Badge> indefinitely — it is never automatically accepted.
+</Note>
 
 ## Unregistration
 
