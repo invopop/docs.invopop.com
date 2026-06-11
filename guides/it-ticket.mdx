@@ -222,7 +222,7 @@ As usual, the recommended approach for running jobs is to perform two steps; fir
 
 ### Register a Supplier
 
-You can register suppliers either manually via the Invopop Console or programmatically via the API. The process is essentially the same, so for this guide we'll demonstrate the manual process.
+You can register suppliers either manually via the Invopop Console or programmatically via the API. The process is essentially the same. We'll demonstrate the manual process first, followed by the [API flow](#register-a-supplier-via-the-api).
 
 <Warning>
   Suppliers in Italy using this system must generate and provide their [AdE](https://ivaservizi.agenziaentrate.gov.it/portale/)
@@ -296,6 +296,53 @@ We will update the supplier with the provided _codice fiscale_ for future use bu
 <Warning>
   These credentials will expire every 90 days. You must first update your credentials on the official AdE web portal, then enter these new credentials in our registration form. You can use the same registration link to update your credentials.
 </Warning>
+
+### Register a supplier via the API
+
+The whole registration process can also be completed programmatically. This is useful in [white-label](/guides/white-label) setups where you want to collect the supplier's credentials inside your own product instead of sharing Invopop's hosted form.
+
+<Steps>
+  <Step title="Upload the supplier">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the supplier [party](https://docs.gobl.org/draft-0/org/party), like the example in the previous section. The party must include the company `name` and an Italian `tax_id` (Partita IVA). Optionally include the `it-fiscal-code` identity and an email address to pre-fill the registration form.
+  </Step>
+  <Step title="Run the registration workflow">
+    Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-put) endpoint with the IDs of the **silo entry** and the **supplier registration workflow** created during setup.
+  </Step>
+  <Step title="Fetch the registration link">
+    [Fetch the silo entry](/api-ref/silo/entries/fetch-an-entry) and read the `meta` row where the `key` is `registration-link`. The `link_url` will look like this:
+
+    ```
+    https://ticket-it.invopop.com/register/{owner_id}/{entry_id}?exp={expiry}&sig={signature}
+    ```
+
+    The URL is signed: the `exp` and `sig` query parameters are validated on every request, so always use the `link_url` exactly as returned. Requests with missing or modified parameters are rejected.
+  </Step>
+  <Step title="Submit the credentials">
+    Opening the link in a browser presents the hosted registration form. To submit the credentials from your own product instead, send a `PUT` request to the `link_url` (keeping the query parameters intact) with the following JSON body:
+
+    ```json
+    {
+      "fiscal_id": "48220010093",
+      "codice_fiscale": "MRTMTT91D08F205J",
+      "email": "supplier@example.com",
+      "password": "supplier-ade-password",
+      "pin": "12345678"
+    }
+    ```
+
+    | Field | Required | Description |
+    | --- | --- | --- |
+    | `fiscal_id` | Yes | The supplier's Partita IVA, without the `IT` country prefix. |
+    | `codice_fiscale` | Yes | The supplier's _codice fiscale_. It will be stored in the supplier party for future use. |
+    | `password` | Yes | The supplier's AdE portal password. |
+    | `pin` | Yes | The supplier's AdE portal PIN. |
+    | `email` | No | Email address to receive AdE notifications. Updates the supplier party if changed. |
+
+    A `200` response means the registration is complete and the post-registration workflow configured in the app will be launched. Errors are returned as `{"error": "<message>"}` with a `400` status for client errors (invalid or expired link, missing fields) or `500` for server errors.
+
+    The same endpoint can be called again with the same link to update the supplier's credentials when they expire.
+  </Step>
+</Steps>
 
 ### Send an Invoice
 
