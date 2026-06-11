@@ -467,7 +467,7 @@ Every series registered with the AT has a type that determines its purpose. You 
 | --- | --- | --- |
 | **Normal** | `N` | The standard type for series used in production. Use this type for all real documents with fiscal effect in live workspaces. |
 | **Training**<br/>_(Formação)_ | `F` | For testing and training purposes only. Documents issued under a training series are fictitious and carry no fiscal effect. Use this type in sandbox workspaces when validating your integration before going live. |
-| **Recovery**<br/>_(Recuperação)_ | `R` | A special type for registering documents that were issued manually on paper during a system outage. Portuguese law requires that when the invoicing system is unavailable, issuers continue on paper and then re-enter those documents once the system is restored. This type covers that scenario. |
+| **Recovery**<br/>_(Recuperação)_ | `R` | A special type for registering documents that were issued manually on paper during a system outage. Portuguese law requires that when the invoicing system is unavailable, issuers continue on paper and then re-enter those documents once the system is restored. See [Recovering documents issued offline](#recovering-documents-issued-offline) for the full process. |
 
 <Note>
   The series type is set at registration time and cannot be changed afterward. Make sure to choose the correct type for your use case.
@@ -486,6 +486,63 @@ The following examples show partial [GOBL](https://docs.gobl.org) documents you 
 ### Cancel a document
 
 If you need to cancel a document that has already been issued and reported to the AT, you can use the cancel workflows created during setup. The cancellation process follows the same pattern as sending a document: create a job for the silo entry you want to cancel using the cancel workflow appropriate for the document type.
+
+### Recovering documents issued offline
+
+If you lose the connection to Invopop and cannot issue documents through your regular workflow, Portuguese law defines exactly what to do. [Despacho n.º 8632/2014](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Despacho_n%C2%BA_8632_2014_03_07.pdf), section 2.4, regulates the issuance of documents during a period of software unavailability (_inoperacionalidade do programa_) and their later integration into the certified invoicing system.
+
+#### While offline: issue on paper
+
+During the outage, documents must be issued manually on pre-printed paper forms acquired from an AT-authorized typography (_tipografia autorizada_). These paper documents:
+
+- Carry their own series and sequential numbering, pre-printed by the typography.
+- Include a pre-printed ATCUD: the typography registers the series with the AT and obtains the validation code on your behalf.
+- Do **not** require a QR code: the QR code obligation only applies to documents issued by certified software.
+
+We recommend keeping a pad of these forms on hand as your offline contingency.
+
+#### Once back online: recover the documents
+
+Immediately after the connection is restored, each paper document must be re-entered ("recovered") through Invopop so it becomes part of the certified record and gets reported to the AT:
+
+1. **Register a recovery series** (type `R`), either through the Supplier Portal or the [series registration endpoint](/api-ref/apps/at-pt/series-register). You can do this ahead of time as part of your contingency setup. Documents recovered from paper can only be issued under a recovery series.
+
+2. **Create a GOBL document replicating the paper document exactly** — same line items, taxes, and totals — with these specifics:
+
+   - The `issue_date` must be the date of the original paper document.
+   - The `$tags` array must include `bypass`, so the totals are taken verbatim from the paper document instead of being recalculated.
+   - The [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension must be set to `M` (manual).
+   - The [`pt-saft-source-ref`](https://docs.gobl.org/addons/pt-saft-v1#source-document-reference) extension must reference the paper document using the format defined in section 2.4.5 of the despacho: the document type code followed by the letter `M`, a space, and the paper document's series and number separated by a slash.
+
+   ```json
+   {
+     "$schema": "https://gobl.org/draft-0/bill/invoice",
+     "$regime": "PT",
+     "$addons": ["pt-saft-v1"],
+     "$tags": ["bypass"],
+     "series": "FT RECOVERY",
+     "issue_date": "2026-05-28",
+     "tax": {
+       "ext": {
+         "pt-saft-source": "M",
+         "pt-saft-source-ref": "FTM ABC123/00042"
+       }
+     }
+   }
+   ```
+
+   This partial example shows only the recovery-specific fields. Complete the document with the supplier, customer, lines, and totals copied from the paper document.
+
+3. **Run your regular invoice workflow** on the document. The recovered document is sealed like any other software-issued document — it receives a hash, an ATCUD from the recovery series, and a QR code — and is reported to the AT through the usual channels (real-time webservice and/or SAF-T PT). The reference to the paper document is included in the SAF-T `HashControl` field, as required by the despacho.
+
+Keep in mind:
+
+- Each paper document can be recovered only once. Attempting to recover the same source reference twice is rejected.
+- Any later document referencing a recovered one (e.g., a credit note rectifying it) must reference the original paper document's series and number, not the number assigned to the recovered document.
+
+<Note>
+  Recovery series also cover a second scenario regulated by section 2.5 of the same despacho: re-entering documents lost to a system failure from their printed duplicates. In that case, the `pt-saft-source-ref` extension uses the letter `D` instead of `M` (e.g., `FTD FT SERIES/123`), and the original series is automatically decommissioned once the first document is recovered, as the law requires it to be closed.
+</Note>
 
 ### Reporting documents to the AT
 
