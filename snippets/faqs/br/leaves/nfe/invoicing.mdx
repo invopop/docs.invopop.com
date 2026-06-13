@@ -2,6 +2,22 @@
     Build a GOBL invoice with the `br-nfe-v4` addon, send it through the Issue NF-e workflow. Invopop signs with the supplier's A1 cert, transmits to the issuer's state SEFAZ, receives the protocolo de autorização, and exposes the authorized XML and DANFE PDF.
   </Accordion>
 
+  <Accordion title="How do I retrieve the NF-e access key and authorization protocol?">
+    After a successful issuance, SEFAZ returns two identifiers that Invopop stores as envelope stamps on the silo entry under `data.head.stamps`:
+
+    - `sefaz-key` — the 44-digit NF-e access key (*chave de acesso*) that uniquely identifies the document.
+    - `sefaz-auth` — the authorization protocol number (*número do protocolo*) confirming SEFAZ acceptance.
+
+    Use them to reconcile your records, build the DANFE QR code, or query SEFAZ directly.
+
+    ```json
+    "stamps": [
+      { "provider": "sefaz-key", "value": "35240114200166000187550010000000071123456789" },
+      { "provider": "sefaz-auth", "value": "135240000123456" }
+    ]
+    ```
+  </Accordion>
+
   <Accordion title="What are the required and optional fields for NF-e invoices in Brazil?">
     NF-e (`br-nfe-v4`) covers electronic invoices for the circulation of **goods** in Brazil. It maps to two fiscal models:
 
@@ -96,7 +112,11 @@
 
     Required tax categories per line: `ICMS`, `PIS`, `COFINS`. `IPI` is optional.
 
-    Optional item extensions: `item.ext.br-nfe-cfop`, `item.identities[].key: "ncm" | "gtin" | "gtin+taxable"`.
+    | Extension | Required | Notes |
+    | --- | --- | --- |
+    | `line.ext.br-nfe-cfop` | ✅ model 55 <br /> ⬜ model 65 | CFOP (Código Fiscal de Operações e Prestações) code identifying the fiscal nature of the operation, e.g. `"5102"` for in-state resale. Required on every line of an NF-e (model 55). |
+
+    Optional item identities: `item.identities[].key: "ncm" | "gtin" | "gtin+taxable"`.
 
     ### Payment
 
