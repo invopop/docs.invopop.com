@@ -1,3 +1,37 @@
+  <Accordion title="Can I issue an NF-e to a foreign customer?">
+    Yes. A foreign customer that does not have a Brazilian CNPJ or CPF can be identified by providing a country-qualified `identity` (e.g. a passport number) on the customer party. The `identity.country` must be an ISO country code other than `BR`.
+
+    When a foreign customer is used:
+
+    - the `tax_id` block can be omitted,
+    - the customer address `country` is required and must not be `BR` (it is auto-filled from the identity country if missing),
+    - the `state` field and the `br-ibge-municipality` extension are not required, as they only apply to Brazilian parties.
+
+    Example customer block for a foreign buyer:
+
+    ```json
+    "customer": {
+      "name": "Acme International Inc.",
+      "identities": [
+        {
+          "key": "passport",
+          "country": "US",
+          "code": "US-FOREIGN-123"
+        }
+      ],
+      "addresses": [
+        {
+          "num": "500",
+          "street": "Market Street",
+          "locality": "San Francisco",
+          "code": "94105",
+          "country": "US"
+        }
+      ]
+    }
+    ```
+  </Accordion>
+
   <Accordion title="What's the workflow for issuing NF-e invoices?">
     Build a GOBL invoice with the `br-nfe-v4` addon, send it through the Issue NF-e workflow. Invopop signs with the supplier's A1 cert, transmits to the issuer's state SEFAZ, receives the protocolo de autorização, and exposes the authorized XML and DANFE PDF.
   </Accordion>
@@ -97,16 +131,22 @@
     | `tax_id.code` | ✅ | CNPJ (14 digits) or CPF (11 digits), Mod11 validated |
     | `identities[].key: "br-nfe-state-reg"` | ✅ | State Registration (Inscrição Estadual) |
     | `addresses` | ✅ | At least one |
+    | `addresses[].country` | ✅ 🔧 | ISO country code. Auto-filled from `tax_id.country` if missing. |
     | `ext.br-ibge-municipality` | ✅ | 7-digit IBGE municipality code |
 
     ### Customer (Model 55 — required, Model 65 — optional)
 
+    Brazilian customers must provide a Brazilian `tax_id`. Foreign customers can issue an NF-e by providing a country-qualified `identity` (e.g. a passport number) instead of a `tax_id`.
+
     | Field | Required | Notes |
     | --- | --- | --- |
-    | `tax_id.country` | ✅ | `"BR"` |
-    | `tax_id.code` | ✅ | CNPJ or CPF |
+    | `tax_id.country` | ✅ for BR customers | `"BR"` |
+    | `tax_id.code` | ✅ when `tax_id` is present | CNPJ or CPF |
+    | `identities[]` with non-BR `country` | ✅ for foreign customers without a `tax_id` | E.g. `{ "key": "passport", "country": "US", "code": "US-FOREIGN-123" }` |
     | `addresses` | ✅ | |
-    | `ext.br-ibge-municipality` | ✅ | Required when addresses are present |
+    | `addresses[].country` | ✅ 🔧 | ISO country code. Auto-filled from the `tax_id` country or the first identity that declares a country. |
+    | `addresses[].state` | ✅ for BR customers | Must be a valid Brazilian state acronym (e.g. `SP`). Not required for foreign customers. |
+    | `ext.br-ibge-municipality` | ✅ for BR customers | 7-digit IBGE code. Not required for foreign customers. |
 
     ### Line items
 
