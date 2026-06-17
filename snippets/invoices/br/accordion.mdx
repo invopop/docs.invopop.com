@@ -6,6 +6,8 @@ import ConsumerInvoiceMin from '/snippets/invoices/br/dfe-consumer-invoice.min.m
 import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
 import ProductInvoiceMin from '/snippets/invoices/br/dfe-product-invoice.min.mdx';
 import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
+import ProductInvoiceSimplesMin from '/snippets/invoices/br/dfe-product-invoice-simples.min.mdx';
+import ProductInvoiceSimples from '/snippets/invoices/br/dfe-product-invoice-simples.mdx';
 
 <AccordionGroup>
 	<Accordion title="Example B2B service invoice (NFS-e)">
@@ -57,6 +59,24 @@ import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 		<CodeGroup>
 			<ProductInvoiceMin />
 			<ProductInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example B2B product invoice for a Simples Nacional issuer (NF-e)">
+
+		In this example, we're issuing a product invoice (NF-e) from a supplier enrolled in the _Simples Nacional_ tax regime.
+
+		Notice the differences from the previous example:
+
+		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_); use `2` for _Simples Nacional, Excess_ or `4` for _MEI_ — omitting it defaults to `3` (normal regime),
+		- each ICMS line carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension (here `101`, taxed with credit permission) instead of the `br-nfe-icms-cst` code that normal-regime issuers use,
+		- PIS and COFINS are still required on every line but are not levied per item under _Simples Nacional_, so they use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
+		- there are no totals or calculations; all these will be made automatically when uploading, and,
+		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+
+		<CodeGroup>
+			<ProductInvoiceSimplesMin />
+			<ProductInvoiceSimples />
 		</CodeGroup>
 	</Accordion>
 
