@@ -1,5 +1,5 @@
 ---
-title: "Email Guide"
+title: "Email guide"
 sidebarTitle: "Email"
 icon: "envelope"
 description: An application to send emails from your workflows, with or without attachments.
@@ -107,16 +107,16 @@ It's possible that your workflow generates several files per invoice (sometimes 
 
 ***
 
-## Custom Template Variables with Job Args
+## Custom template variables with job args
 
 In addition to the predefined variables available in the **Insert variable** menu, you can inject custom variables into your email templates using job args. This is particularly useful for dynamic content like payment links, conditional text, and other external data.
 
-### How It Works
+### How it works
 
 When [using the API to run a workflow](https://docs.invopop.com/api-ref/transform/jobs/create-a-job-put) you pass an `args` data object with custom variables you want to inject into your email. You will then introduce the variable into the email's subject or body with the following syntax: `{{args.variable_name}}`. If you need to provide a fallback in case the variable is not present, we recommend using the following syntax: `{{ or args.value "Default value" }}`.
 
 
-### Example: Adding a Payment Link
+### Example: adding a payment link
 
 Let's say you want to send an email with a custom payment link. Here's how to set it up:
 
@@ -165,7 +165,7 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 </Steps>
 
 <Info>
- **Key Points**
+ **Key points**
 - Use `{{args.variable_name}}` syntax in email templates for custom variables
 - Include the same variable names in the `args` object when executing the job via API
 - Custom variables work in both email body and subject fields
@@ -175,7 +175,32 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 **FAQ**
 
 <AccordionGroup>
-<Accordion title="Is Email in Sandbox limited in any way?">
+
+<Accordion title="How do I get errors emailed to me when a workflow fails?">
+
+**How do I get errors emailed to me when a workflow fails?**
+
+    <Frame caption="Notify via email configuration">
+      <img
+        width="395"
+        src="/assets/guides/email-faults.png"
+        alt="Email faults"
+      />
+    </Frame>
+
+Add a **Notify via email** step to the error handling area at the end of your workflow. The error handler only runs when something upstream fails, so the email is sent just for failed jobs. Alternatively, if you handle the exception, add it in the exception handling area nested in the step.
+
+Configure the step like this:
+
+- **To** — your own address (or a shared inbox / distribution list).
+- **Subject** — write a short label such as `Error on invoice`. You can use the <kbd>Insert variable</kbd> button to append the **Full Code** so you can identify which document failed.
+- **Body** — describe the problem, then use <kbd>Insert variable</kbd> to add the **Full Code** and the **Faults** variable. `Faults` expands into the list of errors that caused the job to fail, so you get the full reason without opening the console.
+
+For example, a body of `Invoice [Full Code] has the following errors: [Faults]` produces a message naming the document and listing every error.
+
+Once saved, any job that fails will trigger this step and send you the error details automatically.
+</Accordion>
+<Accordion title="Is email in sandbox limited in any way?">
 
 We strive to make our sandbox workspaces as similar to our live workspaces as possible. However, in order to prevent abuse and email mistakes, the following differences should be observed in Sandbox:
 
