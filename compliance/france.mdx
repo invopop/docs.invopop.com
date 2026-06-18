@@ -97,9 +97,48 @@ Stripe and Chargebee integrations let merchants and ERPs issue compliant invoice
   E-reporting applies to B2C sales, cross-border B2B, and any flow where one party is not registered in the Annuaire — i.e. everything that is out of scope for e-invoicing.
 </Note>
 
-For e-reporting use cases, PAs aggregate transaction and payment data and submit periodic reports to the PPF on a cadence tied to the party's VAT regime.
+For e-reporting use cases, a PA aggregates transaction and payment data and submits periodic reports (the **Flux 10** dataset) to the PPF on a cadence tied to the party's VAT regime. The regulation splits this into two distinct obligations — **transaction data** and **payment data** — which apply to different cases and follow different deadlines.
 
 E-reporting becomes mandatory on the same dates as e-invoicing issuance: 1 Sept 2026 for large and medium-sized companies, 1 Sept 2027 for all businesses. Non-established taxable persons are an exception: their obligation to e-report acquisitions is postponed to 1 September 2027 regardless of the size of the business.
+
+### When e-reporting applies
+
+**E-reporting of transactions** is required for all cross-border B2B and B2C sales, regardless of how VAT is accounted for.
+
+**E-reporting of payments** is required only for **supplies of services**, where VAT becomes due when the payment is collected (_encaissement_). It does **not** apply when:
+
+- The business has opted to **pay VAT on debits** (_sur les débits_): VAT is already accounted for when the invoice is issued, so the invoice itself serves as the payment record. This waiver does not apply to **advance payments** or **agricultural transactions**, where VAT falls due on receipt of payment and so must still be reported.
+- The transaction is subject to **reverse charge**: the customer accounts for the VAT, so the supplier has no payment VAT to report.
+
+<Note>
+  The debit-option waiver affects **payment reporting only**. Transaction data must be reported in all cases.
+</Note>
+
+### Reporting flows
+
+Each recorded document is classified into one of four Flux 10 data blocks, based on whether it is a cross-border B2B or a domestic B2C operation, and whether it carries transaction or payment data:
+
+| Flow   | Reports     | Applies to                                 |
+|--------|-------------|--------------------------------------------|
+| `10.1` | Transaction | Cross-border B2B invoices                  |
+| `10.2` | Payment     | Payments against cross-border B2B invoices |
+| `10.3` | Transaction | B2C transactions                           |
+| `10.4` | Payment     | B2C payments                               |
+
+### What each report must contain
+
+The field-level mapping including required extensions, document-type codes, permitted VAT rates and party identifier schemes is maintained in the GOBL add-on documentation:
+
+<Card title="GOBL fr-ctc-flow10-v1 add-on" icon="book" href="https://docs.gobl.org/addons/fr-ctc-flow10-v1" horizontal>
+  Scenario-by-scenario data requirements →
+</Card>
+
+### How Invopop processes reporting
+
+- **Aggregation**: data is consolidated per declarant at **SIREN level** and by the declarant's role in each transaction (seller or buyer). 
+- **Cadence**: submission frequency follows the declarant's VAT regime. Because transaction and payment data can fall on different deadlines, they are submitted as separate reports.
+
+See the [PA reporting guide](/guides/fr-pa-reporting) for the registration, recording and submission workflow.
 
 <AccordionGroup>
   <Accordion title="PPF (Portail Public de Facturation)">
@@ -109,6 +148,17 @@ E-reporting becomes mandatory on the same dates as e-invoicing issuance: 1 Sept 
     | **Cadence**         | Determined by VAT regime — ten-day, monthly, or bimonthly |
     | **Scope & deadline**| 1 Sept 2026 for large and medium-sized companies, 1 Sept 2027 for all businesses |
     | **Invopop support** | In development — see [reporting guide](/guides/fr-pa-reporting) |
+  </Accordion>
+
+  <Accordion title="Submission cadence by VAT regime">
+    Transaction and payment data are reported on a cadence set by the declarant's VAT regime.
+
+    | VAT regime                | Transaction data | Payment data |
+    |---------------------------|------------------|--------------|
+    | _Réel normal mensuel_     | Ten-day period   | Monthly      |
+    | _Réel normal trimestriel_ | Monthly          | Monthly      |
+    | _Réel simplifié_          | Monthly          | Monthly      |
+    | _Franchise en base_       | Bimonthly        | Bimonthly    |
   </Accordion>
 </AccordionGroup>
 
