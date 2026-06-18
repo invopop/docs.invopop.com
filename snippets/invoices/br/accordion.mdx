@@ -42,22 +42,14 @@ import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 
 	<Accordion title="Example B2B product invoice (NF-e)">
 
-		In this example, we're issuing an extended product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
+		In this example, we're issuing a simple product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
 
 		Notice:
 
 		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon without the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `55` (NF-e),
 		- the customer is required for NF-e and must include a full address with the [`br-ibge-municipality`](https://docs.gobl.org/addons/br-nfe-v4#municipality-code) extension,
 		- each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation,
-		- item identities carry the NCM product classification code (`cProd` in the NF-e XML) and the GTIN barcode (`cEAN`),
-		- `item.ref` maps to the supplier's internal product code, and `item.unit` is converted to a UNECE unit code,
-		- line `discounts` reduce the taxable base (`vDesc`); line `charges` with key `delivery` map to freight (`vFrete`) and key `insurance` to insurance value (`vSeg`),
-		- `line.order` provides the line reference within the purchase order (`nItemPed`),
-		- a line `notes` entry with key `goods` maps to per-item additional information (`infAdProd`),
-		- `ordering.code` sets the purchase order number (`nPed` in `compra`) and `ordering.contracts[0].code` sets the contract number (`nCont`),
-		- `delivery.receiver` sets a separate delivery address (`entrega`) when goods ship to a different location than the buyer's fiscal address,
-		- the payment instructions key is set to `credit-transfer`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `18` (transferência bancária),
-		- a `general` note maps to complementary information (`infCpl`) in the NF-e XML,
+		- item identities are used to provide the NCM (Mercosur Common Nomenclature) product code,
 		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
 		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
@@ -77,7 +69,6 @@ import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
 		- the customer is optional and in this example we've omitted it,
 		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-		- the payment instructions key is set to `card`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `03` (cartão de crédito),
 		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
 		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
