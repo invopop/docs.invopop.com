@@ -18,6 +18,33 @@ import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
 France requires lifecycle status updates on B2B national invoices to be reported to the PPF. Two statuses are your responsibility to send — `212` Encaissée (paid) and `210` Refusée (refused). The other two mandatory codes (`200` Déposée and `213` Rejetée) are emitted automatically by Invopop, so you do not need a workflow for them.
 
+## Invoice lifecycle
+
+After an invoice is issued, it moves through a sequence of lifecycle events. Each event is a GOBL [`bill.Status`](https://docs.gobl.org/draft-0/bill/status) (acknowledgement, acceptance, dispute, rejection…) or [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) (advice, receipt) that references the invoice and carries one CDV ProcessConditionCode. A single invoice follows one of several paths:
+
+| Path | Sequence |
+|---|---|
+| **Happy path** | `201` issued → `202` received → `203` made available → `204` taken into account → `205` approved → `211` payment advice → `212` receipt |
+| **Partial approval** | `202` → `206` partially approved → `212` |
+| **Dispute resolved** | `202` → `207` in dispute → `208` suspended → `209` completed → `205` approved |
+| **Rejected** | `202` → `210` rejected |
+
+```mermaid
+flowchart LR
+    I[Invoice] --> S201[201 issued]
+    S201 --> S202[202 received]
+    S202 --> S205[205 approved]
+    S202 --> S206[206 partial]
+    S202 --> S207[207 dispute]
+    S202 --> S210[210 rejected]
+    S207 --> S208[208 suspended]
+    S208 --> S209[209 completed]
+    S209 --> S205
+    S205 --> P211[211 advice]
+    P211 --> P212[212 receipt]
+    S206 --> P212
+```
+
 ## Sending
 
 A status workflow generates a CDAR XML payload against the originating invoice, transmits it to the counterparty's PA over Peppol, and — for the two mandatory statuses — forwards a copy to the PPF.
@@ -103,18 +130,115 @@ flowchart LR
 
 ## Status codes
 
-| Code | French | English | Mandatory to PPF |
-|---|---|---|---|
-| `200` | Déposée | Deposited | Yes (automatic) |
-| `205` | Approuvée | Accepted | No |
-| `206` | Partiellement approuvée | Partially Approved | No |
-| `207` | En litige | Disputed | No |
-| `208` | Suspendue | Suspended | No |
-| `209` | Complétée | Completed | No |
-| `210` | Refusée | Refused by buyer | Yes (manual) |
-| `211` | Paiement transmis | Payment transmitted | No |
-| `212` | Encaissée | Cashed/Paid | Yes (manual) |
-| `213` | Rejetée | Rejected by platform | Yes (automatic) |
+Each code maps to a GOBL document shape. Most codes derive from the document's natural `(type, key)` pair; `206` and `207` additionally pin an extension (see [below](#representing-a-status-in-gobl)).
+
+| Code | French | English | GOBL representation | Mandatory to PPF |
+|---|---|---|---|---|
+| `200` | Déposée | Deposited | emitted automatically by Invopop | Yes (automatic) |
+| `201` | Émise par la plateforme | Issued by platform | `bill.Status` · response · `issued` | No |
+| `202` | Reçue par PA | Received by recipient | `bill.Status` · response · `acknowledged` | No |
+| `203` | Mise à disposition | Made available | `bill.Status` · response · `other` | No |
+| `204` | Prise en charge | Taken into account | `bill.Status` · response · `processing` | No |
+| `205` | Approuvée | Accepted | `bill.Status` · response · `accepted` | No |
+| `206` | Partiellement approuvée | Partially Approved | `bill.Status` · response · `rejected` + ext `206` | No |
+| `207` | En litige | Disputed | `bill.Status` · response · `rejected` + ext `207` | No |
+| `208` | Suspendue | Suspended | `bill.Status` · response · `querying` | No |
+| `209` | Complétée | Completed | `bill.Status` · update · `other` | No |
+| `210` | Refusée | Refused by buyer | `bill.Status` · response · `rejected` | Yes (manual) |
+| `211` | Paiement transmis | Payment transmitted | `bill.Payment` · `advice` | No |
+| `212` | Encaissée | Cashed/Paid | `bill.Payment` · `receipt` | Yes (manual) |
+| `213` | Rejetée | Rejected by platform | emitted automatically by Invopop | Yes (automatic) |
+
+### Representing a status in GOBL
+
+A status is a `bill.Status` whose line `key` and the document `type` together select the CDV code; a payment event is a `bill.Payment` whose `type` (`advice` / `receipt`) selects `211` / `212`. The `fr-ctc-flow6-v1` addon derives the code automatically — you set the natural GOBL fields, not the code.
+
+The one ambiguity: the line `key: rejected` covers three outcomes — `210` (the default), `207` and `206`. To mean `206` or `207`, pin the code on the line:
+
+```json
+"ext": { "fr-ctc-flow6-status": "206" }
+```
+
+**Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
+
+**Direction.** Party roles are derived automatically (`SE` Seller on the supplier, `BY` Buyer on the customer). Buyer-issued events — a `211` advice and the recipient-issued statuses — invert the issuer, which the addon handles; the invoice's supplier SIREN is always preserved on the reference so the invoice still resolves.
+
+<Tabs>
+  <Tab title="210 — Refusée">
+    A `bill.Status` of `type: response` with line `key: rejected` derives `210`. The line carries a mandatory `reason` from the `210` allow-list.
+    ```json expandable
+    {
+      "$schema": "https://gobl.org/draft-0/bill/status",
+      "$addons": ["fr-ctc-flow6-v1"],
+      "type": "response",
+      "issue_date": "2026-06-19",
+      "code": "ST-210",
+      "supplier": {
+        "name": "Example Supplier SARL",
+        "tax_id": { "country": "FR", "code": "83698680774" },
+        "identities": [{ "type": "SIREN", "code": "698680774" }],
+        "inboxes": [{ "scheme": "0225", "code": "698680774" }]
+      },
+      "customer": {
+        "name": "Example Customer SAS",
+        "tax_id": { "country": "FR", "code": "67698681771" },
+        "identities": [{ "type": "SIREN", "code": "698681771" }],
+        "inboxes": [{ "scheme": "0225", "code": "698681771" }]
+      },
+      "lines": [
+        {
+          "key": "rejected",
+          "doc": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19", "type": "380" },
+          "reasons": [
+            { "description": "Taux de TVA erroné", "ext": { "fr-ctc-flow6-reason": "TX_TVA_ERR" } }
+          ]
+        }
+      ]
+    }
+    ```
+  </Tab>
+  <Tab title="212 — Encaissée">
+    A `bill.Payment` of `type: receipt`, issued by the supplier (payee), derives `212`. The line references the invoice via `document`.
+    ```json expandable
+    {
+      "$schema": "https://gobl.org/draft-0/bill/payment",
+      "$addons": ["fr-ctc-flow6-v1"],
+      "type": "receipt",
+      "issue_date": "2026-06-19",
+      "value_date": "2026-06-19",
+      "series": "PAY",
+      "code": "2026-0042-R",
+      "currency": "EUR",
+      "supplier": {
+        "name": "Example Supplier SARL",
+        "tax_id": { "country": "FR", "code": "83698680774" },
+        "identities": [{ "type": "SIREN", "code": "698680774" }],
+        "inboxes": [{ "scheme": "0225", "code": "698680774" }]
+      },
+      "customer": {
+        "name": "Example Customer SAS",
+        "tax_id": { "country": "FR", "code": "67698681771" },
+        "identities": [{ "type": "SIREN", "code": "698681771" }],
+        "inboxes": [{ "scheme": "0225", "code": "698681771" }]
+      },
+      "methods": [
+        { "key": "credit-transfer", "amount": "120.00" }
+      ],
+      "lines": [
+        {
+          "amount": "120.00",
+          "document": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19", "type": "380" },
+          "tax": {
+            "categories": [
+              { "code": "VAT", "rates": [{ "base": "100.00", "percent": "20.0%", "amount": "20.00" }] }
+            ]
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
 
 
 ### Reason codes
@@ -263,6 +387,20 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
     | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
   </Accordion>
 </AccordionGroup>
+
+## On the wire
+
+<Steps>
+  <Step title="CDAR">
+    Each event is generated as a CDAR XML document (Compte-rendu d'Acquittement et de Rapprochement, Flow 6). The referenced-document block carries the invoice number in `IssuerAssignedID`, the invoice supplier's SIREN in `IssuerTradeParty`, and — for rejections — the comment as an `IncludedNote` (MDT-126).
+  </Step>
+  <Step title="Peppol">
+    Peer-to-peer interchange between platforms uses the busdox document type `urn:peppol:france:billing:cdv:1.0::D22B` with process `urn:peppol:france:billing:regulated`.
+  </Step>
+  <Step title="PPF">
+    The mandatory codes (`210` refused, `212` paid) additionally derive a copy forwarded to the PPF (einvoicingF2 guideline, recipient = PPF).
+  </Step>
+</Steps>
 
 ## FAQ
 
