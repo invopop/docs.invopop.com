@@ -4,6 +4,10 @@ sidebarTitle: "Platform reporting"
 description: Expose the operations carried out through a digital platform to the SAT via a hosted, access-controlled portal.
 ---
 
+import RegisterWorkflow from '/snippets/workflows/mx/sat-platforms-register.mdx';
+import RecordWorkflow from '/snippets/workflows/mx/sat-platforms-record.mdx';
+import UnregisterWorkflow from '/snippets/workflows/mx/sat-platforms-unregister.mdx';
+
 <Warning>
   Digital platform reporting is in active development. The action names and the portal layout may change. If you operate a platform in Mexico, talk to us before enabling it in production.
 </Warning>
@@ -62,6 +66,9 @@ The action returns, and stores on the party:
   <Step title="Set State → processing">
     Marks the silo entry as "Processing".
   </Step>
+  <Step title="Sign envelope">
+    Closes (signs) the party envelope so it can be processed.
+  </Step>
   <Step title="Register party for platform reporting">
     Enrolls the party, signs the portal URL, and stores the link + credentials on the party metadata.
   </Step>
@@ -70,32 +77,17 @@ The action returns, and stores on the party:
   </Step>
 </Steps>
 
-```json Register party for platform reporting
-{
-  "name": "Register platform for SAT reporting",
-  "description": "Enroll a party for digital platform reporting in Mexico",
-  "schema": "org/party",
-  "steps": [
-    {
-      "id": "1a9bcde0-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Sign Envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "2061c540-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Register platform (Mexico)",
-      "provider": "sat-mx.platforms.register"
-    },
-    {
-      "id": "6f9282a0-3870-11ef-af29-4533d56cea03",
-      "name": "Set State",
-      "config": { "state": "processing" },
-      "summary": "Set state to `processing`{.state .processing}",
-      "provider": "silo.state"
-    }
-  ]
-}
-```
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT register platform workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-register" cta="Add to my workspace">
+      Enrolls a party for digital platform reporting and generates the SAT portal URL and credentials.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
 
 ## Recording operations
 
@@ -109,40 +101,28 @@ Recording is **idempotent on the invoice**: re-running the workflow for the same
   <Step title="Set State → processing">
     Marks the silo entry as "Processing".
   </Step>
+  <Step title="Sign envelope">
+    Closes (signs) the invoice envelope so it can be processed.
+  </Step>
   <Step title="Record operation for reporting">
     Extracts the rule 2.9.21 fields and files the operation; errors if a required field is missing.
   </Step>
-  <Step title="Set State → recorded">
-    Marks the silo entry as "Recorded".
+  <Step title="Set State → sent">
+    Marks the silo entry as "Sent".
   </Step>
 </Steps>
 
-```json Record operation for platform reporting
-{
-  "name": "Record operation for SAT platform reporting",
-  "description": "File a single sale through the digital platform portal",
-  "schema": "bill/invoice",
-  "steps": [
-    {
-      "id": "3b1c2d40-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Sign Envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "4c2d3e50-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Record operation (Mexico)",
-      "provider": "sat-mx.platforms.record"
-    },
-    {
-      "id": "5d3e4f60-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Set State",
-      "config": { "state": "processing" },
-      "summary": "Set state to `processing`{.state .processing}",
-      "provider": "silo.state"
-    }
-  ]
-}
-```
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT record operation workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-record" cta="Add to my workspace">
+      Files a single sale through the digital platform portal, ready for SAT inspection.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <RecordWorkflow />
+  </Tab>
+</Tabs>
 
 <Info>
   An operation can only be recorded against a party that has been registered first. The record action resolves the platform from the invoice's supplier — register the supplier's party before sending it any operations.
@@ -181,26 +161,16 @@ When a party should no longer accept new operations, run `sat-mx.platforms.unreg
   </Step>
 </Steps>
 
-```json Unregister party from platform reporting
-{
-  "name": "Unregister platform from SAT reporting",
-  "description": "Stop accepting new operations while keeping portal access",
-  "schema": "org/party",
-  "steps": [
-    {
-      "id": "6e4f5a70-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Unregister platform (Mexico)",
-      "provider": "sat-mx.platforms.unregister"
-    },
-    {
-      "id": "7f5a6b80-a816-11ef-87b2-fd751e6d3b88",
-      "name": "Set State",
-      "config": { "state": "processing" },
-      "summary": "Set state to `processing`{.state .processing}",
-      "provider": "silo.state"
-    }
-  ]
-}
-```
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT unregister platform workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-unregister" cta="Add to my workspace">
+      Stops accepting new operations for a platform while preserving portal access and history.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
 
 To resume reporting for the party, register it again — the existing portal URL and secret are reused.

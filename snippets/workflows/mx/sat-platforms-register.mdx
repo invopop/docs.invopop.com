@@ -1,0 +1,56 @@
+---
+title: "SAT register platform for reporting"
+description: "Enroll a party for digital platform reporting in Mexico and generate the SAT portal URL and credentials"
+countryCode: "mx"
+appId: "sat-mx"
+schema: "org/party"
+---
+
+```json Example SAT register platform workflow
+{
+    "name": "Register platform for SAT reporting",
+    "description": "Enroll a party for digital platform reporting in Mexico",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "a1000000-0001-11f1-a000-000000000001",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "a1000000-0001-11f1-a000-000000000002",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "a1000000-0001-11f1-a000-000000000003",
+            "name": "Register platform (Mexico)",
+            "provider": "sat-mx.platforms.register"
+        },
+        {
+            "id": "a1000000-0001-11f1-a000-000000000004",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a1000000-0001-11f1-a000-000000000099",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
