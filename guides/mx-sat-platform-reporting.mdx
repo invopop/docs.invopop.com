@@ -1,0 +1,176 @@
+---
+title: "Digital platform reporting for Mexico"
+sidebarTitle: "Platform reporting"
+description: Expose the operations carried out through a digital platform to the SAT via a hosted, access-controlled portal.
+---
+
+import RegisterWorkflow from '/snippets/workflows/mx/sat-platforms-register.mdx';
+import RecordWorkflow from '/snippets/workflows/mx/sat-platforms-record.mdx';
+import UnregisterWorkflow from '/snippets/workflows/mx/sat-platforms-unregister.mdx';
+
+<Warning>
+  Digital platform reporting is in active development. The action names and the portal layout may change. If you operate a platform in Mexico, talk to us before enabling it in production.
+</Warning>
+
+Operators of digital platforms ("plataformas digitales tecnológicas") that facilitate sales or services for third parties must keep, and make available to the SAT, the information of every operation carried out through them. This is a **separate obligation from CFDI issuance** — the platform itself reports the operations, regardless of who issued the underlying invoice.
+
+This feature lets you register a party as a platform reporter, record each operation with the legally required fields, and hand the SAT a private URL where it can browse, filter, and export those operations on demand.
+
+For the regulatory background — Article 30-B of the CFF (2026 RMF) and the operation-information requirements of rule 2.9.21 — see the [Mexico compliance page](/compliance/mexico).
+
+## How it works
+
+There are three provider actions, in the `platforms` namespace, plus a SAT-facing portal:
+
+| Step | Action | What it does |
+|---|---|---|
+| **Register** | `sat-mx.platforms.register` | Enrolls a party for platform reporting and produces the portal URL + access credentials. |
+| **Record** | `sat-mx.platforms.record` | Files a single operation (invoice / CFDI) with the required fields, ready for inspection. |
+| **Unregister** | `sat-mx.platforms.unregister` | Stops accepting new operations while keeping the portal and its history available. |
+
+The typical lifecycle is: **register the party once → record every operation as it happens → share the portal URL with the SAT**. The SAT logs in whenever it needs to inspect the operations. If the party stops reporting, you unregister it; the historical data stays accessible.
+
+## Recorded fields
+
+Each recorded operation captures the fields required by rule 2.9.21, section I, extracted automatically from the GOBL document:
+
+| # | Field | Source | Required |
+|---|---|---|---|
+| a | Tipo de servicio (service type) | Distinct line-item descriptions (capped at the first three, with "+N más") | Yes |
+| b | RFC del comprador (buyer tax ID) | Customer `tax_id.code`, when present | When known |
+| c | Monto sin IVA (amount before VAT) | Invoice totals | Yes |
+| d | IVA (VAT) | Invoice totals | Yes |
+| e | Monto con IVA (amount incl. VAT) | Invoice totals | Yes |
+| f | Folio fiscal (CFDI UUID) | The SAT stamp (`sat-uuid`); falls back to the invoice number when there is no CFDI | When available |
+| g | Forma de pago (payment method) | The Mexican `FormaPago` (`mx-cfdi-payment-means`) when present, otherwise the GOBL payment instruction key | Yes |
+
+<Note>
+  Fields **b** and **f** are conditional in the rule itself — a sale to público en general has no buyer RFC, and a non-CFDI operation has no folio fiscal. The recording action only rejects an operation when one of the always-required totals (c, d, e), the service type, or the payment method is missing.
+</Note>
+
+The feature does **not** restrict by country or tax regime: a foreign operator (for example, a German company operating in Mexico) can be registered and reported on just the same.
+
+## Registering a platform
+
+Run `sat-mx.platforms.register` against the operator's party. It enrolls the party, generates an HMAC-signed portal URL, and writes the link and credentials to the party's metadata so you can retrieve and re-share them at any time.
+
+The action returns, and stores on the party:
+
+- **URL** — the signed portal address to give to the SAT.
+- **Usuario** — the operator's RFC.
+- **Secreto** — the access secret (shown so you can share it; re-running register keeps the same secret).
+
+### How it works
+
+<Steps>
+  <Step title="Set State → processing">
+    Marks the silo entry as "Processing".
+  </Step>
+  <Step title="Sign envelope">
+    Closes (signs) the party envelope so it can be processed.
+  </Step>
+  <Step title="Register party for platform reporting">
+    Enrolls the party, signs the portal URL, and stores the link + credentials on the party metadata.
+  </Step>
+  <Step title="Set State → registered">
+    Marks the silo entry as "Registered".
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT register platform workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-register" cta="Add to my workspace">
+      Enrolls a party for digital platform reporting and generates the SAT portal URL and credentials.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+## Recording operations
+
+Wire `sat-mx.platforms.record` as the workflow for the `bill/invoice` documents that flow through the platform. The action resolves the supplier from the invoice, extracts the required fields, and files the operation against that platform's portal.
+
+Recording is **idempotent on the invoice**: re-running the workflow for the same document updates the existing row instead of creating a duplicate. If the platform has been unregistered, new operations are rejected.
+
+### How it works
+
+<Steps>
+  <Step title="Set State → processing">
+    Marks the silo entry as "Processing".
+  </Step>
+  <Step title="Sign envelope">
+    Closes (signs) the invoice envelope so it can be processed.
+  </Step>
+  <Step title="Record operation for reporting">
+    Extracts the rule 2.9.21 fields and files the operation; errors if a required field is missing.
+  </Step>
+  <Step title="Set State → sent">
+    Marks the silo entry as "Sent".
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT record operation workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-record" cta="Add to my workspace">
+      Files a single sale through the digital platform portal, ready for SAT inspection.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <RecordWorkflow />
+  </Tab>
+</Tabs>
+
+<Info>
+  An operation can only be recorded against a party that has been registered first. The record action resolves the platform from the invoice's supplier — register the supplier's party before sending it any operations.
+</Info>
+
+## The SAT portal
+
+The portal is the SAT-facing side of the feature. It needs no Invopop account: the SAT opens the signed URL from the register step and authenticates with the **Usuario** (RFC) and **Secreto**.
+
+Once logged in, the SAT sees a paginated table of every recorded operation for that platform, with the fields above, and can:
+
+- **Filter** by buyer RFC and by a date range. Filtering and pagination run server-side, so the table stays fast over very large histories.
+- **Export to CSV** — the full, filtered result set streams as a download, with no row-count ceiling.
+
+<Badge color="blue" size="sm">GET</Badge> `/<owner>/<entry>?sig=<signature>` — the signed portal entry point (login).<br />
+<Badge color="green" size="sm">GET</Badge> `/<owner>/<entry>/sales` — the filterable, paginated operations table.<br />
+<Badge color="green" size="sm">GET</Badge> `/<owner>/<entry>/sales.csv` — a streaming CSV export of the current filter.
+
+The session is a short-lived signed cookie; logging out (or letting it expire) returns the SAT to the login screen for the same signed link.
+
+## Unregistering
+
+When a party should no longer accept new operations, run `sat-mx.platforms.unregister`. New `record` calls are rejected from that point on, **but the portal URL and secret keep working** so the SAT can still inspect everything filed up to then.
+
+### How it works
+
+<Steps>
+  <Step title="Set State → processing">
+    Marks the silo entry as "Processing".
+  </Step>
+  <Step title="Unregister party from platform reporting">
+    Stops accepting new operations; preserves portal access and history.
+  </Step>
+  <Step title="Set State → void">
+    Marks the silo entry as "Void".
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="SAT unregister platform workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-platforms-unregister" cta="Add to my workspace">
+      Stops accepting new operations for a platform while preserving portal access and history.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
+
+To resume reporting for the party, register it again — the existing portal URL and secret are reused.
