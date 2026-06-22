@@ -8,6 +8,19 @@ import FranceResources from '/snippets/tables/france-resources.mdx';
 import SendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
+import State201 from '/snippets/examples/fr/states/201-issued.mdx';
+import State202 from '/snippets/examples/fr/states/202-acknowledged.mdx';
+import State203 from '/snippets/examples/fr/states/203-made-available.mdx';
+import State204 from '/snippets/examples/fr/states/204-taken-into-account.mdx';
+import State205 from '/snippets/examples/fr/states/205-approved.mdx';
+import State206 from '/snippets/examples/fr/states/206-partially-approved.mdx';
+import State207 from '/snippets/examples/fr/states/207-in-dispute.mdx';
+import State208 from '/snippets/examples/fr/states/208-suspended.mdx';
+import State209 from '/snippets/examples/fr/states/209-completed.mdx';
+import State210 from '/snippets/examples/fr/states/210-rejected.mdx';
+import State211 from '/snippets/examples/fr/states/211-payment-advice.mdx';
+import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
+
 <Note>
   Lifecycle status updates on domestic B2B invoices — accepted, paid, refused, disputed. Statuses are exchanged between PAs over Peppol, with mandatory codes also forwarded to the PPF.
 </Note>
@@ -163,82 +176,63 @@ The one ambiguity: the line `key: rejected` covers three outcomes — `210` (the
 
 **Direction.** Party roles are derived automatically (`SE` Seller on the supplier, `BY` Buyer on the customer). Buyer-issued events — a `211` advice and the recipient-issued statuses — invert the issuer, which the addon handles; the invoice's supplier SIREN is always preserved on the reference so the invoice still resolves.
 
-<Tabs>
-  <Tab title="210 — Refusée">
-    A `bill.Status` of `type: response` with line `key: rejected` derives `210`. The line carries a mandatory `reason` from the `210` allow-list.
-    ```json expandable
-    {
-      "$schema": "https://gobl.org/draft-0/bill/status",
-      "$addons": ["fr-ctc-flow6-v1"],
-      "type": "response",
-      "issue_date": "2026-06-19",
-      "code": "ST-210",
-      "supplier": {
-        "name": "Example Supplier SARL",
-        "tax_id": { "country": "FR", "code": "83698680774" },
-        "identities": [{ "type": "SIREN", "code": "698680774" }],
-        "inboxes": [{ "scheme": "0225", "code": "698680774" }]
-      },
-      "customer": {
-        "name": "Example Customer SAS",
-        "tax_id": { "country": "FR", "code": "67698681771" },
-        "identities": [{ "type": "SIREN", "code": "698681771" }],
-        "inboxes": [{ "scheme": "0225", "code": "698681771" }]
-      },
-      "lines": [
-        {
-          "key": "rejected",
-          "doc": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19", "type": "380" },
-          "reasons": [
-            { "description": "Taux de TVA erroné", "ext": { "fr-ctc-flow6-reason": "TX_TVA_ERR" } }
-          ]
-        }
-      ]
-    }
-    ```
-  </Tab>
-  <Tab title="212 — Encaissée">
-    A `bill.Payment` of `type: receipt`, issued by the supplier (payee), derives `212`. The line references the invoice via `document`.
-    ```json expandable
-    {
-      "$schema": "https://gobl.org/draft-0/bill/payment",
-      "$addons": ["fr-ctc-flow6-v1"],
-      "type": "receipt",
-      "issue_date": "2026-06-19",
-      "value_date": "2026-06-19",
-      "series": "PAY",
-      "code": "2026-0042-R",
-      "currency": "EUR",
-      "supplier": {
-        "name": "Example Supplier SARL",
-        "tax_id": { "country": "FR", "code": "83698680774" },
-        "identities": [{ "type": "SIREN", "code": "698680774" }],
-        "inboxes": [{ "scheme": "0225", "code": "698680774" }]
-      },
-      "customer": {
-        "name": "Example Customer SAS",
-        "tax_id": { "country": "FR", "code": "67698681771" },
-        "identities": [{ "type": "SIREN", "code": "698681771" }],
-        "inboxes": [{ "scheme": "0225", "code": "698681771" }]
-      },
-      "methods": [
-        { "key": "credit-transfer", "amount": "120.00" }
-      ],
-      "lines": [
-        {
-          "amount": "120.00",
-          "document": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19", "type": "380" },
-          "tax": {
-            "categories": [
-              { "code": "VAT", "rates": [{ "base": "100.00", "percent": "20.0%", "amount": "20.00" }] }
-            ]
-          }
-        }
-      ]
-    }
-    ```
-  </Tab>
-</Tabs>
+### Examples
+
+One worked GOBL example per lifecycle code. Each is a complete, ready-to-build
+document — every status references the same invoice (`INV-2026-0042`,
+supplier SIREN `698680774`). Codes `200` (Déposée) and `213` (Rejetée) are
+emitted automatically by Invopop and are not authored by you.
+
+<AccordionGroup>
+  <Accordion title="201 — Émise par la plateforme (Issued by platform)">
+    `bill.Status` · `type: response` · line `key: issued`.
+    <State201 />
+  </Accordion>
+  <Accordion title="202 — Reçue par la PA (Received)">
+    `bill.Status` · `type: response` · line `key: acknowledged`.
+    <State202 />
+  </Accordion>
+  <Accordion title="203 — Mise à disposition (Made available)">
+    `bill.Status` · `type: response` · line `key: other`.
+    <State203 />
+  </Accordion>
+  <Accordion title="204 — Prise en charge (Taken into account)">
+    `bill.Status` · `type: response` · line `key: processing`.
+    <State204 />
+  </Accordion>
+  <Accordion title="205 — Approuvée (Approved)">
+    `bill.Status` · `type: response` · line `key: accepted`.
+    <State205 />
+  </Accordion>
+  <Accordion title="206 — Approuvée partiellement (Partially approved)">
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `206`. Requires a `reason`.
+    <State206 />
+  </Accordion>
+  <Accordion title="207 — En litige (In dispute)">
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `207`. Requires a `reason`.
+    <State207 />
+  </Accordion>
+  <Accordion title="208 — Suspendue (Suspended)">
+    `bill.Status` · `type: response` · line `key: querying`. Requires a `reason`.
+    <State208 />
+  </Accordion>
+  <Accordion title="209 — Complétée (Completed)">
+    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier.
+    <State209 />
+  </Accordion>
+  <Accordion title="210 — Refusée (Rejected)">
+    `bill.Status` · `type: response` · line `key: rejected`. Requires a `reason`.
+    <State210 />
+  </Accordion>
+  <Accordion title="211 — Paiement transmis (Payment advice)">
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer).
+    <State211 />
+  </Accordion>
+  <Accordion title="212 — Encaissée (Payment receipt)">
+    `bill.Payment` · `type: receipt`. Issued by the supplier (payee).
+    <State212 />
+  </Accordion>
+</AccordionGroup>
 
 
 ### Reason codes
