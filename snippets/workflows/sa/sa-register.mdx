@@ -1,0 +1,60 @@
+---
+title: "Saudi Arabia register party workflow"
+description: "Publishes the ZATCA onboarding link and provisions the party's CSID with FATOORA"
+countryCode: "sa"
+appId: "gov-sa"
+schema: "org/party"
+---
+```json Saudi Arabia register party workflow
+{
+    "name": "ZATCA register supplier",
+    "description": "Onboards a supplier with ZATCA and provisions its production CSID",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "b1f0c2a0-0001-11f0-9a00-0242ac120001",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "b1f0c2a0-0002-11f0-9a00-0242ac120002",
+            "name": "Register Party",
+            "provider": "gov-sa.party.register",
+            "summary": "Validates the party and publishes the ZATCA onboarding link",
+            "config": {
+                "mode": "simulation"
+            }
+        },
+        {
+            "id": "b1f0c2a0-0003-11f0-9a00-0242ac120003",
+            "name": "Wait for Authorization",
+            "provider": "gov-sa.wait.authorization",
+            "summary": "Waits for OTP onboarding, runs compliance, and issues the production CSID"
+        },
+        {
+            "id": "b1f0c2a0-0004-11f0-9a00-0242ac120004",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "b1f0c2a0-00ff-11f0-9a00-0242ac1200ff",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

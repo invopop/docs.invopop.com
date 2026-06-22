@@ -1,0 +1,107 @@
+---
+title: "Saudi Arabia ZATCA — registration"
+sidebarTitle: "Registration"
+description: Onboard a Saudi VAT-registered party with ZATCA and provision its production CSID.
+---
+
+import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
+import RegisterWorkflow from '/snippets/workflows/sa/sa-register.mdx';
+
+<Note>
+  Registration is required for any Saudi VAT number that will clear or report invoices through Invopop. It is a prerequisite for the [clearance and reporting](/guides/sa-zatca-clearance-reporting) flow.
+</Note>
+
+## Sandbox environments
+
+In sandbox, the **Register Party** step's configuration selects which ZATCA portal to onboard against. Production enrollments ignore this and always use the live endpoint.
+
+| Mode | Target | OTP in the wizard | Use it to |
+|---|---|---|---|
+| `developer` | ZATCA Developer (sandbox) portal | **Dummy** — any placeholder value is accepted | Wire up and smoke-test the onboarding flow end to end without touching a real ZATCA account. |
+| `simulation` (default) | ZATCA Simulation portal | **Real** — must be generated from the supplier's FATOORA Simulation account | Rehearse the production onboarding with genuine certificates and compliance checks before going live. |
+
+The two modes target different ZATCA sandbox endpoints and differ mainly in how the OTP is treated:
+
+- **Developer** is the lightweight sandbox. ZATCA does not validate the OTP, so the value the supplier types in the [onboarding wizard](#the-onboarding-wizard) is a dummy.
+
+  You can **register any party** in developer mode, but ZATCA only accepts **invoices issued from its fixed test VAT number, `399999999900003`**.
+- **Simulation** mirrors production. The OTP must be a **real** one-time password the supplier generates from their FATOORA *Simulation* portal, exactly as they would in production.
+
+<Note>
+  In both sandbox modes the supplier still completes the same wizard, only the OTP requirement changes.
+</Note>
+
+## How it works
+
+Registration spans two parts: a workflow you run against the party document, and a hosted onboarding wizard the supplier completes to provide the FATOORA OTP.
+
+<Steps>
+  <Step title="Set State → processing">
+    Moves the silo entry into a visible "in progress" state so operator dashboards reflect that onboarding is underway.
+  </Step>
+  <Step title="Register Party">
+    Validates the party's identity (one of `CRN`, `MOM`, `MLS`, `700`, `SAG`, or `OTH`) and full address and publishes a public onboarding link in the meta section of the party. The supplier follows this link to complete the wizard below.
+  </Step>
+  <Step title="Wait for Authorization">
+    Pauses until the supplier finishes the wizard and a Compliance CSID exists. It then submits the mandatory compliance sample invoices and exchanges the Compliance CSID for the **Production CSID**.
+  </Step>
+  <Step title="Set State → registered">
+    Marks the party as fully onboarded and ready to clear and report invoices.
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="Saudi Arabia register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-gov-sa-register" cta="Add to my workspace">
+      Publishes the ZATCA onboarding link and provisions the party's production CSID.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+## The onboarding wizard
+
+The link published by **Register Party** opens a hosted wizard the supplier completes once:
+
+<Steps>
+  <Step title="Company details">
+    The supplier confirms the legal name and provides the **invoice type** (`1000` standard, `0100` simplified, or `1100` both), **branch name**, **registered address**, and **business category**. These values feed the certificate request.
+  </Step>
+  <Step title="Get the OTP from FATOORA">
+    The supplier signs in to the FATOORA portal and generates a One-Time Password for the EGS unit. The wizard shows the relevant FATOORA screens.
+  </Step>
+  <Step title="Enter the OTP">
+    The supplier pastes the OTP and reviews the recap of the details that will be sent to ZATCA.
+  </Step>
+  <Step title="Submit">
+    Invopop requests the **Compliance CSID**, and stores the credentials. This unblocks the **Wait for Authorization** step in the workflow.
+  </Step>
+</Steps>
+
+<Info>
+  The invoice type chosen here determines which compliance samples Invopop submits: `1000` runs standard tax invoices, credit notes, and debit notes; `0100` runs the simplified equivalents; `1100` runs both sets.
+</Info>
+
+## Deregistration
+
+Unregistering a party from ZATCA can only be done by the **supplier**, directly in the **FATOORA portal**. Invopop has no action to do this on their behalf.
+
+## FAQ
+
+More available in our [Saudi Arabia FAQ](/faq/saudi-arabia) section.
+
+---
+
+<SaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Saudi Arabia →
+</Card>
