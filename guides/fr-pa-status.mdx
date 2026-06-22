@@ -87,7 +87,7 @@ For the dispute and refusal codes (`206`, `207`, `208`, `210`) the line carries 
 - **`reason.faults[]`** — the field-level corrections. Each fault names one field: `code` is the characteristic type (`DIV` = the value found, `DVA` = the value expected), `message` is the data and value (e.g. `"Taux TVA (BT-152): 10.00%"`), and `paths` is the field's location in the document. Send a `DIV`/`DVA` pair to say "you put X, it should be Y."
 - **`line.actions[]`** — what the issuer should do next: `provide` (supply missing info), `reissue` a corrected invoice, or raise a credit note (`credit-full` / `credit-partial`).
 
-The supplier-issued **`209` Complétée** takes no reason; use the line **`description`** to state what was supplied to lift the suspension.
+The supplier-issued **`209` Complétée** requires no reason, but it can carry one to **supply data back** — e.g. completing a bank-details suspension by returning the corrected IBAN as a `MAJ` fault (the value to apply) under a `finance-terms` reason. The line `description` summarises what was supplied.
 
 ### Examples
 
@@ -127,7 +127,7 @@ One worked GOBL example per code you build — each a complete, ready-to-build d
     <State208 />
   </Accordion>
   <Accordion title="209 — Complétée (Completed)">
-    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier to lift a suspension — the line **`description` states what was supplied** (e.g. the missing purchase order). No reason code.
+    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier to lift a suspension raised over bank details: a `finance-terms` reason (condition `CBB`, *coordonnées bancaires à modifier*) whose fault **supplies the corrected IBAN** — code `MAJ` (the value to apply), the IBAN in the `message`, and the `paths` pointing at the invoice's IBAN field (BT-84).
     <State209 />
   </Accordion>
   <Accordion title="210 — Refusée (Refused by buyer)">
