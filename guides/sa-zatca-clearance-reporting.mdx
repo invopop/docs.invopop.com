@@ -1,0 +1,111 @@
+---
+title: "Saudi Arabia ZATCA — clearance & reporting"
+sidebarTitle: "Clearance & Reporting"
+description: Clear standard invoices in real time and report simplified invoices to ZATCA.
+---
+
+import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/sa/sa-send-invoice.mdx';
+
+<Note>
+  This flow requires a party that has completed [registration](/guides/sa-zatca-registration). The same workflow handles both models. Invopop picks clearance or reporting from the invoice itself.
+</Note>
+
+Saudi Arabia runs two e-invoicing models, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the right ZATCA endpoint:
+
+| Model | Invoices | Behaviour |
+|---|---|---|
+| **Clearance** | Standard tax invoices (B2B, B2G) | Submitted to ZATCA in real time. ZATCA validates, applies its own cryptographic stamp, and returns the **cleared** document. Only that version is legally valid and shareable with the buyer. |
+| **Reporting** | Simplified tax invoices (B2C) | Signed and stamped by Invopop with the party's Production CSID. Delivered to the buyer immediately, then **reported** to ZATCA within 24 hours. |
+
+<Info>
+  The Saudi Arabia (ZATCA) implementation is being actively developed. Action names, GOBL add-ons, and workflows can change before the June 1st 2026 availability date.
+</Info>
+
+## Format and chaining
+
+Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regardless of model. Before submission, Invopop adds the two chain values ZATCA requires:
+
+| Field | Meaning |
+|---|---|
+| **ICV** | Invoice Counter Value. A strictly increasing counter per party and environment. |
+| **PIH** | Previous Invoice Hash. The hash of the previous invoice in the chain, linking documents into a tamper-evident sequence. |
+| **QR** | A TLV-encoded QR code carrying the seller VAT number, timestamp, totals, hash, and cryptographic stamp. |
+
+## How the chain is created
+
+ZATCA requires every document a party issues to form a single, unbroken cryptographic chain. Invopop maintains one chain **per party and environment** (sandbox simulation/developer vs. production are separate sequences), so each registered CSID has its own continuous counter.
+
+Two values link the chain together:
+
+- **ICV** starts at `1` for the first document and increments by exactly `1` for every document that follows.
+- **PIH** of the first document is the hash of the value `0` — the base case defined in ZATCA's data dictionary. Every document after that sets its PIH to the hash of the **immediately preceding document**.
+
+Every new document should take the hash value from immediately preceding document and increment ICV by 1 based irrespective of type and status:
+
+- **Document type does not split the chain.** Standard invoices, simplified invoices, credit notes, and debit notes all share one sequence.
+- **Rejected documents still occupy their slot.** A document that ZATCA rejects keeps its ICV and hash; the next document chains off it, not off the last *accepted* one.
+
+For example, if invoice 2 is rejected, invoice 3 still uses `hash(invoice 2)` as its PIH and `ICV = 3`:
+
+| Document | ICV | PIH points to | ZATCA result |
+|---|---|---|---|
+| Invoice 1 | 1 | hash of `0` (base case) | Accepted |
+| Invoice 2 | 2 | hash(Invoice 1) | Rejected |
+| Invoice 3 | 3 | hash(Invoice 2) | Accepted |
+| Credit note 4 | 4 | hash(Invoice 3) | Accepted |
+
+## Sending
+
+The send workflow claims the next ICV under a, builds and hashes the UBL document, signs it (for simplified invoices), submits to ZATCA and then stores the final XML and QR back on the silo entry.
+
+### How it works
+
+<Steps>
+  <Step title="Set State → processing">
+    Moves the invoice into a visible "in progress" state for operator dashboards.
+  </Step>
+  <Step title="Send Invoice">
+    Converts the GOBL invoice to UBL 2.1, adds the ICV and PIH chain values, hashes the document, and submits it to the clearance or reporting flows. 
+  </Step>
+  <Step title="Set State → sent">
+    Marks the invoice as successfully cleared or reported.
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Template">
+    <Card iconType="duotone" title="Saudi Arabia send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-gov-sa-send-invoice" cta="Add to my workspace">
+      Clears standard invoices and reports simplified invoices to ZATCA.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+<Warning>
+  Submission fails fast if the invoice is not ready to be signed (for example, a missing code or other required key field), before any ICV is claimed or anything is sent to ZATCA. An invoice that is already signed is skipped as "already sent".
+</Warning>
+
+## Credit and debit notes
+
+Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the **same model** — clearance or reporting — as the document it corrects, using the same send workflow.
+
+## FAQ
+
+More available in our [Saudi Arabia FAQ](/faq/saudi-arabia) section.
+
+---
+
+<SaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Saudi Arabia →
+</Card>

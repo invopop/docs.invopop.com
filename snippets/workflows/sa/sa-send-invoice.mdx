@@ -1,0 +1,51 @@
+---
+title: "Saudi Arabia send invoice workflow"
+description: "Clears standard invoices and reports simplified invoices to ZATCA"
+countryCode: "sa"
+appId: "gov-sa"
+schema: "bill/invoice"
+---
+```json Saudi Arabia send invoice workflow
+{
+    "name": "ZATCA send invoice",
+    "description": "Chains, signs, and submits the invoice to ZATCA for clearance or reporting",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "d3f0e4c0-0001-11f0-9a00-0242ac140001",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "d3f0e4c0-0002-11f0-9a00-0242ac140002",
+            "name": "Send Invoice",
+            "provider": "gov-sa.invoice.send",
+            "summary": "Clears standard invoices and reports simplified invoices to ZATCA"
+        },
+        {
+            "id": "d3f0e4c0-0003-11f0-9a00-0242ac140003",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "d3f0e4c0-00ff-11f0-9a00-0242ac1400ff",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
