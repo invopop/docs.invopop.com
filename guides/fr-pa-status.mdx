@@ -16,7 +16,7 @@ import State206 from '/snippets/examples/fr/states/206-partially-approved.mdx';
 import State207 from '/snippets/examples/fr/states/207-in-dispute.mdx';
 import State208 from '/snippets/examples/fr/states/208-suspended.mdx';
 import State209 from '/snippets/examples/fr/states/209-completed.mdx';
-import State210 from '/snippets/examples/fr/states/210-rejected.mdx';
+import State210 from '/snippets/examples/fr/states/210-refused.mdx';
 import State211 from '/snippets/examples/fr/states/211-payment-advice.mdx';
 import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
 
@@ -24,7 +24,7 @@ import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
   Lifecycle status updates on domestic B2B invoices — acknowledged, accepted, disputed, refused, paid. They are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
 </Note>
 
-France requires lifecycle status updates on B2B national invoices to be reported to the PPF. You build each one as a GOBL document and send it through the standard send workflow. Two are your responsibility to send — `210` Refusée (refused) and `212` Encaissée (paid). The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
+France requires lifecycle status updates on B2B national invoices to be reported to the PPF. You build each one as a GOBL document and send it through the standard send workflow. Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each) — but **`210` Refusée (refused) and `212` Encaissée (paid) are the two that must be forwarded to the PPF**. The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
 
 ## Invoice lifecycle
 
@@ -43,7 +43,9 @@ The paths below are **common examples, not an exhaustive set**: any code can in 
 flowchart LR
     I[Invoice] --> S201[201 issued]
     S201 --> S202[202 received]
-    S202 --> S205[205 approved]
+    S202 --> S203[203 made available]
+    S203 --> S204[204 taken into account]
+    S204 --> S205[205 approved]
     S202 --> S206[206 partial]
     S202 --> S207[207 dispute]
     S202 --> S210[210 refused]
@@ -74,7 +76,7 @@ You build the natural GOBL document and the addon derives the CDV code — the f
 **The one ambiguity.** The line `key: rejected` covers three outcomes — `210` (the default), `207` and `206`. To mean `206` or `207`, pin the code on the line:
 
 ```json
-"ext": { "fr-ctc-flow6-status": "206" }
+{ "ext": { "fr-ctc-flow6-status": "206" } }
 ```
 
 **Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
@@ -194,7 +196,7 @@ Each code maps to a GOBL document. Most derive from the document's natural `(typ
 |---|---|---|---|---|---|
 | `200` | Déposée | Deposited | — | — | Invopop (automatic) |
 | `201` | Émise par la plateforme | Issued by platform | `bill.Status` | `response` · `issued` | Supplier's platform |
-| `202` | Reçue par PA | Received by recipient | `bill.Status` | `response` · `acknowledged` | Buyer |
+| `202` | Reçue par la PA | Received by recipient | `bill.Status` | `response` · `acknowledged` | Buyer |
 | `203` | Mise à disposition | Made available | `bill.Status` | `response` · `other` | Buyer |
 | `204` | Prise en charge | Taken into account | `bill.Status` | `response` · `processing` | Buyer |
 | `205` | Approuvée | Approved | `bill.Status` | `response` · `accepted` | Buyer |
@@ -209,7 +211,7 @@ Each code maps to a GOBL document. Most derive from the document's natural `(typ
 
 ### Reason codes
 
-Codes `206`, `207`, `208` and `210` require at least one `reason` on the line, and the reason's code must come from that status's allow-list. Set the bucket via the reason `key` and the exact CDAR code via the `fr-ctc-flow6-reason` extension; if you set only the bucket, the addon fills the default code marked <Badge color="green" size="sm">⚹</Badge>. Codes `205`, `209`, `211` and `212` take no reason.
+Codes `206`, `207`, `208` and `210` require at least one `reason` on the line, and the reason's code must come from that status's allow-list. Set the bucket via the reason `key` and the exact CDAR code via the `fr-ctc-flow6-reason` extension; if you set only the bucket, the addon fills the default code marked <Badge color="green" size="sm">⚹</Badge>. Codes `205`, `209`, `211` and `212` don't require a reason — though `209` may optionally carry one to supply data back (see [Reasons, faults and actions](#reasons-faults-and-actions)).
 
 <AccordionGroup>
   <Accordion title="206 — Partiellement approuvée (Partially Approved)">
