@@ -79,57 +79,67 @@ You build the natural GOBL document and the addon derives the CDV code:
 
 **Direction is automatic.** Party roles are derived (`SE` Seller on the supplier, `BY` Buyer on the customer), and the sending/receiving direction follows the event type — buyer-issued events (a `211` advice, the recipient-issued statuses) invert the issuer. You only provide the supplier and customer; the addon handles the rest.
 
+### Reasons, faults and actions
+
+For the dispute and refusal codes (`206`, `207`, `208`, `210`) the line carries a `reason`, and that's where the substance is:
+
+- **`reason.key` + `reason.ext.fr-ctc-flow6-reason`** — the rejection bucket and the exact CDV reason code (see [Reason codes](#reason-codes)). Set only the `key` and the addon fills the bucket's default code.
+- **`reason.faults[]`** — the field-level corrections. Each fault names one field: `code` is the characteristic type (`DIV` = the value found, `DVA` = the value expected), `message` is the data and value (e.g. `"Taux TVA (BT-152): 10.00%"`), and `paths` is the field's location in the document. Send a `DIV`/`DVA` pair to say "you put X, it should be Y."
+- **`line.actions[]`** — what the issuer should do next: `provide` (supply missing info), `reissue` a corrected invoice, or raise a credit note (`credit-full` / `credit-partial`).
+
+The supplier-issued **`209` Complétée** takes no reason; use the line **`description`** to state what was supplied to lift the suspension.
+
 ### Examples
 
-One worked GOBL example per code you build — each a complete, ready-to-build document referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`). Reason-bearing codes (`206`/`207`/`208`/`210`) include the required `reason`.
+One worked GOBL example per code you build — each a complete, ready-to-build document referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`) on its effective `date`. The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
 
 <AccordionGroup>
   <Accordion title="201 — Émise par la plateforme (Issued by platform)">
-    `bill.Status` · `type: response` · line `key: issued`.
+    `bill.Status` · `type: response` · line `key: issued`. A plain acknowledgement — no reason or action.
     <State201 />
   </Accordion>
   <Accordion title="202 — Reçue par la PA (Received)">
-    `bill.Status` · `type: response` · line `key: acknowledged`.
+    `bill.Status` · `type: response` · line `key: acknowledged`. A plain acknowledgement.
     <State202 />
   </Accordion>
   <Accordion title="203 — Mise à disposition (Made available)">
-    `bill.Status` · `type: response` · line `key: other`.
+    `bill.Status` · `type: response` · line `key: other`. A plain acknowledgement.
     <State203 />
   </Accordion>
   <Accordion title="204 — Prise en charge (Taken into account)">
-    `bill.Status` · `type: response` · line `key: processing`.
+    `bill.Status` · `type: response` · line `key: processing`. A plain acknowledgement.
     <State204 />
   </Accordion>
   <Accordion title="205 — Approuvée (Approved)">
-    `bill.Status` · `type: response` · line `key: accepted`.
+    `bill.Status` · `type: response` · line `key: accepted`. A plain acknowledgement — the invoice is fully approved.
     <State205 />
   </Accordion>
   <Accordion title="206 — Approuvée partiellement (Partially approved)">
-    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `206`. Requires a `reason`.
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `206`. The `reason` faults show the **invoiced vs approved quantity**; the `action` requests a partial credit note (`credit-partial` → CNP).
     <State206 />
   </Accordion>
   <Accordion title="207 — En litige (In dispute)">
-    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `207`. Requires a `reason`.
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `207`. The `reason` faults pinpoint the disputed field — **actual VAT rate (DIV) vs expected (DVA)** and its XML path; the `action` requests a full credit note (`credit-full` → CNF).
     <State207 />
   </Accordion>
   <Accordion title="208 — Suspendue (Suspended)">
-    `bill.Status` · `type: response` · line `key: querying`. Requires a `reason`.
+    `bill.Status` · `type: response` · line `key: querying`. The `reason` names **what is missing** (order reference); the `action` asks the supplier to provide it (`provide` → PIN).
     <State208 />
   </Accordion>
   <Accordion title="209 — Complétée (Completed)">
-    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier.
+    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier to lift a suspension — the line **`description` states what was supplied** (e.g. the missing purchase order). No reason code.
     <State209 />
   </Accordion>
   <Accordion title="210 — Refusée (Refused by buyer)">
-    `bill.Status` · `type: response` · line `key: rejected`. Requires a `reason`.
+    `bill.Status` · `type: response` · line `key: rejected`. The `reason` faults pinpoint the failing field; the `action` asks for a corrected reissue (`reissue` → NIN).
     <State210 />
   </Accordion>
   <Accordion title="211 — Paiement transmis (Payment advice)">
-    `bill.Payment` · `type: advice`. Issued by the buyer (payer).
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date.
     <State211 />
   </Accordion>
   <Accordion title="212 — Encaissée (Payment receipt)">
-    `bill.Payment` · `type: receipt`. Issued by the supplier (payee).
+    `bill.Payment` · `type: receipt`. Issued by the supplier (payee); the `methods` carry the amount received.
     <State212 />
   </Accordion>
 </AccordionGroup>

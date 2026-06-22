@@ -52,23 +52,46 @@ description: "GOBL bill/status example for French CTC lifecycle code 206 (Partia
   },
   "lines": [
     {
+      "key": "rejected",
+      "date": "2026-06-19",
       "doc": {
         "series": "INV",
         "code": "2026-0042",
         "issue_date": "2026-06-19",
         "type": "380"
       },
-      "key": "rejected",
       "ext": {
         "fr-ctc-flow6-status": "206"
       },
       "reasons": [
         {
           "key": "quantity",
-          "description": "Quantité partiellement approuvée",
+          "description": "Quantité facturée supérieure à la quantité livrée",
           "ext": {
             "fr-ctc-flow6-reason": "QTE_ERR"
-          }
+          },
+          "faults": [
+            {
+              "code": "DIV",
+              "message": "Quantité facturée: 10",
+              "paths": [
+                "/rsm:CrossIndustryInvoice/rsm:SupplyChainTradeTransaction/ram:IncludedSupplyChainTradeLineItem/ram:SpecifiedLineTradeAgreement/ram:GrossProductTradePrice/ram:BasisQuantity"
+              ]
+            },
+            {
+              "code": "DVA",
+              "message": "Quantité approuvée: 8",
+              "paths": [
+                "/rsm:CrossIndustryInvoice/rsm:SupplyChainTradeTransaction/ram:IncludedSupplyChainTradeLineItem/ram:SpecifiedLineTradeAgreement/ram:GrossProductTradePrice/ram:BasisQuantity"
+              ]
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "key": "credit-partial",
+          "description": "Créer un avoir partiel pour les 2 unités non livrées"
         }
       ]
     }
