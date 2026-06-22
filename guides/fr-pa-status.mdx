@@ -1,140 +1,222 @@
 ---
 title: "France PA — lifecycle status"
 sidebarTitle: "Status"
-description: Send and receive lifecycle status updates (CDAR) for B2B invoices.
+description: Build, send and receive lifecycle status and payment updates (CDAR) for B2B invoices.
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
-import SendStatusWorkflow from '/snippets/workflows/fr/fr-pa-send-status.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
+import State201 from '/snippets/examples/fr/states/201-issued.mdx';
+import State202 from '/snippets/examples/fr/states/202-acknowledged.mdx';
+import State203 from '/snippets/examples/fr/states/203-made-available.mdx';
+import State204 from '/snippets/examples/fr/states/204-taken-into-account.mdx';
+import State205 from '/snippets/examples/fr/states/205-approved.mdx';
+import State206 from '/snippets/examples/fr/states/206-partially-approved.mdx';
+import State207 from '/snippets/examples/fr/states/207-in-dispute.mdx';
+import State208 from '/snippets/examples/fr/states/208-suspended.mdx';
+import State209 from '/snippets/examples/fr/states/209-completed.mdx';
+import State210 from '/snippets/examples/fr/states/210-refused.mdx';
+import State211 from '/snippets/examples/fr/states/211-payment-advice.mdx';
+import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
+
 <Note>
-  Lifecycle status updates on domestic B2B invoices — accepted, paid, refused, disputed. Statuses are exchanged between PAs over Peppol, with mandatory codes also forwarded to the PPF.
+  Lifecycle status updates on domestic B2B invoices — acknowledged, accepted, disputed, refused, paid. They are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
 </Note>
 
-<Warning>
-  Status is moving to a first-class GOBL document. Today it is a CDAR XML attached to the originating invoice; the next iteration makes it a standalone document with its own schema. Workflow steps and job arguments will change before the September 2026 mandate.
-</Warning>
+France requires lifecycle status updates on B2B national invoices to be reported to the PPF. You build each one as a GOBL document and send it through the standard send workflow. Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each) — but **`210` Refusée (refused) and `212` Encaissée (paid) are the two that must be forwarded to the PPF**. The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
 
-France requires lifecycle status updates on B2B national invoices to be reported to the PPF. Two statuses are your responsibility to send — `212` Encaissée (paid) and `210` Refusée (refused). The other two mandatory codes (`200` Déposée and `213` Rejetée) are emitted automatically by Invopop, so you do not need a workflow for them.
+## Invoice lifecycle
 
-## Sending
+After an invoice is issued it moves through a sequence of lifecycle events. Each event is a GOBL [`bill.Status`](https://docs.gobl.org/draft-0/bill/status) or [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) that references the invoice and carries one CDV ProcessConditionCode. For the full list of codes — with the document each maps to and which party issues it — see [Status codes](#status-codes).
 
-A status workflow generates a CDAR XML payload against the originating invoice, transmits it to the counterparty's PA over Peppol, and — for the two mandatory statuses — forwards a copy to the PPF.
+The paths below are **common examples, not an exhaustive set**: any code can in principle follow another (e.g. a `205` approval can still be followed by a `210` refusal). The typical sequences are:
 
-### How it works
-
-<Steps>
-  <Step title="Generate Status (France)">
-    Records the status against the originating invoice and produces the CDAR XML payload in a single step (`gov-fr.status.generate`). The `status_code` and `reason_code` come from the workflow config or from job arguments at runtime.
-  </Step>
-  <Step title="Send Peppol Document">
-    Transmits the CDAR to the counterparty's PA over the Peppol network.
-  </Step>
-  <Step title="Forward Status to PPF">
-    For the two mandatory statuses (`210` and `212`), forwards the CDAR to the PPF (`gov-fr.status.forward`). Non-mandatory statuses skip this step.
-  </Step>
-</Steps>
-
-### Job arguments
-
-Pass status details as job arguments to use one workflow for multiple status types. Arguments take priority over workflow config.
-
-| Argument | Description |
+| Path | Sequence |
 |---|---|
-| `code` | Status code (`200`–`213`). |
-| `reason-code` | Reason code (e.g. `MONTANTTOTAL_ERR`). Defaults by status code if omitted. |
-| `reason-text` | Optional free-text explanation. |
-
-```json
-{
-  "args": {
-    "code": "210",
-    "reason-code": "DOUBLON",
-    "reason-text": "Duplicate invoice already processed"
-  }
-}
-```
-
-<Info>
-  Use one workflow per mandatory status (paid, refused) with the code pre-configured, rather than a single generic workflow. Keeps runbooks simple.
-</Info>
-
-The example below is configured for `207` (En litige) with reason `MONTANTTOTAL_ERR`. Override `status_code` / `reason_code` per workflow or via job arguments.
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA send status workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-status" cta="Add to my workspace">
-      Generates and forwards a CDAR status update via Peppol and the PPF.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
-    <SendStatusWorkflow />
-  </Tab>
-</Tabs>
-
-## Receiving
-
-Incoming statuses arrive over the same Peppol transport as invoices. Peppol's format detection identifies them as CDAR, the CII app imports them into GOBL, and the result is recorded against the originating invoice.
-
-<Steps>
-  <Step title="Import Peppol Document">
-    Receives the inbound Peppol payload and detects that it is a CDAR status update rather than an invoice.
-  </Step>
-  <Step title="Import UN/CEFACT CII Document">
-    Converts the CDAR XML into a GOBL representation.
-  </Step>
-  <Step title="Generate Status (France)">
-    Files the status under the originating invoice in the local PA database (`gov-fr.status.generate`).
-  </Step>
-</Steps>
-
-## Deriving a status from an invoice
-
-The **Build Status from Invoice** step creates a new silo entry with a status payload pre-filled from an existing invoice. The new entry can then trigger the **Send status** workflow. Use this when the events that drive a status — payment captured, dispute raised — live alongside invoices in your system, and you want to avoid building a CDAR payload from scratch.
+| **Happy path** | `201` issued → `202` received → `203` made available → `204` taken into account → `205` approved → `211` payment advice → `212` receipt |
+| **Partial approval** | `202` → `206` partially approved → `212` |
+| **Dispute resolved** | `202` → `207` in dispute → `208` suspended → `209` completed → `205` approved |
+| **Refused** | `202` → `210` refused |
 
 ```mermaid
 flowchart LR
-    I[Invoice] --> B[Build Status from Invoice]
-    B -->|new silo entry| N[Create Job]
-    N -..-> S[Send status workflow]
+    I[Invoice] --> S201[201 issued]
+    S201 --> S202[202 received]
+    S202 --> S203[203 made available]
+    S203 --> S204[204 taken into account]
+    S204 --> S205[205 approved]
+    S202 --> S206[206 partial]
+    S202 --> S207[207 dispute]
+    S202 --> S210[210 refused]
+    S207 --> S208[208 suspended]
+    S208 --> S209[209 completed]
+    S209 --> S205
+    S205 --> P211[211 advice]
+    P211 --> P212[212 receipt]
+    S206 --> P212
 ```
+
+## `bill.Status` vs `bill.Payment`
+
+A lifecycle event is modelled as the GOBL document that matches its nature:
+
+- **`bill.Status`** — *processing* events: the recipient acknowledging, making available, taking into account, accepting, partially accepting, disputing, suspending or refusing the invoice, or the supplier completing a suspension. These describe where the invoice is in its handling. Codes `201`–`210`.
+- **`bill.Payment`** — *payment* events: a payment **advice** (the buyer tells the supplier a payment has been sent) or a payment **receipt** (the supplier confirms funds received). These describe money movement, so they use GOBL's dedicated payment document, which carries the amount, method and value date. Codes `211` (advice) / `212` (receipt).
+
+The `fr-ctc-flow6-v1` addon maps each document to its CDV ProcessConditionCode — you set the natural GOBL fields, not the code.
+
+## Building a status
+
+You build the natural GOBL document and the addon derives the CDV code — the full `(type, key)` → code mapping is in the [Status codes](#status-codes) table:
+
+- **`bill.Status`** — set the document `type` and the line `key`; together they select the code (e.g. `type: response` + `key: accepted` → `205`; `type: update` + `key: other` → `209`).
+- **`bill.Payment`** — set `type` to `advice` (→ `211`) or `receipt` (→ `212`).
+
+**The one ambiguity.** The line `key: rejected` covers three outcomes — `210` (the default), `207` and `206`. To mean `206` or `207`, pin the code on the line:
+
+```json
+{ "ext": { "fr-ctc-flow6-status": "206" } }
+```
+
+**Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
+
+**Direction is automatic.** Party roles are derived (`SE` Seller on the supplier, `BY` Buyer on the customer), and the sending/receiving direction follows the event type — buyer-issued events (a `211` advice, the recipient-issued statuses) invert the issuer. You only provide the supplier and customer; the addon handles the rest.
+
+### Reasons, faults and actions
+
+For the dispute and refusal codes (`206`, `207`, `208`, `210`) the line carries a `reason`, and that's where the meaningful detail lives:
+
+- **`reason.key` + `reason.ext.fr-ctc-flow6-reason`** — the rejection bucket and the exact CDV reason code (see [Reason codes](#reason-codes)). Set only the `key` and the addon fills the bucket's default code.
+- **`reason.faults[]`** — the field-level corrections. Each fault names one field: `code` is the characteristic type (`DIV` = the value found, `DVA` = the value expected), `message` is the data and value (e.g. `"Taux TVA (BT-152): 10.00%"`), and `paths` is the field's location in the document. Send a `DIV`/`DVA` pair to say "you put X, it should be Y."
+- **`line.actions[]`** — what the issuer should do next: `provide` (supply missing info), `reissue` a corrected invoice, or raise a credit note (`credit-full` / `credit-partial`).
+
+The supplier-issued **`209` Complétée** requires no reason, but it can carry one to **supply data back** — e.g. completing a bank-details suspension by returning the corrected IBAN as a `MAJ` fault (the value to apply) under a `finance-terms` reason. The line `description` summarises what was supplied.
+
+### Examples
+
+One worked GOBL example per code you build — each a complete, ready-to-build document referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`) on its effective `date`. The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
+
+<AccordionGroup>
+  <Accordion title="201 — Émise par la plateforme (Issued by platform)">
+    `bill.Status` · `type: response` · line `key: issued`. A plain acknowledgement — no reason or action.
+    <State201 />
+  </Accordion>
+  <Accordion title="202 — Reçue par la PA (Received)">
+    `bill.Status` · `type: response` · line `key: acknowledged`. A plain acknowledgement.
+    <State202 />
+  </Accordion>
+  <Accordion title="203 — Mise à disposition (Made available)">
+    `bill.Status` · `type: response` · line `key: other`. A plain acknowledgement.
+    <State203 />
+  </Accordion>
+  <Accordion title="204 — Prise en charge (Taken into account)">
+    `bill.Status` · `type: response` · line `key: processing`. A plain acknowledgement.
+    <State204 />
+  </Accordion>
+  <Accordion title="205 — Approuvée (Approved)">
+    `bill.Status` · `type: response` · line `key: accepted`. A plain acknowledgement — the invoice is fully approved.
+    <State205 />
+  </Accordion>
+  <Accordion title="206 — Approuvée partiellement (Partially approved)">
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `206`. The `reason` faults show the **invoiced vs approved quantity**; the `action` requests a partial credit note (`credit-partial` → CNP).
+    <State206 />
+  </Accordion>
+  <Accordion title="207 — En litige (In dispute)">
+    `bill.Status` · `type: response` · line `key: rejected` + pinned ext `207`. The `reason` faults pinpoint the disputed field — **actual VAT rate (DIV) vs expected (DVA)** and its XML path; the `action` requests a full credit note (`credit-full` → CNF).
+    <State207 />
+  </Accordion>
+  <Accordion title="208 — Suspendue (Suspended)">
+    `bill.Status` · `type: response` · line `key: querying`. The `reason` names **what is missing** (order reference); the `action` asks the supplier to provide it (`provide` → PIN).
+    <State208 />
+  </Accordion>
+  <Accordion title="209 — Complétée (Completed)">
+    `bill.Status` · `type: update` · line `key: other`. Issued by the supplier to lift a suspension raised over bank details: a `finance-terms` reason (condition `CBB`, *coordonnées bancaires à modifier*) whose fault **supplies the corrected IBAN** — code `MAJ` (the value to apply), the IBAN in the `message`, and the `paths` pointing at the invoice's IBAN field (BT-84).
+    <State209 />
+  </Accordion>
+  <Accordion title="210 — Refusée (Refused by buyer)">
+    `bill.Status` · `type: response` · line `key: rejected`. The `reason` faults pinpoint the failing field; the `action` asks for a corrected reissue (`reissue` → NIN).
+    <State210 />
+  </Accordion>
+  <Accordion title="211 — Paiement transmis (Payment advice)">
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date.
+    <State211 />
+  </Accordion>
+  <Accordion title="212 — Encaissée (Payment receipt)">
+    `bill.Payment` · `type: receipt`. Issued by the supplier (payee); the `methods` carry the amount received.
+    <State212 />
+  </Accordion>
+</AccordionGroup>
+
+## Sending
+
+A status is sent with the **same workflow as an invoice** — there is no dedicated status step. You build the `bill.Status` / `bill.Payment`, then run the standard send pipeline:
+
+<Steps>
+  <Step title="Sign envelope">
+    Closes and signs the silo entry (`silo.close`).
+  </Step>
+  <Step title="Generate CDAR">
+    `cii.generate` (doc type `fr-ctc-cdar-flow6`) converts the `bill.Status` / `bill.Payment` into its CDAR XML payload. This is the only step that differs from the invoice workflow, which generates a UBL invoice here instead.
+  </Step>
+  <Step title="Record">
+    `gov-fr.directory.record` links the status to its referenced invoice.
+  </Step>
+  <Step title="Send over Peppol">
+    `peppol.send` transmits the CDAR to the counterparty's PA.
+  </Step>
+  <Step title="Forward to PPF">
+    `gov-fr.directory.forward` forwards the mandatory codes (`210`, `212`) to the PPF. Non-mandatory codes skip this leg.
+  </Step>
+</Steps>
+
+The structure mirrors [Sending an invoice](/guides/fr-pa-invoicing) one-for-one — `sign → generate → record → send → forward` — so you can reuse the same workflow shape, swapping the UBL invoice generation for the CDAR generation above.
+
+## Receiving
+
+Incoming statuses arrive over the same Peppol transport as invoices.
+
+<Steps>
+  <Step title="Import Peppol document">
+    `peppol.import` receives the inbound SBD and detects that it is a CDAR rather than an invoice.
+  </Step>
+  <Step title="Parse to GOBL">
+    The CII app converts the CDAR XML into a GOBL `bill.Status` / `bill.Payment`.
+  </Step>
+  <Step title="Record">
+    `gov-fr.directory.record` files it against the referenced invoice; it then appears in the invoice's **Related** tab.
+  </Step>
+</Steps>
 
 ## Status codes
 
-| Code | French | English | Mandatory to PPF |
-|---|---|---|---|
-| `200` | Déposée | Deposited | Yes (automatic) |
-| `205` | Approuvée | Accepted | No |
-| `206` | Partiellement approuvée | Partially Approved | No |
-| `207` | En litige | Disputed | No |
-| `208` | Suspendue | Suspended | No |
-| `209` | Complétée | Completed | No |
-| `210` | Refusée | Refused by buyer | Yes (manual) |
-| `211` | Paiement transmis | Payment transmitted | No |
-| `212` | Encaissée | Cashed/Paid | Yes (manual) |
-| `213` | Rejetée | Rejected by platform | Yes (automatic) |
+Each code maps to a GOBL document. Most derive from the document's natural `(type, key)` pair; `206` and `207` additionally pin an extension (see [Building a status](#building-a-status)). **Issued by** is the party that sends the event — the counterparty receives it; the two codes marked _automatic_ are emitted by Invopop, you never build them.
 
+| Code | French | English | Document | `type` · line `key` | Issued by |
+|---|---|---|---|---|---|
+| `200` | Déposée | Deposited | — | — | Invopop (automatic) |
+| `201` | Émise par la plateforme | Issued by platform | `bill.Status` | `response` · `issued` | Supplier's platform |
+| `202` | Reçue par la PA | Received by recipient | `bill.Status` | `response` · `acknowledged` | Buyer |
+| `203` | Mise à disposition | Made available | `bill.Status` | `response` · `other` | Buyer |
+| `204` | Prise en charge | Taken into account | `bill.Status` | `response` · `processing` | Buyer |
+| `205` | Approuvée | Approved | `bill.Status` | `response` · `accepted` | Buyer |
+| `206` | Partiellement approuvée | Partially approved | `bill.Status` | `response` · `rejected` + ext `206` | Buyer |
+| `207` | En litige | Disputed | `bill.Status` | `response` · `rejected` + ext `207` | Buyer |
+| `208` | Suspendue | Suspended | `bill.Status` | `response` · `querying` | Buyer |
+| `209` | Complétée | Completed | `bill.Status` | `update` · `other` | Supplier |
+| `210` | Refusée | Refused by buyer | `bill.Status` | `response` · `rejected` | Buyer · mandatory to PPF |
+| `211` | Paiement transmis | Payment advice | `bill.Payment` | `advice` | Buyer (payer) |
+| `212` | Encaissée | Cashed / paid | `bill.Payment` | `receipt` | Supplier (payee) · mandatory to PPF |
+| `213` | Rejetée | Rejected by platform | — | — | Invopop (automatic) |
 
 ### Reason codes
 
-Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `211`, `212`) do not require one. Defaults are applied when `reason-code` is omitted.
+Codes `206`, `207`, `208` and `210` require at least one `reason` on the line, and the reason's code must come from that status's allow-list. Set the bucket via the reason `key` and the exact CDAR code via the `fr-ctc-flow6-reason` extension; if you set only the bucket, the addon fills the default code marked <Badge color="green" size="sm">⚹</Badge>. Codes `205`, `209`, `211` and `212` don't require a reason — though `209` may optionally carry one to supply data back (see [Reasons, faults and actions](#reasons-faults-and-actions)).
 
 <AccordionGroup>
-  <Accordion title="200 — Déposée (Deposited)">
-
-    <Info>Status `200` is automatically generated by Invopop when an invoice is sent. The code `NON_TRANSMISE` will be added if the recipient's PA is unreachable.</Info>
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `NON_TRANSMISE` | Destinataire non connecté | Recipient not connected |
-  </Accordion>
-
-
   <Accordion title="206 — Partiellement approuvée (Partially Approved)">
 
-    <Badge color="green" size="sm">`AUTRE`</Badge>  is applied if the reason code is omitted 
+    <Badge color="green" size="sm">`AUTRE`</Badge>  is the default if the reason code is omitted
 
     | Reason code | French | English |
     |---|---|---|
@@ -166,7 +248,7 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
 
   <Accordion title="207 — En litige (Disputed)">
 
-    <Badge color="green" size="sm">`AUTRE`</Badge>  is applied if the reason-code is omitted 
+    <Badge color="green" size="sm">`AUTRE`</Badge>  is the default if the reason code is omitted
 
     | Reason code | French | English |
     |---|---|---|
@@ -185,8 +267,8 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
   </Accordion>
 
   <Accordion title="208 — Suspendue (Suspended)">
-    
-    <Badge color="green" size="sm">`JUSTIF_ABS`</Badge>  is applied if the reason code is omitted 
+
+    <Badge color="green" size="sm">`JUSTIF_ABS`</Badge>  is the default if the reason code is omitted
 
     | Reason code | French | English |
     |---|---|---|
@@ -199,10 +281,9 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
     | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
   </Accordion>
 
-
   <Accordion title="210 — Refusée (Refused by buyer)">
 
-    <Badge color="green" size="sm">`TRANSAC_INC`</Badge>  is applied if the reason code is omitted 
+    <Badge color="green" size="sm">`TRANSAC_INC`</Badge>  is the default if the reason code is omitted
 
     | Reason code | French | English |
     |---|---|---|
@@ -230,37 +311,6 @@ Each status accepts specific reason codes. Statuses not listed (`205`, `209`, `2
     | `MODPAI_ERR` | Modalités de paiement incorrectes | Incorrect payment terms |
     | `QUALITE_ERR` | Qualité d'article livré incorrecte | Incorrect quality of delivered item |
     | `LIVR_INCOMP` | Problème de livraison | Delivery problem |
-  </Accordion>
-
-
-  <Accordion title="213 — Rejetée (Rejected by platform)">
-
-    <Badge color="green" size="sm">`REJ_SEMAN`</Badge> is applied if the reason code is omitted.
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `REJ_SEMAN` <Badge color="green" size="sm">⚹</Badge> | Rejet pour erreur sémantique | Rejection for semantic error |
-    | `REJ_UNI` | Rejet sur contrôle unicité | Rejection on uniqueness check |
-    | `REJ_COH` | Rejet sur contrôle cohérence de données | Rejection on data consistency check |
-    | `REJ_ADR` | Rejet sur contrôle d'adressage | Rejection on addressing check |
-    | `REJ_CONT_B2G` | Rejet sur contrôles métier B2G | Rejection on B2G business checks |
-    | `REJ_REF_PJ` | Rejet sur référence de PJ | Rejection on attachment reference |
-    | `REJ_ASS_PJ` | Rejet sur erreur d'association de la PJ | Rejection on attachment association error |
-    | `IRR_VIDE_F` | Contrôle de non vide sur les fichiers du flux | Non-empty check on flow files |
-    | `IRR_TYPE_F` | Contrôle de type et extension des fichiers | File type and extension check |
-    | `IRR_SYNTAX` | Contrôle syntaxique des fichiers du flux | Syntactic check on flow files |
-    | `IRR_TAILLE_PJ` | Contrôle de taille des PJ | Attachment size check |
-    | `IRR_NOM_PJ` | Contrôle du nom des PJ | Attachment name check |
-    | `IRR_VID_PJ` | Contrôle de PJ non vide | Non-empty attachment check |
-    | `IRR_EXT_DOC` | Contrôle de l'extension des PJ | Attachment extension check |
-    | `IRR_TAILLE_F` | Contrôle de taille max des fichiers | Maximum file size check |
-    | `IRR_ANTIVIRUS` | Contrôle anti-virus | Anti-virus check |
-    | `DEST_INC` | Destinataire inconnu | Unknown recipient |
-    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
-    | `DOUBLON` | Facture en doublon | Duplicate invoice |
-    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
-    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
-    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
   </Accordion>
 </AccordionGroup>
 
