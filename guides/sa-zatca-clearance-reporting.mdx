@@ -6,6 +6,7 @@ description: Clear standard invoices in real time and report simplified invoices
 
 import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
 import SendInvoiceWorkflow from '/snippets/workflows/sa/sa-send-invoice.mdx';
+import SaAccordion from '/snippets/invoices/sa/sa-accordion.mdx';
 
 <Note>
   This flow requires a party that has completed [registration](/guides/sa-zatca-registration). The same workflow handles both models. Invopop picks clearance or reporting from the invoice itself.
@@ -33,6 +34,10 @@ Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regard
 | **QR** | A TLV-encoded QR code carrying the seller VAT number, timestamp, totals, hash, and cryptographic stamp. |
 
 ## How the chain is created
+
+<Note>
+  You do not need to build or track this chain yourself. Invopop assigns the ICV, computes the PIH, and orders the sequence automatically on every submission. This section explains what happens under the hood — there is nothing to implement on your side.
+</Note>
 
 ZATCA requires every document a party issues to form a single, unbroken cryptographic chain. Invopop maintains one chain **per party and environment** (sandbox simulation/developer vs. production are separate sequences), so each registered CSID has its own continuous counter.
 
@@ -92,6 +97,12 @@ The send workflow claims the next ICV under a, builds and hashes the UBL documen
 ## Credit and debit notes
 
 Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the **same model** — clearance or reporting — as the document it corrects, using the same send workflow.
+
+## Example invoices
+
+Each example pairs a minimal hand-authored GOBL document with the built version produced by `gobl build`.
+
+<SaAccordion />
 
 ## FAQ
 
