@@ -93,7 +93,7 @@ You build the natural GOBL document and the addon derives the CDV code — the f
 
 **Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
 
-**Direction is automatic.** Party roles are derived (`SE` Seller on the supplier, `BY` Buyer on the customer), and the sending/receiving direction follows the event type — buyer-issued events (a `211` advice, the recipient-issued statuses) invert the issuer. You only provide the supplier and customer; the addon handles the rest.
+**Direction is automatic.** You always provide the same `supplier` (the seller) and `customer` (the buyer) as on the invoice; the addon derives each party's CDV role code. For statuses and payment receipts that is `SE` (Seller) on the supplier and `BY` (Buyer) on the customer. A **`211` payment advice is issued by the payer (the buyer), so it inverts the role codes** — in the built document the supplier carries `BY` and the customer `SE`. You don't swap the parties; only the derived roles flip, and the addon handles it.
 
 ### Reasons, faults and actions
 
@@ -181,7 +181,7 @@ One example per code you build, each referencing the same invoice (`INV-2026-004
     </CodeGroup>
   </Accordion>
   <Accordion title="211 — Paiement transmis (Payment advice)">
-    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date.
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`; see [Direction is automatic](#building-a-status)).
     <CodeGroup>
       <State211Min />
       <State211 />
