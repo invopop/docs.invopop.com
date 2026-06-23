@@ -19,10 +19,6 @@ Saudi Arabia runs two e-invoicing models, and both are driven by the **same GOBL
 | **Clearance** | Standard tax invoices (B2B, B2G) | Submitted to ZATCA in real time. ZATCA validates, applies its own cryptographic stamp, and returns the **cleared** document. Only that version is legally valid and shareable with the buyer. |
 | **Reporting** | Simplified tax invoices (B2C) | Signed and stamped by Invopop with the party's Production CSID. Delivered to the buyer immediately, then **reported** to ZATCA within 24 hours. |
 
-<Info>
-  The Saudi Arabia (ZATCA) implementation is being actively developed. Action names, GOBL add-ons, and workflows can change before the June 1st 2026 availability date.
-</Info>
-
 ## Format and chaining
 
 Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regardless of model. Before submission, Invopop adds the two chain values ZATCA requires:
@@ -91,7 +87,7 @@ The send workflow claims the next ICV under a, builds and hashes the UBL documen
 </Tabs>
 
 <Warning>
-  Submission fails fast if the invoice is not ready to be signed (for example, a missing code or other required key field), before any ICV is claimed or anything is sent to ZATCA. An invoice that is already signed is skipped as "already sent".
+  An invoice that is already signed is skipped as "already sent".
 </Warning>
 
 ## Credit and debit notes
@@ -99,8 +95,6 @@ The send workflow claims the next ICV under a, builds and hashes the UBL documen
 Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the **same model** — clearance or reporting — as the document it corrects, using the same send workflow.
 
 ## Example invoices
-
-Each example pairs a minimal hand-authored GOBL document with the built version produced by `gobl build`.
 
 <SaAccordion />
 
