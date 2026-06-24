@@ -2,8 +2,37 @@
   From the GOBL invoice type. **Simplified** invoices (B2C) are **reported** to ZATCA; all **standard** invoices (B2B and B2G) are **cleared**.
 </Accordion>
 
+<Accordion title="When do I submit a standard invoice (clearance) to Invopop?">
+  **Before you share it with the buyer.** Standard invoices follow the clearance model: Invopop submits the invoice to ZATCA in real time, ZATCA validates it and applies its cryptographic stamp, and the **cleared** document is returned. Only that cleared version is legally valid and shareable — so the invoice must go through Invopop before you send it on to the buyer.
+</Accordion>
+
+<Accordion title="When do I submit a simplified invoice (reporting) to Invopop?">
+  **Within 24 hours of issuing it.** Simplified invoices follow the reporting model, so you can give the invoice to the customer straight away at the point of sale — it does **not** need ZATCA validation first, and you can share it before it ever reaches Invopop. You then have up to **24 hours from issuance** to submit it to Invopop, which forwards it to ZATCA immediately when the workflow runs.
+</Accordion>
+
 <Accordion title="Do I need to build the ICV/PIH chain myself?">
   No. Invopop calculates the Invoice Counter Value (ICV) and Previous Invoice Hash (PIH) internally on every submission. You only see them reflected in the generated invoice XML.
+</Accordion>
+
+<Accordion title="How is the invoice chain created?">
+  ZATCA requires every document a party issues to form a single, unbroken cryptographic chain. Invopop maintains one chain **per party and environment** (sandbox simulation/developer vs. production are separate sequences), so each registered CSID has its own continuous counter. Two values link it together:
+
+  - **ICV** starts at `1` for the first document and increments by exactly `1` for every document that follows.
+  - **PIH** of the first document is the hash of the value `0` — the base case defined in ZATCA's data dictionary. Every document after that sets its PIH to the hash of the **immediately preceding document**.
+
+  Each new document takes the hash of the immediately preceding document and increments ICV by 1, **irrespective of type and status**:
+
+  - **Document type does not split the chain.** Standard invoices, simplified invoices, credit notes, and debit notes all share one sequence.
+  - **Rejected documents still occupy their slot.** A document that ZATCA rejects keeps its ICV and hash; the next document chains off it, not off the last *accepted* one.
+
+  For example, if invoice 2 is rejected, invoice 3 still uses `hash(invoice 2)` as its PIH and `ICV = 3`:
+
+  | Document | ICV | PIH points to | ZATCA result |
+  |---|---|---|---|
+  | Invoice 1 | 1 | hash of `0` (base case) | Accepted |
+  | Invoice 2 | 2 | hash(Invoice 1) | Rejected |
+  | Invoice 3 | 3 | hash(Invoice 2) | Accepted |
+  | Credit note 4 | 4 | hash(Invoice 3) | Accepted |
 </Accordion>
 
 <Accordion title="Where do I find the cleared invoice?">
