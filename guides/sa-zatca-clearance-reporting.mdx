@@ -15,51 +15,14 @@ import FAQ from '/snippets/faqs/sa/composers/guide-zatca-invoicing.mdx';
 
 Saudi Arabia runs two e-invoicing flows, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the right ZATCA endpoint:
 
-| Flow | Invoices | Behaviour |
-|---|---|---|
-| **Clearance** | Standard tax invoices (B2B, B2G) | Submitted to ZATCA in real time. ZATCA validates, applies its own cryptographic stamp, and returns the **cleared** document. Only that version is legally valid and shareable with the buyer. |
-| **Reporting** | Simplified tax invoices (B2C) | Signed and stamped by Invopop with the party's Production CSID. Delivered to the buyer immediately, then **reported** to ZATCA within 24 hours. |
-
-## Format and chaining
-
-Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regardless of flow. Before submission, Invopop adds the two chain values ZATCA requires:
-
-| Field | Meaning |
+| Flow | Invoices |
 |---|---|
-| **ICV** | Invoice Counter Value. A strictly increasing counter per party and environment. |
-| **PIH** | Previous Invoice Hash. The hash of the previous invoice in the chain, linking documents into a tamper-evident sequence. |
-| **QR** | A TLV-encoded QR code carrying the seller VAT number, timestamp, totals, hash, and cryptographic stamp. |
-
-## How the chain is created
-
-<Note>
-  You do not need to build or track this chain yourself. Invopop assigns the ICV, computes the PIH, and orders the sequence automatically on every submission. This section explains what happens under the hood — there is nothing to implement on your side.
-</Note>
-
-ZATCA requires every document a party issues to form a single, unbroken cryptographic chain. Invopop maintains one chain **per party and environment** (sandbox simulation/developer vs. production are separate sequences), so each registered CSID has its own continuous counter.
-
-Two values link the chain together:
-
-- **ICV** starts at `1` for the first document and increments by exactly `1` for every document that follows.
-- **PIH** of the first document is the hash of the value `0` — the base case defined in ZATCA's data dictionary. Every document after that sets its PIH to the hash of the **immediately preceding document**.
-
-Every new document should take the hash value from immediately preceding document and increment ICV by 1 based irrespective of type and status:
-
-- **Document type does not split the chain.** Standard invoices, simplified invoices, credit notes, and debit notes all share one sequence.
-- **Rejected documents still occupy their slot.** A document that ZATCA rejects keeps its ICV and hash; the next document chains off it, not off the last *accepted* one.
-
-For example, if invoice 2 is rejected, invoice 3 still uses `hash(invoice 2)` as its PIH and `ICV = 3`:
-
-| Document | ICV | PIH points to | ZATCA result |
-|---|---|---|---|
-| Invoice 1 | 1 | hash of `0` (base case) | Accepted |
-| Invoice 2 | 2 | hash(Invoice 1) | Rejected |
-| Invoice 3 | 3 | hash(Invoice 2) | Accepted |
-| Credit note 4 | 4 | hash(Invoice 3) | Accepted |
+| **Clearance** | Standard tax invoices (B2B, B2G) |
+| **Reporting** | Simplified tax invoices (B2C) |
 
 ## Sending
 
-The send workflow claims the next ICV under a, builds and hashes the UBL document, signs it (for simplified invoices), submits to ZATCA and then stores the final XML and QR back on the silo entry.
+The send workflow claims the next ICV, builds and hashes the UBL document, signs it and generates the QR (for simplified invoices), submits to ZATCA and then stores the final XML and QR back on the silo entry.
 
 ### How it works
 

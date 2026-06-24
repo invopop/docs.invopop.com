@@ -4,7 +4,15 @@ sidebarTitle: "Compliance"
 description: "Saudi Arabia's ZATCA FATOORA e-invoicing obligations for business and consumer transactions"
 ---
 
+import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
+
 <Note>Invopop supports Saudi Arabia (ZATCA) e-invoicing. See the [Clearance & Reporting](/guides/sa-zatca-clearance-reporting) and [Registration](/guides/sa-zatca-registration) guides to get started.</Note>
+
+<Card title="Saudi Arabia's e-invoicing regulation timeline" size="20" icon="timeline" href="/timelines/saudi-arabia" horizontal>
+  View current and upcoming regulation  →
+</Card>
+
+<SaResources />
 
 ## Executive summary
 
@@ -14,56 +22,59 @@ Saudi Arabia mandates electronic invoicing through the **FATOORA** system, opera
 
 **Simplified tax invoices** (B2C) follow a reporting model, where the document is issued at the point of sale and reported to ZATCA within 24 hours.
 
-| | |
-|---|---|
-| **Scope** | B2B, B2C, B2G |
-| **Format** | UBL 2.1 XML with KSA extensions |
-| **Models** | Clearance (standard invoices) + Reporting within 24h (simplified invoices) |
-| **Agency** | [ZATCA](https://zatca.gov.sa) |
-| **System** | FATOORA |
-| **Invopop addon** | <Badge color="green">Available</Badge> [`sa-zatca-v1`](https://docs.gobl.org/addons/sa-zatca-v1) |
+**Key requirements:**
+  * **Format**: UBL 2.1 XML with ZATCA's KSA extensions.
+  * **Clearance (B2B, B2G)**: standard invoices are stamped by ZATCA in real time before they reach the buyer.
+  * **Reporting (B2C)**: simplified invoices are issued at the point of sale and reported to ZATCA within 24 hours.
+  * **Security**: each invoice carries a ZATCA-issued cryptographic stamp (CSID), a QR code, an Invoice Counter Value (ICV) and a Previous Invoice Hash (PIH).
 
-## The ZATCA FATOORA system
+Invopop provides ZATCA/FATOORA integration through its [Saudi Arabia app](/apps/saudi-arabia) to ensure compliance.
 
-ZATCA is the tax and customs authority in Saudi Arabia. FATOORA is the e-invoicing platform that VAT-registered taxpayers use to clear standard tax invoices in real time and to report simplified tax invoices within 24 hours of issuance. 
+## Invoicing in Saudi Arabia
 
-The invoice is an XML document built on the UBL 2.1 standard with ZATCA-specific extensions. In the clearance flow it is cryptographically stamped by ZATCA itself. In the reporting flow the stamp is applied by Invopop using the supplier's X.509 certificate issued by ZATCA.
-
-The scope covers all **resident VAT-registered taxable persons** in the Kingdom, plus any third party issuing invoices on their behalf. Non-resident taxable persons are out of scope.
-
-### Document types
-
-| Type | Counterparty | Flow | Invopop coverage |
-|---|---|---|:---:|
-| Standard tax invoice | B2B, B2G | Clearance (real-time stamp by ZATCA before sharing with buyer) | <Badge color="green">Available</Badge> |
-| Simplified tax invoice | B2C | Reporting (issued at point of sale, reported to ZATCA within 24h) | <Badge color="green">Available</Badge> |
-| Credit note | Any | Same flow as the invoice it corrects | <Badge color="green">Available</Badge> |
-| Debit note | Any | Same flow as the invoice it corrects | <Badge color="green">Available</Badge> |
+ZATCA operates the **FATOORA** platform, which VAT-registered taxpayers use to clear standard tax invoices in real time and report simplified tax invoices within 24 hours of issuance. The invoice is a UBL 2.1 XML document with ZATCA-specific extensions: in the clearance flow it is cryptographically stamped by ZATCA itself; in the reporting flow the stamp is applied by Invopop using the supplier's ZATCA-issued certificate. The mandate covers all **resident VAT-registered taxable persons**, plus any third party issuing invoices on their behalf — non-resident taxable persons are out of scope.
 
 <AccordionGroup>
-  <Accordion title="Standard tax invoice (B2B, B2G)">
-    Required for transactions where the buyer is a VAT-registered business or a government entity. Carries the full set of mandatory fields, including the buyer's name, address, and VAT registration number.
+  <Accordion title="Clearance (standard tax invoices — B2B, B2G)">
+    Required where the buyer is a VAT-registered business or a government entity, carrying the full set of mandatory fields. The issuer submits the XML to ZATCA in real time; ZATCA validates, applies its own cryptographic stamp, and returns the cleared invoice. Only the cleared document is legally valid and shareable with the buyer.
 
-    Standard invoices follow the **clearance model**: the issuer's solution submits the XML to ZATCA in real time; ZATCA validates, applies its own cryptographic stamp, and returns the cleared invoice. Only the cleared document is legally valid and shareable with the buyer.
+  |            |             |
+  |------------|-------------|
+  | **Models** | B2B, B2G |
+  | **Format** | UBL 2.1 XML with KSA extensions |
+  | **Infrastructure** | FATOORA |
+  | **Model** | Clearance (real-time) |
+  | **Scope & Deadline** | Resident VAT-registered taxpayers; rolling out in waves (see [timeline](/timelines/saudi-arabia)). |
+  | **Agency** | [ZATCA](https://zatca.gov.sa) |
+  | **Invopop Support** | [Saudi Arabia](/apps/saudi-arabia) |
+
+    <Card title="Saudi Arabia" size="20" icon="https://assets.invopop.com/apps/zatca/icon.svg" href="/apps/saudi-arabia" horizontal>
+      Connect the app to get you covered →
+    </Card>
+
   </Accordion>
 
-  <Accordion title="Simplified tax invoice (B2C)">
-    Used for transactions with end consumers. The buyer's VAT details are not required and the field set is reduced.
+  <Accordion title="Reporting (simplified tax invoices — B2C)">
+    Used for transactions with end consumers; the buyer's VAT details are not required and the field set is reduced. The issuer signs and delivers the invoice to the buyer immediately at the point of sale, then **reports** it to ZATCA within 24 hours.
 
-    Simplified invoices follow the **reporting model**: the issuer's solution signs and delivers the invoice to the buyer immediately at the point of sale, then **reports** it to ZATCA within 24 hours. The buyer receives the invoice without waiting for ZATCA to acknowledge it.
-  </Accordion>
+  |            |             |
+  |------------|-------------|
+  | **Models** | B2C |
+  | **Format** | UBL 2.1 XML with KSA extensions |
+  | **Infrastructure** | FATOORA |
+  | **Model** | Reporting (within 24h) |
+  | **Scope & Deadline** | Resident VAT-registered taxpayers; rolling out in waves (see [timeline](/timelines/saudi-arabia)). |
+  | **Agency** | [ZATCA](https://zatca.gov.sa) |
+  | **Invopop Support** | [Saudi Arabia](/apps/saudi-arabia) |
 
-  <Accordion title="Credit and debit notes">
-    Issued invoices cannot be cancelled or edited after issuance. Corrections are made through:
+    <Card title="Saudi Arabia" size="20" icon="https://assets.invopop.com/apps/zatca/icon.svg" href="/apps/saudi-arabia" horizontal>
+      Connect the app to get you covered →
+    </Card>
 
-    - **Credit notes**: reduce the value of a previously issued invoice (returns, post-sale discounts, corrections).
-    - **Debit notes**: increase the value of a previously issued invoice.
-
-    Notes must reference the original invoice's number, date and the reason for correction. They flow through the same clearance or reporting channel as the document type they correct.
   </Accordion>
 </AccordionGroup>
 
-### Implementation phases
+## Implementation phases
 
 ZATCA introduced e-invoicing in two phases.
 
