@@ -71,6 +71,9 @@ curated=(
   "pt/leaves/at/invoicing/compliance.mdx"
   "pt/leaves/at/invoicing/operations.mdx"
   "pt/leaves/at/invoicing/tech.mdx"
+  # Saudi Arabia
+  "sa/leaves/zatca/invoicing.mdx"
+  "sa/leaves/zatca/supplier.mdx"
 )
 
 # Build an associative-array-style lookup

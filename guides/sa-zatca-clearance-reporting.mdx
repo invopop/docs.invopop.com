@@ -7,21 +7,22 @@ description: Clear standard invoices in real time and report simplified invoices
 import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
 import SendInvoiceWorkflow from '/snippets/workflows/sa/sa-send-invoice.mdx';
 import SaAccordion from '/snippets/invoices/sa/sa-accordion.mdx';
+import FAQ from '/snippets/faqs/sa/composers/guide-zatca-invoicing.mdx';
 
 <Note>
   This flow requires a party that has completed [registration](/guides/sa-zatca-registration). The same workflow handles both models. Invopop picks clearance or reporting from the invoice itself.
 </Note>
 
-Saudi Arabia runs two e-invoicing models, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the right ZATCA endpoint:
+Saudi Arabia runs two e-invoicing flows, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the right ZATCA endpoint:
 
-| Model | Invoices | Behaviour |
+| Flow | Invoices | Behaviour |
 |---|---|---|
 | **Clearance** | Standard tax invoices (B2B, B2G) | Submitted to ZATCA in real time. ZATCA validates, applies its own cryptographic stamp, and returns the **cleared** document. Only that version is legally valid and shareable with the buyer. |
 | **Reporting** | Simplified tax invoices (B2C) | Signed and stamped by Invopop with the party's Production CSID. Delivered to the buyer immediately, then **reported** to ZATCA within 24 hours. |
 
 ## Format and chaining
 
-Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regardless of model. Before submission, Invopop adds the two chain values ZATCA requires:
+Every invoice is rendered as **UBL 2.1 XML with ZATCA's KSA extensions**, regardless of flow. Before submission, Invopop adds the two chain values ZATCA requires:
 
 | Field | Meaning |
 |---|---|
@@ -66,7 +67,7 @@ The send workflow claims the next ICV under a, builds and hashes the UBL documen
   <Step title="Set State → processing">
     Moves the invoice into a visible "in progress" state for operator dashboards.
   </Step>
-  <Step title="Send Invoice">
+  <Step title="Send to ZATCA">
     Converts the GOBL invoice to UBL 2.1, adds the ICV and PIH chain values, hashes the document, and submits it to the clearance or reporting flows. 
   </Step>
   <Step title="Set State → sent">
@@ -92,13 +93,15 @@ The send workflow claims the next ICV under a, builds and hashes the UBL documen
 
 ## Credit and debit notes
 
-Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the **same model** — clearance or reporting — as the document it corrects, using the same send workflow.
+Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the same clearance or reporting model as the document it corrects, using the same send workflow.
 
 ## Example invoices
 
 <SaAccordion />
 
 ## FAQ
+
+<FAQ />
 
 More available in our [Saudi Arabia FAQ](/faq/saudi-arabia) section.
 

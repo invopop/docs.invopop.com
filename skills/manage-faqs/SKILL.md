@@ -77,6 +77,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Mexico | mx | `sat` |
 | Poland | pl | `ksef` |
 | Portugal | pt | `at` |
+| Saudi Arabia | sa | `zatca` |
 | — | peppol | (top-level, scopeless) |
 
 ### Display labels
@@ -102,6 +103,7 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 | `sat` | SAT/CFDI |
 | `ksef` | KSeF |
 | `at` | AT (SAF-T) |
+| `zatca` | ZATCA |
 
 For the country scope, the subheading is the **country name** (e.g. `Spain`, `Belgium`, `Argentina`), not "General". The label `General` is deprecated. Replace it with the country name when touching a composer.
 
@@ -360,6 +362,10 @@ For single-regime countries, country-level operations or tech content goes into 
 | `compliance/portugal.mdx` | `pt/composers/page-compliance.mdx` |
 | `apps/at-portugal.mdx` | `pt/composers/app-at.mdx` |
 | `guides/pt-at.mdx` | `pt/composers/guide-at-invoicing.mdx` |
+| `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
+| `apps/saudi-arabia.mdx` | `sa/composers/app-zatca.mdx` |
+| `guides/sa-zatca-clearance-reporting.mdx` | `sa/composers/guide-zatca-invoicing.mdx` |
+| `guides/sa-zatca-registration.mdx` | `sa/composers/guide-zatca-supplier.mdx` |
 
 ## Categorising new questions
 
