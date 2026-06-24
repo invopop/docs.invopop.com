@@ -1,0 +1,51 @@
+---
+title: "Saudi Arabia unregister party workflow"
+description: "Removes a party's registration from Invopop's internal systems (sandbox testing only)"
+countryCode: "sa"
+appId: "gov-sa"
+schema: "org/party"
+---
+```json Saudi Arabia unregister party workflow
+{
+    "name": "ZATCA unregister supplier",
+    "description": "Removes the party's local registration and stored credentials from Invopop",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "c2f0d3b0-0001-11f0-9a00-0242ac130001",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "c2f0d3b0-0002-11f0-9a00-0242ac130002",
+            "name": "Unregister Party",
+            "provider": "gov-sa.party.deregister",
+            "summary": "Removes the party and its stored credentials from Invopop's internal systems"
+        },
+        {
+            "id": "c2f0d3b0-0003-11f0-9a00-0242ac130003",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c2f0d3b0-00ff-11f0-9a00-0242ac1300ff",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
