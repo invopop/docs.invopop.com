@@ -58,13 +58,13 @@ NO VERI\*FACTU supplier registration does not require an agreement signing proce
 
         The new workflow will need the following steps:
 
-        1. **Set State** — select "Processing".
-        2. **Sign Envelope** — signs the GOBL envelope.
+        1. **Set state** — select "Processing".
+        2. **Sign envelope** — signs the GOBL envelope.
         3. **Generate Event Record** — generates and digitally signs the event XML from the `bill.Status` document.
         4. **Store Record** — persists the signed event record in the database.
-        5. **Set State** — select "Registered".
+        5. **Set state** — select "Registered".
 
-        In the Error Handling area, add the **Set State** action and select `Error`.
+        In the Error Handling area, add the **Set state** action and select `Error`.
       </Tab>
     </Tabs>
   </Step>
@@ -93,7 +93,7 @@ NO VERI\*FACTU supplier registration does not require an agreement signing proce
         1. **Build Summary Event** — configured with event type `10` ("Summary event"). Aggregates invoicing and event record counts, tax totals, and references for the period since the last summary.
         2. **Process Event** — creates a job to process the summary event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow created in the previous step.
 
-        In the Error Handling section, add the **Set State** action and select `Error`.
+        In the Error Handling section, add the **Set state** action and select `Error`.
       </Tab>
     </Tabs>
 
@@ -125,17 +125,17 @@ NO VERI\*FACTU supplier registration does not require an agreement signing proce
 
         The new workflow will need to perform the following steps:
 
-        1. **Set State** — select "Processing".
+        1. **Set state** — select "Processing".
         2. **Register supplier** — registers the supplier for NO VERI\*FACTU mode. Registration is immediate (auto-approved).
         3. **Build Start Event** — configured with event type `01` ("Start of NO VERI\*FACTU mode"). Builds a `bill.Status` document and uploads it as a silo entry.
         4. **Process Event** — creates a job to process the event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow.
         5. **Subscribe to summary event cron** — uses the [Cron app](/apps/cron) to subscribe the supplier to periodic execution every 6 hours. Set the **Workflow** field to the **NO VERI\*FACTU summary event** workflow.
-        6. **Set State** — select "Registered".
+        6. **Set state** — select "Registered".
 
         In the Error Handling area, add the following steps:
 
         1. **Unregister supplier** — clears the registration.
-        2. **Set State** — select `Rejected`.
+        2. **Set state** — select `Rejected`.
       </Tab>
     </Tabs>
   </Step>
@@ -161,14 +161,14 @@ NO VERI\*FACTU supplier registration does not require an agreement signing proce
       <Tab title="Build from scratch">
         In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
 
-        1. **Set State** — select "Processing".
+        1. **Set state** — select "Processing".
         2. **Unsubscribe from summary event cron** — uses the [Cron app](/apps/cron) to remove the periodic summary event subscription for this supplier.
         3. **Unregister supplier** — clears the NO VERI\*FACTU registration state.
         4. **Build End Event** — configured with event type `02` ("End of NO VERI\*FACTU mode"). Builds a `bill.Status` document and uploads it as a silo entry.
         5. **Process Event** — creates a job to process the event. Set the **Workflow** field to the **NO VERI\*FACTU event processing** workflow.
-        6. **Set State** — select `Void`.
+        6. **Set state** — select `Void`.
 
-        In the Error Handling section, add the **Set State** action and select `Error`.
+        In the Error Handling section, add the **Set state** action and select `Error`.
       </Tab>
     </Tabs>
   </Step>

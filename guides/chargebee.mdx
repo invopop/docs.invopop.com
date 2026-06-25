@@ -72,7 +72,7 @@ This guide assumes that you already have a Chargebee site configured and using P
 
         In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with Chargebee".
 
-        It's essential to add the **Import Chargebee document** step at the very beginning of the workflow to import the document. Also, be sure to add a **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
+        It's essential to add the **Import document from Chargebee** step at the very beginning of the workflow to import the document. Also, be sure to add a **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
       </Tab>
     </Tabs>
     <Tabs>
@@ -93,7 +93,7 @@ This guide assumes that you already have a Chargebee site configured and using P
 
         In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with Chargebee".
 
-        It's essential to add the **Import Chargebee document** step at the very beginning of the workflow to import the document. Also, be sure to add a **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
+        It's essential to add the **Import document from Chargebee** step at the very beginning of the workflow to import the document. Also, be sure to add a **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
       </Tab>
     </Tabs>
   </Step>
@@ -205,7 +205,7 @@ Belgium uses the Peppol network for e-invoicing, which became mandatory in Janua
     </Note>
 
     <Note>
-      The **Lookup Participant ID** step automatically looks up your customer's Peppol participant ID from the Peppol network at the time the invoice is processed. If you have already set the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) on your customers in Chargebee, Invopop will use that value directly and you can remove this step.
+      The **Lookup Peppol participant** step automatically looks up your customer's Peppol participant ID from the Peppol network at the time the invoice is processed. If you have already set the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) on your customers in Chargebee, Invopop will use that value directly and you can remove this step.
     </Note>
     <PeppolExample />
   </Tab>
@@ -213,7 +213,7 @@ Belgium uses the Peppol network for e-invoicing, which became mandatory in Janua
 
 #### Participant ID lookup
 
-Belgium enforces a standard set of Peppol participant ID schemes, all derived from the customer's **BCE number** (Belgian company registration number). Since this number is typically available in Chargebee, the **Lookup Participant ID** step can automatically resolve the correct Peppol ID for each customer — no manual setup required in most cases.
+Belgium enforces a standard set of Peppol participant ID schemes, all derived from the customer's **BCE number** (Belgian company registration number). Since this number is typically available in Chargebee, the **Lookup Peppol participant** step can automatically resolve the correct Peppol ID for each customer — no manual setup required in most cases.
 
 If you want to specify a Peppol ID manually for a particular customer (or override the lookup result), you can do so with the following custom field:
 
@@ -225,7 +225,7 @@ If you want to specify a Peppol ID manually for a particular customer (or overri
 
 ### 🇩🇰 Denmark
 
-Denmark also uses the Peppol network and the same Peppol BIS Billing UBL format. However, unlike Belgium, Danish Peppol participant IDs come in a wide variety of schemes — GLN numbers, CVR numbers, and others — and they don't all derive from the VAT number. This makes automatic lookup unreliable, so **this workflow does not include a Lookup Participant ID step**. You will need to set the Peppol ID directly on each customer as a custom field.
+Denmark also uses the Peppol network and the same Peppol BIS Billing UBL format. However, unlike Belgium, Danish Peppol participant IDs come in a wide variety of schemes — GLN numbers, CVR numbers, and others — and they don't all derive from the VAT number. This makes automatic lookup unreliable, so **this workflow does not include a Lookup Peppol participant step**. You will need to set the Peppol ID directly on each customer as a custom field.
 
 If you do want to use automatic lookup for some customers, you can add the lookup step from the [generic Peppol template](/guides/peppol).
 
@@ -257,7 +257,7 @@ If you do want to use automatic lookup for some customers, you can add the looku
     </Note>
 
     <Note>
-      Unlike other Peppol countries, this template does not include a **Lookup Participant ID** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
+      Unlike other Peppol countries, this template does not include a **Lookup Peppol participant** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
     </Note>
 
     <Note>
@@ -396,7 +396,7 @@ Once a silo entry (invoice) has been created in Invopop, retriggering from Charg
 
 #### Error is downstream — data hasn't changed
 
-If the failure happened after the invoice was already signed (e.g. the Generate UBL or Send Peppol step failed) and nothing has changed in Chargebee, you can simply run the workflow again:
+If the failure happened after the invoice was already signed (e.g. the Generate UBL document or Send Peppol document step failed) and nothing has changed in Chargebee, you can simply run the workflow again:
 
 1. In the [Invopop console](https://console.invopop.com), navigate to the workflow that processed the invoice
 2. Find the last job for that invoice
@@ -406,7 +406,7 @@ The import step will detect that the invoice is already signed and skip the upda
 
 #### Data has changed in Chargebee — signature needs to be removed
 
-The **Import Chargebee document** step updates the invoice with fresh data from Chargebee each time it runs. However, if the invoice has already been signed, the import step will skip this update to preserve the signature. If you need the latest data from Chargebee to be pulled in — for example, because you updated a customer's custom fields, corrected an error, or the failure happened before or during signing — you must first remove the signature:
+The **Import document from Chargebee** step updates the invoice with fresh data from Chargebee each time it runs. However, if the invoice has already been signed, the import step will skip this update to preserve the signature. If you need the latest data from Chargebee to be pulled in — for example, because you updated a customer's custom fields, corrected an error, or the failure happened before or during signing — you must first remove the signature:
 
 1. In the [Invopop console](https://console.invopop.com), navigate to the silo entry for that invoice
 2. Click **Edit**, then **Save** — this removes the signature without altering the data
