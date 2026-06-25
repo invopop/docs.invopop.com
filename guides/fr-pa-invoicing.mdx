@@ -41,28 +41,28 @@ The **Record Invoice** step validates SIRENs and checks both parties against the
 ### How it works
 
 <Steps>
-  <Step title="Set State → processing">
+  <Step title="Set state → processing">
     Moves the invoice into a visible "in progress" state for operator dashboards.
   </Step>
-  <Step title="Add Signature">
+  <Step title="Sign envelope">
     Locks the GOBL envelope so downstream steps work against an immutable document.
   </Step>
   <Step title="Record Invoice">
     Validates SIRENs, checks both parties against the Annuaire, and stores the invoice in the local PA database.
   </Step>
-  <Step title="Generate UBL Document">
-    Produces a Peppol France CIUS UBL invoice or credit note. Swap for **Generate CII Document** if the receiver requires CII, or **Generate PDF (Factur-X)** for hybrid PDF.
+  <Step title="Generate UBL document">
+    Produces a Peppol France CIUS UBL invoice or credit note. Swap for **Generate CII document** if the receiver requires CII, or **Generate PDF (Factur-X)** for hybrid PDF.
   </Step>
-  <Step title="Send Peppol Document">
+  <Step title="Send Peppol document">
     Transmits the generated document to the receiver's PA over the Peppol network.
   </Step>
-  <Step title="Set State → sent">
+  <Step title="Set state → sent">
     Marks Peppol delivery as successful.
   </Step>
   <Step title="Forward Invoice to PPF">
     Generates the simplified F1 invoice and forwards it, along with the mandatory `200` _déposée_ status, to the PPF.
   </Step>
-  <Step title="Set State → completed">
+  <Step title="Set state → completed">
     Marks the full e-invoicing flow — Peppol delivery and PPF reporting — as complete.
   </Step>
 </Steps>
@@ -91,19 +91,19 @@ The receive workflow detects the inbound format, imports it into a GOBL document
 ### How it works
 
 <Steps>
-  <Step title="Import Peppol Document">
+  <Step title="Import Peppol document">
     Pulls the inbound payload from Peppol and branches on the detected format:
-    - `UBL` → **Import UBL Document** converts the UBL XML to GOBL.
-    - `CII` → **Import UN/CEFACT CII Document** converts the CII XML to GOBL.
-    - `PDF` → **Import PDF (Factur-X)** extracts the embedded CII and converts it to GOBL.
+    - `UBL` → **Import UBL document** converts the UBL XML to GOBL.
+    - `CII` → **Import CII document** converts the CII XML to GOBL.
+    - `PDF` → **Import Factur-X PDF** extracts the embedded CII and converts it to GOBL.
   </Step>
-  <Step title="Set Folder → expenses">
+  <Step title="Set folder → expenses">
     Files the invoice under the `Invoices · Expenses` folder so it lands in the right place for accounting workflows.
   </Step>
   <Step title="Record Invoice">
     Validates SIRENs, resolves your registered party as the customer (or supplier in self-billing flows), and guards against duplicate processing.
   </Step>
-  <Step title="Set State → registered">
+  <Step title="Set state → registered">
     Marks the incoming invoice as successfully received.
   </Step>
 </Steps>
