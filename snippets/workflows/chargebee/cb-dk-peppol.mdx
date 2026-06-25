@@ -1,25 +1,25 @@
 ---
-title: "Chargebee DK E-invoicing"
-description: "Send Peppol BIS invoice through Peppol network to DK customers"
+title: "Chargebee Peppol invoice (DK)"
+description: "Sync from Chargebee and send via Peppol to DK customers"
 countryCode: "dk"
 appId: "chargebee"
 schema: "bill/invoice"
 ---
 
-```json Example Chargebee DK E-invoicing workflow
+```json Example Chargebee Peppol invoice (DK) workflow
 {
-    "name": "DK E-invoicing",
-    "description": "Send Peppol BIS invoice through Peppol network to DK customers",
+    "name": "Chargebee Peppol invoice (DK)",
+    "description": "Sync from Chargebee and send via Peppol to DK customers",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "84944c00-16e1-11f1-96ed-bb71a2a9b3a3",
-            "name": "Import Chargebee document",
+            "name": "Import document from Chargebee",
             "provider": "chargebee.import"
         },
         {
             "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -31,7 +31,7 @@ schema: "bill/invoice"
             "name": "Fix bank-transfer details",
             "provider": "silo.modify",
             "notes": "Normalizes the payment key to SEPA credit transfer format",
-            "summary": "Modifications configured",
+            "summary": "Normalize payment key to SEPA",
             "config": {
                 "jq": "if .payment?.instructions?.key == \"credit-transfer\" then\n  .payment.instructions.key = \"credit-transfer+sepa\"\nelse\n  .\nend",
                 "merge_type": "application/jq",
@@ -41,9 +41,9 @@ schema: "bill/invoice"
         },
         {
             "id": "cfe249c0-1c93-11f1-8e47-3f51862e93e3",
-            "name": "Modify Silo Entry",
+            "name": "Modify silo entry",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Add `eu-en16931-v2017` addon",
             "config": {
                 "addons": [
                     "eu-en16931-v2017"
@@ -52,14 +52,14 @@ schema: "bill/invoice"
         },
         {
             "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Generate UBL Document",
+            "name": "Generate UBL document",
             "provider": "ubl.generate",
-            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "summary": "Peppol BIS Billing v3",
             "config": {
                 "attach_invoice_pdf": false,
                 "doc_type": "bis-invoice-v3",
@@ -69,12 +69,12 @@ schema: "bill/invoice"
         },
         {
             "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Send Peppol Document",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
             "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -90,7 +90,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

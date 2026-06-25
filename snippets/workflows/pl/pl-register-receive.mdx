@@ -1,20 +1,20 @@
 ---
-title: "Register party in KSeF for receiving"
-description: "Set up a supplier in KSeF for receiving e-invoices"
+title: "KSeF register supplier (receive)"
+description: "Register a supplier with KSeF for receiving e-invoices"
 countryCode: "pl"
 appId: "gov-pl"
 schema: "org/party"
 ---
 
-```json Example Register supplier for KSeF (receive) workflow
+```json Example KSeF register supplier (receive) workflow
 {
-    "name": "Register for KSeF (Receive)",
-    "description": "Register a party in KSeF for receiving e-invoices",
+    "name": "KSeF register supplier (receive)",
+    "description": "Register a supplier with KSeF for receiving e-invoices",
     "schema": "org/party",
     "steps": [
         {
             "id": "f6ca2240-fb6b-11f0-b2f4-37a8eb8f9eb9",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -23,22 +23,23 @@ schema: "org/party"
         },
         {
             "id": "f7315970-fb74-11f0-8137-27e02839a7ca",
-            "name": "Register for KSeF",
+            "name": "Register supplier with KSeF",
             "provider": "gov-pl.register"
         },
         {
             "id": "3166cb10-fdba-11f0-a562-870ebfef62f3",
-            "name": "Wait for KSeF Certificate Upload",
+            "name": "Wait for KSeF certificate upload",
             "provider": "gov-pl.wait.upload"
         },
         {
             "id": "a1b2c3d0-fb75-11f0-b567-89abcdef0123",
-            "name": "Subscribe to periodic KSeF sync",
-            "provider": "cron.subscribe"
+            "name": "Subscribe to periodic execution",
+            "provider": "cron.subscribe",
+            "summary": "Periodic KSeF sync"
         },
         {
             "id": "f0b45d30-fb6b-11f0-b2f4-37a8eb8f9eb9",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `registered`{.state .registered}",
             "config": {
@@ -49,7 +50,7 @@ schema: "org/party"
     "rescue": [
         {
             "id": "ebf99440-fb6b-11f0-b2f4-37a8eb8f9eb9",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

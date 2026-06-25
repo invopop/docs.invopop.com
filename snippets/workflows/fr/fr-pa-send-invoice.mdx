@@ -1,19 +1,19 @@
 ---
-title: "France PA send invoice workflow"
-description: "Record and send a France-compliant invoice via Peppol and PPF"
+title: "PPF send invoice"
+description: "Send an invoice via Peppol and record it with PPF"
 countryCode: "fr"
 appId: "gov-fr"
 schema: "bill/invoice"
 ---
-```json France PA send invoice workflow
+```json PPF send invoice workflow
 {
-    "name": "Send an invoice France",
-    "description": "Record and send a France-compliant invoice via Peppol and PPF",
+    "name": "PPF send invoice",
+    "description": "Send an invoice via Peppol and record it with PPF",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "72bc5070-1a17-11f1-a82f-e740c226ef51",
-            "name": "Set Silo Entry State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -22,19 +22,19 @@ schema: "bill/invoice"
         },
         {
             "id": "f5aaed10-13c9-11f1-98a6-7dfa4cb26122",
-            "name": "Add Signature",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "f1e30fa0-13c9-11f1-98a6-7dfa4cb26122",
-            "name": "Record Invoice (France)",
+            "name": "Record document for e-invoicing",
             "provider": "gov-fr.directory.record"
         },
         {
             "id": "1b5850d0-13bf-11f1-bc3b-b99ec414b63d",
-            "name": "Generate UBL Document",
+            "name": "Generate UBL document",
             "provider": "ubl.generate",
-            "summary": "Peppol France CIUS UBL Invoice/CreditNote",
+            "summary": "Peppol France CIUS v1",
             "config": {
                 "attach_invoice_pdf": false,
                 "doc_type": "peppol-fr-cius",
@@ -44,12 +44,12 @@ schema: "bill/invoice"
         },
         {
             "id": "ab598990-16f0-11f1-86ba-d13d91b4f398",
-            "name": "Send Peppol Document",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
             "id": "79bd38d0-1a17-11f1-a82f-e740c226ef51",
-            "name": "Set Silo Entry State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -58,12 +58,12 @@ schema: "bill/invoice"
         },
         {
             "id": "e1f6ce90-16eb-11f1-86ba-d13d91b4f398",
-            "name": "Forward Invoice to PPF",
+            "name": "Forward document to PPF",
             "provider": "gov-fr.directory.forward"
         },
         {
             "id": "80a9d5e0-1a17-11f1-a82f-e740c226ef51",
-            "name": "Set Silo Entry State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `completed`{.state .completed}",
             "config": {
@@ -74,7 +74,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "892a8070-1a17-11f1-a82f-e740c226ef51",
-            "name": "Set Silo Entry State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

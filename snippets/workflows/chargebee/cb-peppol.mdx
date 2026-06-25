@@ -1,24 +1,24 @@
 ---
-title: "Chargebee Peppol"
-description: "Sync with Chargebee and send via Peppol"
+title: "Chargebee Peppol invoice"
+description: "Sync from Chargebee and send via Peppol"
 appId: "chargebee"
 schema: "bill/invoice"
 ---
 
 ```json Example Chargebee Peppol workflow
 {
-    "name": "Chargebee Peppol",
-    "description": "Sync with Chargebee and send via Peppol",
+    "name": "Chargebee Peppol invoice",
+    "description": "Sync from Chargebee and send via Peppol",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "3879bbb0-6c79-11f0-a3f7-072a34d19639",
-            "name": "Import Chargebee document",
+            "name": "Import document from Chargebee",
             "provider": "chargebee.import"
         },
         {
             "id": "7d00a700-25d2-11f0-b641-350e77c28eed",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -27,12 +27,12 @@ schema: "bill/invoice"
         },
         {
             "id": "a8bde710-1d46-11f1-ba7f-8d561e47d4e4",
-            "name": "Download PDF",
+            "name": "Download PDF from Chargebee",
             "provider": "chargebee.pdf.download"
         },
         {
             "id": "c4025680-d103-11f0-a0bd-350448c4fb2d",
-            "name": "Lookup Participant ID",
+            "name": "Lookup Peppol participant",
             "provider": "peppol.lookup",
             "summary": "Lookup customer",
             "config": {
@@ -41,9 +41,9 @@ schema: "bill/invoice"
         },
         {
             "id": "6358ec20-6c79-11f0-913a-f35872125699",
-            "name": "Modify Silo Entry",
+            "name": "Modify silo entry",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Add `eu-en16931-v2017` addon",
             "config": {
                 "addons": [
                     "eu-en16931-v2017"
@@ -53,14 +53,14 @@ schema: "bill/invoice"
         },
         {
             "id": "b079af50-25d2-11f0-b641-350e77c28eed",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "5bb0d200-25d2-11f0-b641-350e77c28eed",
-            "name": "Generate UBL Document",
+            "name": "Generate UBL document",
             "provider": "ubl.generate",
-            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "summary": "Peppol BIS Billing v3",
             "config": {
                 "attach_invoice_pdf": true,
                 "doc_type": "bis-invoice-v3",
@@ -70,12 +70,12 @@ schema: "bill/invoice"
         },
         {
             "id": "606d96c0-25d2-11f0-b641-350e77c28eed",
-            "name": "Send Peppol Document",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
             "id": "7a321db0-25d2-11f0-b641-350e77c28eed",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -91,7 +91,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "82674050-25d2-11f0-b641-350e77c28eed",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

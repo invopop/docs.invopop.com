@@ -1,19 +1,19 @@
 ---
-title: "France PA receive invoice workflow"
-description: "Receive UBL, CII or Factur-X PDF invoice via Peppol and register it as received through the PA system"
+title: "PPF receive invoice"
+description: "Receive an invoice via Peppol and register it with PPF"
 countryCode: "fr"
 appId: "gov-fr"
 schema: "bill/invoice"
 ---
-```json France PA receive invoice workflow
+```json PPF receive invoice workflow
 {
-    "name": "France PA receive invoice workflow",
-    "description": "Receive UBL, CII or Factur-X PDF invoice via Peppol and register it as received through the PA system",
+    "name": "PPF receive invoice",
+    "description": "Receive an invoice via Peppol and register it with PPF",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "db61c3c0-0fb5-11f0-b078-9fc456829eca",
-            "name": "Import Peppol Document",
+            "name": "Import Peppol document",
             "provider": "peppol.import",
             "next": [
                 {
@@ -22,7 +22,7 @@ schema: "bill/invoice"
                     "steps": [
                         {
                             "id": "62e94570-8fdb-11f0-a8fb-61ec9e5a76ba",
-                            "name": "Import UBL Document",
+                            "name": "Import UBL document",
                             "provider": "ubl.import"
                         }
                     ]
@@ -33,7 +33,7 @@ schema: "bill/invoice"
                     "steps": [
                         {
                             "id": "6480ae50-8fdb-11f0-a8fb-61ec9e5a76ba",
-                            "name": "Import UN/CEFACT CII Document",
+                            "name": "Import CII document",
                             "provider": "cii.import"
                         }
                     ]
@@ -44,7 +44,7 @@ schema: "bill/invoice"
                     "steps": [
                         {
                             "id": "26ba4f80-1e2a-11f1-8bfb-2beaa1df60f0",
-                            "name": "Import PDF (Factur-X)",
+                            "name": "Import Factur-X PDF",
                             "provider": "cii.pdf.import"
                         }
                     ]
@@ -53,7 +53,7 @@ schema: "bill/invoice"
         },
         {
             "id": "fdfc81a0-6e23-11f0-913b-5732f966b346",
-            "name": "Set Folder",
+            "name": "Set folder",
             "provider": "silo.folder",
             "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
             "config": {
@@ -62,12 +62,12 @@ schema: "bill/invoice"
         },
         {
             "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
-            "name": "Record Invoice",
+            "name": "Record document for e-invoicing",
             "provider": "gov-fr.directory.record"
         },
         {
             "id": "dd14a3e0-0fb5-11f0-b078-9fc456829eca",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `registered`{.state .registered}",
             "config": {
@@ -78,7 +78,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "e109d2e0-0fb5-11f0-b078-9fc456829eca",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {
