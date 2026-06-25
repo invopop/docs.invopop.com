@@ -1,21 +1,21 @@
 ---
-title: "France PA unregister party workflow"
-description: "Revokes Peppol and French Directory registrations so the party can no longer issue or receive invoices"
+title: "PPF unregister supplier"
+description: "Unregister a supplier from Peppol and the French Directory"
 countryCode: "fr"
 appId: "gov-fr"
 schema: "org/party"
 ---
-```json France PA unregister party workflow
+```json PPF unregister supplier workflow
 {
-    "name": "France PA unregister party",
-    "description": "Revokes Peppol and French Directory registrations so the party can no longer issue or receive invoices",
+    "name": "PPF unregister supplier",
+    "description": "Unregister a supplier from Peppol and the French Directory",
     "schema": "org/party",
     "steps": [
         {
             "id": "0a1f4b30-5452-11f1-baf5-4f2c2882107f",
-            "name": "Unregister Peppol Party",
+            "name": "Register party on Peppol",
             "provider": "peppol.register",
-            "summary": "Disable Party",
+            "summary": "Disabled",
             "config": {
                 "disable": true,
                 "visibility": "smp+sml+peppol",
@@ -24,12 +24,12 @@ schema: "org/party"
         },
         {
             "id": "13c84e60-5452-11f1-baf5-4f2c2882107f",
-            "name": "Unregister from Directory",
+            "name": "Disable party in Directory",
             "provider": "gov-fr.directory.disable"
         },
         {
             "id": "1b8a6b80-5452-11f1-baf5-4f2c2882107f",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `void`{.state .void}",
             "config": {
@@ -40,7 +40,7 @@ schema: "org/party"
     "rescue": [
         {
             "id": "23e0d3a0-5452-11f1-baf5-4f2c2882107f",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

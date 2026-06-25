@@ -1,82 +1,75 @@
 ---
-title: "VERI*FACTU supplier registration"
-description: "Enables suppliers to register for VERI*FACTU invoice generation"
+title: "VERI*FACTU register supplier"
+description: "Register a supplier with VERI*FACTU"
 countryCode: "es"
 appId: "verifactu"
 schema: "org/party"
 ---
 
-```json Example VERI*FACTU supplier registration
+```json Example VERI*FACTU register supplier workflow
 {
-    "name": "VERI*FACTU supplier registration",
-    "description": "Enables suppliers to register for VERI*FACTU invoice generation",
+    "name": "VERI*FACTU register supplier",
+    "description": "Register a supplier with VERI*FACTU",
     "schema": "org/party",
     "steps": [
         {
             "id": "74b9cf20-da92-11f0-864b-8d842f7d4ab2",
-            "name": "Verify Spanish Tax ID (NIF/CIF)",
+            "name": "Verify Spanish Tax ID",
             "provider": "gov-es.lookup.verify"
         },
         {
             "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Register with VERI*FACTU",
+            "name": "Register supplier with VERI*FACTU",
             "provider": "verifactu.register",
-            "next": [],
-            "notes": "Register a party before issuing invoices"
+            "next": []
         },
         {
             "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
                 "state": "processing"
             },
-            "next": [],
-            "notes": "Label the silo entry as 'Processing'"
+            "next": []
         },
         {
             "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Wait for Upload VERI*FACTU",
+            "name": "Wait for VERI*FACTU supplier agreement upload",
             "provider": "verifactu.wait.upload",
-            "next": [],
-            "notes": "Block the job while waiting for the end-user to complete their registration steps."
+            "next": []
         },
         {
             "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `registered`{.state .registered}",
             "config": {
                 "state": "registered"
             },
-            "next": [],
-            "notes": "The party has issuing entitlement, so label as 'Registered'"
+            "next": []
         },
         {
             "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
-            "name": "Wait for Approval VERI*FACTU",
+            "name": "Wait for VERI*FACTU supplier approval",
             "provider": "verifactu.wait.approval",
-            "next": [],
-            "notes": "Pending verification of uploaded documentation"
+            "next": []
         }
     ],
     "rescue": [
         {
             "id": "4be625f0-da6d-11f0-864b-8d842f7d4ab2",
-            "name": "Unregister VERI*FACTU",
-            "provider": "verifactu.unregister",
-            "notes": "Disables a previously registered party from issuing invoices."
+            "name": "Unregister supplier from VERI*FACTU",
+            "provider": "verifactu.unregister"
         },
         {
             "id": "535bf030-da6d-11f0-864b-8d842f7d4ab2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `rejected`{.state .rejected}",
             "config": {
                 "state": "rejected"
-            },
-            "notes": "Label the silo entry as 'Rejected'"
+            }
         }
     ]
 }

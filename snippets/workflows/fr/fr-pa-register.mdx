@@ -1,24 +1,24 @@
 ---
-title: "France PA register party workflow"
-description: "Registers in the French Directory and Peppol network for sending and receiving invoices"
+title: "PPF register supplier"
+description: "Register a supplier with the French Directory and Peppol"
 countryCode: "fr"
 appId: "gov-fr"
 schema: "org/party"
 ---
-```json France PA register party workflow
+```json PPF register supplier workflow
 {
-    "name": "Directory register supplier",
-    "description": "Onboards participants before they can issue or receive invoices",
+    "name": "PPF register supplier",
+    "description": "Register a supplier with the French Directory and Peppol",
     "schema": "org/party",
     "steps": [
         {
             "id": "0adf46e0-8fdb-11f0-a8fb-61ec9e5a76ba",
-            "name": "Sign agreement for France",
+            "name": "Sign PPF agreement",
             "provider": "gov-fr.agreement.sign"
         },
         {
             "id": "0e44b900-8fdb-11f0-a8fb-61ec9e5a76ba",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -27,12 +27,12 @@ schema: "org/party"
         },
         {
             "id": "12aaf950-8fdb-11f0-a8fb-61ec9e5a76ba",
-            "name": "Wait for French agreement upload",
+            "name": "Wait for PPF agreement upload",
             "provider": "gov-fr.agreement.wait.approval"
         },
         {
             "id": "b194f710-5451-11f1-baf5-4f2c2882107f",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `completed`{.state .completed}",
             "config": {
@@ -41,14 +41,14 @@ schema: "org/party"
         },
         {
             "id": "d10a4680-1e29-11f1-8bfb-2beaa1df60f0",
-            "name": "Register Party in Directory",
+            "name": "Register party in Directory",
             "provider": "gov-fr.directory.register"
         },
         {
             "id": "7a5a4db0-0fae-11f0-b37b-0be1c251a274",
-            "name": "Register Peppol Party",
+            "name": "Register party on Peppol",
             "provider": "peppol.register",
-            "summary": "Sending and Receiving with groups: france",
+            "summary": "Enabled · groups: france",
             "config": {
                 "directory": true,
                 "disable": false,
@@ -60,7 +60,7 @@ schema: "org/party"
         },
         {
             "id": "7c2fa9f0-0fae-11f0-b37b-0be1c251a274",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `registered`{.state .registered}",
             "config": {
@@ -71,7 +71,7 @@ schema: "org/party"
     "rescue": [
         {
             "id": "a34e83f0-25dc-11f0-b641-350e77c28eed",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

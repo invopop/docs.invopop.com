@@ -1,24 +1,24 @@
 ---
-title: "Stripe sync and send via Peppol"
-description: "Send a Peppol BIS invoice through Peppol network from Stripe"
+title: "Stripe Peppol invoice"
+description: "Sync from Stripe and send via Peppol"
 appId: "stripe"
 schema: "bill/invoice"
 ---
 
 ```json Example Stripe to Peppol Workflow
 {
-    "name": "Stripe sync and send via Peppol",
-    "description": "Send a Peppol BIS invoice through Peppol network from Stripe",
+    "name": "Stripe Peppol invoice",
+    "description": "Sync from Stripe and send via Peppol",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "ab0b8c40-d4e7-11f0-9e5d-e1650cc9a3d1",
-            "name": "Import data from Stripe",
+            "name": "Import invoice from Stripe",
             "provider": "stripe.import"
         },
         {
             "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -27,9 +27,9 @@ schema: "bill/invoice"
         },
         {
             "id": "dcb86010-d4e7-11f0-9bd8-c3ca8212c614",
-            "name": "Add Supplier Peppol ID",
+            "name": "Add supplier Peppol ID",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Add supplier Peppol inbox",
             "config": {
                 "merge_type": "application/jq",
                 "scope": "doc",
@@ -38,9 +38,9 @@ schema: "bill/invoice"
         },
         {
             "id": "00e00280-d66f-11f0-8fc4-ff91328c62f5",
-            "name": "Add Purchase Order Number",
+            "name": "Add purchase order number",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Add purchase order number",
             "config": {
                 "jq": "if (.ordering.code == null) and ((.ordering.purchases // [])[0].code == null) then \n.ordering.purchases[0].code = \"NA\"\nend",
                 "merge_type": "application/jq",
@@ -51,7 +51,7 @@ schema: "bill/invoice"
             "id": "b54b7000-d779-11f0-8eaf-79de543fb8d0",
             "name": "Move negative line items to discounts",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Move negative line items to discounts",
             "config": {
                 "jq": ". as $doc\n|\n# Select lines that are negative\n($doc.lines | map(select(.item.price|tonumber < 0))) as $neg\n|\n# Select lines that are positive\n($doc.lines | map(select(.item.price|tonumber >= 0))) as $pos\n|\n# Convert negative lines to discount entries\n($neg | map({\n    reason: .item.name,\n    amount: ((.total|tonumber) * -1 | tostring),\n    taxes: .taxes\n})) as $discounts\n|\n$doc\n| .lines = $pos\n| .discounts = $discounts\n",
                 "merge_type": "application/jq",
@@ -60,9 +60,9 @@ schema: "bill/invoice"
         },
         {
             "id": "896013d0-d515-11f0-a832-01ce614dcba6",
-            "name": "Include Payment Means when empty",
+            "name": "Include payment means when empty",
             "provider": "silo.modify",
-            "summary": "Modifications configured",
+            "summary": "Include payment means when empty",
             "config": {
                 "addons": [
                     "eu-en16931-v2017"
@@ -74,7 +74,7 @@ schema: "bill/invoice"
         },
         {
             "id": "6c96aac0-d4e8-11f0-9bd8-c3ca8212c614",
-            "name": "Lookup Participant ID",
+            "name": "Lookup Peppol participant",
             "provider": "peppol.lookup",
             "summary": "Lookup customer",
             "config": {
@@ -83,12 +83,12 @@ schema: "bill/invoice"
         },
         {
             "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Generate UBL Document",
+            "name": "Generate UBL document",
             "provider": "ubl.generate",
             "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
             "config": {
@@ -98,12 +98,12 @@ schema: "bill/invoice"
         },
         {
             "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Send Peppol Document",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
             "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -114,7 +114,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "97ced0a0-d4e8-11f0-985d-3b44fe520da3",
-            "name": "Send Email",
+            "name": "Send email",
             "provider": "email.send",
             "summary": "",
             "config": {
@@ -130,7 +130,7 @@ schema: "bill/invoice"
         },
         {
             "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

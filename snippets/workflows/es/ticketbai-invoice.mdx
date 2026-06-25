@@ -1,6 +1,6 @@
 ---
 title: "TicketBAI issue invoice"
-description: "Send TicketBAI invoice and generate PDF with QR"
+description: "Issue a TicketBAI invoice and generate PDF with QR"
 countryCode: "es"
 appId: "gov-es"
 schema: "bill/invoice"
@@ -9,24 +9,24 @@ schema: "bill/invoice"
 ```json Example TicketBAI invoice workflow
 {
   "name": "TicketBAI issue invoice",
-  "description": "Send TicketBAI invoice and generate PDF with QR",
+  "description": "Issue a TicketBAI invoice and generate PDF with QR",
   "schema": "bill/invoice",
   "steps": [
     {
       "id": "dd319d60-8bc1-11ef-96af-b55bf69bb0b8",
-      "name": "Add Sequential Code",
+      "name": "Add sequential code",
       "config": {
         "name": "TicketBAI Invoice",
         "start": 1,
         "prefix": "F",
         "padding": 6
       },
-      "summary": "Dynamic · TicketBAI Invoice · F000001",
+      "summary": "Dynamic · TicketBAI · F000001",
       "provider": "sequence.enumerate"
     },
     {
       "id": "ba77d5b0-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
+      "name": "Set state",
       "config": {
         "state": "processing"
       },
@@ -35,17 +35,17 @@ schema: "bill/invoice"
     },
     {
       "id": "fc75e4f0-8721-11ef-a962-73e3f2037a52",
-      "name": "Sign Envelope",
+      "name": "Sign envelope",
       "provider": "silo.close"
     },
     {
       "id": "fc618ea0-a757-11ef-8377-c15ac3014ffb",
-      "name": "Generate TicketBAI (Spain)",
+      "name": "Generate TicketBAI XML",
       "provider": "gov-es.ticketbai.generate"
     },
     {
       "id": "0448df60-a758-11ef-8377-c15ac3014ffb",
-      "name": "Send TicketBAI (Spain)",
+      "name": "Send invoice to TicketBAI",
       "provider": "gov-es.ticketbai.send"
     },
     {
@@ -56,12 +56,12 @@ schema: "bill/invoice"
         "date_format": "%Y-%m-%d",
         "logo_height": 40
       },
-      "summary": "Spanish",
+      "summary": "Spanish · A4",
       "provider": "pdf"
     },
     {
       "id": "d8693d70-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
+      "name": "Set state",
       "config": {
         "state": "sent"
       },
@@ -72,7 +72,7 @@ schema: "bill/invoice"
   "rescue": [
     {
       "id": "dd889490-7b3a-11ef-bffc-d9a10ebf9f89",
-      "name": "Set State",
+      "name": "Set state",
       "config": {
         "state": "error"
       },

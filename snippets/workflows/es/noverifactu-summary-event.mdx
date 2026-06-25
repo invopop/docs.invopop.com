@@ -1,6 +1,6 @@
 ---
 title: "NO VERI*FACTU summary event"
-description: "Build and process a NO VERI*FACTU summary event every 6 hours"
+description: "Build a NO VERI*FACTU summary event (cron-driven)"
 countryCode: "es"
 appId: "gov-es"
 schema: "org/party"
@@ -9,12 +9,12 @@ schema: "org/party"
 ```json Example NO VERI*FACTU summary event cron workflow expandable
 {
     "name": "NO VERI*FACTU summary event",
-    "description": "Build and process a NO VERI*FACTU summary event every 6 hours",
+    "description": "Build a NO VERI*FACTU summary event (cron-driven)",
     "schema": "org/party",
     "steps": [
         {
             "id": "f6a7b8c0-0006-11f1-a000-000000000001",
-            "name": "Build NO VERI*FACTU Status (Spain)",
+            "name": "Build status for NO VERI*FACTU",
             "provider": "gov-es.noverifactu.build.status",
             "summary": "Build status: 10 - Summary event",
             "config": {
@@ -23,7 +23,7 @@ schema: "org/party"
         },
         {
             "id": "4f527c60-3a95-11f1-a472-21be9722e465",
-            "name": "Create a Job",
+            "name": "Create a job",
             "provider": "transform.job.create",
             "summary": "Send to NO VERI*FACTU process event (bill/status)",
             "config": {
@@ -35,7 +35,7 @@ schema: "org/party"
     "rescue": [
         {
             "id": "f6a7b8c0-0006-11f1-a000-000000000003",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

@@ -1,6 +1,6 @@
 ---
 title: "Peppol send invoice"
-description: "Send Peppol BIS invoice through Peppol network"
+description: "Send a Peppol BIS invoice through the Peppol network"
 appId: "peppol"
 schema: "bill/invoice"
 ---
@@ -8,12 +8,12 @@ schema: "bill/invoice"
 ```json Example Peppol send invoice workflow
 {
     "name": "Peppol send invoice",
-    "description": "Send Peppol BIS invoice through Peppol network",
+    "description": "Send a Peppol BIS invoice through the Peppol network",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -22,9 +22,9 @@ schema: "bill/invoice"
         },
         {
             "id": "2354afd0-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Add Sequential Code",
+            "name": "Add sequential code",
             "provider": "sequence.enumerate",
-            "summary": "Dynamic · PPL · PPL000001",
+            "summary": "Dynamic · Peppol · PPL000001",
             "config": {
                 "name": "PPL",
                 "padding": 6,
@@ -34,14 +34,14 @@ schema: "bill/invoice"
         },
         {
             "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Generate UBL Document",
+            "name": "Generate UBL document",
             "provider": "ubl.generate",
-            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+            "summary": "Peppol BIS Billing v3",
             "config": {
                 "doc_type": "bis-invoice-v3",
                 "private": false,
@@ -50,12 +50,12 @@ schema: "bill/invoice"
         },
         {
             "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Send Peppol Document",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
             "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -66,7 +66,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

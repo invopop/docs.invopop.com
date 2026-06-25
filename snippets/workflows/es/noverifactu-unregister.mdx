@@ -1,20 +1,20 @@
 ---
 title: "NO VERI*FACTU unregister supplier"
-description: "Unsubscribe from summary events, unregister a NO VERI*FACTU supplier, and generate the end-of-mode event"
+description: "Unregister a supplier from NO VERI*FACTU and generate the end-of-mode event"
 countryCode: "es"
 appId: "gov-es"
 schema: "org/party"
 ---
 
-```json Example NO VERI*FACTU unregister supplier expandable
+```json Example NO VERI*FACTU unregister supplier workflow expandable
 {
     "name": "NO VERI*FACTU unregister supplier",
-    "description": "Unsubscribe from summary events, unregister a NO VERI*FACTU supplier, and generate the end-of-mode event",
+    "description": "Unregister a supplier from NO VERI*FACTU and generate the end-of-mode event",
     "schema": "org/party",
     "steps": [
         {
             "id": "d4e5f6a0-0004-11f1-a000-000000000007",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -23,12 +23,12 @@ schema: "org/party"
         },
         {
             "id": "3e4bd770-3a92-11f1-a472-21be9722e465",
-            "name": "Unsubscribe from Periodic Execution",
+            "name": "Unsubscribe from periodic execution",
             "provider": "cron.unsubscribe"
         },
         {
             "id": "f46dfa20-3ca3-11f1-90b7-0d81b4010093",
-            "name": "Build NO VERI*FACTU Status (Spain)",
+            "name": "Build status for NO VERI*FACTU",
             "provider": "gov-es.noverifactu.build.status",
             "summary": "Build status: 02 - End of NO VERI*FACTU mode",
             "config": {
@@ -37,7 +37,7 @@ schema: "org/party"
         },
         {
             "id": "2fbe2590-3caf-11f1-ae77-65667068cb42",
-            "name": "Create a Job",
+            "name": "Create a job",
             "provider": "transform.job.create",
             "summary": "Send to NO VERI*FACTU process event (bill/status)",
             "config": {
@@ -47,12 +47,12 @@ schema: "org/party"
         },
         {
             "id": "9a9235e0-3cb0-11f1-ae77-65667068cb42",
-            "name": "Unregister from NO VERI*FACTU (Spain)",
+            "name": "Unregister supplier from NO VERI*FACTU",
             "provider": "gov-es.noverifactu.unregister"
         },
         {
             "id": "d4e5f6a0-0004-11f1-a000-000000000004",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `void`{.state .void}",
             "config": {
@@ -63,7 +63,7 @@ schema: "org/party"
     "rescue": [
         {
             "id": "d4e5f6a0-0004-11f1-a000-000000000006",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

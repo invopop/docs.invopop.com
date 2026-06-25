@@ -1,38 +1,84 @@
 ---
-title: "France PA send status workflow"
+title: "France PA send status"
 description: "Generate and forward a lifecycle status update (CDAR) via Peppol and PPF"
 countryCode: "fr"
 appId: "gov-fr"
 schema: "bill/invoice"
 ---
-```json France PA send status workflow
+```json PPF send status workflow
 {
-    "name": "Send state",
+    "name": "France PA send status",
     "description": "Generate and forward a lifecycle status update (CDAR) via Peppol and PPF",
     "schema": "bill/invoice",
     "steps": [
         {
-            "id": "e600d990-16f5-11f1-86ba-d13d91b4f398",
-            "name": "Generate Status (France)",
-            "provider": "gov-fr.status.generate",
-            "summary": "Generate 207 status (MONTANTTOTAL_ERR)",
+            "id": "90262b50-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
             "config": {
-                "reason_code": "MONTANTTOTAL_ERR",
-                "reason_text": "",
-                "status_code": "207"
+                "state": "processing"
             }
         },
         {
-            "id": "eb002590-16f5-11f1-86ba-d13d91b4f398",
-            "name": "Send Peppol Document",
+            "id": "d0a4ca10-6fcf-11f1-b09d-79f60b032746",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "d1e427e0-6fcf-11f1-b09d-79f60b032746",
+            "name": "Generate CII document",
+            "provider": "cii.generate",
+            "summary": "France CTC Flow 6 CDAR (lifecycle status/payment)",
+            "config": {
+                "attach_invoice_pdf": false,
+                "doc_type": "fr-ctc-cdar-flow6",
+                "validate_cii": false
+            }
+        },
+        {
+            "id": "d7e2bb70-6fcf-11f1-b09d-79f60b032746",
+            "name": "Record document for e-invoicing",
+            "provider": "gov-fr.directory.record"
+        },
+        {
+            "id": "df212200-6fcf-11f1-b09d-79f60b032746",
+            "name": "Send Peppol document",
             "provider": "peppol.send"
         },
         {
-            "id": "ef5500c0-16f5-11f1-86ba-d13d91b4f398",
-            "name": "Forward Status to PPF",
-            "provider": "gov-fr.status.forward"
+            "id": "ee8282c0-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "e5763a00-6fcf-11f1-b09d-79f60b032746",
+            "name": "Forward document to PPF",
+            "provider": "gov-fr.directory.forward"
+        },
+        {
+            "id": "e85b3180-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
         }
     ],
-    "rescue": []
+    "rescue": [
+        {
+            "id": "f14dfed0-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
 }
 ```
