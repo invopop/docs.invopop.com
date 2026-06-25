@@ -8,6 +8,8 @@ import ProductInvoiceMin from '/snippets/invoices/br/dfe-product-invoice.min.mdx
 import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 import ProductInvoiceSimplesMin from '/snippets/invoices/br/dfe-product-invoice-simples.min.mdx';
 import ProductInvoiceSimples from '/snippets/invoices/br/dfe-product-invoice-simples.mdx';
+import CreditNoteMin from '/snippets/invoices/br/dfe-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 
 <AccordionGroup>
 	<Accordion title="Example B2B service invoice (NFS-e)">
@@ -77,6 +79,27 @@ import ProductInvoiceSimples from '/snippets/invoices/br/dfe-product-invoice-sim
 		<CodeGroup>
 			<ProductInvoiceSimplesMin />
 			<ProductInvoiceSimples />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example NF-e for a full goods return">
+
+		In this example, we're issuing a NF-e that fully returns the goods of a previously issued B2B product invoice — a _devolução total_ under the pre-reform (pre-RTC) rules.
+
+		Notice the differences from a standard product invoice:
+
+		- the document `type` is `credit-note`; it keeps the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon and is still issued as an NF-e, so [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) is derived as `55`,
+		- a `preceding` entry references the original NF-e and carries its SEFAZ access key (_chave de acesso_) as a stamp — you can copy it from the `sefaz-key` entry in the `stamps` array of the original invoice's envelope `head`, where it was added once the tax authority authorized the document,
+		- because this is a full return, the [`br-nfe-purpose`](https://docs.gobl.org/addons/br-nfe-v4#purpose-code) extension is set to `4` (_Goods Return_) and the [`br-nfe-operation-type`](https://docs.gobl.org/addons/br-nfe-v4#operation-type-code) extension to `0` (_Inbound / Entrada_), since the returned goods re-enter the supplier; standard invoices set these automatically to `1` (normal) and `1` (outbound), but corrective documents must set both explicitly,
+		- no [`br-nfe-credit-note-type`](https://docs.gobl.org/addons/br-nfe-v4#credit-note-type-code) extension is used: that field only applies to post-reform IBS/CBS credit notes (those set `br-nfe-purpose` to `5`),
+		- the line [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) is a return code — `2202` (_Devolução de venda de mercadoria adquirida ou recebida de terceiros_) — mirroring the original `6102` sale but recorded as an inbound inter-state operation (CFOP starting with `2`),
+		- the payment sets the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to `90` (_No payment_), as a return does not involve a new payment,
+		- there are no totals or calculations; all these will be made automatically when uploading, and,
+		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
 		</CodeGroup>
 	</Accordion>
 
