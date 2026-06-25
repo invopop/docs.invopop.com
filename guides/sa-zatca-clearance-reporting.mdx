@@ -1,5 +1,5 @@
 ---
-title: "Saudi Arabia ZATCA — clearance & reporting"
+title: "ZATCA clearance & reporting in Saudi Arabia"
 sidebarTitle: "Clearance & Reporting"
 description: Clear standard invoices in real time and report simplified invoices to ZATCA.
 ---
@@ -10,10 +10,10 @@ import SaAccordion from '/snippets/invoices/sa/sa-accordion.mdx';
 import FAQ from '/snippets/faqs/sa/composers/guide-zatca-invoicing.mdx';
 
 <Note>
-  This flow requires a party that has completed [registration](/guides/sa-zatca-registration). The same workflow handles both models. Invopop picks clearance or reporting from the invoice itself.
+  Make sure you have completed the [registration guide](/guides/sa-zatca-registration) before clearing or reporting invoices.
 </Note>
 
-Saudi Arabia runs two e-invoicing flows, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the right ZATCA endpoint:
+Saudi Arabia runs two e-invoicing flows, and both are driven by the **same GOBL invoice** with the ZATCA add-on. A single send workflow converts the document to UBL 2.1, chains it, signs it, and submits it to the corresponding ZATCA endpoint:
 
 | Flow | Invoices |
 |---|---|
@@ -26,15 +26,19 @@ The send workflow claims the next ICV, builds and hashes the UBL document, signs
 
 ### How it works
 
+<Frame caption="ZATCA send invoice workflow">
+  <img src="/assets/guides/sa-send-invoice.png" width="580" />
+</Frame>
+
 <Steps>
-  <Step title="Set State → processing">
-    Moves the invoice into a visible "in progress" state for operator dashboards.
+  <Step title="Set State → Processing">
+    Sets the state of the silo entry as "Processing".
   </Step>
-  <Step title="Send to ZATCA">
+  <Step title="Send invoice to ZATCA">
     Converts the GOBL invoice to UBL 2.1, adds the ICV and PIH chain values, hashes the document, and submits it to the clearance or reporting flows. 
   </Step>
-  <Step title="Set State → sent">
-    Marks the invoice as successfully cleared or reported.
+  <Step title="Set state → Sent">
+    Marks the silo entry as "Sent"
   </Step>
 </Steps>
 
@@ -56,7 +60,7 @@ The send workflow claims the next ICV, builds and hashes the UBL document, signs
 
 ## Credit and debit notes
 
-Issued invoices cannot be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the same clearance or reporting model as the document it corrects, using the same send workflow.
+Issued invoices can't be cancelled or edited once cleared or reported. Corrections are made with **credit notes** (reduction) or **debit notes** (increase) that reference the original invoice. A note flows through the same clearance or reporting model as the document it corrects, using the same send workflow.
 
 ## Example invoices
 

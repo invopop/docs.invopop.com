@@ -1,5 +1,5 @@
 ---
-title: "Saudi Arabia ZATCA — registration"
+title: "ZATCA supplier registration in Saudi Arabia"
 sidebarTitle: "Registration"
 description: Onboard a Saudi VAT-registered party with ZATCA and provision its production CSID.
 ---
@@ -37,24 +37,28 @@ The two modes target different ZATCA sandbox endpoints and differ mainly in how 
 
 Registration spans two parts: a workflow you run against the party document, and a hosted onboarding wizard the supplier completes to provide the FATOORA OTP.
 
+<Frame caption="ZATCA register supplier">
+  <img src="/assets/guides/sa-register-supplier.png" width="640" />
+</Frame>
+
 <Steps>
-  <Step title="Set State → processing">
-    Moves the silo entry into a visible "in progress" state so operator dashboards reflect that onboarding is underway.
+  <Step title="Set State → Processing">
+    Sets the state of the silo entry as "Processing".
   </Step>
-  <Step title="Register Party">
-    Validates the party's identity (one of `CRN`, `MOM`, `MLS`, `700`, `SAG`, or `OTH`) and full address and publishes a public onboarding link in the meta section of the party. The supplier follows this link to complete the wizard below.
+  <Step title="Register supplier with ZATCA">
+    Validates the party's identity and full address, then publishes a public onboarding link in the meta section of the party. The supplier follows this link to complete the onboarding wizard.
   </Step>
-  <Step title="Wait for Authorization">
-    Pauses until the supplier finishes the wizard and a Compliance CSID exists. It then submits the mandatory compliance sample invoices and exchanges the Compliance CSID for the **Production CSID**.
+  <Step title="Wait for ZATCA certificate upload">
+    Pauses until the supplier uploads the compliance CSID. It will then submit the mandatory compliance sample invoices and swaps the Compliance CSID with the Production CSID.
   </Step>
-  <Step title="Set State → registered">
-    Marks the party as fully onboarded and ready to clear and report invoices.
+  <Step title="Set State → Registered">
+    Sets the state of the silo entry as "Registered".
   </Step>
 </Steps>
 
 <Tabs>
   <Tab title="Template">
-    <Card iconType="duotone" title="Saudi Arabia register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-register" cta="Add to my workspace">
+    <Card iconType="duotone" title="ZATCA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-register" cta="Add to my workspace">
       Publishes the ZATCA onboarding link and provisions the party's production CSID.
     </Card>
   </Tab>
@@ -66,20 +70,38 @@ Registration spans two parts: a workflow you run against the party document, and
 
 ## The onboarding wizard
 
-The link published by **Register Party** opens a hosted wizard the supplier completes once:
+The link published by **Register Party** provides an onboarding wizard for the supplier to complete:
 
 <Steps>
   <Step title="Company details">
+    <Frame caption="Company details screen">
+      <img src="/assets/guides/sa-wizard-1.png" width="640" />
+    </Frame>
     The supplier confirms the legal name and provides the **invoice type** (`1000` standard, `0100` simplified, or `1100` both), **branch name**, **registered address**, and **business category**. These values feed the certificate request.
   </Step>
   <Step title="Get the OTP from FATOORA">
+    <Frame caption="FATOORA instructions screen">
+      <img src="/assets/guides/sa-wizard-2.png" width="640" />
+    </Frame>
     The supplier signs in to the FATOORA portal and generates a One-Time Password for the EGS unit. The wizard shows the relevant FATOORA screens.
   </Step>
   <Step title="Enter the OTP">
+    <Frame caption="OTP Code screen">
+      <img src="/assets/guides/sa-wizard-3.png" width="640" />
+    </Frame>
     The supplier pastes the OTP and reviews the recap of the details that will be sent to ZATCA.
   </Step>
+  <Step title="Confirm details">
+    <Frame caption="Confirmation screen">
+      <img src="/assets/guides/sa-wizard-4.png" width="640" />
+    </Frame>
+    Here you will make sure all the details you entered were correct. Click "Back" if you need to change anything.
+  </Step>
   <Step title="Submit">
-    Invopop requests the **Compliance CSID**, and stores the credentials. This unblocks the **Wait for Authorization** step in the workflow.
+    <Frame caption="Submission screen">
+      <img src="/assets/guides/sa-wizard-5.png" width="640" />
+    </Frame>
+    Upon submit, Invopop requests the **Compliance CSID**, and stores the credentials. This unblocks the **Wait for Authorization** step in the workflow.
   </Step>
 </Steps>
 
@@ -87,9 +109,9 @@ The link published by **Register Party** opens a hosted wizard the supplier comp
   The invoice type chosen here determines which compliance samples Invopop submits: `1000` runs standard tax invoices, credit notes, and debit notes; `0100` runs the simplified equivalents; `1100` runs both sets.
 </Info>
 
-## Unregistration
+## Unregistration (sandbox only)
 
-Unregistering a party from ZATCA is handled by the **tax payers**, directly in the **FATOORA portal**, signing in with their own credentials.
+Unregistering a party from ZATCA in production environment is handled by the **tax payers**, directly in the **FATOORA portal**, signing in with their own credentials.
 
 Invopop also provides an unregister action that removes the party and its stored credentials from **Invopop's internal systems only**. It does not touch the party's registration with ZATCA.
 
@@ -99,7 +121,7 @@ Invopop also provides an unregister action that removes the party and its stored
 
 <Tabs>
   <Tab title="Template">
-    <Card iconType="duotone" title="Saudi Arabia unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-unregister" cta="Add to my workspace">
+    <Card iconType="duotone" title="ZATCA unregister supplier workflow (sandbox only)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-unregister" cta="Add to my workspace">
       Removes the party's registration and stored credentials from Invopop's internal systems.
     </Card>
   </Tab>
