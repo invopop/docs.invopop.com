@@ -1,0 +1,191 @@
+# OpenAPI gov-sa v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points for the Saudi Arabia (ZATCA) app, covering supplier
+    onboarding against the ZATCA Fatoora platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Saudi Arabia Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-sa/v1/entry/{silo_entry_id}/otp:
+    post:
+      operationId: submitEntryOTP
+      summary: Submit the OTP and obtain the Compliance CSID
+      description: Submit the One Time Password (OTP) generated in the ZATCA Fatoora portal.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OTPSubmit"
+      responses:
+        "204":
+          description: OTP accepted, Compliance CSID obtained and credentials stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    SiloEntryID:
+      name: silo_entry_id
+      in: path
+      required: true
+      description: ID of the `org.Party` silo entry being onboarded.
+      schema:
+        type: string
+        example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
+  schemas:
+    OTPSubmit:
+      type: object
+      required:
+        - name
+        - invoice_type
+        - branch_name
+        - registered_address
+        - business_category
+        - otp
+      properties:
+        name:
+          type: string
+          description: Legal name of the supplier as registered with ZATCA.
+          example: "Acme Trading Co."
+        invoice_type:
+          type: string
+          description: |-
+            Which invoice transactions the CSID is requested for, encoded as
+            ZATCA's 4-digit functionality map.
+
+              - `1000` — standard tax invoices only.
+              - `0100` — simplified invoices only.
+              - `1100` — both standard and simplified invoices.
+          enum: ["1000", "0100", "1100"]
+          example: "1100"
+        branch_name:
+          type: string
+          description: |-
+            Name of the branch or organizational unit the certificate is issued for. 
+            In case of VAT Groups, this field should contain the 10-digit TIN number 
+            of the individual group member.
+          example: "Head Office"
+        registered_address:
+          type: string
+          description: Registered address of the supplier as recorded with ZATCA.
+          example: "King Fahd Road, Riyadh 12211"
+        business_category:
+          type: string
+          description: Business category or industry of the supplier.
+          example: "Retail"
+        otp:
+          type: string
+          description: |-
+            6-digit One-Time Password generated in the ZATCA Fatoora portal
+            for the registering device. Valid only for a short period.
+          example: "123456"
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable description of the error.
+          example: "invalid OTP"
+
+  responses:
+    BadRequest:
+      description: |-
+        The request is malformed or a field failed validation. For example
+        a missing party field, an unsupported `invoice_type`, or an OTP that
+        is not exactly six digits.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "invalid OTP"
+
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "missing enrollment"
+
+    Forbidden:
+      description: The authenticated enrollment is not allowed to access this silo entry.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "access denied"
+
+    NotFound:
+      description: |-
+        The referenced silo entry or its party registration could not be
+        found. The party must be registered before submitting the OTP.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "party registration not found"
+
+    UnprocessableEntity:
+      description: |-
+        The request is well-formed but ZATCA rejected the submission. For
+        example the OTP was incorrect or expired, or the Compliance CSID
+        request failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "requesting compliance CSID"
+
+    InternalServerError:
+      description: An unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "internal server error"
+
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Authenticate using a valid Invopop enrollment token in the `Bearer`
+        scheme.
+
+        Example: `Authorization: Bearer <token>`
