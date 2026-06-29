@@ -472,6 +472,70 @@ Finally, you can use the following custom fields to choose which customer's invo
 
 ---
 
+## Writing values back to Chargebee
+
+The [Custom Fields & Metadata](#custom-fields-metadata) section above covers data flowing _into_ GOBL. The **Update invoice details** step does the reverse: it writes values produced during your workflow back onto the originating Chargebee document. A typical use case is recording the official reference number returned by a tax authority — for example, the Polish KSeF number — into a Chargebee custom field so it stays visible and searchable in Chargebee.
+
+For invoices, the resolved values are written through Chargebee's [`update_details`](https://apidocs.chargebee.com/docs/api/invoices?lang=curl#update_invoice_details) endpoint. Credit notes can't be updated in Chargebee, so for them the same values are recorded as a comment on the credit note instead.
+
+<Note>
+  Today this step is geared towards **custom fields** (keys starting with `cf_`), but field keys are sent to Chargebee verbatim, so other `update_details` parameters can be targeted as well.
+</Note>
+
+### Configuration
+
+Add the **Update invoice details** step to your workflow (its provider is `chargebee.update.details`) and open its configuration. You'll see a table where each row maps one Chargebee field to a value:
+
+- **Field** — the Chargebee field name to set, e.g. `cf_ksef_number`.
+- **Value** — an [expr](https://expr-lang.org/) expression, evaluated against the full GOBL envelope (both `head` and `doc`). Document extensions are available under `doc.ext[...]`, while values added by earlier steps — such as the confirmation numbers returned by a tax authority — are stored as stamps under `head.stamps` and can be looked up with expr's `find()` function. To set a static value, use a literal string such as `"invopop"`.
+
+<Frame caption="Configuring the Update invoice details step">
+  ![Update invoice details step configuration](/assets/guides/cb_update_invoice_details.png)
+</Frame>
+
+For example, to write the Polish KSeF number into the `cf_ksef_number` custom field, set the value to:
+
+```
+find(head.stamps, {.prv == "favat-ksef-number"}).val
+```
+
+This finds the stamp whose provider (`.prv`) is `favat-ksef-number` — the KSeF reference number added when the invoice is submitted — and returns its value (`.val`).
+
+A few rules to keep in mind:
+
+- Each expression must resolve to a single scalar value (text, number, or boolean). Returning an object or a list is not allowed.
+- If an expression resolves to nothing (a missing or null value), that field is skipped rather than written as an empty value.
+- The step is idempotent — it replaces the field values each time it runs, so re-running a workflow won't create duplicates.
+
+In JSON, the step looks like this:
+
+```json
+{
+  "name": "Update invoice details",
+  "provider": "chargebee.update.details",
+  "config": {
+    "fields": [
+      {
+        "field": "cf_ksef_number",
+        "value": "find(head.stamps, {.prv == \"favat-ksef-number\"}).val"
+      }
+    ]
+  }
+}
+```
+
+### Where to place the step
+
+The value you want to write must already exist in the envelope by the time this step runs. For instance, to write the KSeF number back to Chargebee, place the step _after_ the step that submits the invoice and obtains that number, and typically _before_ the final **Update Chargebee** step.
+
+Once the workflow runs, the resolved value appears on the invoice's custom fields in Chargebee:
+
+<Frame caption="The KSeF number written back to the Chargebee invoice">
+  ![Custom field populated on a Chargebee invoice](/assets/guides/cb_updated_custom_field.png)
+</Frame>
+
+---
+
 <Card title="Participate in our community"
   icon="forumbee"
   href="https://community.invopop.com"
