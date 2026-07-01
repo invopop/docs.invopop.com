@@ -10,6 +10,7 @@ import ZUGFeRDExample from '/snippets/workflows/chargebee/cb-zugferd.mdx'
 import XRechnungExample from '/snippets/workflows/chargebee/cb-xrechnung.mdx'
 import PeppolExample from '/snippets/workflows/chargebee/cb-peppol.mdx'
 import DKPeppolExample from '/snippets/workflows/chargebee/cb-dk-peppol.mdx'
+import FRExample from '/snippets/workflows/chargebee/cb-france.mdx'
 
 ## Introduction
 
@@ -366,6 +367,75 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
     <XRechnungExample />
   </Tab>
 </Tabs>
+
+---
+
+### 🇫🇷 France
+
+France runs two parallel flows, and which one an invoice takes depends on whether the customer is registered in the **Annuaire** (the French directory). 
+
+- Customers subject to VAT in France are handled through the [e-invoicing flow](/guides/fr-pa-invoicing#sending) for domestic B2B transactions, with [status updates](/guides/fr-pa-status) reported back throughout. 
+- Customers not subject to VAT in France — international or B2C transactions, and territories excluded from the mandate such as Guyane, Mayotte, New Caledonia and French Polynesia — go through [e-reporting](/guides/fr-pa-reporting) instead. 
+
+**Required apps:** [France](/apps/france), [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
+
+<Info>
+  Before processing any invoices, you must register your supplier in the Annuaire through Invopop. See the [registration guide](/guides/fr-pa-registration) for the e-invoicing flow and the [e-reporting registration steps](/guides/fr-pa-reporting#registration) for the reporting flow.
+</Info>
+
+{/* TODO: Add the walkthrough video once recorded, matching the other countries.
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/TODO_VIDEO_ID"
+  title="Chargebee + Invopop | E-invoicing in France"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  loading="lazy"
+></iframe>
+*/}
+
+  A single template covers both French flows and picks between them automatically from the result of the **Lookup in Directory** step. 
+  - **found** result means the customer is subject to e-invoicing, so Invopop records the document in the Annuaire, forwards it to the PPF, and sends it over Peppol. 
+  - **not found** result means the transaction falls outside domestic e-invoicing — international B2B, B2C, or a customer in a territory excluded from the mandate — so it is recorded for e-reporting. For those, the **Can Send** action checks whether the customer is reachable on the Peppol network: if it is (a Belgian party, for example), the workflow sends the invoice over Peppol as well.
+
+<Tabs>
+  <Tab title="Template">
+    <Card title="Chargebee France" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-france" cta="Add to my workspace">
+      Syncs with Chargebee, looks the customer up in the French Annuaire, and branches automatically: registered parties are e-invoiced via Peppol France CIUS and forwarded to the PPF, while unregistered parties are recorded for e-reporting.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    <Note>
+      For a full walkthrough including required apps, directory registration, and customer routing, see the [France section of the Chargebee guide](/guides/chargebee#france).
+    </Note>
+
+    <Note>
+      The two paths differ in the addon and format they apply: the e-invoicing path applies the `fr-ctc-flow2-v1` addon and generates a Peppol France CIUS UBL, while the e-reporting path applies `fr-ctc-flow10-v1` and, when the customer is reachable on Peppol, generates a Peppol BIS Billing v3 document.
+    </Note>
+
+    <Note>
+      The **Add bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. It only applies when the invoice carries payment due dates and the payment key is a plain `credit-transfer`, normalising it to the SEPA format France expects. If you don't need to include payment instructions, you can remove this step.
+    </Note>
+
+    <Note>
+      The **Add Billing Mode** step sets the French CTC billing mode: `S2` when the invoice is fully paid (an advance equal to the total), otherwise `S1`. The subsequent **Modify Silo Entry** step maps UNTDID tax categories onto the GOBL tax keys and `VATEX` exemption codes required by the French format.
+    </Note>
+    <FRExample />
+  </Tab>
+</Tabs>
+
+#### Customer routing &amp; identifiers
+
+A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has a unique identifier — mapped to the Peppol inbox — in one of the `SIREN`, `SIREN_SIRET`, `SIREN_SIRET_suffix` or `SIREN_suffix` forms. When no Peppol inbox is set on the customer, Invopop defaults to `0225:SIREN`, ignoring any SIRET present in the customer's identities.
+
+Use the custom fields below to control this. Set the **Peppol inbox** to target a specific directory entry, or provide the customer's **SIREN** and **SIRET** so the directory lookup can resolve them. All three are configured as **Single line text** custom fields (or as metadata, using the hyphenated key):
+
+| Field | Metadata key | Custom field key | Example |
+| ----- | ------------ | ---------------- | ------- |
+| Peppol inbox | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0225:123456789_test` |
+| SIREN | `gobl-customer-identity-SIREN` | `cf_gobl_customer_identity_SIREN` | `123456789` |
+| SIRET | `gobl-customer-identity-SIRET` | `cf_gobl_customer_identity_SIRET` | `12345678900011` |
 
 ---
 

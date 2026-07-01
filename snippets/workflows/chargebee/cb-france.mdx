@@ -1,0 +1,235 @@
+---
+title: "Chargebee France invoice"
+description: "Sync from Chargebee and forward to PPF or record for reporting"
+countryCode: "fr"
+appId: "chargebee"
+schema: "bill/invoice"
+---
+
+```json Example Chargebee France workflow
+{
+    "name": "FR send invoice",
+    "description": "Send French invoice through Peppol network and to the PPF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "30960320-a44d-11f0-b23b-fd08a0f26c87",
+            "name": "Import Chargebee document",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "66cdc390-485f-11f1-86b7-9745cc4d2380",
+            "name": "Download PDF",
+            "provider": "chargebee.pdf.download"
+        },
+        {
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "eea78ac0-26f0-11f1-9156-e518ebabd527",
+            "name": "Add Billing Mode",
+            "provider": "silo.modify",
+            "notes": "S2 (already-paid) ONLY when fully paid (totals.advance == total_with_tax); else S1. S2 also adds payment.terms due_dates (BR-FR-CO-09). Reads .totals.advance (NOT the old .advances bug).",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": ".tax.ext = (.tax.ext // {})\n| .tax.point = \"issue\"\n| if ((.totals.advance // null) != null and (.totals.advance == .totals.total_with_tax)) then\n    .tax.ext[\"fr-ctc-billing-mode\"] = \"S2\"\n    | .payment = (.payment // {})\n    | .payment.terms = (.payment.terms // {\"due_dates\":[{\"date\":.issue_date,\"percent\":\"100%\"}]})\n  else\n    .tax.ext[\"fr-ctc-billing-mode\"] = \"S1\"\n  end",
+                "merge_type": "application/jq",
+                "scope": "doc"
+            }
+        },
+        {
+            "id": "4f427d80-a44d-11f0-b23b-fd08a0f26c87",
+            "name": "Modify Silo Entry",
+            "provider": "silo.modify",
+            "summary": "Modifications configured",
+            "config": {
+                "jq": ".lines |= map(\n  .taxes |= map(\n    (.ext[\"untdid-tax-category\"]? as $cat\n     | if $cat then\n         {\n           key: {\n             \"AE\": \"reverse-charge\",\n             \"E\": \"export\",\n             \"G\": \"export\",\n             \"O\": \"outside-scope\",\n             \"K\": \"intra-community\"\n           }[$cat],\n           vatex: {\n             \"AE\": \"VATEX-EU-AE\",\n             \"G\": \"VATEX-EU-G\",\n             \"O\": \"VATEX-EU-O\",\n             \"K\": \"VATEX-EU-IC\"\n           }[$cat]\n         } as $m\n\n         | if $m.key then .key = $m.key else . end\n         | if $m.vatex then\n             .ext = ((.ext // {}) + {\"cef-vatex\": $m.vatex})\n           else\n             .\n           end\n       else\n         .\n       end\n    )\n  )\n)",
+                "merge_type": "application/jq",
+                "scope": "doc",
+                "sign": false
+            }
+        },
+        {
+            "id": "7dad54c0-154a-11f0-8028-c1ed648b57b5",
+            "name": "Add bank details",
+            "provider": "silo.modify",
+            "notes": "Normalizes the payment key to SEPA credit transfer format",
+            "summary": "Modifications configured",
+            "config": {
+                "allow_invalid_json": false,
+                "data": {
+                    "doc": {
+                        "payment": {
+                            "instructions": {
+                                "credit_transfer": [
+                                    {
+                                        "bic": "",
+                                        "iban": ""
+                                    }
+                                ],
+                                "key": "credit-transfer"
+                            }
+                        }
+                    }
+                },
+                "expr": "(doc?.payment?.instructions == nil || doc?.payment?.instructions?.key == \"credit-transfer\")\n&& doc?.payment?.terms?.due_dates != nil",
+                "merge_type": "application/merge-patch+json",
+                "sign": false
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "de2407b0-5e94-11f1-90fe-f3d836f89160",
+            "name": "Lookup in Directory",
+            "provider": "gov-fr.directory.lookup",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "found",
+                    "steps": [
+                        {
+                            "id": "3ffd50e0-5e95-11f1-90fe-f3d836f89160",
+                            "name": "Modify Silo Entry",
+                            "provider": "silo.modify",
+                            "summary": "Modifications configured",
+                            "config": {
+                                "addons": [
+                                    "fr-ctc-flow2-v1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "1f8bf500-5e95-11f1-90fe-f3d836f89160",
+                            "name": "Generate UBL document",
+                            "provider": "ubl.generate",
+                            "summary": "Peppol France CIUS UBL Invoice/CreditNote",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "peppol-fr-cius",
+                                "private": false
+                            }
+                        },
+                        {
+                            "id": "9e22f4a0-485f-11f1-86b7-9745cc4d2380",
+                            "name": "Record document for e-invoicing",
+                            "provider": "gov-fr.directory.record"
+                        },
+                        {
+                            "id": "285c9450-5e95-11f1-90fe-f3d836f89160",
+                            "name": "Send Peppol Document",
+                            "provider": "peppol.send"
+                        },
+                        {
+                            "id": "2d6926c0-5e95-11f1-90fe-f3d836f89160",
+                            "name": "Forward document to PPF",
+                            "provider": "gov-fr.directory.forward"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "not-found",
+                    "steps": [
+                        {
+                            "id": "5cff2420-7470-11f1-9deb-cda1ffc5317f",
+                            "name": "Modify Silo Entry",
+                            "provider": "silo.modify",
+                            "summary": "Modifications configured",
+                            "config": {
+                                "addons": [
+                                    "fr-ctc-flow10-v1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "3a023fc0-5e95-11f1-90fe-f3d836f89160",
+                            "name": "Record document for reporting",
+                            "provider": "gov-fr.reporting.record"
+                        },
+                        {
+                            "id": "aaf85b90-6996-11f1-8722-e7a7821bd54f",
+                            "name": "Can Send",
+                            "provider": "peppol.has.inboxes",
+                            "next": [
+                                {
+                                    "status": "NA",
+                                    "code": "true",
+                                    "steps": [
+                                        {
+                                            "id": "afcc78e0-6996-11f1-8722-e7a7821bd54f",
+                                            "name": "Generate UBL document",
+                                            "provider": "ubl.generate",
+                                            "summary": "Peppol BIS Billing UBL Invoice/CreditNote V3",
+                                            "config": {
+                                                "attach_invoice_pdf": false,
+                                                "doc_type": "bis-invoice-v3",
+                                                "private": false
+                                            }
+                                        },
+                                        {
+                                            "id": "b798c790-6996-11f1-8722-e7a7821bd54f",
+                                            "name": "Send Peppol Document",
+                                            "provider": "peppol.send"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "status": "NA",
+                                    "code": "false"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "354dbed0-a44d-11f0-b23b-fd08a0f26c87",
+            "name": "Update Chargebee",
+            "provider": "chargebee",
+            "config": {
+                "document_select": "xml"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        },
+        {
+            "id": "38fd0b30-a44d-11f0-b23b-fd08a0f26c87",
+            "name": "Update Chargebee",
+            "provider": "chargebee",
+            "config": {
+                "document_select": "xml"
+            }
+        }
+    ]
+}
+
+```
