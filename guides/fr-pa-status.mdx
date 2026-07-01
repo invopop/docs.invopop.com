@@ -8,17 +8,29 @@ import FranceResources from '/snippets/tables/france-resources.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
 import State201 from '/snippets/examples/fr/states/201-issued.mdx';
+import State201Min from '/snippets/examples/fr/states/201-issued.min.mdx';
 import State202 from '/snippets/examples/fr/states/202-acknowledged.mdx';
+import State202Min from '/snippets/examples/fr/states/202-acknowledged.min.mdx';
 import State203 from '/snippets/examples/fr/states/203-made-available.mdx';
+import State203Min from '/snippets/examples/fr/states/203-made-available.min.mdx';
 import State204 from '/snippets/examples/fr/states/204-taken-into-account.mdx';
+import State204Min from '/snippets/examples/fr/states/204-taken-into-account.min.mdx';
 import State205 from '/snippets/examples/fr/states/205-approved.mdx';
+import State205Min from '/snippets/examples/fr/states/205-approved.min.mdx';
 import State206 from '/snippets/examples/fr/states/206-partially-approved.mdx';
+import State206Min from '/snippets/examples/fr/states/206-partially-approved.min.mdx';
 import State207 from '/snippets/examples/fr/states/207-in-dispute.mdx';
+import State207Min from '/snippets/examples/fr/states/207-in-dispute.min.mdx';
 import State208 from '/snippets/examples/fr/states/208-suspended.mdx';
+import State208Min from '/snippets/examples/fr/states/208-suspended.min.mdx';
 import State209 from '/snippets/examples/fr/states/209-completed.mdx';
+import State209Min from '/snippets/examples/fr/states/209-completed.min.mdx';
 import State210 from '/snippets/examples/fr/states/210-refused.mdx';
+import State210Min from '/snippets/examples/fr/states/210-refused.min.mdx';
 import State211 from '/snippets/examples/fr/states/211-payment-advice.mdx';
+import State211Min from '/snippets/examples/fr/states/211-payment-advice.min.mdx';
 import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
+import State212Min from '/snippets/examples/fr/states/212-payment-receipt.min.mdx';
 
 <Note>
   Lifecycle status updates on domestic B2B invoices — acknowledged, accepted, disputed, refused, paid. They are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
@@ -81,7 +93,7 @@ You build the natural GOBL document and the addon derives the CDV code — the f
 
 **Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
 
-**Direction is automatic.** Party roles are derived (`SE` Seller on the supplier, `BY` Buyer on the customer), and the sending/receiving direction follows the event type — buyer-issued events (a `211` advice, the recipient-issued statuses) invert the issuer. You only provide the supplier and customer; the addon handles the rest.
+**Direction is automatic.** You always provide the same `supplier` (the seller) and `customer` (the buyer) as on the invoice; the addon derives each party's CDV role code. For statuses and payment receipts that is `SE` (Seller) on the supplier and `BY` (Buyer) on the customer. A **`211` payment advice is issued by the payer (the buyer), so it inverts the role codes** — in the built document the supplier carries `BY` and the customer `SE`. You don't swap the parties; only the derived roles flip, and the addon handles it.
 
 ### Reasons, faults and actions
 
@@ -95,56 +107,92 @@ The supplier-issued **`209` Complétée** requires no reason, but it can carry o
 
 ### Examples
 
-One worked GOBL example per code you build — each a complete, ready-to-build document referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`) on its effective `date`. The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
+One example per code you build, each referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`). Every example pairs the **Minimal** hand-authored GOBL input with the **Built version** produced by `gobl build` — which adds the derived fields (the `fr-ctc-flow6-*` extensions, party roles, ISO scheme ids and endpoints). The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
 
 <AccordionGroup>
   <Accordion title="201 — Émise par la plateforme (Issued by platform)">
     `bill.Status` · `type: response` · line `key: issued`. A plain acknowledgement — no reason or action.
-    <State201 />
+    <CodeGroup>
+      <State201Min />
+      <State201 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="202 — Reçue par la PA (Received)">
     `bill.Status` · `type: response` · line `key: acknowledged`. A plain acknowledgement.
-    <State202 />
+    <CodeGroup>
+      <State202Min />
+      <State202 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="203 — Mise à disposition (Made available)">
     `bill.Status` · `type: response` · line `key: other`. A plain acknowledgement.
-    <State203 />
+    <CodeGroup>
+      <State203Min />
+      <State203 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="204 — Prise en charge (Taken into account)">
     `bill.Status` · `type: response` · line `key: processing`. A plain acknowledgement.
-    <State204 />
+    <CodeGroup>
+      <State204Min />
+      <State204 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="205 — Approuvée (Approved)">
     `bill.Status` · `type: response` · line `key: accepted`. A plain acknowledgement — the invoice is fully approved.
-    <State205 />
+    <CodeGroup>
+      <State205Min />
+      <State205 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="206 — Approuvée partiellement (Partially approved)">
     `bill.Status` · `type: response` · line `key: rejected` + pinned ext `206`. The `reason` faults show the **invoiced vs approved quantity**; the `action` requests a partial credit note (`credit-partial` → CNP).
-    <State206 />
+    <CodeGroup>
+      <State206Min />
+      <State206 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="207 — En litige (In dispute)">
     `bill.Status` · `type: response` · line `key: rejected` + pinned ext `207`. The `reason` faults pinpoint the disputed field — **actual VAT rate (DIV) vs expected (DVA)** and its XML path; the `action` requests a full credit note (`credit-full` → CNF).
-    <State207 />
+    <CodeGroup>
+      <State207Min />
+      <State207 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="208 — Suspendue (Suspended)">
     `bill.Status` · `type: response` · line `key: querying`. The `reason` names **what is missing** (order reference); the `action` asks the supplier to provide it (`provide` → PIN).
-    <State208 />
+    <CodeGroup>
+      <State208Min />
+      <State208 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="209 — Complétée (Completed)">
     `bill.Status` · `type: update` · line `key: other`. Issued by the supplier to lift a suspension raised over bank details: a `finance-terms` reason (condition `CBB`, *coordonnées bancaires à modifier*) whose fault **supplies the corrected IBAN** — code `MAJ` (the value to apply), the IBAN in the `message`, and the `paths` pointing at the invoice's IBAN field (BT-84).
-    <State209 />
+    <CodeGroup>
+      <State209Min />
+      <State209 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="210 — Refusée (Refused by buyer)">
     `bill.Status` · `type: response` · line `key: rejected`. The `reason` faults pinpoint the failing field; the `action` asks for a corrected reissue (`reissue` → NIN).
-    <State210 />
+    <CodeGroup>
+      <State210Min />
+      <State210 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="211 — Paiement transmis (Payment advice)">
-    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date.
-    <State211 />
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`; see [Direction is automatic](#building-a-status)).
+    <CodeGroup>
+      <State211Min />
+      <State211 />
+    </CodeGroup>
   </Accordion>
   <Accordion title="212 — Encaissée (Payment receipt)">
     `bill.Payment` · `type: receipt`. Issued by the supplier (payee); the `methods` carry the amount received.
-    <State212 />
+    <CodeGroup>
+      <State212Min />
+      <State212 />
+    </CodeGroup>
   </Accordion>
 </AccordionGroup>
 
