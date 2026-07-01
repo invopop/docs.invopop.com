@@ -1,5 +1,5 @@
 ---
-title: "Chargebee France invoice"
+title: "Chargebee France send invoice"
 description: "Sync from Chargebee and forward to PPF or record for reporting"
 countryCode: "fr"
 appId: "chargebee"
@@ -8,7 +8,7 @@ schema: "bill/invoice"
 
 ```json Example Chargebee France workflow
 {
-    "name": "FR send invoice",
+    "name": "Chargebee France send invoice",
     "description": "Send French invoice through Peppol network and to the PPF",
     "schema": "bill/invoice",
     "steps": [
@@ -24,7 +24,7 @@ schema: "bill/invoice"
         },
         {
             "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -33,7 +33,7 @@ schema: "bill/invoice"
         },
         {
             "id": "eea78ac0-26f0-11f1-9156-e518ebabd527",
-            "name": "Add Billing Mode",
+            "name": "Add billing mode",
             "provider": "silo.modify",
             "notes": "S2 (already-paid) ONLY when fully paid (totals.advance == total_with_tax); else S1. S2 also adds payment.terms due_dates (BR-FR-CO-09). Reads .totals.advance (NOT the old .advances bug).",
             "summary": "Modifications configured",
@@ -45,7 +45,7 @@ schema: "bill/invoice"
         },
         {
             "id": "4f427d80-a44d-11f0-b23b-fd08a0f26c87",
-            "name": "Modify Silo Entry",
+            "name": "Add VATEX",
             "provider": "silo.modify",
             "summary": "Modifications configured",
             "config": {
@@ -85,7 +85,7 @@ schema: "bill/invoice"
         },
         {
             "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
@@ -142,7 +142,7 @@ schema: "bill/invoice"
                     "steps": [
                         {
                             "id": "5cff2420-7470-11f1-9deb-cda1ffc5317f",
-                            "name": "Modify Silo Entry",
+                            "name": "Add flow10 addon",
                             "provider": "silo.modify",
                             "summary": "Modifications configured",
                             "config": {
@@ -158,7 +158,7 @@ schema: "bill/invoice"
                         },
                         {
                             "id": "aaf85b90-6996-11f1-8722-e7a7821bd54f",
-                            "name": "Can Send",
+                            "name": "Verify invoice can be sent",
                             "provider": "peppol.has.inboxes",
                             "next": [
                                 {
@@ -178,7 +178,7 @@ schema: "bill/invoice"
                                         },
                                         {
                                             "id": "b798c790-6996-11f1-8722-e7a7821bd54f",
-                                            "name": "Send Peppol Document",
+                                            "name": "Send Peppol document",
                                             "provider": "peppol.send"
                                         }
                                     ]
@@ -195,7 +195,7 @@ schema: "bill/invoice"
         },
         {
             "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -214,7 +214,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {
