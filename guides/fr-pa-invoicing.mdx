@@ -16,6 +16,10 @@ import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
 
 The France PA invoicing flow covers **regulated B2B exchanges** — both parties registered in the Annuaire. The same GOBL document drives both sides: a single invoice with the `fr-ctc-flow2-v1` add-on, generated as the format negotiated with the receiver. On receipt, any of the accepted formats is converted back to that same representation.
 
+<Warning>
+  Every invoice run through the **Record Invoice** step (`gov-fr.directory.record`) must carry the `fr-ctc-flow2-v1` add-on. The action rejects invoices without it up front with a validation error, since the addon's normalization and validation rules are what make the envelope PPF-compliant. If you build a custom send or receive workflow, make sure the addon is applied to the GOBL invoice before it reaches this step — otherwise the invoice fails immediately instead of getting stuck later at PPF business validation. The example invoices on this page already include it.
+</Warning>
+
 ## Formats
 
 The PA specification accepts five formats. In practice the three base formats below cover essentially all real-world traffic, and Invopop supports both sending and receiving on all three.
