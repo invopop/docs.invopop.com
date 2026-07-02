@@ -274,6 +274,222 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/gov-fr/v1/reports/{silo_entry_id}:
+    get:
+      operationId: fetchReportingSummary
+      summary: Fetch the e-reporting summary for a party
+      description: |-
+        Returns the current Flux 10 e-reporting status for the party
+        identified by the silo entry, one block per report kind:
+
+        - `tx` — **transactions** (invoice data).
+        - `py` — **payments**.
+
+        Each kind reports two distinct windows. `open_period_*` is the window
+        currently being accumulated against (what the party is filling right
+        now); `next_due_period_*` is the window the platform will generate a
+        report for next, together with its filing `next_due_deadline`. After a
+        report is generated for the open window, `next_due_*` advances while
+        `open_*` stays put until the calendar rolls over.
+
+        Always returns `200`. When the party exists but reporting was never
+        enabled (or was disabled), `enabled` is `false` and `kinds` is empty —
+        this lets callers tell "party not found" (`404`) apart from "party not
+        reporting".
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: Reporting summary for the party.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportingSummary"
+              examples:
+                enabled:
+                  summary: Reporting enabled (Réel normal mensuel)
+                  value:
+                    silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+                    siren: "123456789"
+                    enabled: true
+                    regime: "real_normal_monthly"
+                    kinds:
+                      - kind: "tx"
+                        cadence: "ten_day"
+                        open_period_start: "2026-07-01"
+                        open_period_end: "2026-07-10"
+                        next_due_period_start: "2026-06-21"
+                        next_due_period_end: "2026-06-30"
+                        next_due_deadline: "2026-07-10T23:59:59+02:00"
+                        last_period_end: "2026-06-20"
+                        last_filed_period:
+                          id: "018f9e2a-7c31-7a10-9b44-2f9d1e6c8a01"
+                          siren: "123456789"
+                          flux_kind: "tx"
+                          role: "seller"
+                          period_start: "2026-06-11"
+                          period_end: "2026-06-20"
+                          sequence: 1
+                          status: "filed"
+                          flux_code: "PPF206_1025_000123"
+                          ack_ref: "300"
+                          submitted_at: "2026-06-21T08:15:00Z"
+                          created_at: "2026-06-21T08:00:00Z"
+                          updated_at: "2026-06-21T08:20:00Z"
+                      - kind: "py"
+                        cadence: "monthly"
+                        open_period_start: "2026-07-01"
+                        open_period_end: "2026-07-31"
+                        next_due_period_start: "2026-06-01"
+                        next_due_period_end: "2026-06-30"
+                        next_due_deadline: "2026-07-10T23:59:59+02:00"
+                        last_period_end: ""
+                        last_filed_period: null
+                disabled:
+                  summary: Party exists but reporting is off
+                  value:
+                    silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+                    siren: "123456789"
+                    enabled: false
+                    kinds: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/reports/{silo_entry_id}/periods:
+    get:
+      operationId: listReportingPeriods
+      summary: List e-reporting periods for a party
+      description: |-
+        Returns the party's Flux 10 report periods, most recent first
+        (`created_at` descending). Each period is one submission window for a
+        `(kind, role)` tuple; corrective re-submissions of the same window
+        appear as separate periods with an incrementing `sequence`.
+
+        Filter by report kind with `?kind=tx` or `?kind=py`. Paginate with
+        `offset` and `limit` (default `50`, maximum `200`). When more results
+        remain, the response carries a `next_offset` to pass on the next call;
+        it is omitted on the last page. There is **no** date/period filter.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/ReportKind"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of report periods.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListPeriodsResponse"
+              examples:
+                page:
+                  summary: First page with more results available
+                  value:
+                    periods:
+                      - id: "018f9e2a-7c31-7a10-9b44-2f9d1e6c8a01"
+                        siren: "123456789"
+                        flux_kind: "tx"
+                        role: "seller"
+                        period_start: "2026-06-11"
+                        period_end: "2026-06-20"
+                        sequence: 1
+                        status: "filed"
+                        flux_code: "PPF206_1025_000123"
+                        ack_ref: "300"
+                        submitted_at: "2026-06-21T08:15:00Z"
+                        created_at: "2026-06-21T08:00:00Z"
+                        updated_at: "2026-06-21T08:20:00Z"
+                    next_offset: 50
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/reports/{silo_entry_id}/periods/{period_id}:
+    get:
+      operationId: fetchReportingPeriod
+      summary: Fetch a single e-reporting period
+      description: |-
+        Returns the metadata for one report period, scoped to the party
+        identified by the silo entry. The generated XML body is not included
+        — use the `/xml` sub-resource to download it.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/PeriodID"
+      responses:
+        "200":
+          description: The requested report period.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportingPeriod"
+              examples:
+                filed:
+                  summary: A filed period
+                  value:
+                    id: "018f9e2a-7c31-7a10-9b44-2f9d1e6c8a01"
+                    siren: "123456789"
+                    flux_kind: "tx"
+                    role: "seller"
+                    period_start: "2026-06-11"
+                    period_end: "2026-06-20"
+                    sequence: 1
+                    status: "filed"
+                    flux_code: "PPF206_1025_000123"
+                    ack_ref: "300"
+                    submitted_at: "2026-06-21T08:15:00Z"
+                    created_at: "2026-06-21T08:00:00Z"
+                    updated_at: "2026-06-21T08:20:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/reports/{silo_entry_id}/periods/{period_id}/xml:
+    get:
+      operationId: fetchReportingPeriodXML
+      summary: Download a period's Flux 10 XML
+      description: |-
+        Streams the raw Flux 10 `Report.xml` body generated for the period,
+        with the same party scoping as the period detail endpoint.
+
+        Available for any period status — including `generated` (not yet sent)
+        and `submitted` (sent, awaiting PPF acknowledgement). Callers that want
+        only finalized payloads should check the period's `status` field first.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/PeriodID"
+      responses:
+        "200":
+          description: The Flux 10 XML body, served as `application/xml`.
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
   parameters:
     SiloEntryID:
@@ -284,6 +500,56 @@ components:
       schema:
         type: string
         example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
+    PeriodID:
+      name: period_id
+      in: path
+      required: true
+      description: ID of the report period.
+      schema:
+        type: string
+        example: "018f9e2a-7c31-7a10-9b44-2f9d1e6c8a01"
+
+    ReportKind:
+      name: kind
+      in: query
+      required: false
+      description: |-
+        Restrict the results to a single report kind:
+
+          - `tx` - Transactions (invoice data).
+          - `py` - Payments.
+
+        Omit to return both kinds.
+      schema:
+        type: string
+        enum: ["tx", "py"]
+        example: "tx"
+
+    Offset:
+      name: offset
+      in: query
+      required: false
+      description: Number of periods to skip, for pagination. Must be non-negative.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+        example: 0
+
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: |-
+        Maximum number of periods to return. Values outside the `1`–`200`
+        range fall back to the default of `50`.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+        example: 50
 
   schemas:
     DirectoryEntry:
@@ -385,6 +651,205 @@ components:
           description: Matching directory entries. Empty when the identifier is not in the Annuaire.
           items:
             $ref: "#/components/schemas/DirectoryEntry"
+
+    ReportingPeriod:
+      type: object
+      description: |-
+        One Flux 10 submission window for a `(kind, role)` tuple. Corrective
+        re-submissions of the same window are separate periods sharing the
+        window dates but with an incrementing `sequence`.
+      required: [id, siren, flux_kind, role, period_start, period_end, sequence, status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the period.
+          example: "018f9e2a-7c31-7a10-9b44-2f9d1e6c8a01"
+        siren:
+          type: string
+          description: 9-digit French SIREN of the reporting party.
+          example: "123456789"
+        flux_kind:
+          type: string
+          description: |-
+            Report kind:
+
+              - `tx` - Transactions (invoice data).
+              - `py` - Payments.
+          enum: ["tx", "py"]
+          example: "tx"
+        role:
+          type: string
+          description: |-
+            Role the reporting party plays for the transactions in this
+            period. Empty for B2C-only periods.
+
+              - `seller` - The party is the supplier.
+              - `buyer` - The party is the customer.
+          enum: ["seller", "buyer", ""]
+          example: "seller"
+        period_start:
+          type: string
+          description: First day of the reporting window, as `YYYY-MM-DD`.
+          example: "2026-06-11"
+        period_end:
+          type: string
+          description: Last day (inclusive) of the reporting window, as `YYYY-MM-DD`.
+          example: "2026-06-20"
+        sequence:
+          type: integer
+          description: |-
+            Submission sequence for the window. `1` is the initial report;
+            higher values are corrective re-submissions.
+          example: 1
+        previous_period_id:
+          type: string
+          description: ID of the prior sequence for the same window. Omitted for sequence 1.
+          example: ""
+        status:
+          type: string
+          description: |-
+            Lifecycle status of the period:
+
+              - `generated` - XML built, not yet sent to the PPF.
+              - `submitted` - Sent to the PPF, awaiting acknowledgement.
+              - `filed` - Accepted by the PPF.
+              - `rejected` - Rejected by the PPF.
+          enum: ["generated", "submitted", "filed", "rejected"]
+          example: "filed"
+        flux_code:
+          type: string
+          description: PPF flux filename assigned when the report was submitted. Omitted before submission.
+          example: "PPF206_1025_000123"
+        ack_ref:
+          type: string
+          description: |-
+            PPF acknowledgement status code once received (`300` filed,
+            `301` rejected). Omitted while awaiting acknowledgement.
+          example: "300"
+        submitted_at:
+          type: string
+          format: date-time
+          description: When the report was submitted to the PPF. Omitted before submission.
+          example: "2026-06-21T08:15:00Z"
+        created_at:
+          type: string
+          format: date-time
+          description: When the period was created.
+          example: "2026-06-21T08:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the period was last updated.
+          example: "2026-06-21T08:20:00Z"
+
+    ReportingKindStatus:
+      type: object
+      description: |-
+        Reporting status for a single kind (`tx` or `py`). Surfaces two
+        distinct windows: `open_period_*` (currently being accumulated) and
+        `next_due_period_*` (the next window a report will be generated for).
+      required: [kind, cadence, open_period_start, open_period_end, next_due_period_start, next_due_period_end, next_due_deadline]
+      properties:
+        kind:
+          type: string
+          description: |-
+            Report kind:
+
+              - `tx` - Transactions (invoice data).
+              - `py` - Payments.
+          enum: ["tx", "py"]
+          example: "tx"
+        cadence:
+          type: string
+          description: |-
+            How often reports are filed for this kind, derived from the VAT
+            regime:
+
+              - `ten_day` - Every ten days.
+              - `monthly` - Once per calendar month.
+              - `bimonthly` - Once every two calendar months.
+          enum: ["ten_day", "monthly", "bimonthly"]
+          example: "ten_day"
+        open_period_start:
+          type: string
+          description: First day of the window currently being accumulated, as `YYYY-MM-DD`.
+          example: "2026-07-01"
+        open_period_end:
+          type: string
+          description: Last day (inclusive) of the currently open window, as `YYYY-MM-DD`.
+          example: "2026-07-10"
+        next_due_period_start:
+          type: string
+          description: First day of the next window a report will be generated for, as `YYYY-MM-DD`.
+          example: "2026-06-21"
+        next_due_period_end:
+          type: string
+          description: Last day (inclusive) of the next-due window, as `YYYY-MM-DD`.
+          example: "2026-06-30"
+        next_due_deadline:
+          type: string
+          format: date-time
+          description: Filing deadline for the next-due window (Europe/Paris).
+          example: "2026-07-10T23:59:59+02:00"
+        last_period_end:
+          type: string
+          description: End date of the most recently processed window, as `YYYY-MM-DD`. Omitted when none has been processed.
+          example: "2026-06-20"
+        last_filed_period:
+          description: The most recently filed period for this kind, if any.
+          oneOf:
+            - $ref: "#/components/schemas/ReportingPeriod"
+            - type: "null"
+
+    ReportingSummary:
+      type: object
+      description: A party's Flux 10 e-reporting status across all report kinds.
+      required: [silo_entry_id, siren, enabled, kinds]
+      properties:
+        silo_entry_id:
+          type: string
+          description: Silo entry (party) the summary is for.
+          example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+        siren:
+          type: string
+          description: 9-digit French SIREN of the party.
+          example: "123456789"
+        enabled:
+          type: boolean
+          description: Whether e-reporting is currently enabled for the party.
+          example: true
+        regime:
+          type: string
+          description: |-
+            VAT regime driving the reporting cadences. Omitted when reporting
+            is not enabled.
+
+              - `real_normal_monthly` - Réel normal mensuel.
+              - `real_normal_quarterly` - Réel normal trimestriel.
+              - `simplified` - Réel simplifié.
+              - `vat_franchise` - Franchise en base.
+          enum: ["real_normal_monthly", "real_normal_quarterly", "simplified", "vat_franchise"]
+          example: "real_normal_monthly"
+        kinds:
+          type: array
+          description: Per-kind status blocks. Empty when reporting is not enabled.
+          items:
+            $ref: "#/components/schemas/ReportingKindStatus"
+
+    ListPeriodsResponse:
+      type: object
+      description: One page of report periods, most recent first.
+      required: [periods]
+      properties:
+        periods:
+          type: array
+          description: The report periods on this page.
+          items:
+            $ref: "#/components/schemas/ReportingPeriod"
+        next_offset:
+          type: integer
+          description: Offset to pass on the next call to fetch the following page. Omitted on the last page.
+          example: 50
 
     AgreementSubmit:
       type: object
