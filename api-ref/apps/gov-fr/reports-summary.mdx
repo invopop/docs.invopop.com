@@ -3,6 +3,6 @@ title: "Fetch e-reporting summary"
 openapi: "GET /apps/gov-fr/v1/reports/{silo_entry_id}"
 ---
 
-Returns the current Flux 10 e-reporting status for a party, one block per report kind — `tx` (transactions) and `py` (payments). Each block reports the window currently being filled (`open_period_*`), the next window a report will be generated for (`next_due_period_*`) and its filing deadline, plus the last filed period.
+Each kind reports two distinct windows. `open_period_*` is the window currently being accumulated against (what the party is filling right now); `next_due_period_*` is the window the platform will generate a report for next, together with its filing `next_due_deadline`. After a report is generated for the open window, `next_due_*` advances while `open_*` stays put until the calendar rolls over.
 
-Always returns `200`: when the party exists but reporting is off, `enabled` is `false` and `kinds` is empty.
+Always returns `200`. When the party exists but reporting was never enabled (or was disabled), `enabled` is `false` and `kinds` is empty — this lets callers tell "party not found" (`404`) apart from "party not reporting".
