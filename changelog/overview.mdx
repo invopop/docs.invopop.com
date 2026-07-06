@@ -5,6 +5,36 @@ sidebarTitle: "Overview"
 mode: "center"
 ---
 
+<Update label="July 6, 2026" description="Weekly update" tags={["Finland", "Portugal", "France", "Colombia", "Stripe"]}>
+
+## New features
+
+**Finland tax regime.** GOBL now includes a dedicated Finland (`FI`) tax regime with the current VAT categories — standard (25.5%), reduced (13.5%) and super-reduced (10%) — plus the full historical VAT rate table back to 2013. Useful for Finnish suppliers issuing GOBL-based invoices and for correcting older documents. See [Finland compliance](/compliance/finland).
+
+**Portugal income tax withholdings.** The Portugal regime now supports the `IRS` (personal) and `IRC` (corporate) retained tax categories, so Portuguese payors can record income tax withholdings on invoices and payments alongside the existing VAT categories. See [Portugal compliance](/compliance/portugal).
+
+**Payer party on invoices.** Invoices can now carry a dedicated **Payer** party on `payment.payer`, the symmetric counterpart to `payee`, to represent the party responsible for settling the invoice when it isn't the customer (for example, factoring or third-party payment arrangements). The field maps to CII `PayerTradeParty` and to UBL `PayerParty` under the French extended CTC profile.
+
+**Self-billed label on French PDFs.** Invoices tagged as self-billed now show an **Autofacturation** / **Self-billed** label next to the title on the generated PDF, translated into every supported language. Improves clarity for French self-billing (autofacturation) flows.
+
+## Updates
+
+**Denmark OIOUBL addon registered.** The `dk-oioubl` addon is now registered as an approved GOBL addon, in preparation for Danish OIOUBL 2.1 support. A new `EXCISE` tax category has also been added to cover Danish excise duties. Full OIOUBL invoicing coverage is landing in the coming weeks.
+
+**Colombia DIAN invoice PDF redesign.** The Colombian DIAN QR area on generated PDFs has been redesigned for better readability, and monospace text across the invoice template now uses Geist Mono. See the [DIAN Colombia app](/apps/dian-colombia).
+
+## Bug fixes
+
+**Stripe → GOBL reverse charge across regimes.** Stripe invoices where the supplier's regime differs from the customer's (for example, a Polish supplier billing an Australian customer) no longer fail with `invalid-category: GST not defined in regime`. Reverse-charge lines are now mapped against the supplier regime's tax category. See the [Stripe app](/apps/stripe).
+
+**Stripe US EIN handling.** Stripe invoices for US customers with a `us_ein` tax ID no longer fail silo creation with a tax code validation error. EIN identifiers are now routed to `org.Identity` instead of being treated as a tax ID. See the [Stripe app](/apps/stripe).
+
+**CII preceding reference without issue date.** CII (Factur-X / ZUGFeRD) invoices that reference a preceding document without an issue date no longer emit an empty `FormattedIssueDateTime` element, which produced invalid XML.
+
+**TicketBAI Araba test environment.** The TicketBAI integration now ships with Araba's test environment CA root certificate, so sandbox submissions to the Araba regional gateway succeed without extra trust store configuration. See the [TicketBAI invoicing guide](/guides/es-ticketbai).
+
+</Update>
+
 <Update label="May 14, 2026" description="TicketBAI extensions" tags={["Spain"]}>
 
 ## New features
