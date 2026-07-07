@@ -12,124 +12,147 @@ import CreditNoteMin from '/snippets/invoices/br/dfe-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 
 <AccordionGroup>
-	<Accordion title="Example B2B service invoice (NFS-e)">
+  <Accordion title="Example B2B service invoice (NFS-e)">
+    In this example, we're issuing a simple service invoice (NFS-e) from a Brazilian supplier to another Brazilian business customer.
 
-		In this example, we're issuing a simple service invoice (NFS-e) from a Brazilian supplier to another Brazilian business customer.
+    Notice:
 
-		Notice:
+    - we've added the [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) addon; this ensures the document will be validated using the NFS-e rules built into the [GOBL](https://docs.gobl.org) library,
+    - extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
+    - ISS percentage is provided explicitly as it varies depending on the municipality and type of service,
+    - there are no totals or calculations; all these will be made automatically when uploading, and,
+    - make sure to process it with the "DF-e issue service invoice (NFS-e)" workflow created during setup.
 
-		- we've added the [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) addon; this ensures the document will be validated using the NFS-e rules built into the [GOBL](https://docs.gobl.org) library,
-		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-		- ISS percentage is provided explicitly as it varies depending on the municipality and type of service,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue service invoice (NFS-e)" workflow created during setup.
+    <CodeGroup>
 
-		<CodeGroup>
-			<ServiceInvoiceMin />
-			<ServiceInvoice />
-		</CodeGroup>
-	</Accordion>
+    ```text
+    ```
 
-	<Accordion title="Example B2B service invoice with RTC (NFS-e)">
+    ```text
+    ```
 
-		In this example, we're issuing a simple service invoice (NFS-e) with the currently supported RTC (Tax Reform) fields.
+    </CodeGroup>
+  </Accordion>
 
-		Notice the differences from the previous example:
+  <Accordion title="Example B2B service invoice with RTC (NFS-e)">
+    In this example, we're issuing a simple service invoice (NFS-e) with the currently supported RTC (Tax Reform) fields.
 
-		- we've set the [`br-nfse-operation`](https://docs.gobl.org/addons/br-nfse-v1#operation-indicator) extension, the [`br-nfse-tax-status`](https://docs.gobl.org/addons/br-nfse-v1#tax-status-code-cst) extension and the [`br-nfse-tax-class`](https://docs.gobl.org/addons/br-nfse-v1#tax-classification-code) extension at item level which will be used to determine the IBS and CBS taxes as part of the tax reform.
+    Notice the differences from the previous example:
 
-		<CodeGroup>
-			<ServiceInvoiceRTCMin />
-			<ServiceInvoiceRTC />
-		</CodeGroup>
-	</Accordion>
+    - we've set the [`br-nfse-operation`](https://docs.gobl.org/addons/br-nfse-v1#operation-indicator) extension, the [`br-nfse-tax-status`](https://docs.gobl.org/addons/br-nfse-v1#tax-status-code-cst) extension and the [`br-nfse-tax-class`](https://docs.gobl.org/addons/br-nfse-v1#tax-classification-code) extension at item level which will be used to determine the IBS and CBS taxes as part of the tax reform.
 
-	<Accordion title="Example B2B product invoice (NF-e)">
+    <CodeGroup>
 
-		In this example, we're issuing an extended product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
+    ```text
+    ```
 
-		Notice:
+    ```text
+    ```
 
-		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon without the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `55` (NF-e),
-		- the customer is required for NF-e and must include a full address; Brazilian customers must declare the [`br-ibge-municipality`](https://docs.gobl.org/addons/br-nfe-v4#municipality-code) extension and a valid state, while foreign customers can be identified by a country-qualified `identity` (e.g. a passport) instead of a `tax_id`,
-		- supplier and customer addresses must include a `country`; it is auto-filled from the party's tax ID (or first identity that declares a country) when omitted,
-		- each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation,
-		- item identities carry the NCM product classification code (`cProd` in the NF-e XML) and the GTIN barcode (`cEAN`),
-		- `item.ref` maps to the supplier's internal product code, and `item.unit` is converted to a UNECE unit code,
-		- line `discounts` reduce the taxable base (`vDesc`); line `charges` with key `delivery` map to freight (`vFrete`) and key `insurance` to insurance value (`vSeg`),
-		- `line.order` provides the line reference within the purchase order (`nItemPed`),
-		- a line `notes` entry with key `goods` maps to per-item additional information (`infAdProd`),
-		- `ordering.code` sets the purchase order number (`nPed` in `compra`) and `ordering.contracts[0].code` sets the contract number (`nCont`),
-		- `delivery.receiver` sets a separate delivery address (`entrega`) when goods ship to a different location than the buyer's fiscal address,
-		- the payment instructions key is set to `credit-transfer`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `18` (transferência bancária),
-		- a `general` note maps to complementary information (`infCpl`) in the NF-e XML,
-		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+    </CodeGroup>
+  </Accordion>
 
-		<CodeGroup>
-			<ProductInvoiceMin />
-			<ProductInvoice />
-		</CodeGroup>
-	</Accordion>
+  <Accordion title="Example B2B product invoice (NF-e)">
+    In this example, we're issuing an extended product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
 
-	<Accordion title="Example B2B product invoice for a Simples Nacional issuer (NF-e)">
+    Notice:
 
-		In this example, we're issuing a product invoice (NF-e) from a supplier enrolled in the _Simples Nacional_ tax regime.
+    - we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon without the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `55` (NF-e),
+    - the customer is required for NF-e and must include a full address; Brazilian customers must declare the [`br-ibge-municipality`](https://docs.gobl.org/addons/br-nfe-v4#municipality-code) extension and a valid state, while foreign customers can be identified by a country-qualified `identity` (e.g. a passport) instead of a `tax_id`,
+    - supplier and customer addresses must include a `country`; it is auto-filled from the party's tax ID (or first identity that declares a country) when omitted,
+    - each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation,
+    - item identities carry the NCM product classification code (`cProd` in the NF-e XML) and the GTIN barcode (`cEAN`),
+    - `item.ref` maps to the supplier's internal product code, and `item.unit` is converted to a UNECE unit code,
+    - line `discounts` reduce the taxable base (`vDesc`); line `charges` with key `delivery` map to freight (`vFrete`) and key `insurance` to insurance value (`vSeg`),
+    - `line.order` provides the line reference within the purchase order (`nItemPed`),
+    - a line `notes` entry with key `goods` maps to per-item additional information (`infAdProd`),
+    - `ordering.code` sets the purchase order number (`nPed` in `compra`) and `ordering.contracts[0].code` sets the contract number (`nCont`),
+    - `delivery.receiver` sets a separate delivery address (`entrega`) when goods ship to a different location than the buyer's fiscal address,
+    - the payment instructions key is set to `credit-transfer`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `18` (transferência bancária),
+    - a `general` note maps to complementary information (`infCpl`) in the NF-e XML,
+    - tax percentages are provided explicitly as they vary depending on the state and type of goods,
+    - there are no totals or calculations; all these will be made automatically when uploading, and,
+    - make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
 
-		Notice the differences from the previous example:
+    <CodeGroup>
 
-		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_); use `2` for _Simples Nacional, Excess_ or `4` for _MEI_ — omitting it defaults to `3` (normal regime),
-		- each ICMS line carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension (here `101`, taxed with credit permission) instead of the `br-nfe-icms-cst` code that normal-regime issuers use,
-		- PIS and COFINS are still required on every line but are not levied per item under _Simples Nacional_, so they use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+    ```text
+    ```
 
-		<CodeGroup>
-			<ProductInvoiceSimplesMin />
-			<ProductInvoiceSimples />
-		</CodeGroup>
-	</Accordion>
+    ```text
+    ```
 
-	<Accordion title="Example NF-e for a full goods return">
+    </CodeGroup>
+  </Accordion>
 
-		In this example, we're issuing a NF-e that fully returns the goods of a previously issued B2B product invoice — a _devolução total_ under the pre-reform (pre-RTC) rules.
+  <Accordion title="Example B2B product invoice for a Simples Nacional issuer (NF-e)">
+    In this example, we're issuing a product invoice (NF-e) from a supplier enrolled in the _Simples Nacional_ tax regime.
 
-		Notice the differences from a standard product invoice:
+    Notice the differences from the previous example:
 
-		- the document `type` is `credit-note`; it keeps the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon and is still issued as an NF-e, so [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) is derived as `55`,
-		- a `preceding` entry references the original NF-e and carries its SEFAZ access key (_chave de acesso_) as a stamp — you can copy it from the `sefaz-key` entry in the `stamps` array of the original invoice's envelope `head`, where it was added once the tax authority authorized the document,
-		- because this is a full return, the [`br-nfe-purpose`](https://docs.gobl.org/addons/br-nfe-v4#purpose-code) extension is set to `4` (_Goods Return_) and the [`br-nfe-operation-type`](https://docs.gobl.org/addons/br-nfe-v4#operation-type-code) extension to `0` (_Inbound / Entrada_), since the returned goods re-enter the supplier; standard invoices set these automatically to `1` (normal) and `1` (outbound), but corrective documents must set both explicitly,
-		- no [`br-nfe-credit-note-type`](https://docs.gobl.org/addons/br-nfe-v4#credit-note-type-code) extension is used: that field only applies to post-reform IBS/CBS credit notes (those set `br-nfe-purpose` to `5`),
-		- the line [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) is a return code — `2202` (_Devolução de venda de mercadoria adquirida ou recebida de terceiros_) — mirroring the original `6102` sale but recorded as an inbound inter-state operation (CFOP starting with `2`),
-		- the payment sets the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to `90` (_No payment_), as a return does not involve a new payment,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+    - the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_); use `2` for _Simples Nacional, Excess_ or `4` for _MEI_ — omitting it defaults to `3` (normal regime),
+    - each ICMS line carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension (here `101`, taxed with credit permission) instead of the `br-nfe-icms-cst` code that normal-regime issuers use,
+    - PIS and COFINS are still required on every line but are not levied per item under _Simples Nacional_, so they use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
+    - there are no totals or calculations; all these will be made automatically when uploading, and,
+    - make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
 
-		<CodeGroup>
-			<CreditNoteMin />
-			<CreditNote />
-		</CodeGroup>
-	</Accordion>
+    <CodeGroup>
 
-	<Accordion title="Example B2C consumer invoice (NFC-e)">
+    ```text
+    ```
 
-		In this example, we're issuing a simple consumer invoice (NFC-e) from a Brazilian supplier.
+    ```text
+    ```
 
-		Notice:
+    </CodeGroup>
+  </Accordion>
 
-		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
-		- the customer is optional and in this example we've omitted it,
-		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-		- the payment instructions key is set to `card`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `03` (cartão de crédito),
-		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
+  <Accordion title="Example NF-e for a full goods return">
+    In this example, we're issuing a NF-e that fully returns the goods of a previously issued B2B product invoice — a _devolução total_ under the pre-reform (pre-RTC) rules.
 
-		<CodeGroup>
-			<ConsumerInvoiceMin />
-			<ConsumerInvoice />
-		</CodeGroup>
-	</Accordion>
+    Notice the differences from a standard product invoice:
 
+    - the document `type` is `credit-note`; it keeps the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon and is still issued as an NF-e, so [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#fiscal-document-model-code) is derived as `55`,
+    - a `preceding` entry references the original NF-e and carries its SEFAZ access key (_chave de acesso_) as a stamp — you can copy it from the `sefaz-key` entry in the `stamps` array of the original invoice's envelope `head`, where it was added once the tax authority authorized the document,
+    - because this is a full return, the [`br-nfe-purpose`](https://docs.gobl.org/addons/br-nfe-v4#purpose-code) extension is set to `4` (_Goods Return_) and the [`br-nfe-operation-type`](https://docs.gobl.org/addons/br-nfe-v4#operation-type-code) extension to `0` (_Inbound / Entrada_), since the returned goods re-enter the supplier; standard invoices set these automatically to `1` (normal) and `1` (outbound), but corrective documents must set both explicitly,
+    - no [`br-nfe-credit-note-type`](https://docs.gobl.org/addons/br-nfe-v4#credit-note-type-code) extension is used: that field only applies to post-reform IBS/CBS credit notes (those set `br-nfe-purpose` to `5`),
+    - the line [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) is a return code — `2202` (_Devolução de venda de mercadoria adquirida ou recebida de terceiros_) — mirroring the original `6102` sale but recorded as an inbound inter-state operation (CFOP starting with `2`),
+    - the payment sets the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to `90` (_No payment_), as a return does not involve a new payment,
+    - there are no totals or calculations; all these will be made automatically when uploading, and,
+    - make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
+
+    <CodeGroup>
+
+    ```text
+    ```
+
+    ```text
+    ```
+
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Example B2C consumer invoice (NFC-e)">
+    In this example, we're issuing a simple consumer invoice (NFC-e) from a Brazilian supplier.
+
+    Notice:
+
+    - we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
+    - the customer is optional and in this example we've omitted it,
+    - extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
+    - the payment instructions key is set to `card`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `03` (cartão de crédito),
+    - tax percentages are provided explicitly as they vary depending on the state and type of goods,
+    - there are no totals or calculations; all these will be made automatically when uploading, and,
+    - make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
+
+    <CodeGroup>
+
+    ```text
+    ```
+
+    ```text
+    ```
+
+    </CodeGroup>
+  </Accordion>
 </AccordionGroup>
