@@ -23,6 +23,7 @@ Invopop simplifies SDI integration by allowing you to work with [GOBL](https://d
 |---|---|---|
 | **Responses** | Simulated by A-Cube (no real SDI sandbox) | Real SDI responses |
 | **Configuration** | Simulated response type must be set | — |
+| **Archiving** | A-Cube test environment (no legal validity) | Certified preservation |
 
 ## Setup
 
@@ -102,6 +103,17 @@ When the Send step completes, it returns one of three results:
 - `OK` if successful
 - `KO` for unrecoverable errors
 - `SKIP` if the invoice was already sent
+
+### Archiving (conservazione a norma)
+
+Italian law requires issued electronic invoices to be preserved long-term through a certified archiving process known as _conservazione a norma_. Keeping a copy of the XML on your own systems is not enough — preservation must follow the rules set by the Italian authorities, which Invopop handles through its integration partner A-Cube.
+
+Archiving is built into the standard Italy templates, so no extra setup is needed:
+
+- The party registration workflow includes a step that enables archiving for the supplier. It requires the party to have a valid Italian tax ID.
+- The send invoice workflow includes an archive step after the Send step. It preserves the exact FatturaPA file transmitted to SDI and attaches the preservation receipt to the invoice entry as `archive-receipt.pdf` and `archive-receipt.xml`, along with an indexed `archive-uuid` metadata field identifying the archived document.
+
+Preservation is asynchronous: the archive step stays in a `Queued` state until the receipt is ready, then completes with `OK`. It is safe to retry — an already-archived invoice completes without uploading or duplicating attachments. Only invoices you issue and send through SDI are archived; invoices you receive are not.
 
 ## Example Invoices
 
