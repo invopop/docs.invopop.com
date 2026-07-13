@@ -59,9 +59,50 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
   </Tab>
 </Tabs>
 
-## Agreement signing API
+## Agreement signing
 
-The `gov-fr.agreement.sign` step generates the mandate and waits while the customer completes signing via the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required on both paths.
+The `gov-fr.agreement.sign` step generates the mandate and publishes a `link_url` under the `approval-link` key in the silo entry meta. The party representative can complete signing through the registration wizard, or platforms that want full control can use the [entry API](#entry-api) directly.
+
+### Registration wizard
+
+Once the workflow step runs, find the `link_url` in the `approval-link` meta entry of the silo entry. In console, it appears in the Meta tab of the entry's right sidebar.
+
+<Accordion title="Example approval-link meta entry">
+```json
+{
+  "src": "gov-fr",
+  "key": "approval-link",
+  "ref": "EgDeG3pDBDe",
+  "link_url": "https://gouv-fr.invopop.com/reg/EgDeG3pDBDe/start",
+  "link_scope": "public",
+  "indexed": true,
+  "shared": true
+}
+```
+</Accordion>
+
+Forward the `link_url` to the party representative, or embed it as an `iframe` to keep them within your platform.
+
+The wizard walks the representative through each step:
+
+<Steps>
+  <Step title="Party details">
+    Review and confirm the pre-filled company and signer information.
+  </Step>
+  <Step title="Identity document">
+    Upload a photo of the signer's ID card (front and back) or passport page.
+  </Step>
+  <Step title="Sign mandate">
+    Sign the pre-filled mandate directly in the browser, or upload a pre-signed PDF.
+  </Step>
+  <Step title="Confirm">
+    Submit for Invopop review. The party status moves to `submitted` until a decision is made.
+  </Step>
+</Steps>
+
+### Entry API
+
+For platforms that want to drive the signing process programmatically, use the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required on both paths.
 
 <Tabs>
   <Tab title="In-app signing">
