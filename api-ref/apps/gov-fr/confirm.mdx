@@ -1,6 +1,14 @@
 ---
 title: "Confirm submission"
+description: "Finalise the onboarding approval and advance the registration workflow."
 openapi: "POST /apps/gov-fr/v1/entry/{silo_entry_id}/confirm"
 ---
 
-Marks the customer's submission as complete once the signed agreement (and any required identity images) have been uploaded. Records the decision in silo meta and pokes the queued `agreement.wait.approval` task so the onboarding workflow can continue.
+Finalises the approval and pokes the queued `agreement.wait.approval` task so the onboarding workflow continues. Returns the approval flow status.
+
+Identity verification (`POST /identity`) is required on both paths. In addition:
+
+- **In-app signing**: `POST /sign` must have been called.
+- **Pre-signed PDF**: `POST /agreement` must have been called.
+
+A `submitted` status in the response means the submission is under review; the workflow advances once a decision is made.

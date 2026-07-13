@@ -59,6 +59,49 @@ The Annuaire requires every entry to be receive-capable, so there is no send-onl
   </Tab>
 </Tabs>
 
+## Agreement signing API
+
+The `gov-fr.agreement.sign` step generates the mandate and waits while the customer completes signing via the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required on both paths.
+
+<Tabs>
+  <Tab title="In-app signing">
+    The customer signs the mandate directly. Invopop stamps the signature and verifies identity.
+
+    <Steps>
+      <Step title="Download mandate">
+        `GET /agreement` returns the mandate PDF pre-filled with the party's details. Fails with `422` if any required signer field is missing.
+      </Step>
+      <Step title="Upload identity document">
+        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
+      </Step>
+      <Step title="Sign the mandate">
+        `POST /sign` stamps the signature. Pass a drawn PNG or JPEG image in `signature` (≤ 4 MB), or omit it to render the signer's name as a typed signature.
+      </Step>
+      <Step title="Confirm">
+        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Pre-signed PDF">
+    The customer signs the mandate externally and uploads the result.
+
+    <Steps>
+      <Step title="Download mandate">
+        `GET /agreement` returns the pre-filled mandate PDF for the customer to sign externally.
+      </Step>
+      <Step title="Upload identity document">
+        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
+      </Step>
+      <Step title="Upload signed PDF">
+        `POST /agreement` stores the signed PDF (≤ 4 MB).
+      </Step>
+      <Step title="Confirm">
+        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
 ### Taking over a line from another Plateforme Agréée
 
 If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), registration takes that line over instead of creating a duplicate. To do so, the party must specify the former PA line under `fr-former-matricule` meta key. This will add an additional section in the signed agreement that asks for consent to take over the line. 
