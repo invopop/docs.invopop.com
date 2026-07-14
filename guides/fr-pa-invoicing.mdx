@@ -133,9 +133,63 @@ France does not treat self-billing as a document type of its own: it is a standa
 
 The parties keep their natural roles, the vendor remains the `supplier`, and the buyer the `customer`. When Invopop detects the tag, it acts on behalf of the customer and adjusts the flow automatically:
 
-- The **customer**, rather than the supplier, is validated as the registered party.
+- The **buyer**, rather than the supplier, is validated as the registered party.
 - The invoice is delivered over Peppol to the **supplier's** PA.
 - The invoice is recorded and forwarded to the PPF as a self-billed invoice.
+
+<Info>
+  In the example below, we assume both the Seller and Buyer have selected Invopop as their PA, so it covers both sending and receiving flows.
+</Info>
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'primaryColor': '#E8F5EE',
+  'primaryTextColor': '#103830',
+  'primaryBorderColor': '#169958',
+  'actorBkg': '#E8F5EE',
+  'actorBorder': '#169958',
+  'actorTextColor': '#103830',
+  'actorLineColor': '#9ca3af',
+  'signalColor': '#103830',
+  'signalTextColor': '#103830',
+  'labelBoxBkgColor': '#169958',
+  'labelBoxBorderColor': '#103830',
+  'labelTextColor': '#ffffff',
+  'loopTextColor': '#103830',
+  'noteBkgColor': '#F3F4F6',
+  'noteBorderColor': '#9ca3af',
+  'noteTextColor': '#103830',
+  'activationBorderColor': '#169958',
+  'activationBkgColor': '#D9F2E6',
+  'sequenceNumberColor': '#ffffff'
+}}}%%
+sequenceDiagram
+    participant BS as Buyer systems
+    participant BW as Buyer's workspace (PA-E)
+    participant SW as Seller's workspace (PA-R)
+    participant SS as Seller systems
+
+    Note over BS,SW: Self-billing: buyer issues on behalf of the seller
+
+    BS->>BW: Create GOBL bill.invoice<br/>tagged self-billed (doc type 389)
+    BW->>SW: Invoice (UBL / CII / Factur-X)
+    SW->>SS: Invoice (GOBL bill.invoice)
+
+    opt Seller can send any statuses
+    SS->>SW: bill.Status:<br/>Accepted / Partially Approved / etc.
+    SW->>BW: Statuses (PA-R to PA-E)
+        BS->>BW: bill.Status: Paiement transmis
+        BW->>SW: Status "211 - Paiement transmis"
+        SW->>SS: GOBL bill.Status
+    end
+
+    Note over SS,SW: Seller still needs to submit the payment status
+    SS->>SW: bill.payment referencing the invoice
+    SW->>BW: Status "211 - Encaissee"
+    BW->>BS: GOBL bill.payment
+```
+<Tip>
+Invopop will always report the relevant flows to the PPF (invoice data, mandatory statuses, and payment). This step has been removed to illustrate the interchange between the seller and receiver.
+</Tip>
 
 France also requires the _autofacturation_ note on the invoice, which appears as a `legal` note, as shown in the [example](#example-invoices) below.
 
