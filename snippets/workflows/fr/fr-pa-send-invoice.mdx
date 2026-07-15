@@ -8,7 +8,7 @@ schema: "bill/invoice"
 ```json PPF send invoice workflow
 {
     "name": "PPF send invoice",
-    "description": "Send an invoice via Peppol and record it with PPF",
+    "description": "",
     "schema": "bill/invoice",
     "steps": [
         {
@@ -23,12 +23,8 @@ schema: "bill/invoice"
         {
             "id": "f5aaed10-13c9-11f1-98a6-7dfa4cb26122",
             "name": "Sign envelope",
-            "provider": "silo.close"
-        },
-        {
-            "id": "f1e30fa0-13c9-11f1-98a6-7dfa4cb26122",
-            "name": "Record document for e-invoicing",
-            "provider": "gov-fr.directory.record"
+            "provider": "silo.close",
+            "notes": "Adds a signature to the envelope preventing further changes."
         },
         {
             "id": "1b5850d0-13bf-11f1-bc3b-b99ec414b63d",
@@ -40,12 +36,20 @@ schema: "bill/invoice"
                 "doc_type": "peppol-fr-cius",
                 "private": false,
                 "validate_ubl": false
-            }
+            },
+            "notes": "Generates a Peppol UBL with France specific validations."
+        },
+        {
+            "id": "f1e30fa0-13c9-11f1-98a6-7dfa4cb26122",
+            "name": "Record document for e-invoicing",
+            "provider": "gov-fr.directory.record",
+            "notes": "Validates SIRENs, checks both parties against the Annuaire, and stores the invoice in Invopop's PA database."
         },
         {
             "id": "ab598990-16f0-11f1-86ba-d13d91b4f398",
             "name": "Send Peppol document",
-            "provider": "peppol.send"
+            "provider": "peppol.send",
+            "notes": "Sends the invoice to the recipient via the Peppol network."
         },
         {
             "id": "79bd38d0-1a17-11f1-a82f-e740c226ef51",
@@ -59,7 +63,8 @@ schema: "bill/invoice"
         {
             "id": "e1f6ce90-16eb-11f1-86ba-d13d91b4f398",
             "name": "Forward document to PPF",
-            "provider": "gov-fr.directory.forward"
+            "provider": "gov-fr.directory.forward",
+            "notes": "Forwards a previously recorded document to the French tax authorities via the PPF platform."
         },
         {
             "id": "80a9d5e0-1a17-11f1-a82f-e740c226ef51",

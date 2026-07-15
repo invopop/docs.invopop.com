@@ -1,5 +1,5 @@
 ---
-title: "France PA — lifecycle status"
+title: "Invoice lifecycle status in France"
 sidebarTitle: "Status"
 description: Build, send and receive lifecycle status and payment updates (CDAR) for B2B invoices.
 ---
@@ -32,15 +32,14 @@ import State211Min from '/snippets/examples/fr/states/211-payment-advice.min.mdx
 import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
 import State212Min from '/snippets/examples/fr/states/212-payment-receipt.min.mdx';
 
-<Note>
-  Lifecycle status updates on domestic B2B invoices — acknowledged, accepted, disputed, refused, paid. They are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
-</Note>
 
-France requires lifecycle status updates on B2B national invoices to be reported to the PPF. You build each one as a GOBL document and send it through the standard send workflow. Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each) — but **`210` Refusée (refused) and `212` Encaissée (paid) are the two that must be forwarded to the PPF**. The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
+  Lifecycle status updates on domestic B2B invoices (acknowledged, accepted, disputed, refused, paid) are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
+
+You build each one as a GOBL document and send it through the standard send workflow. Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each). However, `210` **Refusée** (refused) and `212` **Encaissée** (paid) are the two that must be forwarded to the PPF. The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
 
 ## Invoice lifecycle
 
-After an invoice is issued it moves through a sequence of lifecycle events. Each event is a GOBL [`bill.Status`](https://docs.gobl.org/draft-0/bill/status) or [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) that references the invoice and carries one CDV ProcessConditionCode. For the full list of codes — with the document each maps to and which party issues it — see [Status codes](#status-codes).
+After an invoice is issued it moves through a sequence of lifecycle events. Each event is a [GOBL status](https://docs.gobl.org/draft-0/bill/status) or [GOBL payment](https://docs.gobl.org/draft-0/bill/payment) that references the invoice and carries one CDV `ProcessConditionCode`. For the full list of codes see [Status codes](#status-codes).
 
 The paths below are **common examples, not an exhaustive set**: any code can in principle follow another (e.g. a `205` approval can still be followed by a `210` refusal). The typical sequences are:
 
@@ -53,8 +52,7 @@ The paths below are **common examples, not an exhaustive set**: any code can in 
 
 ```mermaid
 flowchart LR
-    I[Invoice] --> S201[201 issued]
-    S201 --> S202[202 received]
+    S201[201 issued] --> S202[202 received]
     S202 --> S203[203 made available]
     S203 --> S204[204 taken into account]
     S204 --> S205[205 approved]
@@ -69,18 +67,20 @@ flowchart LR
     S206 --> P212
 ```
 
-## `bill.Status` vs `bill.Payment`
+## Status vs payment
 
-A lifecycle event is modelled as the GOBL document that matches its nature:
+A lifecycle event is modelled as the GOBL document that matches its purpose:
 
-- **`bill.Status`** — *processing* events: the recipient acknowledging, making available, taking into account, accepting, partially accepting, disputing, suspending or refusing the invoice, or the supplier completing a suspension. These describe where the invoice is in its handling. Codes `201`–`210`.
-- **`bill.Payment`** — *payment* events: a payment **advice** (the buyer tells the supplier a payment has been sent) or a payment **receipt** (the supplier confirms funds received). These describe money movement, so they use GOBL's dedicated payment document, which carries the amount, method and value date. Codes `211` (advice) / `212` (receipt).
+| Document | What it covers | Codes |
+|---|---|---|
+| `bill.Status`<br /><small>Processing events</small>  | Where the invoice is in its handling: the recipient acknowledging, making available, taking into account, accepting, partially accepting, disputing, suspending or refusing the invoice, or the supplier completing a suspension. | `201`–`210` |
+| `bill.Payment`<br /><small>Payment events</small> | Money movement, e.g. a payment **advice** (buyer tells the supplier a payment has been sent) or a payment **receipt** (supplier confirms funds received). Uses GOBL's dedicated payment document, which carries the amount, method and value date. | `211` (advice) / `212` (receipt) |
 
-The `fr-ctc-flow6-v1` addon maps each document to its CDV ProcessConditionCode — you set the natural GOBL fields, not the code.
+The `fr-ctc-flow6-v1` addon maps each document to its CDV `ProcessConditionCode`. You set the GOBL fields, not the code.
 
 ## Building a status
 
-You build the natural GOBL document and the addon derives the CDV code — the full `(type, key)` → code mapping is in the [Status codes](#status-codes) table:
+You build the natural GOBL document and the addon derives the CDV code. The full `(type, key)` → code mapping is in the [Status codes](#status-codes) table:
 
 - **`bill.Status`** — set the document `type` and the line `key`; together they select the code (e.g. `type: response` + `key: accepted` → `205`; `type: update` + `key: other` → `209`).
 - **`bill.Payment`** — set `type` to `advice` (→ `211`) or `receipt` (→ `212`).

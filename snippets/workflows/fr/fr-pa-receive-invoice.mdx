@@ -49,16 +49,65 @@ schema: "bill/invoice"
                         }
                     ]
                 }
-            ]
+            ],
+            "notes": "Receives the Peppol document and returns the format in a code (UBL/CII/PDF)"
         },
         {
-            "id": "fdfc81a0-6e23-11f0-913b-5732f966b346",
-            "name": "Set folder",
-            "provider": "silo.folder",
-            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+            "id": "9c15ac60-7b8c-11f1-bf7f-e1e339678581",
+            "name": "If / Else",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "a48f03f0-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Sign Envelope",
+                            "provider": "silo.close",
+                            "next": [],
+                            "notes": "If it's an invoice, sign, generate a PDF and place it in the Expenses folder"
+                        },
+                        {
+                            "id": "a80b8080-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Generate PDF",
+                            "provider": "pdf",
+                            "next": [],
+                            "summary": "English - A4",
+                            "config": {
+                                "logo_height": 40,
+                                "locale": "en",
+                                "date_format": "%Y-%m-%d",
+                                "time_format": "%H:%M",
+                                "layout": "A4",
+                                "scripting": false,
+                                "label": "",
+                                "watermark": "",
+                                "currency_template": "",
+                                "negative_template": "",
+                                "thousands_separator": "",
+                                "decimal_mark": "",
+                                "duplicate": false
+                            }
+                        },
+                        {
+                            "id": "ab7e1200-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Set Folder",
+                            "provider": "silo.folder",
+                            "next": [],
+                            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+                            "config": {
+                                "folder": "expenses"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "summary": "",
             "config": {
-                "folder": "expenses"
-            }
+                "expr": "$schema endsWith \"bill/invoice\"",
+                "scope": "doc"
+            },
+            "notes": "Checks for bill/invoice document"
         },
         {
             "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
@@ -69,9 +118,9 @@ schema: "bill/invoice"
             "id": "dd14a3e0-0fb5-11f0-b078-9fc456829eca",
             "name": "Set state",
             "provider": "silo.state",
-            "summary": "Set state to `registered`{.state .registered}",
+            "summary": "Set state to `received`{.state .received}",
             "config": {
-                "state": "registered"
+                "state": "received"
             }
         }
     ],

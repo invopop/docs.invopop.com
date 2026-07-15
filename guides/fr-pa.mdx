@@ -1,33 +1,70 @@
 ---
-title: "PA (Plateforme Agréée) guide"
+title: "Plateforme Agréée (PA) guide"
 sidebarTitle: "Overview"
-description: France's PA system — concepts, readiness, and links to the four implementation guides.
+description: France's PA system. Guides, timeline, key concepts and obligations.
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import FAQ from '/snippets/faqs/fr/composers/app-pa.mdx';
 
-Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) (PA) under the DGFiP mandate. This page is the entry point to the four France PA implementation guides — [registration](/guides/fr-pa-registration), [invoicing](/guides/fr-pa-invoicing), [status](/guides/fr-pa-status), and [reporting](/guides/fr-pa-reporting).
+France is replacing paper and PDF invoicing with a <Tooltip headline="Continuous Transaction Control" tip="Government-mandated tax mechanisms that require businesses to submit structured transaction data to tax authorities in real time or near real time">CTC</Tooltip> regime covering all VAT-registered businesses established in France. Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) (PA) under the DGFiP mandate. The reform has two pillars: [e-invoicing](/guides/fr-pa-invoicing), which requires domestic B2B invoices to be exchanged as structured electronic documents through accredited platforms (PDPs), and [e-reporting](/guides/fr-pa-reporting), which requires transaction and payment data to be transmitted to the tax authority for operations outside the e-invoicing scope (B2C sales, international trade, and payments on services subject to VAT on collection.
+
+This guide walks through how to implement these obligations in practice: classifying your transactions into the correct flows, building compliant invoices, and handling status reporting and e-reporting submissions.
 
 ## Prerequisites
 
-- An Invopop workspace with the **Peppol** and **France** apps enabled.
+- An Invopop workspace with the [France](/apps/france), [Peppol](/apps/peppol), and [OASIS UBL](http://localhost:3001/apps/oasis-ubl) apps enabled. Enable [UN/CEFACT CII](apps/uncefact-cii) for maximum compatibility and [PDF Generator](/apps/pdf-generator) to attach human readable versions of your documents.
 - French company details, including SIREN/SIRET.
-- A clear view of your invoicing flows (B2B, B2C, domestic, cross-border) — this drives which sub-guides apply.
+- A clear view of your invoicing flows (B2B, B2C, domestic, cross-border).
 
-<Info>
-  The France PA implementation is being actively developed. Action names, GOBL add-ons, and workflows can change, especially those marked as `Beta` or `In development` 
-</Info>
+<Note>The full France PA implementation is complete. However, some minor changes are still possible ahead of the September 2026 mandate, particularly to APIs and the fr-ctc-flow10-v1 add-on.</Note>
 
-## Availability
+## Guides
 
-| Capability | Status | Notes | Guide |
+[Registration](/guides/fr-pa-registration) is a one-time, per-party prerequisite for the invoicing, status, and reporting flows. Before a French SIREN can send or receive invoices through Invopop, it must be registered in the French Annuaire and published on the Peppol network.
+
+
+<Card title="Registration" icon="address-book" href="/guides/fr-pa-registration" horizontal>
+  Register and unregister a party in the French Directory and on Peppol.
+</Card>
+
+[Invoicing](/guides/fr-pa-invoicing) in France covers exchanges where both parties are registered in the Annuaire. A single GOBL invoice can generate and send any of the formats allowed in France (UBL, CII, Factur-X), with the required copy reported automatically to the PPF.
+
+<Card title="Invoicing" icon="file-invoice" href="/guides/fr-pa-invoicing" horizontal>
+  Send and receive B2B invoices via Peppol with PPF reporting.
+</Card>
+
+[Reporting](/guides/fr-pa-reporting) (Flux 10) covers everything outside regulated e-invoicing: B2C sales, cross-border B2B, and any flow where one party isn't in the Annuaire. You record each invoice and payment, Invopop generates a Flux 10 XML for each closed reporting window and sends it to the PPF.
+
+<Card title="Reporting" icon="building-columns" href="/guides/fr-pa-reporting" horizontal>
+  Periodic e-reporting of B2C and non-regulated B2B transactions.
+</Card>
+
+[Status](/guides/fr-pa-status) updates carry the lifecycle and payment state of domestic B2B invoices (CDAR): acknowledged, accepted, disputed, refused, paid. Each is built as a GOBL document and exchanged between PAs over Peppol, with the mandatory codes (notably `210` refused and `212` paid) also forwarded to the PPF.
+
+<Card title="Status" icon="signal-bars" href="/guides/fr-pa-status" horizontal>
+  Send, receive, and derive lifecycle status updates (CDAR).
+</Card>
+
+[Directory lookup](/guides/fr-pa-reporting) queries the French Annuaire to confirm whether a party is registered before sending — useful for branching between regulated and non-regulated flows. Look up a party by its SIREN or by its electronic address.
+
+<Card title="Directory lookup" icon="address-book" href="/guides/fr-pa-reporting" horizontal>
+  Check whether a SIREN or electronic address is registered in the Annuaire.
+</Card>
+
+
+## Timeline
+
+Reception is universal from 1 September 2026 for all companies regardless of size, while issuance splits by band:
+
+| Company size | Size criteria | Must receive | e-invoicing and<br /> e-reporting |
 |---|---|---|---|
-| Annuaire registration | <Badge color="green">Available</Badge> | Self-serve KYC in development | [Registration guide](/guides/fr-pa-registration) |
-| Send invoices (UBL, CII, Factur-X) | <Badge color="green">Available</Badge> | API may change before Sept 2026 | [Invoicing guide](/guides/fr-pa-invoicing) |
-| Receive invoices | <Badge color="green">Available</Badge> | API may change before Sept 2026 | [Invoicing guide](/guides/fr-pa-invoicing) |
-| Lifecycle status | <Badge color="yellow">In development</Badge> | Moving to a first-class GOBL document | [Status guide](/guides/fr-pa-status) |
-| E-reporting (Flow 10) | <Badge color="green">Available</Badge> | `fr-ctc-flow10-v1` addon may change before Sept 2026 | [Reporting guide](/guides/fr-pa-reporting) |
+| Large | 5,000+ staff, or turnover > €1.5bn / balance sheet > €2bn | 1 Sep 2026 | 1 Sep 2026 |
+| Mid-sized (ETI) | 250–5,000 staff and turnover €50M–1.5bn / balance sheet €43M–2bn | 1 Sep 2026 | 1 Sep 2026 |
+| SME (PME) | under 250 staff and turnover < €50M or balance sheet < €43M | 1 Sep 2026 | 1 Sep 2027 |
+| Micro (TPE) | subset of the SME band, at the smallest end | 1 Sep 2026 | 1 Sep 2027 |
+
+View our [compliance timeline for France](/timelines/france).
 
 ## Key concepts
 
@@ -37,100 +74,51 @@ Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.
 | **PPF** | Portail Public de Facturation — the French government system that receives mandatory invoice data and lifecycle updates. Invopop handles all communications with the PPF automatically. |
 | **Regulated Flow** | An invoice exchange where both the sender and receiver are registered in the Directory. These follow the complete French e-invoicing process including Peppol transmission and PPF reporting. |
 | **Non-Regulated Flow** | An invoice exchange where only one party is registered in the Directory. Invoices are stored for e-reporting to the PPF but may not be transmitted via Peppol. |
-| **E-Reporting** | Periodic reporting to the PPF covering non-regulated flows and B2C transactions.|
+| **E-reporting** | Periodic reporting to the PPF covering non-regulated flows and B2C transactions.|
 | **CDAR** | Cross Domain Acknowledgement and Response. The format used for lifecycle status updates ("cycle de vie") in France, communicated between parties and to the PPF. |
 | **Fifth Corner** | The tax authority in the Peppol exchange model. Corners 1–4 are sender, sender's PA, receiver's PA, and receiver; the fifth corner is the tax authority that receives a copy of the invoice for regulated flows. In France this is the PPF. |
 | **F1 Invoice** | Simplified UBL format used to forward the invoice to the fifth corner (the tax authority, i.e. the PPF) for regulated flows. Part of e-invoicing, not e-reporting. Generated automatically by Invopop. |
 
-## E-Invoicing
+## Obligations
 
-### Annuaire registration
+The reform splits every transaction into one of two regimes, and the split is entirely determined by _who the counterparty_ is and where they sit.
 
-The _annuaire_ is France's national directory of e-invoicing endpoints. It records every registered company and their PA (Invopop, in this case), so that the tax administration knows how to route regulated e-invoicing flows.
+| Issuer | Counterparty | Obligation | Notes |
+|---|---|---|---|
+| French company | French company (VAT taxable) | [E-invoicing](/guides/fr-pa-invoicing) | Domestic B2B; structured invoice via PA (flux 2). Recipient also has a reception obligation. |
+| French company | French public entity (B2G) | [E-invoicing](/guides/fr-pa-invoicing) | Via Chorus Pro, which acts as the public-sector PA |
+| French company | French non-taxable legal person (not VAT-registered) | [E-reporting](/guides/fr-pa-reporting) | Not an *assujetti* → falls out of e-invoicing, treated like B2C |
+| French company | French consumer | [E-reporting](/guides/fr-pa-reporting) | B2C, aggregated data |
+| French company | EU company | [E-reporting](/guides/fr-pa-reporting) | Intra-community supply — VAT-exempt but still reported |
+| French company | Non-EU company | [E-reporting](/guides/fr-pa-reporting) | Export — VAT-exempt but still reported |
+| French company | EU / non-EU consumer | [E-reporting](/guides/fr-pa-reporting) | B2C international / distance sales (interacts with OSS/IOSS) |
+| French company | Foreign taxable person, non-established (even if FR-VAT-registered) | [E-reporting](/guides/fr-pa-reporting) | Buyer isn't *established* → outside domestic B2B |
+| EU company | French company | [E-reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> | Intra-community acquisition, reverse charge. Deferred to **1 Sep 2027**, any size |
+| Foreign company (non-EU) | French company | [E-reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> | Reverse-charge purchase of FR-situated goods/services (autoliquidation). Received invoice, line tax key `reverse-charge` (UNTDID `AE`) → flow10. Deferred to 1 Sep 2027, any size |
+| Foreign company (non-EU) | French company | <Badge color="gray">Neither</Badge> | Straight goods import cleared at customs then import VAT self-assessed on the CA3. Outside the flow2/flow10 CTC scope |
+| Foreign non-established company (FR-VAT-registered) | French consumer / non-established taxable person | [E-reporting](/guides/fr-pa-reporting)<br /> <small>by the foreign seller</small> | Local sale situated in France where the foreign company is the VAT debtor |
+| Foreign company with a French permanent establishment | French company | [E-invoicing](/guides/fr-pa-invoicing) | Treated like a French company |
+| Foreign company | Foreign company | <Badge color="gray">Neither</Badge>  | No French VAT nexus |
+| -- | Operations exempt under Art. [261–261](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006069577/LEGISCTA000006179649/?__cf_chl_f_tk=wLPHK_DeDJkKVVDB1HwyqG1sVsSYx.6RVCOZwrecp4w-1783944438-1.0.1.1-ddoGpoFuEI3Fk6000ucfBBSRzvCflELLWEGq3ym2Kr4) | <Badge color="gray">Neither</Badge> | Dispensed from invoicing → explicitly excluded from e-reporting |
 
-Registering in the annuaire enables parties (companies) to send and receive invoices in France. Behind the scenes, it extends the standard [Peppol registration workflow](/guides/peppol) with one additional French-specific step to register the party in the Annuaire.
+## Mandatory mentions
+ 
+Beyond the usual invoice data (parties, dates, line detail, VAT), the reform adds four *nouvelles mentions obligatoires* that every domestic B2B e-invoice must carry from 1 September 2026.
+ 
+| Mention | GOBL field | Notes |
+|---|---|---|
+| **Buyer's SIREN**<br /> (SIRET where the establishment matters) | `customer.tax_id` and `customer.identities[]` | Provide the `SIREN` or `SIRET` identity. Required for routing  and enforced by `BR-FR-10/11`. |
+| **Delivery address** (country/address, when it differs from billing) | `delivery.receiver.addresses[]` | Required when the place of delivery differs from the customer's billing address. Omit it when they are the same. |
+| **Nature of the operation** (goods / services / both) | `tax.ext.fr-ctc-billing-mode` | Mandatory classification between `B*` = goods, `S*` = services or `M*` = mixed. |
+| **VAT on debits** (paiement de la TVA d'après les débits, when opted) | `tax.notes[]` with key `tax` | Carried as a legal-mention note. Add it only when the supplier has opted for VAT on debits. |
 
-You can query the Annuaire directly to check whether a party is registered before sending an invoice — useful for branching regulated vs. non-regulated flows. See the API reference for [lookup by SIREN](/api-ref/apps/gov-fr/lookup-siren) and [lookup by electronic address](/api-ref/apps/gov-fr/lookup-identifier).
 
-<Note>
-  Peppol registration in France always enables **both sending and receiving**. Once a party is listed in the Annuaire, it must be reachable to receive invoices. There is no send-only option.
-</Note>
 
-#### How it works
 
-1. **Register party for Peppol approval** — submits the party details for Invopop review.
-2. **Set state to Processing** — marks the party as awaiting approval.
-3. **Wait for Peppol approval** — pauses until the party passes the approval check.
-4. **Register party in Directory** — registers the party in the French Directory (`gov-fr.party.register`). This is the France-specific step added on top of the base Peppol flow.
-5. **Register party on Peppol** — registers the party on the Peppol network with the `france` document group, enabled for sending and receiving via SMP/SML/Peppol.
-6. **Set state to Registered** — marks the party as fully onboarded.
-
-<Info>
-  If you want to understand the base Peppol onboarding this workflow is built on, see the [Peppol registration guide](/guides/peppol). The France PA workflow is the same flow plus the **Register party in Directory** step before the Peppol registration step.
-</Info>
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
-      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-    <RegisterWorkflow />
-  </Tab>
-</Tabs>
-
-### Invoice formats
-
-The French PA specification lists five accepted invoice formats. UBL and CII each have a base version and an extended version (adding extra fields for French-specific requirements), and Factur-X rounds out the list. In practice, the three base formats cover essentially all real-world exchanges, and Invopop supports sending _and_ receiving all three:
-
-| Format | Description |
-|---|---|
-| **UBL** | XML invoice based on the Peppol France CIUS. The default format used across the Peppol network and the one we recommend for all outgoing flows. An extended UBL variant also exists but is rarely needed. |
-| **CII** | UN/CEFACT Cross Industry Invoice — another XML format, semantically equivalent to UBL and required by some counterparties (particularly in cross-border and automotive/industrial contexts). An extended CII variant is also accepted. |
-| **Factur-X** | Hybrid PDF/A-3 with an embedded CII XML payload. Human-readable on top, machine-readable underneath. Common with buyers who want a visual invoice alongside the structured data. Factur-X is a joint Franco-German standard (identical to [ZUGFeRD](/guides/de-ubl)) aligned with the European Norm EN 16931. |
-
-<Info>
-  **We recommend sending as UBL.** It's the native Peppol France CIUS format, has the widest receiver support, and is the cleanest to validate. Choose CII or Factur-X only when a specific counterparty requires it.
-</Info>
-
-The underlying invoice is always the **same GOBL document with the `fr-ctc-flow2-v1` add-on**. The format is only an addition at the end of the workflow — switching format is a configuration change, not a data-model change. That means:
-
-- You author and validate one GOBL invoice.
-- The workflow's generation step produces the chosen format (UBL, CII, or Factur-X).
-- Incoming invoices in any of the three formats are converted back into the same GOBL representation for you to consume.
-
-### Sending
-
-#### Invoices
-
-<Warning>
-  The workflow steps below are subject to change. We are working on new methods of handling events for a more global use case. This example is functional today, but expect refinements before the September 2026 mandate.
-</Warning>
-
-The four sub-guides correspond to the workflows you will wire together. Most of these depend on Invopop's [Peppol](/apps/peppol), [UBL](/apps/oasis-ubl), and [CII](/apps/uncefact-cii) apps for transport and format conversion.
-
-<Columns cols="2">
-  <Card title="Registration" icon="address-book" href="/guides/fr-pa-registration" horizontal>
-    Register and unregister a party in the Annuaire and on Peppol.
-  </Card>
-  <Card title="Invoicing" icon="file-invoice" href="/guides/fr-pa-invoicing" horizontal>
-    Send and receive B2B invoices via Peppol with PPF reporting.
-  </Card>
-  <Card title="Status" icon="signal-bars" href="/guides/fr-pa-status" horizontal>
-    Send, receive, and derive lifecycle status updates (CDAR).
-  </Card>
-  <Card title="Reporting" icon="chart-line" href="/guides/fr-pa-reporting" horizontal>
-    Periodic e-reporting of B2C and non-regulated B2B transactions.
-  </Card>
-</Columns>
 
 ## FAQ
 
-<FAQ />
-
-More available in our [France FAQ](/faq/france) section
+Consult our [France FAQ](/faq/france) section.
 
 ---
 

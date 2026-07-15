@@ -5,61 +5,79 @@ description: Register a party in the French Annuaire and on the Peppol network.
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
-import RegisterWorkflow from '/snippets/workflows/fr/fr-pa-register.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
 import UnregisterWorkflow from '/snippets/workflows/fr/fr-pa-unregister.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-supplier.mdx';
+import Supplier from '/snippets/parties/fr/supplier.mdx';
 
-<Note>
-  Registration is required for any French SIREN that will issue or receive invoices through Invopop as its Plateforme Agréée. It is a prerequisite for the invoicing and status flows.
-</Note>
+  
+Registration on the French Directory is required for any SIREN that will issue or receive invoices through Invopop as its Plateforme Agréée. Each party (a SIREN) is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, and publishes it on the Peppol network. After registration is completed, the party can both send and receive invoices. The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries.
 
-Each party (a SIREN) is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, and publishes it on the Peppol network. After it completes, the party can both send and receive invoices.
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Use a checksum valid [generated SIREN](https://www.onsubmit.io/french-siret-siren-generator/) | Requires a valid SIREN and the signature of the company representative. |
+| **Approval** | Automatic | Automatic, but can be flagged for human review |
+| **Registration** | Peppol SMK  and PPF's _environnement de qualification_| Peppol SML and Annuaire production |
 
-The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. Internally, the workflow extends the standard [Peppol registration](/guides/peppol) with French-specific steps (`gov-fr.directory.register`) before the Peppol registration.
+<Accordion title="French supplier" defaultOpen="true">
+      This example shows a French supplier party. Key points to note:
+    * The `tax_id` contains the French TVA number without the `FR` prefix: a 2-digit control key followed by the company's 9-digit SIREN.
+    * The `SIREN` identity uses the `iso-scheme-id` extension `0002` (SIRENE), and must match the last 9 digits of the TVA number.
+    * The person in `people` is the company representative required to sign the *mandat de facturation* (billing mandate), including their `role` and passport/document id number.
+    * The `peppol` inbox uses scheme `0225` (French CTC electronic address) with the SIREN as the code.
+      * If no inbox is specified, the Register for Peppol step will assign one based on the supplier's SIREN.
+  <Supplier />
+</Accordion>
 
-## How it works
+## PPF register supplier workflow
 
-<Frame>
-<img src="/assets/guides/fr-register.png" />
-</Frame>
-
-<Steps>
-  <Step title="Sign PPF agreement">
-    Generates the French PA mandate so the party can authorise Invopop to act on its behalf (`gov-fr.agreement.sign`).
-  </Step>
-  <Step title="Set state → processing">
-    Moves the silo entry into a visible "in progress" state so operator dashboards reflect that registration is underway.
-  </Step>
-  <Step title="Wait for PPF agreement upload">
-    Pauses until the signed agreement is uploaded and accepted (`gov-fr.agreement.wait.approval`).
-  </Step>
-  <Step title="Set state → completed">
-    Marks the agreement step as completed before the directory and Peppol registrations run.
-  </Step>
-  <Step title="Register party in Directory">
-    Submits the party's SIREN to the French Annuaire so other PAs can route invoices to it (`gov-fr.directory.register`).
-  </Step>
-  <Step title="Register party on Peppol">
-    Publishes the party in SMP/SML with the `france` document group, enabling Peppol-level routing for sending and receiving.
-  </Step>
-  <Step title="Set state → registered">
-    Marks the party as fully onboarded.
-  </Step>
-</Steps>
 
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" cta="Add to my workspace">
-      Registers a party in the Annuaire and on the Peppol network for sending and receiving invoices.
+  <Tab title="Register workflow">
+    <Card iconType="duotone" title="PPF register supplier" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" horizontal>
+      Add workflow to my workspace →
     </Card>
+    <Frame>
+      <img src="/assets/guides/fr-register.png" width="650" />
+    </Frame>
   </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
-    <RegisterWorkflow />
+  <Tab title="JSON workflow">
+    <Card iconType="duotone" title="PPF register supplier" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register" horizontal>
+      Add workflow to my workspace →
+    </Card>
+    <SendInvoiceWorkflow />
   </Tab>
 </Tabs>
 
-### Taking over a line from another Plateforme Agréée
+    [PPF register supplier](https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-register) workflow
+    <Badge size="sm" stroke>1</Badge> generates the French PA mandate so the party can authorize Invopop to act on its behalf, then <Badge size="sm" stroke>3</Badge> waits for the signed agreement to be uploaded and approved. Afterwards <Badge size="sm" stroke>5</Badge> it submits the SIREN to the French Annuaire so other PAs can route invoices to it, and finally (7) publishes the party to Peppol for sending and receiving.
+
+    ***
+
+## Unregistration
+
+<Tabs>
+  <Tab title="Unregister workflow">
+      <Card iconType="duotone" title="France PA unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-unregister" horizontal>
+      Add to my workspace →
+    </Card>
+    <Frame>
+      <img src="/assets/guides/fr-unregister.png" />
+    </Frame>
+  </Tab>
+  <Tab title="JSON workflow">
+    <Card iconType="duotone" title="France PA unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-unregister" horizontal>
+      Add to my workspace →
+    </Card>
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
+
+    [PPF unregister supplier](https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-unregister) workflow <Badge size="sm" stroke>1</Badge> revokes Peppol and <Badge size="sm" stroke>2</Badge> French Directory  registration  so the party can no longer issue or receive invoices.
+
+    ***
+
+## Taking over a line from another Plateforme Agréée
 
 If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), registration takes that line over instead of creating a duplicate. To do so, the party must specify the former PA line under `fr-former-matricule` meta key. This will add an additional section in the signed agreement that asks for consent to take over the line. 
 
@@ -67,37 +85,7 @@ If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), 
   If a takeover is required and the matricule is missing, registration fails and asks for it.
 </Note>
 
-## Unregistration
 
-Run the unregister workflow to revoke a party's registrations when it should no longer issue or receive invoices through Invopop.
-
-<Steps>
-  <Step title="Unregister Peppol Party">
-    Disables the party in SMP/SML so Peppol traffic no longer routes to it.
-  </Step>
-  <Step title="Unregister from Directory">
-    Removes the party from the French Annuaire.
-  </Step>
-  <Step title="Set state → void">
-    Marks the party as unregistered.
-  </Step>
-</Steps>
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-unregister" cta="Add to my workspace">
-      Revokes Peppol and Annuaire registrations so the party can no longer issue or receive invoices.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
-    <UnregisterWorkflow />
-  </Tab>
-</Tabs>
-
-<Note>
-  Unregistering does not delete historical data already submitted to the PPF.
-</Note>
 
 ## FAQ
 

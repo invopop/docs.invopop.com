@@ -1,0 +1,153 @@
+import B2BMin from '/snippets/invoices/fr/pa-b2b.min.mdx';
+import B2B from '/snippets/invoices/fr/pa-b2b.mdx';
+import CreditNoteMin from '/snippets/invoices/fr/pa-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/fr/pa-credit-note.mdx';
+import AdvanceMin from '/snippets/invoices/fr/pa-advance.min.mdx';
+import Advance from '/snippets/invoices/fr/pa-advance.mdx';
+import ReverseChargeMin from '/snippets/invoices/fr/pa-reverse-charge.min.mdx';
+import ReverseCharge from '/snippets/invoices/fr/pa-reverse-charge.mdx';
+import FinalAfterAdvanceMin from '/snippets/invoices/fr/pa-final-after-advance.min.mdx';
+import FinalAfterAdvance from '/snippets/invoices/fr/pa-final-after-advance.mdx';
+import VatCollectedMin from '/snippets/invoices/fr/pa-vat-collected.min.mdx';
+import VatCollected from '/snippets/invoices/fr/pa-vat-collected.mdx';
+import SelfBilledMin from '/snippets/invoices/fr/pa-self-billed.min.mdx';
+import SelfBilled from '/snippets/invoices/fr/pa-self-billed.mdx';
+import FacturxB2BMin from '/snippets/invoices/fr/facturx-b2b.min.mdx';
+import FacturxB2B from '/snippets/invoices/fr/facturx-b2b.mdx';
+
+<AccordionGroup>
+
+	<Accordion title="PA B2B invoice (domestic)">
+
+		A regulated B2B invoice between two French parties, both registered in the Annuaire. The [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1) add-on drives validation for the PA e-invoicing flow.
+
+		Notice:
+
+		- both parties carry a `SIREN` identity with `iso-scheme-id` `0002` and a `peppol` inbox under scheme `0225` so the workflow can route via Peppol,
+		- `fr-ctc-billing-mode` `S1` marks the standard submission (*dépôt*) of a services invoice; `untdid-document-type` `380` confirms the commercial invoice type,
+		- the `payment`, `payment-method`, and `payment-term` notes carry the French legal-mention text (penalty clauses, late-payment terms, early-payment discount), each tagged with the appropriate UNTDID 4451 subject code,
+		- `ordering.code` records the customer's purchase order reference.
+
+		<CodeGroup>
+			<B2BMin />
+			<B2B />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B invoice (building subcontracting, autoliquidation)">
+
+		A domestic B2B invoice for construction works supplied by a subcontractor to a taxable main contractor. Because both parties are French, this stays in the PA e-invoicing flow ([`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1)) even though it carries no VAT — it is not e-reporting.
+
+		Notice:
+
+		- the VAT combo uses the `reverse-charge` key, which sets `untdid-tax-category` `AE` and produces a `0.00` VAT total, with no tax rate or amount on the line,
+		- the `reverse-charge` note text is set explicitly to cite **article 283-2 nonies** (subcontracting); left to the regime default it would cite the generic article 283-1,
+		- `fr-ctc-billing-mode` is `S1` — a plain services submission: the reverse charge is carried entirely by the VAT key and note. `S5` (subcontractor invoice) applies only to subcontracting with payment delegation (*paiement direct*), which is not the case here,
+		- the reverse charge only applies where the customer is a taxable person — invoicing a non-taxable property owner would carry standard VAT instead.
+
+		<CodeGroup>
+			<ReverseChargeMin />
+			<ReverseCharge />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B credit note">
+
+		A credit note that partially cancels a previously issued PA invoice. The `preceding` array references the original invoice by series, code, and issue date.
+
+		Notice:
+
+		- `type` is `credit-note` and `untdid-document-type` is `381` (commercial credit note),
+		- the `preceding` block makes the link to the original invoice explicit — required for PA matching at the PPF.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B advance payment invoice">
+
+		An advance (down-payment) invoice — used when a payment is collected before the final goods or services are delivered.
+
+		Notice:
+
+		- the `prepayment` tag sets `untdid-document-type` to `386` (advance payment invoice),
+		- no billing mode is set explicitly: the add-on defaults `fr-ctc-billing-mode` to `M1` (submission of a mixed invoice — here a service plus a good); the advance nature is carried by the document type, not the billing mode,
+		- the final invoice issued at delivery normally references this advance to net it off the total.
+
+		<CodeGroup>
+			<AdvanceMin />
+			<Advance />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B final invoice (after down payment)">
+
+		The final invoice that closes out the advance example above: the full contract is invoiced, and the down payment already billed (`FAC 2024-AV-001`) is netted off the total.
+
+		Notice:
+
+		- `fr-ctc-billing-mode` is pinned to `M4` (mixed, final invoice after down payment); left unset it would default back to `M1`,
+		- flow 2 forbids advance-payment document types (386, 500, 503) on final invoices, so `untdid-document-type` stays `380` (BR-FR-CO-08),
+		- `payment.advances` records the 8,400.00 already paid, referencing the advance invoice — `totals.due` comes out to the remaining 12,000.00,
+		- the due-date payment terms cover only the outstanding balance.
+
+		<CodeGroup>
+			<FinalAfterAdvanceMin />
+			<FinalAfterAdvance />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B invoice after a B2C sale (VAT already collected)">
+
+		A restaurant cashes in a B2C sale — VAT is collected on the spot and reported through [e-reporting](/guides/fr-pa-reporting) — and the guest's company then asks for a proper invoice. That B2B invoice still travels the flux 2 e-invoicing flow, but must be marked so the VAT is not declared twice.
+
+		Notice:
+
+		- `fr-ctc-billing-mode` is pinned to `S7` (services, VAT already collected): the VAT was already reported with the B2C sale, so this invoice must not re-declare it. Left unset, the add-on would default to an already-paid mode and the VAT would be counted twice,
+		- `B7` is the goods counterpart — e.g. retail goods sold over the counter and invoiced to a business afterwards,
+		- the 100% advance records the on-site card payment, leaving `totals.due` at `0.00`,
+		- restaurant meals carry the intermediate 10% VAT rate.
+
+		<CodeGroup>
+			<VatCollectedMin />
+			<VatCollected />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B self-billed invoice (autofacturation)">
+
+		A domestic B2B invoice issued by the customer on behalf of the supplier under a self-billing (autofacturation) agreement. Self-billed invoices between two French parties still travel through the PA e-invoicing flow ([`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1)).
+
+		Notice:
+
+		- the `self-billed` tag sets `untdid-document-type` to `389` (self-billed invoice) — supplier and customer keep their real commercial roles, the tag records that the customer produced the document,
+		- the PA validation flips the routing check on self-billed types: it is the **customer**, as issuer, that must carry the `0225` inbox matching its SIREN,
+		- the `legal` note carries the mandatory *Autofacturation* mention, auto-tagged with `untdid-text-subject` `ABL`; the standard French payment mentions (PMT, PMD, AAB) are filled with regime defaults at build time,
+		- the reduced 5.5% VAT rate applies to the foodstuffs being supplied.
+
+		<CodeGroup>
+			<SelfBilledMin />
+			<SelfBilled />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Factur-X B2B invoice">
+
+		A domestic B2B invoice destined for Factur-X output — a human-readable PDF with the UN/CEFACT CII XML embedded (the French implementation of the same specification as ZUGFeRD). It combines the [`fr-facturx-v1`](https://docs.gobl.org/addons/fr-facturx-v1) add-on for the Factur-X format with [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1), so the same document is also valid for the PA e-invoicing flow.
+
+		Notice:
+
+		- the two add-ons compose: `fr-facturx-v1` drives the Factur-X output while `fr-ctc-flow2-v1` applies the PA validation; the `eu-en16931-v2017` profile they share is added automatically as a dependency,
+		- each party declares only a `SIRET` identity — at build time the regime derives the legal `SIREN` identity (`iso-scheme-id` `0002`) from it, next to the `0225` Peppol inboxes required for PA routing,
+		- `fr-ctc-billing-mode` is `S2` (services, already paid) because the 100% advance settles the invoice at issue; that mode requires payment terms whose due dates cover the total, leaving `totals.due` at `0.00`,
+		- the French payment mentions (PMT, PMD, AAB) are filled with regime defaults at build time.
+
+		<CodeGroup>
+			<FacturxB2BMin />
+			<FacturxB2B />
+		</CodeGroup>
+	</Accordion>
+
+</AccordionGroup>
