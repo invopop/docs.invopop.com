@@ -24,7 +24,7 @@ Verifying that a party is registered in the French Annuaire before issuing or re
 
 Add the **Lookup in Directory** step to your `invoice`, `party` or `status` workflows. 
 
-In the invoice workflow, the step can be configured to lookup suppliers and customers. The job will fail if no matching entry is found, and you can handle the exception any way you want (usually routing to non-regulated flow).
+In the **send document workflow**, the step can be configured to lookup suppliers and customers. The job will fail if no matching entry is found, and you can handle the exception any way you want (usually routing to non-regulated flow).
 
 When a match is found, the step writes the resolved routing details back onto the looked-up party (supplier or customer for invoices and payments, or the root party for standalone party documents):
 
@@ -57,7 +57,9 @@ The following outcomes are possible:
 | Party is not registered | Returns an empty list | **Non-regulated** | Route through the [e-reporting flow](/guides/fr-pa-reporting) instead of Peppol |
 
 <Note>
-  Parties located in the French overseas territories that sit **outside the French VAT zone** — Guyane (postal codes starting with `973`), Mayotte (`976`), New Caledonia (`NC`) and French Polynesia (`PF`) — are treated as foreign zones for the e-invoicing reform. The lookup short-circuits to an empty result for these parties before querying the Annuaire, even when they carry a French SIREN, so their transactions are always routed to [e-reporting](/guides/fr-pa-reporting). Metropolitan France and the overseas départements that share its VAT territory (Guadeloupe, Martinique, Réunion) remain in scope for e-invoicing.
+  French overseas territories that sit outside the French VAT zone (Guyane, Mayotte, New Caledonia and French Polynesia) are treated as foreign zones for the e-invoicing reform.
+
+  Annuaire lookup returns no result even when they carry a French SIREN, so their transactions are always routed to [e-reporting](/guides/fr-pa-reporting). 
 </Note>
 
 ## Look up by electronic address
@@ -76,9 +78,9 @@ See the [API reference for lookup by electronic address](/api-ref/apps/gov-fr/lo
 The typical pattern is to call the lookup endpoint from your own systems **before** triggering an invoice workflow, and then choose which workflow to fire:
 
 - **Both parties registered** → run the [PA send invoice workflow](/guides/fr-pa-invoicing#sending), which transmits over Peppol and forwards the F1 copy to the PPF.
-- **One or both parties unregistered** → run the [e-reporting recording workflow](/guides/fr-pa-reporting#recording) so the transaction is reported to the PPF on the next periodic submission.
+- **One or both parties unregistered** → run the [e-reporting recording workflow](/guides/fr-pa-reporting#recording-workflow) so the transaction is reported to the PPF on the next periodic submission.
 
-This keeps the **Record Invoice** step in the send workflow from rejecting non-regulated traffic.
+This keeps the **Record document** step in the send workflow from rejecting non-regulated traffic.
 
 ---
 

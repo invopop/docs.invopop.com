@@ -14,35 +14,54 @@ The France PA invoicing flow covers regulated B2B exchanges where both parties a
 
 This guide walks through how to implement e-invoicing obligations in France: 
 
-* **[Formats](#formats)**: UBL, CII, and Factur-X and how to choose between them.
-* **[Sending](#sending)**: recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
-* **[Receiving](#receiving)**: detecting the inbound format, importing it into GOBL, and recording it against your registered party.
-* **[Self-billing](#self-billing)** — how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
-* **[Example invoices](#example-invoices)** — minimal GOBL documents and their built versions, ready to paste into the GOBL builder.
+* [Workflows](#workflows): sending and receiving workflows for French documents (payments, statuses and invoices).
+* [Sending](#sending): recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
+* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
+* [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
+* [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
+* [Example invoices](#example-invoices): minimal GOBL documents and their built versions, ready to paste into the GOBL builder.
 
-## Sending
+## Workflows
+
+These workflows are shared between invoice and [status documents](/guides/fr-pa-status). The same workflow processes the different schemas and will perform different actions depending on the document type.  
+
+### Sending
 
 The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF as the fifth corner.
 
-The **Record Invoice** step validates SIRENs and checks both parties against the Annuaire. Invoices where either side is missing are rejected should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
+The **PPF record document** step validates SIRENs and checks both parties against the Annuaire. Documents where either side is missing are rejected and should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
 
+<Card iconType="duotone" title="PPF send invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Image">
+    <Frame>
+      <img src="/assets/guides/fr-invoice.png" width="650" />
+    </Frame>
+  </Tab>
+  <Tab title="JSON">
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
 
+### Receiving
 
-    <Card iconType="duotone" title="PPF send invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" horizontal>
-      Add workflow to your workspace →
+The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
+
+    <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
+      Add to my workspace →
     </Card>
-
-    <AccordionGroup>
-      <Accordion title="JSON workflow">
-        <SendInvoiceWorkflow />
-      </Accordion>
-    </AccordionGroup>
-
-  <Frame>
-  <img src="/assets/guides/fr-invoice.png" width="700" />
-  </Frame>
-
-
+<Tabs>
+  <Tab title="Image">
+    <Frame>
+      <img src="/assets/guides/fr-receive.png" width="650" />
+    </Frame>
+  </Tab>
+  <Tab title="JSON">
+    <ReceiveInvoiceWorkflow />
+  </Tab>
+</Tabs>
 
 ### Invoice formats
 
@@ -90,23 +109,7 @@ GOBL sets the `untdid-tax-category` (and `cef-vatex` exemption reason where one 
 
 The full field-level rules (permitted document types, VAT percents, and party identifier schemes) are maintained in the add-on.
 
-## Receiving
 
-The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
-
-    <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
-      Add workflow to your workspace →
-    </Card>
-
-    <AccordionGroup>
-      <Accordion title="JSON workflow">
-        <ReceiveInvoiceWorkflow />
-      </Accordion>
-    </AccordionGroup>
-
-<Frame>
-<img src="/assets/guides/fr-receive.png" width="700" />
-</Frame>
 
 ## Example invoices
 

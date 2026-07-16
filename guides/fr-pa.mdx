@@ -7,13 +7,13 @@ description: France's PA system. Guides, timeline, key concepts and obligations.
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import FAQ from '/snippets/faqs/fr/composers/app-pa.mdx';
 
-France is replacing paper and PDF invoicing with a <Tooltip headline="Continuous Transaction Control" tip="Government-mandated tax mechanisms that require businesses to submit structured transaction data to tax authorities in real time or near real time">CTC</Tooltip> regime covering all VAT-registered businesses established in France. Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) (PA) under the DGFiP mandate. The reform has two pillars: [e-invoicing](/guides/fr-pa-invoicing), which requires domestic B2B invoices to be exchanged as structured electronic documents through accredited platforms (PDPs), and [e-reporting](/guides/fr-pa-reporting), which requires transaction and payment data to be transmitted to the tax authority for operations outside the e-invoicing scope (B2C sales, international trade, and payments on services subject to VAT on collection.
+France is replacing paper and PDF invoicing with a <Tooltip headline="Continuous Transaction Control" tip="Government-mandated tax mechanisms that require businesses to submit structured transaction data to tax authorities in real time or near real time">CTC</Tooltip> regime covering all VAT-registered businesses established in France. Invopop is an [officially approved Plateforme Agréée](https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees) (PA) under the DGFiP mandate. The reform has two pillars: [Invoicing](/guides/fr-pa-invoicing), which requires domestic B2B invoices to be exchanged as structured electronic documents through accredited platforms (PDPs), and [Reporting](/guides/fr-pa-reporting), which requires transaction and payment data to be transmitted to the tax authority for operations outside the e-invoicing scope (B2C sales, international trade, and payments on services subject to VAT on collection).
 
 This guide walks through how to implement these obligations in practice: classifying your transactions into the correct flows, building compliant invoices, and handling status reporting and e-reporting submissions.
 
 ## Prerequisites
 
-- An Invopop workspace with the [France](/apps/france), [Peppol](/apps/peppol), and [OASIS UBL](http://localhost:3001/apps/oasis-ubl) apps enabled. Enable [UN/CEFACT CII](apps/uncefact-cii) for maximum compatibility and [PDF Generator](/apps/pdf-generator) to attach human readable versions of your documents.
+- An Invopop workspace with the [France](/apps/france), [Peppol](/apps/peppol), and [OASIS UBL](/apps/oasis-ubl) apps enabled. Enable [UN/CEFACT CII](/apps/uncefact-cii) for maximum compatibility and [PDF Generator](/apps/pdf-generator) to attach human readable versions of your documents.
 - French company details, including SIREN/SIRET.
 - A clear view of your invoicing flows (B2B, B2C, domestic, cross-border).
 
@@ -46,9 +46,9 @@ This guide walks through how to implement these obligations in practice: classif
   Send, receive, and derive lifecycle status updates (CDAR).
 </Card>
 
-[Directory lookup](/guides/fr-pa-reporting) queries the French Annuaire to confirm whether a party is registered before sending — useful for branching between regulated and non-regulated flows. Look up a party by its SIREN or by its electronic address.
+[Directory lookup](/guides/fr-lookup) queries the French Annuaire to confirm whether a party is registered before sending — useful for branching between regulated and non-regulated flows. Look up a party by its SIREN or by its electronic address.
 
-<Card title="Directory lookup" icon="address-book" href="/guides/fr-pa-reporting" horizontal>
+<Card title="Directory lookup" icon="address-book" href="/guides/fr-lookup" horizontal>
   Check whether a SIREN or electronic address is registered in the Annuaire.
 </Card>
 
@@ -79,27 +79,36 @@ View our [compliance timeline for France](/timelines/france).
 | **Fifth Corner** | The tax authority in the Peppol exchange model. Corners 1–4 are sender, sender's PA, receiver's PA, and receiver; the fifth corner is the tax authority that receives a copy of the invoice for regulated flows. In France this is the PPF. |
 | **F1 Invoice** | Simplified UBL format used to forward the invoice to the fifth corner (the tax authority, i.e. the PPF) for regulated flows. Part of e-invoicing, not e-reporting. Generated automatically by Invopop. |
 
-## Obligations
+## Flows and obligations
 
-The reform splits every transaction into one of two regimes, and the split is entirely determined by _who the counterparty_ is and where they sit.
+In France's e-invoicing reform, "flux" are the officially numbered message flows defined in the external specifications that structure how invoices and tax data move between businesses, their plateformes agréées (PAs), and the administration. This table presents the flows relevant to an integration with Invopop:
 
-| Issuer | Counterparty | Obligation | Notes |
-|---|---|---|---|
-| French company | French company (VAT taxable) | [E-invoicing](/guides/fr-pa-invoicing) | Domestic B2B; structured invoice via PA (flux 2). Recipient also has a reception obligation. |
-| French company | French public entity (B2G) | [E-invoicing](/guides/fr-pa-invoicing) | Via Chorus Pro, which acts as the public-sector PA |
-| French company | French non-taxable legal person (not VAT-registered) | [E-reporting](/guides/fr-pa-reporting) | Not an *assujetti* → falls out of e-invoicing, treated like B2C |
-| French company | French consumer | [E-reporting](/guides/fr-pa-reporting) | B2C, aggregated data |
-| French company | EU company | [E-reporting](/guides/fr-pa-reporting) | Intra-community supply — VAT-exempt but still reported |
-| French company | Non-EU company | [E-reporting](/guides/fr-pa-reporting) | Export — VAT-exempt but still reported |
-| French company | EU / non-EU consumer | [E-reporting](/guides/fr-pa-reporting) | B2C international / distance sales (interacts with OSS/IOSS) |
-| French company | Foreign taxable person, non-established (even if FR-VAT-registered) | [E-reporting](/guides/fr-pa-reporting) | Buyer isn't *established* → outside domestic B2B |
-| EU company | French company | [E-reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> | Intra-community acquisition, reverse charge. Deferred to **1 Sep 2027**, any size |
-| Foreign company (non-EU) | French company | [E-reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> | Reverse-charge purchase of FR-situated goods/services (autoliquidation). Received invoice, line tax key `reverse-charge` (UNTDID `AE`) → flow10. Deferred to 1 Sep 2027, any size |
-| Foreign company (non-EU) | French company | <Badge color="gray">Neither</Badge> | Straight goods import cleared at customs then import VAT self-assessed on the CA3. Outside the flow2/flow10 CTC scope |
-| Foreign non-established company (FR-VAT-registered) | French consumer / non-established taxable person | [E-reporting](/guides/fr-pa-reporting)<br /> <small>by the foreign seller</small> | Local sale situated in France where the foreign company is the VAT debtor |
-| Foreign company with a French permanent establishment | French company | [E-invoicing](/guides/fr-pa-invoicing) | Treated like a French company |
-| Foreign company | Foreign company | <Badge color="gray">Neither</Badge>  | No French VAT nexus |
-| -- | Operations exempt under Art. [261–261](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006069577/LEGISCTA000006179649/?__cf_chl_f_tk=wLPHK_DeDJkKVVDB1HwyqG1sVsSYx.6RVCOZwrecp4w-1783944438-1.0.1.1-ddoGpoFuEI3Fk6000ucfBBSRzvCflELLWEGq3ym2Kr4) | <Badge color="gray">Neither</Badge> | Dispensed from invoicing → explicitly excluded from e-reporting |
+| Flux | What it carries | Guide |
+|---|---|---|
+| <Badge color="green">2</Badge> | The structured invoice exchanged between the supplier's and the buyer's PAs | [Invoicing](/guides/fr-pa-invoicing) |
+| <Badge color="blue">6</Badge> | Lifecycle statuses (déposée, rejetée, refusée, encaissée) plus optional statuses including payment details | [Status](/guides/fr-pa-status) |
+| <Badge color="purple">10.1</Badge> | International B2B transaction data where either business is French | [Reporting](/guides/fr-pa-reporting) |
+| <Badge color="red">10.2</Badge> | Payment data on those international B2B transactions | [Reporting](/guides/fr-pa-reporting) |
+| <Badge color="orange">10.3</Badge> | Aggregated B2C transaction data (e.g., daily sales totals per rate) | [Reporting](/guides/fr-pa-reporting) |
+| <Badge color="yellow">10.4</Badge> | Aggregated B2C payment data | [Reporting](/guides/fr-pa-reporting) |
+
+The reform splits every transaction into one of two regimes, and the split is entirely determined by _who the counterparty_ is and where they sit. This tells us the flow that corresponds to the transaction:
+
+| Issuer → counterparty | Flows | Obligation |
+|---|---|---|
+| French company → French company (VAT taxable) | <Tooltip headline="Flux 2" tip="The structured invoice exchanged between the supplier's and the buyer's PAs"><Badge color="green">2</Badge></Tooltip> <Tooltip headline="Flux 6" tip="Lifecycle statuses (déposée, rejetée, refusée, encaissée) plus optional statuses including payment details"><Badge color="blue">6</Badge></Tooltip> | [Invoicing](/guides/fr-pa-invoicing) and [Status](/guides/fr-pa-status) |
+| Foreign company with a French permanent establishment → French company | <Tooltip headline="Flux 2" tip="The structured invoice exchanged between the supplier's and the buyer's PAs"><Badge color="green">2</Badge></Tooltip> <Tooltip headline="Flux 6" tip="Lifecycle statuses (déposée, rejetée, refusée, encaissée) plus optional statuses including payment details"><Badge color="blue">6</Badge></Tooltip> | [Invoicing](/guides/fr-pa-invoicing)<br /> [Status](/guides/fr-pa-status) |
+| French company → EU company | <Tooltip headline="Flux 10.1" tip="International B2B transaction data where either business is French"><Badge color="purple">10.1</Badge></Tooltip> <Tooltip headline="Flux 10.2" tip="Payment data on those international B2B transactions"><Badge color="red">10.2</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| French company → Non-EU company | <Tooltip headline="Flux 10.1" tip="International B2B transaction data where either business is French"><Badge color="purple">10.1</Badge></Tooltip> <Tooltip headline="Flux 10.2" tip="Payment data on those international B2B transactions"><Badge color="red">10.2</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| French company → Foreign taxable person, non-established (even if FR-VAT-registered) | <Tooltip headline="Flux 10.1" tip="International B2B transaction data where either business is French"><Badge color="purple">10.1</Badge></Tooltip> <Tooltip headline="Flux 10.2" tip="Payment data on those international B2B transactions"><Badge color="red">10.2</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| EU company → French company | <Tooltip headline="Flux 10.1" tip="International B2B transaction data where either business is French"><Badge color="purple">10.1</Badge></Tooltip> <Tooltip headline="Flux 10.2" tip="Payment data on those international B2B transactions"><Badge color="red">10.2</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> |
+| Foreign company (non-EU) → French company | <Tooltip headline="Flux 10.1" tip="International B2B transaction data where either business is French"><Badge color="purple">10.1</Badge></Tooltip> <Tooltip headline="Flux 10.2" tip="Payment data on those international B2B transactions"><Badge color="red">10.2</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting)<br /><small>by the French buyer</small> |
+| French company → French non-taxable legal person (not VAT-registered) | <Tooltip headline="Flux 10.3" tip="Aggregated B2C transaction data (e.g., daily sales totals per rate)"><Badge color="orange">10.3</Badge></Tooltip> <Tooltip headline="Flux 10.4" tip="Aggregated B2C payment data"><Badge color="yellow">10.4</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| French company → French consumer | <Tooltip headline="Flux 10.3" tip="Aggregated B2C transaction data (e.g., daily sales totals per rate)"><Badge color="orange">10.3</Badge></Tooltip> <Tooltip headline="Flux 10.4" tip="Aggregated B2C payment data"><Badge color="yellow">10.4</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| French company → EU / non-EU consumer | <Tooltip headline="Flux 10.3" tip="Aggregated B2C transaction data (e.g., daily sales totals per rate)"><Badge color="orange">10.3</Badge></Tooltip> <Tooltip headline="Flux 10.4" tip="Aggregated B2C payment data"><Badge color="yellow">10.4</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting) |
+| Foreign non-established company (FR-VAT-registered) → French consumer / non-established taxable person | <Tooltip headline="Flux 10.3" tip="Aggregated B2C transaction data (e.g., daily sales totals per rate)"><Badge color="orange">10.3</Badge></Tooltip> <Tooltip headline="Flux 10.4" tip="Aggregated B2C payment data"><Badge color="yellow">10.4</Badge></Tooltip> | [Reporting](/guides/fr-pa-reporting)<br /> <small>by the foreign seller</small> |
+| French company → French public entity (B2G) | Chorus Pro circuit | [Chorus Pro](/guides/fr-chorus-pro) |
+
 
 ## Mandatory mentions
  
