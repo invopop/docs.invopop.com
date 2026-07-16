@@ -45,6 +45,97 @@ Registration on the French Directory is required for any SIREN that will issue, 
   </Tab>
 </Tabs>
 
+## Agreement signing
+
+The `gov-fr.agreement.sign` step generates the mandate and publishes a `link_url` under the `approval-link` key in the silo entry meta. The party representative can complete signing through the registration wizard, or platforms that want full control can use the [entry API](#entry-api) directly.
+
+### Registration wizard
+
+Once the workflow step runs, find the `link_url` in the `approval-link` meta entry of the silo entry. In console, it appears in the Meta tab of the entry's right sidebar.
+
+<Accordion title="Example approval-link meta entry">
+```json
+{
+  "src": "gov-fr",
+  "key": "approval-link",
+  "ref": "EgDeG3pDBDe",
+  "link_url": "https://gouv-fr.invopop.com/reg/EgDeG3pDBDe/start",
+  "link_scope": "public",
+  "indexed": true,
+  "shared": true
+}
+```
+</Accordion>
+
+Forward the `link_url` to the party representative, or embed it as an `iframe` to keep them within your platform.
+
+The wizard walks the representative through each step:
+
+<Steps>
+  <Step title="Party details">
+    Review and confirm the pre-filled company and signer information.
+  </Step>
+  <Step title="Identity document">
+    Upload a photo of the signer's ID card (front and back) or passport page.
+  </Step>
+  <Step title="Sign mandate">
+    Sign the pre-filled mandate directly in the browser, or upload a pre-signed PDF.
+  </Step>
+  <Step title="Confirm">
+    Submit for Invopop review. The party status moves to `submitted` until a decision is made.
+  </Step>
+</Steps>
+
+### Entry API
+
+For platforms that want to drive the signing process programmatically, use the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required on both paths.
+
+<Tabs>
+  <Tab title="In-app signing">
+    The customer signs the mandate directly. Invopop stamps the signature and verifies identity.
+
+    <Steps>
+      <Step title="Download mandate">
+        `GET /agreement` returns the mandate PDF pre-filled with the party's details. Fails with `422` if any required signer field is missing.
+      </Step>
+      <Step title="Upload identity document">
+        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
+      </Step>
+      <Step title="Sign the mandate">
+        `POST /sign` stamps the signature. Pass a drawn PNG or JPEG image in `signature` (≤ 4 MB), or omit it to render the signer's name as a typed signature.
+      </Step>
+      <Step title="Confirm">
+        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Pre-signed PDF">
+    The customer signs the mandate externally and uploads the result.
+
+    <Steps>
+      <Step title="Download mandate">
+        `GET /agreement` returns the pre-filled mandate PDF for the customer to sign externally.
+      </Step>
+      <Step title="Upload identity document">
+        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
+      </Step>
+      <Step title="Upload signed PDF">
+        `POST /agreement` stores the signed PDF (≤ 4 MB).
+      </Step>
+      <Step title="Confirm">
+        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+### Taking over a line from another Plateforme Agréée
+
+If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), registration takes that line over instead of creating a duplicate. To do so, the party must specify the former PA line under `fr-former-matricule` meta key. This will add an additional section in the signed agreement that asks for consent to take over the line. 
+
+<Note>
+  If a takeover is required and the matricule is missing, registration fails and asks for it.
+</Note>
 
 ## PPF unregister supplier workflow
 
@@ -61,16 +152,6 @@ Registration on the French Directory is required for any SIREN that will issue, 
     <UnregisterWorkflow />
   </Tab>
 </Tabs>
-
-## Taking over a line from another Plateforme Agréée
-
-If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), registration takes that line over instead of creating a duplicate. To do so, the party must specify the former PA line under `fr-former-matricule` meta key. This will add an additional section in the signed agreement that asks for consent to take over the line. 
-
-<Note>
-  If a takeover is required and the matricule is missing, registration fails and asks for it.
-</Note>
-
-
 
 ## FAQ
 
