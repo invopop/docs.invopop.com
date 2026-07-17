@@ -6,6 +6,7 @@ description: Issue CFDI documents in Mexico using the SAT Mexico app.
 
 import PostRegistration from '/snippets/workflows/mx/sat-postregistration.mdx';
 import RegisterSupplier from '/snippets/workflows/mx/sat-register-supplier.mdx';
+import UnregisterSupplier from '/snippets/workflows/mx/sat-unregister-supplier.mdx';
 import IssueInvoice from '/snippets/workflows/mx/sat-issue-invoice.mdx';
 import Supplier from '/snippets/suppliers/mx/sat-supplier.mdx';
 import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
@@ -54,7 +55,7 @@ To issue invoices in Mexico via the SAT, you will need:
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Test CSDs pre-registered; can use test RFC or register your own | Real RFC and CSD certificate required |
+| **Supplier** | Register a test supplier using one of SW Sapien's published test CSDs, or register your own | Real RFC and CSD certificate required |
 
 ## Setup
 
@@ -183,11 +184,7 @@ Registering a business entity requires uploading the CSD to our local provider, 
 Each CSD is tied to an RFC. When you submit an e-invoice, including the supplier's RFC, SW Sapiens checks for a valid CSD linked to it, as SAT requires a valid certificate to issue invoices.
 
 <Note>
-  To speed things up, we've pre-registered all the test CSDs listed on the [SW Sapien test page](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/) in the sandbox.
-
-  If you're working in **sandbox**, you can either:
-  - Skip this section and go straight to [Send an Invoice](#send-an-invoice) using a test RFC, or
-  - Register your own certificate by following the steps below.
+  Registration is required even in the **sandbox** now. When following the steps below in that environment, you don't need a real CSD: you can register either your own company and certificate, or any of the test companies published on the [SW Sapien test page](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/), where you can download each test company's certificate, private key, and password. Either way, make sure the supplier's name and RFC matches its certificate.
 </Note>
 
 <Steps>
@@ -232,7 +229,7 @@ Each CSD is tied to an RFC. When you submit an e-invoice, including the supplier
 
     Fill out the form with the following information: Issuer RFC, CSD certificate file (`.crt`), private key (`.key`), and the private key password.
 
-    Follow this [guide](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan) to generate the CSD certificate and key.
+    Follow this [guide](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan) to generate the CSD certificate and key if you need to.
 
     When you click **Save**, the form details are securely sent to the PAC (*Proveedor Autorizado de Certificación*), who will handle invoice signing and submission to the SAT.
 
@@ -382,6 +379,32 @@ Notice:
 </Accordion>
 
 </AccordionGroup>
+
+## Unregister a supplier
+
+Unregistering a supplier revokes their invoice issuing privileges from your workspace. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
+
+  <Tabs>
+      <Tab title="Template">
+        <Card title="SAT unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-unregister-supplier" cta="Add to my workspace">
+          This workflow will revoke invoice issuing privileges for a SAT supplier.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterSupplier />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
+
+        1. **Unregister supplier from SAT** - Removes the supplier's registration so it can no longer issue invoices from this workspace.
+        2. **Set state** - Select `void` to label the supplier accordingly.
+
+        In the Error Handling section, add the **Set state** action and select `Error`.
+
+      </Tab>
+    </Tabs>
 
 ## FAQ
 

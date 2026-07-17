@@ -1,5 +1,7 @@
 import ATB2BInvoiceMin from '/snippets/invoices/pt/at-b2b.min.mdx';
 import ATB2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
+import ATCashVATInvoiceMin from '/snippets/invoices/pt/at-cash-vat.min.mdx';
+import ATCashVATInvoice from '/snippets/invoices/pt/at-cash-vat.mdx';
 import DeliveryMin from '/snippets/deliveries/pt/delivery.min.mdx';
 import Delivery from '/snippets/deliveries/pt/delivery.mdx';
 import ReturnMin from '/snippets/deliveries/pt/return.min.mdx';
@@ -14,6 +16,8 @@ import PaymentMin from '/snippets/payments/pt/payment.min.mdx';
 import Payment from '/snippets/payments/pt/payment.mdx';
 import WithholdingMin from '/snippets/invoices/pt/at-withholding.min.mdx';
 import Withholding from '/snippets/invoices/pt/at-withholding.mdx';
+import CashVATReceiptMin from '/snippets/payments/pt/cash-vat.min.mdx';
+import CashVATReceipt from '/snippets/payments/pt/cash-vat.mdx';
 
 <AccordionGroup>
 	<Accordion title="AT B2B invoice">
@@ -48,6 +52,22 @@ import Withholding from '/snippets/invoices/pt/at-withholding.mdx';
 		<CodeGroup>
 			<WithholdingMin />
 			<Withholding />
+    </CodeGroup>
+	</Accordion>
+  
+	<Accordion title="AT Cash VAT invoice">
+
+		In this example, we're issuing a standard invoice from a Portuguese supplier that has adhered to the **Cash VAT scheme** (_regime de IVA de Caixa_), under which VAT becomes due only when the customer actually pays rather than when the invoice is issued.
+
+		Notice:
+
+		- the only difference from the standard AT B2B invoice above is the `cash-vat` tag (`$tags: ["cash-vat"]`), which flags the supplier's membership in the scheme,
+		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon reacts to that tag by setting the [`pt-saft-cash-vat`](https://docs.gobl.org/addons/pt-saft-v1#cash-vat-scheme-indicator) extension to `1` in the invoice's `tax` section, and,
+		- the document is otherwise a normal `standard` invoice: the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension is still set to `FT` (Fatura) and the standard VAT rate still maps to the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension `NOR`.
+
+		<CodeGroup>
+			<ATCashVATInvoiceMin />
+			<ATCashVATInvoice />
 		</CodeGroup>
 	</Accordion>
 
@@ -153,6 +173,24 @@ import Withholding from '/snippets/invoices/pt/at-withholding.mdx';
 		<CodeGroup>
 			<PaymentMin />
 			<Payment />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT Cash VAT receipt">
+
+		In this example, we're issuing a payment receipt for a supplier under the **Cash VAT scheme** (_regime de IVA de Caixa_). For these suppliers, the receipt is the document that actually triggers the VAT becoming due, so the AT distinguishes it from an ordinary receipt.
+
+		Notice:
+
+		- the document carries the `cash-vat` tag (`$tags: ["cash-vat"]`), exactly as the Cash VAT invoice does,
+		- on a `receipt`, that tag drives the [`pt-saft-payment-type`](https://docs.gobl.org/addons/pt-saft-v1#payment-type) extension to `RC` (_Recibo no âmbito do regime de IVA de Caixa_) instead of the default `RG` (_Outro Recibo_) you'd get on the ordinary AT payment receipt above,
+		- the `series` follows the `RC ` prefix convention and must be registered through the Supplier Portal,
+		- the payment line references the original invoice being settled, carrying its VAT breakdown so the AT can match the now-due tax to the issued invoice, and,
+		- as with any receipt, the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension is auto-assigned per method (`TB` for the bank transfer) and the [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension is set to `P`.
+
+		<CodeGroup>
+			<CashVATReceiptMin />
+			<CashVATReceipt />
 		</CodeGroup>
 	</Accordion>
 </AccordionGroup>

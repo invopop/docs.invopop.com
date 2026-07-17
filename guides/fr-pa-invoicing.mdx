@@ -121,6 +121,36 @@ The receive workflow detects the inbound format, imports it into a GOBL document
   </Tab>
 </Tabs>
 
+## Self-billing
+
+In self-billing (_also called autofacturation_), the **customer**, rather than the supplier, creates and issues the invoice on the supplier's behalf. The buyer's platform acts as the sending PA and triggers the flow 1 reporting to the PPF, while the supplier's platform receives the invoice.
+
+Invopop covers self-billing with the **same send and receive workflows described above**. The only difference is on the document, which carries the `self-billed` tag.
+
+<Note>
+France does not treat self-billing as a document type of its own: it is a standard invoice with the `untdid-document-type` extension set to `389`. The [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1#standard-self-billed) add-on derives that code from the `self-billed` tag automatically, so you never set it yourself.
+</Note>
+
+The parties keep their natural roles, the vendor remains the `supplier`, and the buyer the `customer`. When Invopop detects the tag, it acts on behalf of the customer and adjusts the flow automatically:
+
+- The **customer**, rather than the supplier, is validated as the registered party.
+- The invoice is delivered over Peppol to the **supplier's** PA.
+- The invoice is recorded and forwarded to the PPF as a self-billed invoice.
+
+France also requires the _autofacturation_ note on the invoice, which appears as a `legal` note, as shown in the [example](#example-invoices) below.
+
+### Step by step
+
+How each step of the self-billing use case maps to an action in Invopop, on both the buyer (sending) and supplier (receiving) side. Statuses are built and exchanged as described in the [status guide](/guides/fr-pa-status).
+
+| Step | Actor | In Invopop |
+|---|---|---|
+| 1 | Buyer | Creates a GOBL invoice tagged `self-billed`. |
+| 2 | Buyer's PA | The buyer's [send workflow](#sending) generates the UBL, CII, or Factur-X document and transmits it as normal. The mandatory `200` Déposée status is emitted automatically once the PPF accepts flow 1. |
+| 3 | Seller's PA | The seller's [receive workflow](#receiving) imports the invoice and records it, resolving the seller's registered party as the `supplier`. |
+| 4 | Seller | Upon reception of payment, the seller builds a `bill.Payment` referencing the invoice, sends it to the customer and forwards it to the PPF. |
+| 5 | Buyer | The buyer's receive workflow imports the inbound CDAR and records it against the invoice. |
+
 ## Example invoices
 
 Each example below pairs a hand-authored minimal GOBL invoice with the built version produced by `gobl build`. Paste either into the [GOBL builder](https://build.gobl.org) to preview the document, or use the minimal version as a starting point for your own integration.
