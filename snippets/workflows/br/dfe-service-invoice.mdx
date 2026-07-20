@@ -1,20 +1,20 @@
 ---
-title: "DF-e issue service invoice (NFS-e)"
-description: "Issue a NFS-e invoice in Brazil"
+title: "SEFAZ issue NFS-e invoice"
+description: "Issue an NFS-e service invoice via PlugNotas"
 countryCode: "br"
 appId: "nfe-br"
 schema: "bill/invoice"
 ---
 
-```json Example DF-e issue service invoice (NFS-e) workflow
+```json Example SEFAZ issue NFS-e invoice workflow
 {
-    "name": "DF-e issue service invoice (NFS-e)",
-    "description": "Issue a NFS-e invoice in Brazil",
+    "name": "SEFAZ issue NFS-e invoice",
+    "description": "Issue an NFS-e service invoice via PlugNotas",
     "schema": "bill/invoice",
     "steps": [
         {
             "id": "d1c7bde0-b651-11f0-b6c3-efa5610a4723",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `processing`{.state .processing}",
             "config": {
@@ -23,7 +23,7 @@ schema: "bill/invoice"
         },
         {
             "id": "dbcb8600-b651-11f0-b6c3-efa5610a4723",
-            "name": "Add Sequential Code",
+            "name": "Add sequential code",
             "provider": "sequence.enumerate",
             "summary": "Dynamic · NFS-e · 1",
             "config": {
@@ -34,17 +34,17 @@ schema: "bill/invoice"
         },
         {
             "id": "e8eba950-b651-11f0-b6c3-efa5610a4723",
-            "name": "Sign Envelope",
+            "name": "Sign envelope",
             "provider": "silo.close"
         },
         {
             "id": "ec64f190-b651-11f0-b6c3-efa5610a4723",
-            "name": "Send NFS-e (Brazil)",
+            "name": "Send NFS-e to Prefeitura",
             "provider": "nfe-br.send"
         },
         {
             "id": "eecc7bb0-b651-11f0-b6c3-efa5610a4723",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `sent`{.state .sent}",
             "config": {
@@ -55,7 +55,7 @@ schema: "bill/invoice"
     "rescue": [
         {
             "id": "f9195ac0-b651-11f0-b6c3-efa5610a4723",
-            "name": "Set State",
+            "name": "Set state",
             "provider": "silo.state",
             "summary": "Set state to `error`{.state .error}",
             "config": {

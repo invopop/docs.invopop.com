@@ -1,0 +1,80 @@
+import B2CMin from '/snippets/payments/fr/b2c.min.mdx';
+import B2C from '/snippets/payments/fr/b2c.mdx';
+import IntlEUMin from '/snippets/payments/fr/intl-eu.min.mdx';
+import IntlEU from '/snippets/payments/fr/intl-eu.mdx';
+import InternationalMin from '/snippets/invoices/fr/pa-b2b-international.min.mdx';
+import International from '/snippets/invoices/fr/pa-b2b-international.mdx';
+import ReverseChargeMin from '/snippets/invoices/fr/pa-reverse-charge.min.mdx';
+import ReverseCharge from '/snippets/invoices/fr/pa-reverse-charge.mdx';
+import SelfBilledMin from '/snippets/invoices/fr/pa-self-billed.min.mdx';
+import SelfBilled from '/snippets/invoices/fr/pa-self-billed.mdx';
+import SelfBilledInternationalMin from '/snippets/invoices/fr/pa-self-billed-international.min.mdx';
+import SelfBilledInternational from '/snippets/invoices/fr/pa-self-billed-international.mdx';
+
+
+<AccordionGroup>
+	<Accordion title="PA intra-community B2B invoice">
+
+		A French supplier invoicing a customer in another EU member state. Cross-border B2B is **not** transmitted via the PA e-invoicing flow — it falls under [e-reporting](/guides/fr-pa-reporting) instead — but the same GOBL document is used as the source of truth for both.
+
+		Notice:
+
+		- the customer carries a DE tax ID and a generic email inbox rather than a Peppol address,
+		- the VAT combo uses the `intra-community` key, which sets `untdid-tax-category` `K` automatically; the `cef-vatex` `VATEX-EU-IC` exemption reason marks the intra-community supply,
+		- the [`fr-ctc-flow10-v1`](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on validates the document for the periodic e-report to the PPF.
+
+		<CodeGroup>
+			<InternationalMin />
+			<International />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA cross-border self-billed invoice">
+
+		A cross-border sale by a French supplier where the German customer issues the invoice under a self-billing agreement. Like all cross-border B2B, it is not transmitted through the PA e-invoicing flow — the French supplier reports the sale via [e-reporting](/guides/fr-pa-reporting) (Flux 10.1), validated by the [`fr-ctc-flow10-v1`](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on.
+
+		Notice:
+
+		- the `self-billed` tag records that the customer issued the document; the e-reporting obligation stays with the French supplier, who includes the sale in its periodic Flux 10 submission,
+		- Flow 10 has no dedicated self-billed document code — `untdid-document-type` stays `380`, unlike e-invoicing where the tag maps to `389`,
+		- the intra-community VAT combo (`untdid-tax-category` `K`, `cef-vatex` `VATEX-EU-IC`) zero-rates the supply, as in the other cross-border example.
+
+		<CodeGroup>
+			<SelfBilledInternationalMin />
+			<SelfBilledInternational />
+		</CodeGroup>
+	</Accordion>
+
+			<Accordion title="Domestic B2C payment">
+
+		A cashed-in receipt from a domestic B2C transaction. Domestic B2C payments aggregate by `(date, currency)` and are rate-agnostic at the bucket level, so the tax breakdown lives directly on each line rather than on a referenced invoice.
+
+		Notice:
+
+		- `type` is `receipt` and `method.key` `credit-transfer` records how the money was received,
+		- no `customer` is set — domestic B2C payments don't need counterparty identification,
+		- `lines[i].document` is omitted on purpose: a line without a `document` reference is what classifies the payment as domestic B2C; a line with one would route it to international B2B instead,
+		- `lines[i].tax.categories[...].rates[...]` carries the VAT base, percent and amount directly on each line, since domestic B2C buckets aggregate by `(date, currency)` and don't reference an underlying invoice.
+
+		<CodeGroup>
+			<B2CMin />
+			<B2C />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="International B2B payment">
+
+		A cross-border B2B payment settling a previously issued invoice — here, Bistrot Lyon SAS cashing in from German customer Müller GmbH. International B2B payments report per-payment detail and require the counterparty identification plus a link to the underlying invoice.
+
+		Notice:
+
+		- `customer` is populated with the foreign counterparty (DE tax ID),
+		- `lines[i].document` references the invoice being settled by `code` and `issue_date` — this is both how `gov-fr.reporting.record` classifies the payment as international B2B and how GOBL allocates the cashed amount across the original invoice's tax rates,
+		- if the referenced invoice had mixed VAT rates and this payment only partially settles it, GOBL splits the cash proportionally across rates at calculation time — you don't write that math.
+
+		<CodeGroup>
+			<IntlEUMin />
+			<IntlEU />
+		</CodeGroup>
+	</Accordion>
+</AccordionGroup>

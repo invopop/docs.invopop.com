@@ -1,15 +1,13 @@
 ---
-title: "PPF send invoice"
-description: "Send an invoice via Peppol and record it with PPF"
+title: "PPF send document"
+description: "Send an invoice, status or payment via Peppol and record it with PPF"
 countryCode: "fr"
-appId: "gov-fr"
-schema: "bill/invoice"
+appId: "gov-fr
 ---
-```json PPF send invoice workflow
+```json PPF send document workflow
 {
-    "name": "PPF send invoice",
-    "description": "Send an invoice via Peppol and record it with PPF",
-    "schema": "bill/invoice",
+    "name": "PPF send document",
+    "description": "Send an invoice, status or payment via Peppol and record it with PPF",
     "steps": [
         {
             "id": "72bc5070-1a17-11f1-a82f-e740c226ef51",
@@ -26,21 +24,55 @@ schema: "bill/invoice"
             "provider": "silo.close"
         },
         {
+            "id": "bf2c86b0-8127-11f1-9e29-9d2d7ab31d21",
+            "name": "Document is an invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "1b5850d0-13bf-11f1-bc3b-b99ec414b63d",
+                            "name": "Generate UBL document",
+                            "provider": "ubl.generate",
+                            "summary": "Peppol France CIUS v1",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "peppol-fr-cius",
+                                "private": false,
+                                "validate_ubl": false
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "e30aa7b0-8127-11f1-9e29-9d2d7ab31d21",
+                            "name": "Generate CDAR Status",
+                            "provider": "cii.generate",
+                            "summary": "France CTC Flow 6 CDAR (lifecycle status/payment)",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "fr-ctc-cdar-flow6",
+                                "validate_cii": false
+                            }
+                        }
+                    ]
+                }
+            ],
+            "config": {
+                "expr": "doc['$schema'] endsWith 'bill/invoice'",
+                "scope": "env"
+            }
+        },
+        {
             "id": "f1e30fa0-13c9-11f1-98a6-7dfa4cb26122",
             "name": "Record document for e-invoicing",
             "provider": "gov-fr.directory.record"
-        },
-        {
-            "id": "1b5850d0-13bf-11f1-bc3b-b99ec414b63d",
-            "name": "Generate UBL document",
-            "provider": "ubl.generate",
-            "summary": "Peppol France CIUS v1",
-            "config": {
-                "attach_invoice_pdf": false,
-                "doc_type": "peppol-fr-cius",
-                "private": false,
-                "validate_ubl": false
-            }
         },
         {
             "id": "ab598990-16f0-11f1-86ba-d13d91b4f398",

@@ -1,5 +1,5 @@
 ---
-title: "France PA — lifecycle status"
+title: "Invoice lifecycle status in France"
 sidebarTitle: "Status"
 description: Build, send and receive lifecycle status and payment updates (CDAR) for B2B invoices.
 ---
@@ -32,29 +32,61 @@ import State211Min from '/snippets/examples/fr/states/211-payment-advice.min.mdx
 import State212 from '/snippets/examples/fr/states/212-payment-receipt.mdx';
 import State212Min from '/snippets/examples/fr/states/212-payment-receipt.min.mdx';
 
-<Note>
-  Lifecycle status updates on domestic B2B invoices — acknowledged, accepted, disputed, refused, paid. They are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
-</Note>
 
-France requires lifecycle status updates on B2B national invoices to be reported to the PPF. You build each one as a GOBL document and send it through the standard send workflow. Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each) — but **`210` Refusée (refused) and `212` Encaissée (paid) are the two that must be forwarded to the PPF**. The codes `200` Déposée and `213` Rejetée are emitted automatically by Invopop, so you never build or send them.
+  Lifecycle status updates on domestic B2B invoices are exchanged between PAs over Peppol, with the mandatory codes also forwarded to the PPF.
+
+Each status must be built as a GOBL silo entry and processed through the [invoicing workflow](/guides/fr-pa-invoicing#sending). Which codes you send depends on whether you operate the supplier or the buyer PA (see [Status codes](#status-codes) for who issues each).
+
+## Status codes
+
+Status codes correspond to a lifecycle event that is modeled as a GOBL document that matches its purpose. Payment events <Badge color="green">211</Badge> and <Badge color="green">212</Badge> are GOBL [bill/payment](https://docs.gobl.org/draft-0/bill/payment#payment) documents. Other codes are invoice lifecycle events [bill/status](https://docs.gobl.org/draft-0/bill/status#status).
+
+The `fr-ctc-flow6-v1` addon maps each document to its CDV `ProcessConditionCode`. You set the GOBL fields, not the code.
+
+### Issued by the platform
+
+Emitted automatically by Invopop as the Plateforme Agréée — you never build or send these.
+
+| Status | Document | Notes |
+|---|---|---|
+| <Badge color="gray">200</Badge><br /> <small>Déposée / Deposited</small> | — | Emitted when the invoice is deposited on the platform. |
+| <Badge color="gray">201</Badge><br /> <small>Émise par la plateforme / Issued by platform</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Emitted when the platform transmits the invoice. You may receive it on the buyer side — no action needed. |
+| <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Emitted when a platform rejects the invoice on validation. |
+
+### Issued by the buyer
+
+| Status | Document | Notes |
+|---|---|---|
+| <Badge color="blue">202</Badge><br /> <small>Reçue par la PA / Received by recipient</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Acknowledge that the invoice has been received. |
+| <Badge color="blue">203</Badge><br /> <small>Mise à disposition / Made available</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. The invoice has been made available to the buyer. |
+| <Badge color="blue">204</Badge><br /> <small>Prise en charge / Taken into account</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Signal that the invoice is being processed. |
+| <Badge color="blue">205</Badge><br /> <small>Approuvée / Approved</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Approve the invoice in full. |
+| <Badge color="yellow">206</Badge><br /> <small>Partiellement approuvée / Partially approved</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Approve part of the invoice; requires a [reason](#available-reasons-for-codes), typically with an `action` requesting a partial credit note. |
+| <Badge color="orange">207</Badge><br /> <small>En litige / Disputed</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Dispute the invoice; requires a [reason](#available-reasons-for-codess). |
+| <Badge color="yellow">208</Badge><br /> <small>Suspendue / Suspended</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Pause processing while the supplier provides missing information; requires a [reason](#available-reasons-for-codess). |
+| <Badge color="red">210</Badge><br /> <small>Refusée / Refused by buyer</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | **Mandatory** when refusing an invoice; requires a [reason](#available-reasons-for-codess). Forwarded to the PPF. |
+| <Badge color="green">211</Badge><br /> <small>Paiement transmis / Payment advice</small> | [bill/payment](https://docs.gobl.org/draft-0/bill/payment#payment) | Optional. Notify the supplier that a payment has been sent. |
+
+### Issued by the supplier
+
+| Status | Document | Notes |
+|---|---|---|
+| <Badge color="yellow">209</Badge><br /> <small>Complétée / Completed</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Lift a `208` suspension by supplying the requested data. |
+| <Badge color="green">212</Badge><br /> <small>Encaissée / Cashed</small> | [bill/payment](https://docs.gobl.org/draft-0/bill/payment#payment) | **Mandatory** when the invoice is paid. Forwarded to the PPF. |
 
 ## Invoice lifecycle
 
-After an invoice is issued it moves through a sequence of lifecycle events. Each event is a GOBL [`bill.Status`](https://docs.gobl.org/draft-0/bill/status) or [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) that references the invoice and carries one CDV ProcessConditionCode. For the full list of codes — with the document each maps to and which party issues it — see [Status codes](#status-codes).
+After an invoice is issued it moves through a sequence of lifecycle events. Each event is a [GOBL status](https://docs.gobl.org/draft-0/bill/status) or [GOBL payment](https://docs.gobl.org/draft-0/bill/payment) that references the invoice and carries one CDV `ProcessConditionCode`. For the full list of codes see [Status codes](#status-codes).
 
-The paths below are **common examples, not an exhaustive set**: any code can in principle follow another (e.g. a `205` approval can still be followed by a `210` refusal). The typical sequences are:
+The paths below are **common examples, not an exhaustive set**: any code can in principle follow another (e.g. a <Badge color="blue">205</Badge> approval can still be followed by a <Badge color="red">210</Badge> refusal). The typical sequences are:
 
-| Path | Sequence |
-|---|---|
-| **Happy path** | `201` issued → `202` received → `203` made available → `204` taken into account → `205` approved → `211` payment advice → `212` receipt |
-| **Partial approval** | `202` → `206` partially approved → `212` |
-| **Dispute resolved** | `202` → `207` in dispute → `208` suspended → `209` completed → `205` approved |
-| **Refused** | `202` → `210` refused |
+| Happy path | Partial approval | Dispute resolved |
+|:---:|:----:|:----:|
+| <Badge color="gray">201</Badge><br /> <small>Issued</small><br />↓<br /><Badge color="blue">202</Badge><br /> <small>Received</small><br />↓<br /><Badge color="blue">203</Badge><br /> <small>Made available</small><br />↓<br /><Badge color="blue">204</Badge><br /> <small>Taken into account</small><br />↓<br /><Badge color="blue">205</Badge><br /> <small>Approved</small><br />↓<br /><Badge color="green">211</Badge><br /> <small>Payment advice</small><br />↓<br /><Badge color="green">212</Badge><br /> <small>Receipt</small> | <Badge color="gray">201</Badge><br /> <small>Issued</small><br />↓<br /><Badge color="blue">202</Badge><br /> <small>Received</small><br />↓<br /><Badge color="yellow">206</Badge><br /> <small>Partially approved</small><br />↓<br /><Badge color="green">212</Badge><br /> <small>Receipt</small> | <Badge color="gray">201</Badge><br /> <small>Issued</small><br />↓<br /><Badge color="blue">202</Badge><br /> <small>Received</small><br />↓<br /><Badge color="orange">207</Badge><br /> <small>In dispute</small><br />↓<br /><Badge color="yellow">208</Badge><br /> <small>Suspended</small><br />↓<br /><Badge color="yellow">209</Badge><br /> <small>Completed</small><br />↓<br /><Badge color="blue">205</Badge><br /> <small>Approved</small> <br />↓<br /><Badge color="green">212</Badge><br /> <small>Receipt</small> |
 
 ```mermaid
 flowchart LR
-    I[Invoice] --> S201[201 issued]
-    S201 --> S202[202 received]
+    S201[201 issued] --> S202[202 received]
     S202 --> S203[203 made available]
     S203 --> S204[204 taken into account]
     S204 --> S205[205 approved]
@@ -69,41 +101,220 @@ flowchart LR
     S206 --> P212
 ```
 
-## `bill.Status` vs `bill.Payment`
+## Workflows
 
-A lifecycle event is modelled as the GOBL document that matches its nature:
+<Note>A status is sent or received with the **same workflow as an invoice**.</Note>
 
-- **`bill.Status`** — *processing* events: the recipient acknowledging, making available, taking into account, accepting, partially accepting, disputing, suspending or refusing the invoice, or the supplier completing a suspension. These describe where the invoice is in its handling. Codes `201`–`210`.
-- **`bill.Payment`** — *payment* events: a payment **advice** (the buyer tells the supplier a payment has been sent) or a payment **receipt** (the supplier confirms funds received). These describe money movement, so they use GOBL's dedicated payment document, which carries the amount, method and value date. Codes `211` (advice) / `212` (receipt).
+There is no dedicated status workflow. The invoicing workflow will generate the appropriate format for each type (CDAR) and report to the tax authority when required.
 
-The `fr-ctc-flow6-v1` addon maps each document to its CDV ProcessConditionCode — you set the natural GOBL fields, not the code.
+If you have installed the [workflows from the invoicing guide](/guides/fr-pa-invoicing#workflows), then you're ready to generate status lifecycle events.
 
 ## Building a status
 
-You build the natural GOBL document and the addon derives the CDV code — the full `(type, key)` → code mapping is in the [Status codes](#status-codes) table:
+You never set the CDV code directly — you build the GOBL document and the `fr-ctc-flow6-v1` addon derives it.
 
-- **`bill.Status`** — set the document `type` and the line `key`; together they select the code (e.g. `type: response` + `key: accepted` → `205`; `type: update` + `key: other` → `209`).
-- **`bill.Payment`** — set `type` to `advice` (→ `211`) or `receipt` (→ `212`).
+Start from the schema and let the document `type` plus the line `key` select the code. Each [example](#examples) shows its type and key pair. In this example, `response` + `accepted` derives <Badge color="blue">205</Badge>.
 
-**The one ambiguity.** The line `key: rejected` covers three outcomes — `210` (the default), `207` and `206`. To mean `206` or `207`, pin the code on the line:
-
-```json
-{ "ext": { "fr-ctc-flow6-status": "206" } }
+```json bill/status focus={2-4,12}
+{
+  "$schema": "https://gobl.org/draft-0/bill/status",
+  "$addons": ["fr-ctc-flow6-v1"],
+  "type": "response",
+  "issue_date": "2026-06-19",
+  "code": "ST-205",
+  "supplier": { /* ... */ },
+  "customer": { /* ... */ },
+  "lines": [
+    {
+      "key": "accepted",
+      "doc": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19" }
+    }
+  ]
+}
 ```
 
-**Linking to the invoice.** Every status or payment references its invoice by the invoice's full number (`series` + `code`) and issue date. On a `bill.Status` line this field is `doc`; on a `bill.Payment` line it is `document`. On receipt the platform resolves the invoice by the supplier's SIREN + number + year and links the two in the console's **Related** tab.
+Keep the same `supplier` and `customer` as on the invoice, whichever direction the event travels, and point the line's `doc` at the invoice's full number and issue date. The platform resolves the invoice by supplier SIREN + number + year and links the two in the console's **Related** tab.
 
-**Direction is automatic.** You always provide the same `supplier` (the seller) and `customer` (the buyer) as on the invoice; the addon derives each party's CDV role code. For statuses and payment receipts that is `SE` (Seller) on the supplier and `BY` (Buyer) on the customer. A **`211` payment advice is issued by the payer (the buyer), so it inverts the role codes** — in the built document the supplier carries `BY` and the customer `SE`. You don't swap the parties; only the derived roles flip, and the addon handles it.
+```json bill/status focus={7-8,11}
+{
+  "$schema": "https://gobl.org/draft-0/bill/status",
+  "$addons": ["fr-ctc-flow6-v1"],
+  "type": "response",
+  "issue_date": "2026-06-19",
+  "code": "ST-205",
+  "supplier": { /* Same as invoice */ },
+  "customer": { /* Same as invoice */ },
+  "lines": [
+    {
+      "key": "accepted",
+      "doc": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19" }
+    }
+  ]
+}
+```
+
+The line `key: rejected` covers three outcomes: 
+
+  * <Badge color="red">210</Badge> Refused (default). 
+  * <Badge color="orange">207</Badge> Disputed. 
+  * <Badge color="yellow">206</Badge> Partially approved.
+
+To pin statuses <Badge color="yellow">206</Badge> or <Badge color="orange">207</Badge>, set the `fr-ctc-flow6-status` extension:
+
+```json bill/status focus={3-4}
+"lines": [
+  {
+    "key": "rejected",
+    "ext": { "fr-ctc-flow6-status": "206" },
+    "doc": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19" }
+  }
+]
+```
+
+For <Badge color="green">211</Badge> (payment advice) and <Badge color="green">212</Badge> (cashed) set a payment schema. Its `type` alone derives the code and the payment methods carry the amount, while the invoice reference sits in the line's document field. Codes for each payment direction are derived and there's no need to swap parties.
+
+```json bill/payment focus={2-3,10,14}
+{
+  "$schema": "https://gobl.org/draft-0/bill/payment",
+  "type": "receipt",
+  "$addons": ["fr-ctc-flow6-v1"],
+  "issue_date": "2026-06-19",
+  "code": "PAY-0042",
+  "currency": "EUR",
+  "supplier": { "name": "Example Supplier SARL", "identities": [{ "type": "SIREN", "code": "698680774" }] },
+  "customer": { "name": "Example Customer SAS", "identities": [{ "type": "SIREN", "code": "698681771" }] },
+  "methods": [{ "key": "credit-transfer", "amount": "120.00" }],
+  "lines": [
+    {
+      "amount": "120.00",
+      "document": { "series": "INV", "code": "2026-0042", "issue_date": "2026-06-19" }
+    }
+  ]
+}
+```
 
 ### Reasons, faults and actions
 
-For the dispute and refusal codes (`206`, `207`, `208`, `210`) the line carries a `reason`, and that's where the meaningful detail lives:
+Codes <Badge color="yellow">206</Badge>, <Badge color="orange">207</Badge>, <Badge color="yellow">208</Badge> and <Badge color="red">210</Badge> must carry at least one `reason` on the line. The reason says why, the faults say which field, and the actions say what the supplier should do next.
 
-- **`reason.key` + `reason.ext.fr-ctc-flow6-reason`** — the rejection bucket and the exact CDV reason code (see [Reason codes](#reason-codes)). Set only the `key` and the addon fills the bucket's default code.
-- **`reason.faults[]`** — the field-level corrections. Each fault names one field: `code` is the characteristic type (`DIV` = the value found, `DVA` = the value expected), `message` is the data and value (e.g. `"Taux TVA (BT-152): 10.00%"`), and `paths` is the field's location in the document. Send a `DIV`/`DVA` pair to say "you put X, it should be Y."
-- **`line.actions[]`** — what the issuer should do next: `provide` (supply missing info), `reissue` a corrected invoice, or raise a credit note (`credit-full` / `credit-partial`).
+| Field | What it carries |
+|---|---|
+| `reasons[].key` | The reason category. On its own the addon fills the category's default [reason code](#available-reasons-for-codess). |
+| `reasons[].ext` | The exact CDV code via `fr-ctc-flow6-reason`, when the default is not the one you mean. |
+| `reasons[].faults[]` | The affected field. `DIV` is the value found, `DVA` the value expected; `message` holds the value and `paths` its location in the invoice XML. |
+| `actions[]` | The requested follow-up: `provide` missing information, `reissue` a corrected invoice, or a credit note (`credit-full` / `credit-partial`). |
 
-The supplier-issued **`209` Complétée** requires no reason, but it can carry one to **supply data back** — e.g. completing a bank-details suspension by returning the corrected IBAN as a `MAJ` fault (the value to apply) under a `finance-terms` reason. The line `description` summarises what was supplied.
+Together on a <Badge color="yellow">206</Badge> partial-approval line — "you invoiced 10, we approved 8, send a partial credit note":
+
+```json focus={3-4,6-7,12}
+"reasons": [
+  {
+    "key": "quantity",
+    "ext": { "fr-ctc-flow6-reason": "QTE_ERR" },
+    "faults": [
+      { "code": "DIV", "message": "Quantité facturée: 10", "paths": ["…/ram:BasisQuantity"] },
+      { "code": "DVA", "message": "Quantité approuvée: 8", "paths": ["…/ram:BasisQuantity"] }
+    ]
+  }
+],
+"actions": [
+  { "key": "credit-partial", "description": "Créer un avoir partiel pour les 2 unités non livrées" }
+]
+```
+
+The supplier's <Badge color="yellow">209</Badge> Complétée uses the same structure in reverse: it lifts a <Badge color="yellow">208</Badge> suspension by returning the requested data as a fault — code `MAJ`, with the corrected value in `message`. See the [209 example](#examples).
+
+#### Available reasons for codes
+
+<AccordionGroup>
+  <Accordion title="206 — Partiellement approuvée (Partially Approved)">
+
+    <Badge color="green" size="sm">AUTRE</Badge>  is the default if the reason code is omitted
+
+    | Reason code | French | English |
+    |---|---|---|
+    | `AUTRE` <Badge color="green" size="sm">⚹</Badge> | Autre | Other |
+    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
+    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
+    | `DOUBLON` | Facture en doublon | Duplicate invoice |
+    | `DEST_ERR` | Erreur de destinataire | Recipient error |
+    | `TRANSAC_INC` | Transaction inconnue | Unknown transaction |
+    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
+    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
+    | `DOUBLE_FACT` | Double facture | Double invoicing |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
+    | `SIRET_ERR` | SIRET erroné ou absent | Incorrect or missing SIRET |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | Missing or incorrect routing code |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
+    | `REF_ERR` | Référence incorrecte | Incorrect reference |
+    | `PU_ERR` | Prix unitaires incorrects | Incorrect unit prices |
+    | `REM_ERR` | Remise erronée | Incorrect discount |
+    | `QTE_ERR` | Quantité facturée incorrecte | Incorrect invoiced quantity |
+    | `ART_ERR` | Article facturé incorrect | Incorrect invoiced item |
+    | `MODPAI_ERR` | Modalités de paiement incorrectes | Incorrect payment terms |
+    | `QUALITE_ERR` | Qualité d'article livré incorrecte | Incorrect quality of delivered item |
+    | `LIVR_INCOMP` | Problème de livraison | Delivery problem |
+  </Accordion>
+
+  <Accordion title="207 — En litige (Disputed)">
+
+    <Badge color="green" size="sm">AUTRE</Badge>  is the default if the reason code is omitted
+
+    | Reason code | French | English |
+    |---|---|---|
+    | `AUTRE` <Badge color="green" size="sm">⚹</Badge> | Autre | Other |
+    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
+    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
+    | `DOUBLON` | Facture en doublon | Duplicate invoice |
+    | `DEST_ERR` | Erreur de destinataire | Recipient error |
+    | `TRANSAC_INC` | Transaction inconnue | Unknown transaction |
+    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
+    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
+    | `DOUBLE_FACT` | Double facture | Double invoicing |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
+  </Accordion>
+
+  <Accordion title="208 — Suspendue (Suspended)">
+
+    <Badge color="green" size="sm">JUSTIF_ABS</Badge>  is the default if the reason code is omitted
+
+    | Reason code | French | English |
+    |---|---|---|
+    | `JUSTIF_ABS` <Badge color="green" size="sm">⚹</Badge> | Justificatif absent ou insuffisant | Missing or insufficient supporting document |
+    | `SIRET_ERR` | SIRET erroné ou absent | Incorrect or missing SIRET |
+    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | Missing or incorrect routing code |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
+    | `REF_ERR` | Référence incorrecte | Incorrect reference |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
+  </Accordion>
+
+  <Accordion title="210 — Refusée (Refused by buyer)">
+
+    <Badge color="green" size="sm">TRANSAC_INC</Badge>  is the default if the reason code is omitted
+
+    | Reason code | French | English |
+    |---|---|---|
+    | `TRANSAC_INC` <Badge color="green" size="sm">⚹</Badge> | Transaction inconnue | Unknown transaction |
+    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
+    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
+    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
+    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
+    | `DOUBLON` | Facture en doublon | Duplicate invoice |
+    | `DEST_ERR` | Erreur de destinataire | Recipient error |
+    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
+    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
+    | `DOUBLE_FACT` | Double facture | Double invoicing |
+    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
+    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
+    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
+  </Accordion>
+</AccordionGroup>
 
 ### Examples
 
@@ -181,7 +392,7 @@ One example per code you build, each referencing the same invoice (`INV-2026-004
     </CodeGroup>
   </Accordion>
   <Accordion title="211 — Paiement transmis (Payment advice)">
-    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`; see [Direction is automatic](#building-a-status)).
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`(direction is automatic).
     <CodeGroup>
       <State211Min />
       <State211 />
@@ -196,160 +407,8 @@ One example per code you build, each referencing the same invoice (`INV-2026-004
   </Accordion>
 </AccordionGroup>
 
-## Sending
 
-A status is sent with the **same workflow as an invoice** — there is no dedicated status step. You build the `bill.Status` / `bill.Payment`, then run the standard send pipeline:
 
-<Steps>
-  <Step title="Sign envelope">
-    Closes and signs the silo entry (`silo.close`).
-  </Step>
-  <Step title="Generate CDAR">
-    `cii.generate` (doc type `fr-ctc-cdar-flow6`) converts the `bill.Status` / `bill.Payment` into its CDAR XML payload. This is the only step that differs from the invoice workflow, which generates a UBL invoice here instead.
-  </Step>
-  <Step title="Record">
-    `gov-fr.directory.record` links the status to its referenced invoice.
-  </Step>
-  <Step title="Send over Peppol">
-    `peppol.send` transmits the CDAR to the counterparty's PA.
-  </Step>
-  <Step title="Forward to PPF">
-    `gov-fr.directory.forward` forwards the mandatory codes (`210`, `212`) to the PPF. Non-mandatory codes skip this leg.
-  </Step>
-</Steps>
-
-The structure mirrors [Sending an invoice](/guides/fr-pa-invoicing) one-for-one — `sign → generate → record → send → forward` — so you can reuse the same workflow shape, swapping the UBL invoice generation for the CDAR generation above.
-
-## Receiving
-
-Incoming statuses arrive over the same Peppol transport as invoices.
-
-<Steps>
-  <Step title="Import Peppol document">
-    `peppol.import` receives the inbound SBD and detects that it is a CDAR rather than an invoice.
-  </Step>
-  <Step title="Parse to GOBL">
-    The CII app converts the CDAR XML into a GOBL `bill.Status` / `bill.Payment`.
-  </Step>
-  <Step title="Record">
-    `gov-fr.directory.record` files it against the referenced invoice; it then appears in the invoice's **Related** tab.
-  </Step>
-</Steps>
-
-## Status codes
-
-Each code maps to a GOBL document. Most derive from the document's natural `(type, key)` pair; `206` and `207` additionally pin an extension (see [Building a status](#building-a-status)). **Issued by** is the party that sends the event — the counterparty receives it; the two codes marked _automatic_ are emitted by Invopop, you never build them.
-
-| Code | French | English | Document | `type` · line `key` | Issued by |
-|---|---|---|---|---|---|
-| `200` | Déposée | Deposited | — | — | Invopop (automatic) |
-| `201` | Émise par la plateforme | Issued by platform | `bill.Status` | `response` · `issued` | Supplier's platform |
-| `202` | Reçue par la PA | Received by recipient | `bill.Status` | `response` · `acknowledged` | Buyer |
-| `203` | Mise à disposition | Made available | `bill.Status` | `response` · `other` | Buyer |
-| `204` | Prise en charge | Taken into account | `bill.Status` | `response` · `processing` | Buyer |
-| `205` | Approuvée | Approved | `bill.Status` | `response` · `accepted` | Buyer |
-| `206` | Partiellement approuvée | Partially approved | `bill.Status` | `response` · `rejected` + ext `206` | Buyer |
-| `207` | En litige | Disputed | `bill.Status` | `response` · `rejected` + ext `207` | Buyer |
-| `208` | Suspendue | Suspended | `bill.Status` | `response` · `querying` | Buyer |
-| `209` | Complétée | Completed | `bill.Status` | `update` · `other` | Supplier |
-| `210` | Refusée | Refused by buyer | `bill.Status` | `response` · `rejected` | Buyer · mandatory to PPF |
-| `211` | Paiement transmis | Payment advice | `bill.Payment` | `advice` | Buyer (payer) |
-| `212` | Encaissée | Cashed / paid | `bill.Payment` | `receipt` | Supplier (payee) · mandatory to PPF |
-| `213` | Rejetée | Rejected by platform | — | — | Invopop (automatic) |
-
-### Reason codes
-
-Codes `206`, `207`, `208` and `210` require at least one `reason` on the line, and the reason's code must come from that status's allow-list. Set the bucket via the reason `key` and the exact CDAR code via the `fr-ctc-flow6-reason` extension; if you set only the bucket, the addon fills the default code marked <Badge color="green" size="sm">⚹</Badge>. Codes `205`, `209`, `211` and `212` don't require a reason — though `209` may optionally carry one to supply data back (see [Reasons, faults and actions](#reasons-faults-and-actions)).
-
-<AccordionGroup>
-  <Accordion title="206 — Partiellement approuvée (Partially Approved)">
-
-    <Badge color="green" size="sm">`AUTRE`</Badge>  is the default if the reason code is omitted
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `AUTRE` <Badge color="green" size="sm">⚹</Badge> | Autre | Other |
-    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
-    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
-    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
-    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
-    | `DOUBLON` | Facture en doublon | Duplicate invoice |
-    | `DEST_ERR` | Erreur de destinataire | Recipient error |
-    | `TRANSAC_INC` | Transaction inconnue | Unknown transaction |
-    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
-    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
-    | `DOUBLE_FACT` | Double facture | Double invoicing |
-    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
-    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
-    | `SIRET_ERR` | SIRET erroné ou absent | Incorrect or missing SIRET |
-    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | Missing or incorrect routing code |
-    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
-    | `REF_ERR` | Référence incorrecte | Incorrect reference |
-    | `PU_ERR` | Prix unitaires incorrects | Incorrect unit prices |
-    | `REM_ERR` | Remise erronée | Incorrect discount |
-    | `QTE_ERR` | Quantité facturée incorrecte | Incorrect invoiced quantity |
-    | `ART_ERR` | Article facturé incorrect | Incorrect invoiced item |
-    | `MODPAI_ERR` | Modalités de paiement incorrectes | Incorrect payment terms |
-    | `QUALITE_ERR` | Qualité d'article livré incorrecte | Incorrect quality of delivered item |
-    | `LIVR_INCOMP` | Problème de livraison | Delivery problem |
-  </Accordion>
-
-  <Accordion title="207 — En litige (Disputed)">
-
-    <Badge color="green" size="sm">`AUTRE`</Badge>  is the default if the reason code is omitted
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `AUTRE` <Badge color="green" size="sm">⚹</Badge> | Autre | Other |
-    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
-    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
-    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
-    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
-    | `DOUBLON` | Facture en doublon | Duplicate invoice |
-    | `DEST_ERR` | Erreur de destinataire | Recipient error |
-    | `TRANSAC_INC` | Transaction inconnue | Unknown transaction |
-    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
-    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
-    | `DOUBLE_FACT` | Double facture | Double invoicing |
-    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
-  </Accordion>
-
-  <Accordion title="208 — Suspendue (Suspended)">
-
-    <Badge color="green" size="sm">`JUSTIF_ABS`</Badge>  is the default if the reason code is omitted
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `JUSTIF_ABS` <Badge color="green" size="sm">⚹</Badge> | Justificatif absent ou insuffisant | Missing or insufficient supporting document |
-    | `SIRET_ERR` | SIRET erroné ou absent | Incorrect or missing SIRET |
-    | `CODE_ROUTAGE_ERR` | CODE_ROUTAGE absent ou erroné | Missing or incorrect routing code |
-    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
-    | `REF_ERR` | Référence incorrecte | Incorrect reference |
-    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
-    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
-  </Accordion>
-
-  <Accordion title="210 — Refusée (Refused by buyer)">
-
-    <Badge color="green" size="sm">`TRANSAC_INC`</Badge>  is the default if the reason code is omitted
-
-    | Reason code | French | English |
-    |---|---|---|
-    | `TRANSAC_INC` <Badge color="green" size="sm">⚹</Badge> | Transaction inconnue | Unknown transaction |
-    | `TX_TVA_ERR` | Taux de TVA erroné | Incorrect VAT rate |
-    | `MONTANTTOTAL_ERR` | Montant total erroné | Incorrect total amount |
-    | `CALCUL_ERR` | Erreur de calcul de la facture | Invoice calculation error |
-    | `NON_CONFORME` | Mention légale manquante | Missing legal mention |
-    | `DOUBLON` | Facture en doublon | Duplicate invoice |
-    | `DEST_ERR` | Erreur de destinataire | Recipient error |
-    | `EMMET_INC` | Émetteur inconnu | Unknown issuer |
-    | `CONTRAT_TERM` | Contrat terminé | Contract ended |
-    | `DOUBLE_FACT` | Double facture | Double invoicing |
-    | `CMD_ERR` | N° de commande incorrect ou manquant | Incorrect or missing order number |
-    | `ADR_ERR` | Adresse de facturation électronique erronée | Incorrect electronic billing address |
-    | `REF_CT_ABSENT` | Référence contractuelle nécessaire | Contractual reference required |
-  </Accordion>
-</AccordionGroup>
 
 ## FAQ
 

@@ -44,7 +44,8 @@ Tabs (in order): Get Started, Platform, Guides, Apps, API Reference. The country
 
 - `snippets/faqs/` — country FAQ leaves + composers. **Read `skills/manage-faqs/SKILL.md` before touching this tree.** Layout in brief: `<country>/leaves/<scope>/{compliance,invoicing,supplier,receiving,reporting}.mdx` hold bare `<Accordion>` blocks; `<country>/composers/<consumer>.mdx` wrap leaves in `<AccordionGroup>` for a specific consumer page (`page-faq`, `page-compliance`, `app-<regime>`, `guide-<regime>-<task>`). Consumer pages import exactly one composer.
 - `snippets/invoices/<country>/` — GOBL invoice example fragments. Files come in pairs: `<name>.min.mdx` (minimal hand-authored input) and `<name>.mdx` (built output produced by `gobl-build.sh`). Edit the `.min.mdx`; rebuild to refresh the `.mdx`.
-- `snippets/suppliers/`, `snippets/payments/`, `snippets/deliveries/`, `snippets/documents/`, `snippets/coverage/` — country-scoped GOBL examples for other document/flow types, same `.min.mdx`/`.mdx` pairing where applicable.
+- `snippets/parties/` — country-scoped `org/party` examples with at least one `supplier.mdx` and one `customer.mdx` per regime (plus variants like `es/supplier-autonomo.mdx`, `de/customer-government.mdx`). Single files, no `.min`/built pairing; validate with `gobl build` when editing.
+- `snippets/payments/`, `snippets/deliveries/`, `snippets/documents/`, `snippets/coverage/` — country-scoped GOBL examples for other document/flow types, same `.min.mdx`/`.mdx` pairing where applicable.
 - `snippets/workflows/<country|integration>/` — reusable workflow descriptions.
 - `snippets/tables/<country>-resources.mdx` — country resource tables embedded by compliance pages.
 
