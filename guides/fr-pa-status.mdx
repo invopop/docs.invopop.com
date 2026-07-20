@@ -62,9 +62,9 @@ Emitted automatically by Invopop as the Plateforme Agréée — you never build 
 | <Badge color="blue">204</Badge><br /> <small>Prise en charge / Taken into account</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Signal that the invoice is being processed. |
 | <Badge color="blue">205</Badge><br /> <small>Approuvée / Approved</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Approve the invoice in full. |
 | <Badge color="yellow">206</Badge><br /> <small>Partiellement approuvée / Partially approved</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Approve part of the invoice; requires a [reason](#available-reasons-for-codes), typically with an `action` requesting a partial credit note. |
-| <Badge color="orange">207</Badge><br /> <small>En litige / Disputed</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Dispute the invoice; requires a [reason](#available-reasons-for-codess). |
-| <Badge color="yellow">208</Badge><br /> <small>Suspendue / Suspended</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Pause processing while the supplier provides missing information; requires a [reason](#available-reasons-for-codess). |
-| <Badge color="red">210</Badge><br /> <small>Refusée / Refused by buyer</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | **Mandatory** when refusing an invoice; requires a [reason](#available-reasons-for-codess). Forwarded to the PPF. |
+| <Badge color="orange">207</Badge><br /> <small>En litige / Disputed</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Dispute the invoice; requires a [reason](#available-reasons-). |
+| <Badge color="yellow">208</Badge><br /> <small>Suspendue / Suspended</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Pause processing while the supplier provides missing information; requires a [reason](#available-reasons-for-codes). |
+| <Badge color="red">210</Badge><br /> <small>Refusée / Refused by buyer</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | **Mandatory** when refusing an invoice; requires a [reason](#available-reasons-for-codes). Forwarded to the PPF. |
 | <Badge color="green">211</Badge><br /> <small>Paiement transmis / Payment advice</small> | [bill/payment](https://docs.gobl.org/draft-0/bill/payment#payment) | Optional. Notify the supplier that a payment has been sent. |
 
 ### Issued by the supplier
@@ -199,7 +199,7 @@ Codes <Badge color="yellow">206</Badge>, <Badge color="orange">207</Badge>, <Bad
 
 | Field | What it carries |
 |---|---|
-| `reasons[].key` | The reason category. On its own the addon fills the category's default [reason code](#available-reasons-for-codess). |
+| `reasons[].key` | The reason category. On its own the addon fills the category's default [reason code](#available-reasons-for-codes). |
 | `reasons[].ext` | The exact CDV code via `fr-ctc-flow6-reason`, when the default is not the one you mean. |
 | `reasons[].faults[]` | The affected field. `DIV` is the value found, `DVA` the value expected; `message` holds the value and `paths` its location in the invoice XML. |
 | `actions[]` | The requested follow-up: `provide` missing information, `reissue` a corrected invoice, or a credit note (`credit-full` / `credit-partial`). |
@@ -392,7 +392,7 @@ One example per code you build, each referencing the same invoice (`INV-2026-004
     </CodeGroup>
   </Accordion>
   <Accordion title="211 — Paiement transmis (Payment advice)">
-    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`(direction is automatic).
+    `bill.Payment` · `type: advice`. Issued by the buyer (payer); the `methods` carry the amount and the `value_date` the payment date. Because it is payer-issued, the **built version inverts the CDV roles** — `BY` on the supplier and `SE` on the customer (you still place the seller in `supplier` and the buyer in `customer`, direction is automatic).
     <CodeGroup>
       <State211Min />
       <State211 />
