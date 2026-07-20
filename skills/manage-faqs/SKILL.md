@@ -49,7 +49,7 @@ snippets/faqs/peppol/leaves/{compliance,invoicing,supplier,receiving}.mdx
 
 Tasks: `invoicing`, `receiving`, `supplier`. **No `reporting`** — periodic reporting is country-specific and stays under each country's regimes.
 
-Peppol-using countries (currently BE, DE, FR) import Peppol leaves into their composers as an additional scope alongside their country scope and regimes.
+Peppol-using countries (currently BE, DE, FI, FR) import Peppol leaves into their composers as an additional scope alongside their country scope and regimes.
 
 ### Which tasks apply to a regime
 
@@ -69,7 +69,12 @@ The country scope only populates a task if the corresponding country-level flow 
 | Argentina | ar | `arca` |
 | Belgium | be | (uses `peppol` only) |
 | Brazil | br | `nfe`, `nfse` |
+| Croatia | hr | (country scope only; own eRačun regime) |
 | Germany | de | (uses `peppol` only) |
+| Finland | fi | (uses `peppol` only) |
+| Hungary | hu | (country scope only; NAV real-time reporting) |
+| Romania | ro | (country scope only; own RO e-Factura regime) |
+| UAE | ae | (country scope only; own EIS / PINT AE regime) |
 | Spain | es | `verifactu`, `ticketbai`, `sii`, `noverifactu`, `facturae` |
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
 | Greece | gr | `mydata` |
@@ -299,6 +304,8 @@ For single-regime countries, country-level operations or tech content goes into 
 
 | Consumer page | Composer |
 |---|---|
+| `faq/uae.mdx` | `ae/composers/page-faq.mdx` |
+| `compliance/uae.mdx` | `ae/composers/page-compliance.mdx` |
 | `faq/argentina.mdx` | `ar/composers/page-faq.mdx` |
 | `compliance/argentina.mdx` | `ar/composers/page-compliance.mdx` |
 | `apps/argentina.mdx` | `ar/composers/app-arca.mdx` |
@@ -314,6 +321,12 @@ For single-regime countries, country-level operations or tech content goes into 
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
 | `guides/de-ubl.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
+| `faq/finland.mdx` | `fi/composers/page-faq.mdx` |
+| `compliance/finland.mdx` | `fi/composers/page-compliance.mdx` |
+| `faq/croatia.mdx` | `hr/composers/page-faq.mdx` |
+| `compliance/croatia.mdx` | `hr/composers/page-compliance.mdx` |
+| `faq/hungary.mdx` | `hu/composers/page-faq.mdx` |
+| `compliance/hungary.mdx` | `hu/composers/page-compliance.mdx` |
 | `faq/spain.mdx` | `es/composers/page-faq.mdx` |
 | `compliance/spain.mdx` | `es/composers/page-compliance.mdx` |
 | `apps/spain.mdx` | `es/composers/app-spain.mdx` |
@@ -362,6 +375,8 @@ For single-regime countries, country-level operations or tech content goes into 
 | `compliance/portugal.mdx` | `pt/composers/page-compliance.mdx` |
 | `apps/at-portugal.mdx` | `pt/composers/app-at.mdx` |
 | `guides/pt-at.mdx` | `pt/composers/guide-at-invoicing.mdx` |
+| `faq/romania.mdx` | `ro/composers/page-faq.mdx` |
+| `compliance/romania.mdx` | `ro/composers/page-compliance.mdx` |
 | `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
 | `apps/saudi-arabia.mdx` | `sa/composers/app-zatca.mdx` |
 | `guides/sa-zatca-clearance-reporting.mdx` | `sa/composers/guide-zatca-invoicing.mdx` |

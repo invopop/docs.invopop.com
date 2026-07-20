@@ -30,7 +30,7 @@ Supporting directories:
 - `assets/` — images, logos, diagrams referenced from MDX.
 - `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`, `mark-generated.sh`).
 - `gobl-build.sh`, `gobl-unbuild.rb` — GOBL invoice example tooling (see below).
-- `skills/` — packaged authoring skills (currently `manage-faqs`). Read the skill's `SKILL.md` before doing the work it covers.
+- `skills/` — packaged authoring skills (currently `manage-faqs` and `mermaid-style`). Read the skill's `SKILL.md` before doing the work it covers. Use `mermaid-style` whenever you add or edit a `mermaid` diagram in an `.mdx` page so the brand palette stays consistent.
 
 ## Navigation (`docs.json`)
 
