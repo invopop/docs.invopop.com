@@ -75,7 +75,7 @@ Use **one** `authority` node per diagram at most. If everything is emphasized, n
 `sequenceDiagram` does not take the `classDef` palette. Theme it instead with an `%%{init}%%` block on the first line (single line, valid JSON). This is the copy-paste header:
 
 ```
-%%{init: {'theme':'base','themeVariables':{'actorBkg':'#ffffff','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#cbd5e1','signalColor':'#64748b','signalTextColor':'#103830','noteBkgColor':'#f4faf6','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#e8f5ee','labelBoxBorderColor':'#169958','labelTextColor':'#103830'}}}%%
+%%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
 ```
 
 Then:
@@ -92,7 +92,7 @@ Then:
 Sequence (preferred for a flow):
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{'actorBkg':'#ffffff','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#cbd5e1','signalColor':'#64748b','signalTextColor':'#103830','noteBkgColor':'#f4faf6','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#e8f5ee','labelBoxBorderColor':'#169958','labelTextColor':'#103830'}}}%%
+%%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
 sequenceDiagram
     autonumber
     participant S as Supplier
