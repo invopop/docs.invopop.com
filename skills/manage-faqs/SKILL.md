@@ -9,7 +9,7 @@ FAQ snippets are organized as a `country / scope / task` grid. **Leaves** hold t
 
 ## Axes
 
-- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
+- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
 - **Scope** — `country` (cross-regime, country-level answers) or one regime from the manifest.
 - **Task** — `invoicing`, `supplier`, `receiving`, `reporting`. Populate only the tasks that genuinely apply to the scope. Plus `compliance` as a special scope-wide file (see below).
 
@@ -35,7 +35,7 @@ Each scope has up to five leaf files:
 The country scope holds answers that aren't tied to a specific regime:
 
 - **Single-regime countries** (`ar`, `gr`, `mx`, `pl`, `pt`) — country scope is a single flat file: `<country>/leaves/country/compliance.mdx`. Country-level operations/tech content is folded directly into the regime's leaves (since there's only one regime, country-level == regime-level for those tasks). Only genuinely cross-cutting compliance answers live in `country/compliance.mdx`.
-- **Multi-regime countries** (`be`, `br`, `de`, `es`, `fr`, `it`) — country scope keeps the full task layout under `<country>/leaves/general/`. The `general/` folder name is legacy; the display label in composers is the country name. Multi-regime countries can't safely merge country-level ops/tech into any one regime, so per-task files are preserved.
+- **Multi-regime countries** (`be`, `br`, `de`, `es`, `fr`, `it`, `no`) — country scope keeps the full task layout under `<country>/leaves/general/`. The `general/` folder name is legacy; the display label in composers is the country name. Multi-regime countries can't safely merge country-level ops/tech into any one regime, so per-task files are preserved.
 
 Regime leaves always use the full layout: `<country>/leaves/<regime>/{compliance,invoicing,supplier,receiving,reporting}.mdx`.
 
@@ -49,7 +49,7 @@ snippets/faqs/peppol/leaves/{compliance,invoicing,supplier,receiving}.mdx
 
 Tasks: `invoicing`, `receiving`, `supplier`. **No `reporting`** — periodic reporting is country-specific and stays under each country's regimes.
 
-Peppol-using countries (currently BE, DE, FR) import Peppol leaves into their composers as an additional scope alongside their country scope and regimes.
+Peppol-using countries (currently BE, DE, FR, NO) import Peppol leaves into their composers as an additional scope alongside their country scope and regimes.
 
 ### Which tasks apply to a regime
 
@@ -75,6 +75,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Greece | gr | `mydata` |
 | Italy | it | `sdi`, `ticket` |
 | Mexico | mx | `sat` |
+| Norway | no | (uses `peppol` only) |
 | Poland | pl | `ksef` |
 | Portugal | pt | `at` |
 | Saudi Arabia | sa | `zatca` |
@@ -241,7 +242,7 @@ If the guide spans several tasks, use the same task-organised shape as `app-<reg
 
 ### Wiring a Peppol-using country
 
-In BE, DE, FR composers, Peppol acts as another scope alongside the country scope and any country-specific regimes:
+In BE, DE, FR, NO composers, Peppol acts as another scope alongside the country scope and any country-specific regimes:
 
 ```mdx
 import PepCompliance from '/snippets/faqs/peppol/leaves/compliance.mdx';
@@ -354,6 +355,9 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/sat-mexico.mdx` | `mx/composers/app-sat.mdx` |
 | `guides/mx-sat-issuing.mdx` | `mx/composers/guide-sat-invoicing.mdx` |
 | `guides/mx-sat-receiving.mdx` | `mx/composers/guide-sat-receiving.mdx` |
+| `faq/norway.mdx` | `no/composers/page-faq.mdx` |
+| `compliance/norway.mdx` | `no/composers/page-compliance.mdx` |
+| `guides/no-peppol.mdx` | `no/composers/guide-peppol-invoicing.mdx` |
 | `faq/poland.mdx` | `pl/composers/page-faq.mdx` |
 | `compliance/poland.mdx` | `pl/composers/page-compliance.mdx` |
 | `apps/poland.mdx` | `pl/composers/app-ksef.mdx` |
