@@ -1,0 +1,53 @@
+import B2BMin from '/snippets/invoices/peppol/peppol-b2b.min.mdx';
+import B2B from '/snippets/invoices/peppol/peppol-b2b.mdx';
+import B2BBelgiumMin from '/snippets/invoices/peppol/peppol-b2b-belgium.min.mdx';
+import B2BBelgium from '/snippets/invoices/peppol/peppol-b2b-belgium.mdx';
+import CreditNoteMin from '/snippets/invoices/peppol/peppol-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/peppol/peppol-credit-note.mdx';
+
+<AccordionGroup>
+  <Accordion title="Peppol B2B invoice">
+    A standard B2B invoice sent over the Peppol network. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon applies the European norm rules; the `peppol` inboxes on both parties identify the sending and receiving participants.
+
+    Notice:
+
+    - both parties carry a `peppol` inbox with the participant `scheme` and `code` used for routing,
+    - the line tax states the VAT `percent` explicitly along with the [`untdid-tax-category`](https://docs.gobl.org/catalogues/untdid) extension, and,
+    - totals are calculated automatically when the document is built.
+
+    <CodeGroup>
+      <B2BMin />
+      <B2B />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol B2B invoice with tax-inclusive prices (Belgium)">
+    A Belgian B2B invoice with VAT-inclusive prices and two different VAT rates.
+
+    Notice:
+
+    - `tax.prices_include` is set to `VAT`, so line prices are treated as tax-inclusive and the base amounts are derived automatically,
+    - the supplier's inbox uses the combined `scheme:code` form (`0208:0735585741`), while the customer states `scheme` and `code` separately — both are equivalent, and,
+    - the two lines apply the `general` (21%) and `reduced` (6%) Belgian VAT rates.
+
+    <CodeGroup>
+      <B2BBelgiumMin />
+      <B2BBelgium />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol B2B credit note">
+    A credit note reversing part of a previously sent invoice.
+
+    Notice:
+
+    - the `type` is set to `credit-note`, which the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon maps to UNTDID document type `381`,
+    - the `preceding` array references the original invoice by `series`, `code`, and `issue_date`, with a `reason` for the correction, and,
+    - the lines state the credited amounts as positive values — the document type is what reverses them.
+
+    <CodeGroup>
+      <CreditNoteMin />
+      <CreditNote />
+    </CodeGroup>
+  </Accordion>
+</AccordionGroup>
