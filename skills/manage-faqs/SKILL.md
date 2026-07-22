@@ -9,7 +9,7 @@ FAQ snippets are organized as a `country / scope / task` grid. **Leaves** hold t
 
 ## Axes
 
-- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
+- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `co`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
 - **Scope** — `country` (cross-regime, country-level answers) or one regime from the manifest.
 - **Task** — `invoicing`, `supplier`, `receiving`, `reporting`. Populate only the tasks that genuinely apply to the scope. Plus `compliance` as a special scope-wide file (see below).
 
@@ -34,7 +34,7 @@ Each scope has up to five leaf files:
 
 The country scope holds answers that aren't tied to a specific regime:
 
-- **Single-regime countries** (`ar`, `gr`, `mx`, `pl`, `pt`) — country scope is a single flat file: `<country>/leaves/country/compliance.mdx`. Country-level operations/tech content is folded directly into the regime's leaves (since there's only one regime, country-level == regime-level for those tasks). Only genuinely cross-cutting compliance answers live in `country/compliance.mdx`.
+- **Single-regime countries** (`ar`, `co`, `gr`, `mx`, `pl`, `pt`) — country scope is a single flat file: `<country>/leaves/country/compliance.mdx`. Country-level operations/tech content is folded directly into the regime's leaves (since there's only one regime, country-level == regime-level for those tasks). Only genuinely cross-cutting compliance answers live in `country/compliance.mdx`.
 - **Multi-regime countries** (`be`, `br`, `de`, `es`, `fi`, `fr`, `it`, `no`) — country scope keeps the full task layout under `<country>/leaves/general/`. The `general/` folder name is legacy; the display label in composers is the country name. Multi-regime countries can't safely merge country-level ops/tech into any one regime, so per-task files are preserved.
 
 Regime leaves always use the full layout: `<country>/leaves/<regime>/{compliance,invoicing,supplier,receiving,reporting}.mdx`.
@@ -55,7 +55,7 @@ Peppol-using countries (currently BE, DE, FI, FR, NO) import Peppol leaves into 
 
 Pick task buckets from the regime's actual flow shape **and** match the documentation we publish — if no guide covers a flow, don't add an FAQ for it.
 
-- **Issuance only** (one-way clearance, no recipient delivery, no separate reporting) — `invoicing` + `supplier`. Examples: ARCA, VERI*FACTU, No-VERI*FACTU, Facturae, NF-e, NFS-e, Chorus Pro.
+- **Issuance only** (one-way clearance, no recipient delivery, no separate reporting) — `invoicing` + `supplier`. Examples: ARCA, DIAN, VERI*FACTU, No-VERI*FACTU, Facturae, NF-e, NFS-e, Chorus Pro.
 - **Issuance + supplementary reporting** — add `reporting`. Examples: TicketBAI (Bizkaia LROE), Smart Receipts (corrispettivi), AT (SAF-T monthly export / real-time submission).
 - **Bidirectional clearance / delivery** — add `receiving`. Examples: SDI, KSeF, SAT/CFDI, Peppol, myDATA.
 - **Reporting regime** (the regime *is* the reporting channel) — all four tasks apply. Examples: SII, France PA.
@@ -69,6 +69,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Argentina | ar | `arca` |
 | Belgium | be | (uses `peppol` only) |
 | Brazil | br | `nfe`, `nfse` |
+| Colombia | co | `dian` |
 | Croatia | hr | (country scope only; own eRačun regime) |
 | Germany | de | (uses `peppol` only) |
 | Finland | fi | (uses `peppol` only) |
@@ -93,6 +94,7 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 | Slug | Label |
 |---|---|
 | `arca` | ARCA |
+| `dian` | DIAN |
 | `peppol` | Peppol |
 | `nfe` | NF-e |
 | `nfse` | NFS-e |
@@ -125,12 +127,6 @@ A leaf is a sequence of bare `<Accordion>` blocks. **Never wrap in `<AccordionGr
 ```
 
 Leaves can have their own MDX imports for shared snippets (absolute paths starting `/snippets/...`).
-
-**Auto-generated content marker.** When a question is drafted by an automated pass, prepend `¿ ` to the title. Strip the prefix once a human has reviewed the answer. Find unreviewed accordions:
-
-```sh
-grep -rl '<Accordion title="¿' snippets/faqs/
-```
 
 ## Composer types
 
@@ -320,6 +316,11 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/documentos-fiscais-electronicos-brazil.mdx` | `br/composers/app-dfe.mdx` |
 | `guides/br-dfe.mdx` | `br/composers/guide-dfe-invoicing.mdx` |
 | `guides/br-dfe-supplier.mdx` | `br/composers/guide-dfe-supplier.mdx` |
+| `faq/colombia.mdx` | `co/composers/page-faq.mdx` |
+| `compliance/colombia.mdx` | `co/composers/page-compliance.mdx` |
+| `apps/dian-colombia.mdx` | `co/composers/app-dian.mdx` |
+| `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
+| `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
 | `guides/de-ubl.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
