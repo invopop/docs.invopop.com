@@ -340,12 +340,10 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/es-ticketbai-supplier.mdx` | `es/composers/guide-ticketbai-supplier.mdx` |
 | `guides/es-sii.mdx` | `es/composers/guide-sii-invoicing.mdx` |
 | `guides/es-sii-supplier.mdx` | `es/composers/guide-sii-supplier.mdx` |
-| `guides/es-noverifactu.mdx` | `es/composers/guide-noverifactu-invoicing.mdx` |
-| `guides/es-noverifactu-supplier.mdx` | `es/composers/guide-noverifactu-supplier.mdx` |
-| `guides/es-facturae.mdx` | `es/composers/guide-facturae-invoicing.mdx` |
 | `faq/france.mdx` | `fr/composers/page-faq.mdx` |
 | `compliance/france.mdx` | `fr/composers/page-compliance.mdx` |
 | `apps/choruspro-france.mdx` | `fr/composers/app-choruspro.mdx` |
+| `apps/france.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa-invoicing.mdx` | `fr/composers/guide-pa-invoicing.mdx` |
 | `guides/fr-pa-registration.mdx` | `fr/composers/guide-pa-supplier.mdx` |
@@ -367,7 +365,6 @@ For single-regime countries, country-level operations or tech content goes into 
 | `compliance/mexico.mdx` | `mx/composers/page-compliance.mdx` |
 | `apps/sat-mexico.mdx` | `mx/composers/app-sat.mdx` |
 | `guides/mx-sat-issuing.mdx` | `mx/composers/guide-sat-invoicing.mdx` |
-| `guides/mx-sat-receiving.mdx` | `mx/composers/guide-sat-receiving.mdx` |
 | `faq/norway.mdx` | `no/composers/page-faq.mdx` |
 | `compliance/norway.mdx` | `no/composers/page-compliance.mdx` |
 | `guides/no-peppol.mdx` | `no/composers/guide-peppol-invoicing.mdx` |

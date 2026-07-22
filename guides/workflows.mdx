@@ -1,11 +1,11 @@
 ---
-title: "Workflows Guide"
+title: "Workflows guide"
 sidebarTitle: "Workflows"
 description: Configure a workflow in Invopop to process documents.
 icon: "timeline"
 ---
 
-## What is a Workflow?
+## What is a workflow?
 
 A workflow in Invopop is a sequence of steps executed for each incoming job. Each step is powered by the provider of a service. Examples of services include:
 
@@ -16,9 +16,9 @@ A workflow in Invopop is a sequence of steps executed for each incoming job. Eac
 * Posting webhooks
 * Sending documents to ERPs or other systems
 
-Workflows automate and streamline your document and invoicing processes. Invopop ensures each step is executed reliably, with built-in retries and error handling. The steps are executed sequentially (the next step will only execute until after the previous one has completed) so you don't need to handle asynchronous responses.
+Workflows automate and streamline your document and invoicing processes. Invopop ensures each step is executed reliably, with built-in retries and error handling. The steps are executed sequentially (the next step only executes after the previous one has completed) so you don't need to handle asynchronous responses.
 
-## Anatomy of a Workflow
+## Anatomy of a workflow
 
 <Frame >
 <img src="/assets/guides/workflow-anatomy.png" width="100%" alt="Parts of a workflow" />
@@ -30,16 +30,16 @@ A workflow is composed of two main areas:
 
 * **Error handling flow** defines the sequence of steps when an unhandled error or exception occurs. It allows you to specify alternative actions, recovery logic, or notifications to ensure the process can handle unexpected conditions gracefully. Keep in mind the error handling flow is executed if a step does not handle its own error through a condition.
 
-Both flows are composed by _steps_ which can contain _conditions_.
+Both flows are composed of _steps_ which can contain _conditions_.
 
-* **Steps** are action performed with the entry being processed, such as sending the document to a tax authority, generating a PDF, or sending a notification to the customer or issuer.
+* **Steps** are actions performed on the entry being processed, such as sending the document to a tax authority, generating a PDF, or sending a notification to the customer or issuer.
 * **Conditions** determine the logic that directs how a workflow proceeds when there's not an error. They evaluate the _status_ and _code_ outcome of a given step, and if there's a match, it will execute the steps contained within that condition. Conditions are often used in the "If / Else" step but can be used to handle non-error responses from other steps.
 * **Exceptions** when a step returns a `KO`, the workflow will continue in the error handling flow by default. However, sometimes you need to handle an error differently from the rest, and adding an exception will prevent the workflow from continuing on the error handling flow, allowing you to handle that case specifically.  
 
 
 
 
-## How to create a Workflow
+## How to create a workflow
 
 Although workflows can be created via the API, we strongly recommend using the [Invopop Console](https://console.invopop.com) for an easier set up.
 
@@ -62,9 +62,9 @@ The "developer mode" <img src="/assets/guides/workflow-switcher.png" alt="Develo
 
 **Conditions** create blocks that execute when a given _code_ matches the response of a workflow step, without an error. There are two status signals (`OK` and `KO`) plus `Any`, which matches regardless of the status.
 
-**Exceptions** create blocks that execute when a `KO` es returned from a workflow step, and has an optional _code_ to further narrow down the exception condition.
+**Exceptions** create blocks that execute when a `KO` is returned from a workflow step, and has an optional _code_ to further narrow down the exception condition.
 
-**Codes** are generally text or numbers returned by providers. Only some steps will return codes along with their status signals. For example, the _Send VERI*FACTU (Spain)_ step will return the error code as [specified by the AEAT](https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties) along with the `KO` status signal. Since GOBL already handles many of the validations in tax authorities lists, we recommend only implementing conditions which happen in your workflow with certain regularity and which should be automated.
+**Codes** are generally text or numbers returned by providers. Only some steps will return codes along with their status signals. For example, the _Send VERI\*FACTU (Spain)_ step will return the error code as [specified by the AEAT](https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties) along with the `KO` status signal. Since GOBL already handles many of the validations in tax authorities lists, we recommend only implementing conditions which happen in your workflow with certain regularity and which should be automated.
 
 As an example, we will handle the case where a supplier is not registered in the taxpayer census by the AEAT:
 
@@ -100,11 +100,11 @@ As an example, we will handle the case where a supplier is not registered in the
         noZoom
       />
     </Frame>
-    Click on "Select an action" and handle the condition as you wish. In this workflow, we have added an If / Else step that reads the country of a customer, returning `true` or `false`, and then performing the required lookup for each type of customer (AEAT for Spanish cusomters and VIES lookup for EU ones), then, if the tax id is not found, the error is handled by sending a webhook.
+    Click on "Select an action" and handle the condition as you wish. In this workflow, we have added an If / Else step that reads the country of a customer, returning `true` or `false`, and then performing the required lookup for each type of customer (AEAT for Spanish customers and VIES lookup for EU ones), then, if the tax id is not found, the error is handled by sending a webhook.
   </Step>
 </Steps>
 
-## Running a Workflow
+## Running a workflow
 
 Workflows in Invopop can be executed through the following methods:
 
@@ -171,7 +171,7 @@ Click <kbd>Run workflow</kbd> to create the job.
   When a job is run with arguments only and no document selected, the workflow will typically create a new silo entry or fetch an existing one based on the arguments provided. For example, an import workflow receiving a document identifier as an argument will download the document and create a corresponding silo entry automatically.
 </Note>
 
-## Error Handling
+## Error handling
 
 Any step that causes an error (`KO`) from which the job can't recover, and is not handled through a condition,  will trigger the error handling flow. To enable this section, tap on **Handle Errors** at the bottom of the workflow creation screen, then add steps into this area which you want to execute when the job fails (often times setting the entry's state to `Error` and possibly sending a notification).
 
@@ -180,11 +180,11 @@ Any step that causes an error (`KO`) from which the job can't recover, and is no
 <AccordionGroup>
 <Accordion title="How do I update deprecated workflow steps?">
 
-If your step conditions displays a **This step contains deprecated conditions** warning, your workflow will continue working normally, but we recommend updating your workflow so that you can modify it without unexpected behavior.
+If your step conditions display a **This step contains deprecated conditions** warning, your workflow will continue working normally, but we recommend updating your workflow so that you can modify it without unexpected behavior.
 
 Steps under deprecated conditions will display with a warning symbol ⚠️ with the label "Go to [action name]". Click on the menu button `...` and select "Replace", and then select the replacement action from the sidebar. So, for example, if the deprecated step is labelled "Go to Set state", replace this step with "Set state" and choose the same configuration as the original step (which you should find further down within the same workflow).
 
-Once all deprecated steps are replaced, locate the the referenced action(s) and delete.
+Once all deprecated steps are replaced, locate the referenced action(s) and delete.
 </Accordion>
 </AccordionGroup>
 

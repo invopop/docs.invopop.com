@@ -26,14 +26,11 @@ Details on what the contents are.
 ### Document
 The data inside the envelope.
 
-### Signatures
-JSON Web Signatures of the header.
-
-#### Files
+## Files
 The Files tab lists generated or attached artifacts:
 Common File Types:
 - PDF: Human-readable rendition (may include mandatory QR, stamp, legends).
-- XML / Structured: Regulatory submission payloads (FacturaE, FatturaPA, KSeF FA(2), CFDI, UBL, CII).
+- XML / Structured: Regulatory submission payloads (Facturae, FatturaPA, KSeF FA(3), CFDI, UBL, CII).
 - JSON: Original or transformed GOBL snapshot.
 - Auxiliary: Attachments (agreement, identity docs, shipping notes, images).
 - Signature logs or hash chains.
@@ -41,7 +38,7 @@ Common File Types:
 Metadata shown often includes size, checksum (SHA256), creation timestamps, and MIME type. Use checksums to verify external copies match stored originals.
 
 Workflow Interactions:
-- Generation steps (e.g. “Generate PDF”, “Generate VERI*FACTU XML”) append files.
+- Generation steps (e.g. “Generate PDF”, “Generate VERI\*FACTU XML”) append files.
 - Cancellation / correction workflows may add new XML replacing or referencing prior versions.
 - Archival workflows create summarized CSV/SAF-T exports and attach them.
 
@@ -49,7 +46,7 @@ Retention:
 - Files are immutable once attached; regeneration creates a new file or updates version counters (depending on workflow design).
 - Never delete compliance artifacts—retain for audit lifetimes (often 5–10 years).
 
-#### Activity
+## Activity
 A chronological log of significant actions affecting the document:
 Common Events:
 - Creation (entry uploaded)
@@ -70,7 +67,7 @@ Audit Integrity:
 - Each event is timestamped (UTC) and references the job/workflow ID.
 - Non-destructive: Past events remain even after corrections.
 
-#### Related
+## Related
 Lists documents logically connected to the current envelope:
 Typical Relations:
 - Credit note referencing an invoice.
@@ -83,7 +80,7 @@ Best Practices:
 - Always navigate to related documents to confirm both halves of a correction or refund are consistent.
 - Use related view to bulk export a chain (original + adjustments + replacements) for external audits.
 
-#### Meta
+## Meta
 Structured metadata and key-value pairs attached to the envelope that provide enhanced context:
 Examples:
 - Regime Addons: `es-verifactu-v1`, `pt-saft-v4`.
@@ -101,8 +98,8 @@ Guidelines:
 - Keep keys namespaced to avoid collisions (`verifactu.*`, `ksef.*`, `cfdi.*`, `custom.*`).
 - Avoid overwriting critical regulatory fields—append new versions or maintain snapshots.
 
-### Signatures
-Signature blocks attest to document integrity and authenticity. Depending on regime and workflow:
+## Signatures
+JSON Web Signatures of the header. Signature blocks attest to document integrity and authenticity. Depending on regime and workflow:
 Contents:
 - Signer identity (certificate thumbprint, key ID).
 - Timestamp at signing.
@@ -116,7 +113,7 @@ Verification:
 - Invalid signatures often result from post-sign modification of core fields or mismatched hashing algorithm settings.
 
 Chain Integrity:
-- For regimes requiring chained documents (Portugal hash chain, VERI*FACTU request chain, Brazilian NF-e sequences), each signature references the preceding hash to prevent tampering.
+- For regimes requiring chained documents (Portugal hash chain, VERI\*FACTU request chain, Brazilian NF-e sequences), each signature references the preceding hash to prevent tampering.
 - Cancellations and corrections may generate new signature entries, preserving prior ones.
 
 Best Practices:
@@ -126,7 +123,7 @@ Best Practices:
 
 ---
 
-### Quick troubleshooting guide
+## Quick troubleshooting guide
 | Symptom | Likely Cause | Resolution |
 |---------|--------------|-----------|
 | Totals mismatch | Line rounding vs tax calculation inconsistency | Recompute sums; ensure currency precision matches regime defaults. |
@@ -135,7 +132,7 @@ Best Practices:
 | Missing related credit note | Credit workflow failed | Inspect Activity for failed job; re-run correction workflow. |
 | Protocol absent | Submission workflow incomplete | Confirm external API connectivity; retry transmission step. |
 
-### Recommended review flow
+## Recommended review flow
 1. Open Header: confirm type, regime, series/code, state.
 2. Inspect Signatures: validate all present and valid.
 3. Review Meta: ensure protocol/UUID and tax chain metadata.
@@ -144,7 +141,7 @@ Best Practices:
 6. Inspect Related: confirm corrections or cancellations linked.
 7. Export or archive if the document reached terminal state (Sent, Paid, Void, Corrected, Archived).
 
-### Glossary
+## Glossary
 - Envelope: Structured wrapper for the business document and signatures.
 - Addon: Extension enabling regime-specific transformations.
 - Protocol / UUID / Hash: External authority identifier proving successful submission.
