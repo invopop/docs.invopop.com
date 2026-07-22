@@ -319,6 +319,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `compliance/brazil.mdx` | `br/composers/page-compliance.mdx` |
 | `apps/documentos-fiscais-electronicos-brazil.mdx` | `br/composers/app-dfe.mdx` |
 | `guides/br-dfe.mdx` | `br/composers/guide-dfe-invoicing.mdx` |
+| `guides/br-dfe-supplier.mdx` | `br/composers/guide-dfe-supplier.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
 | `guides/de-ubl.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
@@ -350,10 +351,12 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/fr-pa-reporting.mdx` | `fr/composers/guide-pa-reporting.mdx` |
 | `guides/fr-pa-status.mdx` | `fr/composers/guide-pa-reporting.mdx` |
 | `guides/fr-chorus-pro.mdx` | `fr/composers/guide-choruspro-invoicing.mdx` |
+| `guides/fr-chorus-pro-supplier.mdx` | `fr/composers/guide-choruspro-supplier.mdx` |
 | `faq/greece.mdx` | `gr/composers/page-faq.mdx` |
 | `compliance/greece.mdx` | `gr/composers/page-compliance.mdx` |
 | `apps/ilyda-greece.mdx` | `gr/composers/app-mydata.mdx` |
 | `guides/gr-iapr.mdx` | `gr/composers/guide-mydata-invoicing.mdx` |
+| `guides/gr-iapr-supplier.mdx` | `gr/composers/guide-mydata-supplier.mdx` |
 | `faq/italy.mdx` | `it/composers/page-faq.mdx` |
 | `compliance/italy.mdx` | `it/composers/page-compliance.mdx` |
 | `apps/sdi-italy.mdx` | `it/composers/app-sdi.mdx` |
@@ -361,10 +364,12 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/it-sdi-sending.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
 | `guides/it-sdi-receiving.mdx` | `it/composers/guide-sdi-receiving.mdx` |
 | `guides/it-ticket.mdx` | `it/composers/guide-ticket-invoicing.mdx` |
+| `guides/it-ticket-supplier.mdx` | `it/composers/guide-ticket-supplier.mdx` |
 | `faq/mexico.mdx` | `mx/composers/page-faq.mdx` |
 | `compliance/mexico.mdx` | `mx/composers/page-compliance.mdx` |
 | `apps/sat-mexico.mdx` | `mx/composers/app-sat.mdx` |
 | `guides/mx-sat-issuing.mdx` | `mx/composers/guide-sat-invoicing.mdx` |
+| `guides/mx-sat-supplier.mdx` | `mx/composers/guide-sat-supplier.mdx` |
 | `faq/norway.mdx` | `no/composers/page-faq.mdx` |
 | `compliance/norway.mdx` | `no/composers/page-compliance.mdx` |
 | `guides/no-peppol.mdx` | `no/composers/guide-peppol-invoicing.mdx` |
@@ -372,10 +377,12 @@ For single-regime countries, country-level operations or tech content goes into 
 | `compliance/poland.mdx` | `pl/composers/page-compliance.mdx` |
 | `apps/poland.mdx` | `pl/composers/app-ksef.mdx` |
 | `guides/pl-ksef.mdx` | `pl/composers/guide-ksef-invoicing.mdx` |
+| `guides/pl-ksef-supplier.mdx` | `pl/composers/guide-ksef-supplier.mdx` |
 | `faq/portugal.mdx` | `pt/composers/page-faq.mdx` |
 | `compliance/portugal.mdx` | `pt/composers/page-compliance.mdx` |
 | `apps/at-portugal.mdx` | `pt/composers/app-at.mdx` |
 | `guides/pt-at.mdx` | `pt/composers/guide-at-invoicing.mdx` |
+| `guides/pt-at-supplier.mdx` | `pt/composers/guide-at-supplier.mdx` |
 | `faq/romania.mdx` | `ro/composers/page-faq.mdx` |
 | `compliance/romania.mdx` | `ro/composers/page-compliance.mdx` |
 | `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
