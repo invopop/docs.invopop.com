@@ -1,0 +1,182 @@
+---
+title: "Chorus Pro supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register suppliers to issue invoices to French public institutions with Chorus Pro.
+---
+
+import SupplierRegistration from '/snippets/workflows/fr/chorus-pro-registration.mdx';
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import FAQ from '/snippets/faqs/fr/composers/guide-choruspro-supplier.mdx';
+
+## Introduction
+
+Chorus Pro is a mandatory service provided by the French government for invoicing French public institutions. Before a supplier can issue invoices through the platform, they need a Chorus Pro technical account and must be registered with Invopop using the [Chorus Pro app](/apps/choruspro-france).
+
+In this guide you'll learn how to create the Chorus Pro credentials and register a supplier. Once a supplier is registered, continue with the companion guide: [Chorus Pro issuing invoices](/guides/fr-chorus-pro).
+
+## Prerequisites
+
+To register a supplier with Chorus Pro, you will need:
+
+- A [Chorus Pro](https://portail.chorus-pro.gouv.fr/) account for the supplier (or a sandbox account for testing — see below).
+- The supplier's VAT number.
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Test Chorus Pro account (qualif.chorus-pro.gouv.fr) | Real Chorus Pro account required |
+| **Accounts** | Downloadable CSV with test accounts | — |
+
+## Setup
+Configure your Invopop Workspace for Chorus Pro supplier registration.
+
+Complete these steps:
+
+<Steps>
+<Step title="Connect the required apps">
+1. Go to **Configuration** > **Apps** in the Console.
+2. Find **UN/CEFACT CII** in the app list and click **Connect** to activate the app.
+3. Find **Chorus Pro** in the app list and click **Connect** to activate the app.
+
+After connecting, you'll see both UN/CEFACT CII and Chorus Pro listed in the Enabled Apps section.
+
+  <Frame>
+  <img width="100%" src="/assets/guides/fr-chorus-pro-apps.png" alt="Chorus Pro app connected" />
+  </Frame>
+
+</Step>
+<Step title="Configure the supplier registration workflow">
+    Add a new workflow to your workspace for registering suppliers. You can start with the template below.
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="Chorus Pro supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=chorus-pro-registration" cta="Add to my workspace">
+        This workflow will issue a registration request for a supplier to complete.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste this code into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+        <SupplierRegistration />
+      </Tab>
+      <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Name the workflow with a descriptive label such as "Chorus Pro Supplier Registration".
+
+        The new workflow performs a single step:
+
+        1. **Register supplier with Chorus Pro**
+
+        Add any additional steps you need such as error handling, and save the new workflow.
+
+      </Tab>
+    </Tabs>
+    Keep the workflow ID at hand as you'll need it later.
+</Step>
+</Steps>
+
+## Chorus Pro credentials
+
+This section explains what suppliers need to configure within their Chorus Pro account to enable integration with Invopop.
+
+To configure Chorus Pro, complete these steps:
+
+<Steps>
+  <Step title="Create a Chorus Pro account">
+
+    Sign up for a [Chorus Pro](https://portail.chorus-pro.gouv.fr/aife_csm?id=aife_enrollment) account if you don't have one.
+    <Info>
+      To test in sandbox mode, create an account in the [Chorus Pro sandbox](https://qualif.chorus-pro.gouv.fr/aife_qual). Download a CSV file with test accounts. Use one of the accounts to log in. For more information, visit the [Chorus Pro documentation](https://portail.chorus-pro.gouv.fr/aife_documentation?sys_kb_id=8ea00d85c398ea1477c2530ed40131e2&id=kb_article_view&sysparm_rank=1&sysparm_tsqueryId=66f41ea033de625056688539bd5c7bd9).
+    </Info>
+  </Step>
+  <Step title="Navigate to API settings">
+    Once logged in to your Chorus Pro account, navigate to the API configuration area:
+    1. Go to **Domains** > **Connections** in the main menu
+      <Frame caption="Navigate to Domains → Connections">
+        <img width="450" src="/assets/guides/fr-chorus-pro-connections.png" alt="Navigate to Domains → Connections" />
+      </Frame>
+    2. Click **Access Service** in the Technical Account section (bottom left)
+      <Frame caption="Navigate to Technical Account">
+        <img width="450" src="/assets/guides/fr-chorus-pro-access-service.png" alt="Navigate to Technical Account" />
+      </Frame>
+      This opens a new page where you can manage your technical accounts.
+  </Step>
+  <Step title="Create a technical account">
+    Set up the technical account credentials, this opens a form to create a technical account:
+      - Set the type of request to __Creation of a technical account__
+      - Select your company in the company field
+
+   - This creates a login and password. **Copy these credentials as you'll need them when registering with Invopop**
+
+      <Frame caption="Technical Account Creation">
+        <img width="100%" src="/assets/guides/fr-chorus-pro-technical-account.png" alt="Technical Account Creation" />
+      </Frame>
+
+   Click **Submit** to complete the setup
+ </Step>
+</Steps>
+
+Return to Invopop for the next steps.
+
+## Register a supplier
+
+Now that you have a technical account, you can register a supplier with Chorus Pro.
+
+<Steps>
+  <Step title="Upload a Supplier">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new supplier. Include a [party](https://docs.gobl.org/draft-0/org/party) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field. For this step, you only need the VAT number.
+
+    After successful upload, you'll see the supplier in the **Parties** section with status `Empty`.
+    <Frame caption="Supplier registration">
+      <img width="100%" src="/assets/guides/fr-chorus-pro-supplier-1.png" alt="Supplier registration in progress" />
+    </Frame>
+  </Step>
+
+  <Step title="Send the Supplier to the registration workflow">
+    Send the supplier to the registration workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+    - The supplier's silo entry UUID from the previous step
+    - The Supplier Registration workflow ID from the [Setup](#setup) section
+
+    This workflow generates a unique URL for the supplier to access and complete the registration process. The URL is stored in the supplier's metadata.
+
+    <Frame>
+      <img width="450" src="/assets/guides/fr-chorus-pro-supplier-2.png" alt="Supplier registration in progress" />
+    </Frame>
+  </Step>
+
+  <Step title="Complete Chorus Pro Authentication">
+    The workflow stays in progress until the supplier completes the registration process. The supplier must access the link and add the credentials they created previously.
+
+    <Frame>
+      <img width="450" src="/assets/guides/fr-chorus-pro-supplier-3.png" alt="Supplier registration in progress" />
+    </Frame>
+
+    The supplier's status will change to `Registered` when authentication is complete.
+
+    <Note>
+    You can fill the form via API by sending a PUT request to the registration link. The payload should be a JSON object with the following fields:
+
+    - `username` (string): The supplier's Chorus Pro username.
+    - `password` (string): The supplier's Chorus Pro password.
+  </Note>
+  </Step>
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Chorus Pro issuing invoices guide](/guides/fr-chorus-pro) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [France FAQ](/faq/france) section
+
+---
+
+<FranceResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in France →
+</Card>

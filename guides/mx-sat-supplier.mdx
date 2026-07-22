@@ -1,0 +1,244 @@
+---
+title: "CFDI supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register suppliers to issue CFDI documents in Mexico using the SAT Mexico app.
+---
+
+import PostRegistration from '/snippets/workflows/mx/sat-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/mx/sat-register-supplier.mdx';
+import UnregisterSupplier from '/snippets/workflows/mx/sat-unregister-supplier.mdx';
+import Supplier from '/snippets/parties/mx/supplier.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import FAQ from '/snippets/faqs/mx/composers/guide-sat-supplier.mdx';
+
+## Introduction
+
+Before a supplier can issue CFDI (_Comprobante Fiscal Digital por Internet_) documents in Mexico, they must be registered with Invopop's local PAC (_Proveedor Autorizado de Certificación_), SW Sapien, who signs and submits invoices to the country's tax authority, the SAT (_Servicio de Administración Tributaria_).
+
+In this guide you'll learn how to register a supplier using the [SAT Mexico app](/apps/sat-mexico), and how to unregister them when they should no longer issue invoices from your workspace. Once a supplier is registered, continue with the companion guide: [Mexico: Issuing invoices](/guides/mx-sat-issuing).
+
+## Prerequisites
+
+To register a supplier with the SAT, you will need:
+
+- **Supplier Information**:
+  - Name
+  - Taxpayer ID (RFC - _Registro Federal de Contribuyentes_)
+  - Address
+  - Fiscal regime code (as defined by SAT)
+- **Two certificates** required by the SAT:
+  1.	**e.firma (FIEL)**: Confirms your identity before SAT. Required to obtain the CSD below and to authorize the PAC to issue on your behalf as explained in step 3 of the [Register a supplier](#register-a-supplier) section below.
+  2.	**CSD (Certificado de Sello Digital)**:  Required to sign electronic invoices and prove they were issued by you.
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Register a test supplier using one of SW Sapien's published test CSDs, or register your own | Real RFC and CSD certificate required |
+
+## Setup
+
+Configure your Invopop workspace for supplier registration by following these steps in the [Invopop Console](https://console.invopop.com):
+
+<Info>
+  These instructions apply to both the sandbox and live environments, with a few exceptions related to supplier data and registration details when real information is not available.
+</Info>
+
+<Steps>
+
+<Step title="Set up the Supplier Post-Registration Workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" cta="Add to my workspace">
+    This workflow marks Suppliers as `Registered`. You will select this workflow in the SAT (Mexico) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Post-registration flow".
+
+      This workflow is composed of a single step:
+
+      1. **Set state** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Set up the Supplier Registration Workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" cta="Add to my workspace">
+    Issues a registration request for a supplier to complete in order to issue invoices through SAT.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterSupplier />
+  </Tab>
+  <Tab title="Build from scratch">
+      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Register Supplier".
+
+    The new workflow will need to perform these steps:
+
+      - **Sign envelope**
+      - **Register supplier with SAT**
+      - **Set state** - with configuration set to `Processing`.
+
+    Add any additional steps you may need, and save the new workflow.
+
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Connect the SAT Mexico App">
+  In the left sidebar, under the **Configuration** section, click **Apps**. This will display all available apps.
+
+  Search for SAT Mexico and click **Connect**. The app will move to the "Enabled Apps" section.
+
+  Next, click **Configure**. This will open a dialog on the right with two fields:
+	  - **Environment**: Sandbox / Live
+	  - **Post-registration workflow**: SAT supplier post-registration
+</Step>
+</Steps>
+
+## Register a supplier
+
+Registering a business entity requires uploading the CSD to our local provider, SW Sapien, via a form (see Step 2: Complete Supplier Registration). This upload goes to either the sandbox or live environment, depending on your SAT Mexico App configuration.
+
+Each CSD is tied to an RFC. When you submit an e-invoice, including the supplier's RFC, SW Sapien checks for a valid CSD linked to it, as SAT requires a valid certificate to issue invoices.
+
+<Info>
+  You can complete this process through the Invopop Console or the API. We'll walk through it using the Console, but don't worry, the steps are nearly identical for the API. We'll add notes along the way to clarify any differences.
+</Info>
+
+<Note>
+  Registration is required even in the **sandbox** now. When following the steps below in that environment, you don't need a real CSD: you can register either your own company and certificate, or any of the test companies published on the [SW Sapien test page](https://developers.sw.com.mx/knowledge-base/donde-encuentro-csd-de-pruebas-vigentes/), where you can download each test company's certificate, private key, and password. Either way, make sure the supplier's name and RFC matches its certificate.
+</Note>
+
+<Steps>
+  <Step title="Run the Supplier Registration Workflow">
+    In the left sidebar, go to the **Parties** section and click **Suppliers**.
+
+    Then click **+New Supplier** and enter the supplier's data manually using the console, or switch to developer mode (`</>` icon) to paste the data directly.
+
+    Here is an example supplier for reference:
+
+    <Supplier />
+
+    Click **Build**, make sure there are no errors, then click **Save**.
+
+    Next, click **Select Workflow** and execute the **Supplier Registration Workflow**.
+  </Step>
+
+  <Step title="Complete Supplier Registration">
+    After it completes, open the **Details** window and click on **Meta**. You should see a section called **Registration Link** with a URL:
+
+    <Frame>
+      <img
+        src="/assets/guides/mx-sat-reg-link.png"
+        width="450px"
+        alt="Supplier Registration Link"
+      />
+    </Frame>
+
+    <Info>
+      You can access the registration link via the API by [fetching the silo entry](/api-ref/silo/entries/fetch-an-entry) and locating the meta entry where the key is `registration-link`.
+    </Info>
+
+    Visit that URL to access the form for registering the supplier.
+
+    <Note>
+      Note that this form can be shared directly with the supplier if required.
+    </Note>
+
+    <Frame>
+      <img src="/assets/guides/mx-sat-reg-csd.png" alt="Issuer Registration Form" />
+    </Frame>
+
+    Fill out the form with the following information: Issuer RFC, CSD certificate file (`.crt`), private key (`.key`), and the private key password.
+
+    Follow this [guide](https://sw.com.mx/blog/administracion-fiscal/sellos-digitales-que-son-y-como-funcionan) to generate the CSD certificate and key if you need to.
+
+    When you click **Save**, the form details are securely sent to the PAC (*Proveedor Autorizado de Certificación*), who will handle invoice signing and submission to the SAT.
+
+    <Note>
+      You can fill the form via API by sending a PUT request to the registration link. The payload should be a JSON object with the following fields:
+
+      - `csd_file` (string): The CSD certificate file (`.crt`).
+      - `key_file` (string): The private key (`.key`).
+      - `password` (string): The private key password.
+
+      The response will be a JSON object with the following fields:
+
+      - `rfc` (string): The RFC of the supplier.
+      - `active_cert` (boolean): Whether the certificate is active.
+    </Note>
+  </Step>
+
+  <Step title="Authorize PAC to Issue Invoices">
+    Since we are using a local PAC, you must authorize the PAC to sign, stamp, and send CFDIs to the SAT on your behalf.
+
+    To do this, visit the following [page]( https://firmamanifiesto.lunasoft.net/) and **sign the manifesto using your e.firma (FIEL)**.
+  </Step>
+
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [CFDI issuing invoices guide](/guides/mx-sat-issuing) to continue.
+
+## Unregister a supplier
+
+Unregistering a supplier revokes their invoice issuing privileges from your workspace. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
+
+  <Tabs>
+      <Tab title="Template">
+        <Card title="SAT unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-unregister-supplier" cta="Add to my workspace">
+          This workflow will revoke invoice issuing privileges for a SAT supplier.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterSupplier />
+      </Tab>
+      <Tab title="Build from scratch">
+        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
+
+        1. **Unregister supplier from SAT** - Removes the supplier's registration so it can no longer issue invoices from this workspace.
+        2. **Set state** - Select `void` to label the supplier accordingly.
+
+        In the Error Handling section, add the **Set state** action and select `Error`.
+
+      </Tab>
+    </Tabs>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Mexico FAQ](/faq/mexico) section
+
+---
+
+<MexicoResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Mexico →
+</Card>

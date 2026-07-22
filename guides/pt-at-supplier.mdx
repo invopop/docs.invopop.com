@@ -1,0 +1,249 @@
+---
+title: "AT supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register suppliers with the Autoridade Tributária (AT) to issue tax documents in Portugal.
+---
+
+import PostRegistration from '/snippets/workflows/pt/at-postregistration.mdx';
+import RegisterSupplier from '/snippets/workflows/pt/at-register-supplier.mdx';
+import Supplier from '/snippets/parties/pt/supplier.mdx';
+import PortugalResources from '/snippets/tables/portugal-resources.mdx';
+import FAQ from '/snippets/faqs/pt/composers/guide-at-supplier.mdx';
+
+## Introduction
+
+Before a supplier can issue tax documents in Portugal through Invopop's certified implementation, they must be registered with the AT Portugal app, provide their credentials for the _Autoridade Tributária e Aduaneira_ (AT) web services, and register the document series they will issue with.
+
+In this guide you'll learn how to register a supplier using the [AT Portugal app](/apps/at-portugal), keep their data up to date, and manage their document series. Once a supplier is registered, continue with the companion guide: [Portugal: Issuing invoices](/guides/pt-at).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Real company details required | Real company details required |
+| **Series type** | `F` (Training) | `N` (Normal) |
+
+## Prerequisites
+
+To register a supplier with the AT, you will need:
+
+- Supplier details, including:
+  - Legal business name
+  - Tax ID
+  - Business address
+- An email address for the supplier to access the Supplier Portal
+- The supplier's credentials to access the AT's web services for registering series and report documents in real-time
+
+## Setup
+
+There are four key processes to prepare:
+
+- connect the AT Portugal app,
+- create a supplier post-registration workflow,
+- configure the AT Portugal app, and,
+- configure a supplier registration workflow.
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Connect the AT Portugal App">
+
+  1. Navigate to **Configuration** →  **Apps**.
+  2. Find **AT Portugal** in the app discovery list.
+  3. Click **Connect** to activate.
+
+</Step>
+
+<Step title="Create Supplier post-registration workflow">
+
+<Tabs>
+  <Tab title="Template">
+
+    <Card iconType="duotone" title="AT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-postregistration" cta="Add to my workspace">
+    Marks Suppliers as "Registered". You will select this workflow in the AT (Portugal) app configuration later.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistration />
+  </Tab>
+  <Tab title="Build from scratch">
+
+      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "PT-AT Post-registration workflow".
+
+      This workflow is composed of a single step:
+
+      1. **Set state** - To `Registered`.
+
+      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
+
+  </Tab>
+</Tabs>
+</Step>
+
+  <Step title="Configure the AT Portugal App">
+
+      1. Navigate to **Configuration** →  **Apps**.
+      2. Find **AT Portugal** in the connected apps list.
+      3. Click **Configure** and choose the "Post-registration workflow" we created in the previous step.
+      4. Click the **Save** button.
+
+
+  </Step>
+<Step title="Configure the supplier registration workflow">
+  <Tabs>
+    <Tab title="Template">
+      <Card iconType="duotone" title="AT supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pt-at-register-supplier" cta="Add to my workspace">
+      Issues a registration request for a supplier to complete.
+      </Card>
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+      <RegisterSupplier />
+    </Tab>
+    <Tab title="Build from scratch">
+        Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "AT supplier registration".
+
+      The new workflow will need to perform three steps:
+
+      - **Set state** - with configuration set to `Processing`.
+      - **Sign envelope**
+      - **Register supplier with AT**
+
+       Finally, in the Error Handling area, add the **Set state** action and select `Error`.
+
+      Add any additional steps you may need, and save the new workflow.
+
+    </Tab>
+  </Tabs>
+</Step>
+
+</Steps>
+
+## Register a supplier
+
+<Steps>
+
+<Step title="Submit the Supplier Information">
+This can be done either manually via the Invopop Console or programmatically via the API. The process is essentially the same; here we'll do it manually.
+
+Find the **Parties** section of the sidebar and click **Suppliers**. Click the **+ New Supplier** button to be presented with a new editor. You can use the following example as a template, and replace it with the details of your company. Note that you'll need the details of a real company both in the sandbox and production environments:
+
+  <Supplier />
+
+<Info>
+  Each supplier must have a unique email address. The email serves as the login for the [Supplier Portal](https://at-pt.invopop.com/portal), so it can only be linked to one supplier. Attempting to register a different supplier with an already-used email will result in an error.
+</Info>
+
+Click **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run Workflow**.
+
+The execution should be successful, and the silo entry will now be in the "Processing" state.
+
+</Step>
+
+<Step title="Obtain the Supplier's AT Credentials">
+To complete the registration process, the supplier will need to obtain the credentials of a user with the necessary permissions in the AT's Portal das Finanças. To create a new user, the supplier can follow these steps:
+
+1. Go to the AT's [Portal das Finanças](https://www.portaldasfinancas.gov.pt) and click on the **Iniciar Sessão** button.
+2. Authenticate by any of the available methods.
+3. Go to **Todos os Serviços** > **Autenticação de Contribuintes** > **Gestão de Utilizadores**.
+4. Click on the **Criar Novo Utilizador** button.
+5. Fill in the form with the required information. We recommend setting a name that identifies the purpose of the user, for example "Invopop User".
+6. Select the user permissions, depending on the supplier needs:
+    - `WSE` – Always required. It allows to register series for any document type.
+    - `WFA` – Required if the supplier wants to submit invoices to the AT in real-time, rather than using SAF-T.
+    - `WDT` – Required if the supplier wants to submit transport documents (e.g. "Guia de Remessa", "Guia de Transporte", etc.) to the AT in real-time, rather than using SAF-T.
+7. Click on the **Submeter** button to create the user.
+8. Store the username and password in a secure location, as they will be needed in the next step.
+</Step>
+
+<Step title="Provide the Supplier's AT Credentials and Register Series">
+
+<Info>
+  **White-label integration:** If you need to fully integrate this functionality into your own platform, the [AT Portugal API](/api-ref/apps/at-pt) provides programmatic access to manage credentials, register series, and generate SAF-T reports without requiring suppliers to use the Supplier Portal as described below.
+</Info>
+
+Now, the supplier will need to complete the registration process in the Invopop's Supplier Portal:
+
+1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
+2. Enter the email address provided in the supplier's information. The system will send to the provided address a code to complete the authentication process.
+3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press <kbd>Save</kbd>.
+4. Go to the **Series** section, click **+ Register** and register at least a series for each document type that the supplier will issue.
+
+Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration workflow" if one was configured.
+
+<Info>
+  For detailed information about series management in Portugal, including naming conventions and automatic sequence assignment, see the [Series management](#series-management) section below.
+</Info>
+
+</Step>
+
+</Steps>
+
+At this point, you're ready to start issuing documents on behalf of the supplier. Head over to the [AT issuing invoices guide](/guides/pt-at) to continue.
+
+## Updating supplier data
+
+After a supplier has been registered, you may need to update their information over time -- for example, a change of address. Keep in mind that supplier data is used in two different contexts:
+
+- **SAF-T reports** use the data stored in the Supplier Record. To have updated information appear in SAF-T reports, update the Supplier Record directly via the API or the Console. Re-running the registration workflow is not necessary for data-only changes.
+- **Printed PDFs** use the supplier details included in each individual invoice, not from the Supplier Record. Make sure the invoice data is correct at the time of issuance.
+
+If you need to change the supplier's login email for the [Supplier Portal](https://at-pt.invopop.com/portal), update the email in the Supplier Record and re-run the registration workflow so the portal access is updated accordingly.
+
+## Series management
+
+Series management in Portugal has specific requirements that differ from other countries. Understanding these particularities is essential for proper document issuance.
+
+### Naming
+
+All series names in Portugal must follow a specific format:
+
+- **Document type prefix**: The name must start with a code indicating the document type (e.g., `FT`, `FS`, `FR`, `NC`...), followed by a space.
+- **Base name**: After the space, you can add any custom name you prefer. The custom name can contain letters, numbers, and most special characters, but not spaces, forward slashes (`/`), or carets (`^`).
+
+**Examples**: `FT A001`, `NC 2024-01`, `FR INV-2024`
+
+When you register series through the Supplier Portal, you're asked to provide a base name (without the document prefix) and select the document types you plan to issue. The portal combines each selected prefix with the base name, registers every resulting series with the AT, and retrieves the corresponding validation code required for generating ATCUD codes.
+
+### Sequence assignment
+
+Unlike other countries, Portugal regulations do not allow pre-assigning sequence numbers to documents. The sequence number (_i.e._, the document's `code` property) is automatically assigned during the **Record document for SAF-T** step in your workflow, following AT regulations. This is why you'll find no `sequence` step in Portugal workflow templates and you should not add one.
+
+### Series type
+
+Every series registered with the AT has a type that determines its purpose. You must choose one of three types when [registering a series](/api-ref/apps/at-pt/series-register), whether through the Supplier Portal or the API:
+
+| Type | Code | Description |
+| --- | --- | --- |
+| **Normal** | `N` | The standard type for series used in production. Use this type for all real documents with fiscal effect in live workspaces. |
+| **Training**<br/>_(Formação)_ | `F` | For testing and training purposes only. Documents issued under a training series are fictitious and carry no fiscal effect. Use this type in sandbox workspaces when validating your integration before going live. |
+| **Recovery**<br/>_(Recuperação)_ | `R` | A special type for registering documents that were issued manually on paper during a system outage. Portuguese law requires that when the invoicing system is unavailable, issuers continue on paper and then re-enter those documents once the system is restored. See [Recovering documents issued offline](/guides/pt-at#recovering-documents-issued-offline) for the full process. |
+
+<Note>
+  The series type is set at registration time and cannot be changed afterward. Make sure to choose the correct type for your use case.
+</Note>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Portugal FAQ](/faq/portugal) section
+
+---
+
+<PortugalResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about Portugal's regulation →
+</Card>

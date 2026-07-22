@@ -1,6 +1,6 @@
 ---
-title: "Documentos Fiscais Eletrônicos guide"
-sidebarTitle: "🇧🇷 Brazil"
+title: "DF-e issuing invoices guide"
+sidebarTitle: "Issuing invoices"
 description: Issue Documentos Fiscais Eletrônicos in Brazil
 ---
 
@@ -10,10 +10,6 @@ import ProductWorkflow from '/snippets/workflows/br/dfe-product-invoice.mdx'
 import CancelNFSeWorkflow from '/snippets/workflows/br/dfe-cancel-nfse.mdx'
 import CancelNFCeWorkflow from '/snippets/workflows/br/dfe-cancel-nfce.mdx'
 import CancelNFEWorkflow from '/snippets/workflows/br/dfe-cancel-nfe.mdx'
-import PostRegistrationFlow from '/snippets/workflows/br/dfe-postregistration.mdx'
-import RegisterSupplier from '/snippets/workflows/br/dfe-register-supplier.mdx'
-import UnregisterSupplier from '/snippets/workflows/br/dfe-unregister-supplier.mdx'
-import Supplier from '/snippets/parties/br/supplier.mdx'
 import ExampleAccordion from '/snippets/invoices/br/accordion.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
 import FAQ from '/snippets/faqs/br/composers/guide-dfe-invoicing.mdx';
@@ -24,29 +20,18 @@ Brazil has a variety of electronic tax documents that must be issued in differen
 
 Invopop's **Documentos Fiscais Eletrônicos** app provides a unified way to issue fiscal documents across all Brazilian states and over 2000 municipalities using GOBL. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
 
-This guide will walk you through the steps required first to register a supplier and then issue electronic fiscal documents in their name.
+This guide will walk you through the steps required to issue electronic fiscal documents in a supplier's name, and to cancel them if needed.
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Registration required, but details don't need to be real | Real company details required |
 | **Responses** | Simulated/mocked | Real from DFe system |
-| **Certificates** | Not required to be valid | Must be valid and real |
 | **PDF & XML** | Always the same mock-up files attached to silo entry | Actual XML sent to tax authority and actual generated PDF attached |
 
 ## Prerequisites
 
 To issue electronic fiscal documents in Brazil, you will need:
 
-- Supplier details, including:
-  - name,
-  - CNPJ (_Cadastro Nacional da Pessoa Jurídica_),
-  - address,
-  - municipality code (IBGE),
-  - municipal registration number (for NFS-e),
-  - state registration number (for NF-e and NFC-e),
-  - whether the supplier opts into the _Simples Nacional_ tax regime,
-  - whether the supplier benefits from a fiscal incentive, and,
-  - optionally, any special tax regime (MEI, estimated, coop…) the supplier is subject to.
+- A registered supplier: follow the [DF-e supplier registration guide](/guides/br-dfe-supplier) to connect the Documentos Fiscais Eletrônicos Brazil app and register the supplier's certificate before issuing.
 - Customer details (except for NFC-e where the customer is optional).
 - Details of the goods or services provided:
   - quantity,
@@ -54,102 +39,18 @@ To issue electronic fiscal documents in Brazil, you will need:
   - applicable tax rates (ISS, ICMS, PIS, COFINS, etc.), and,
   - (only for services) service code (_Código Item Lista Serviço_) as defined by the municipality.
 - To have chosen an invoice series
-- A certificate and password accepted by the municipality (for NFS-e) or the state (for NF-e and NFC-e) to send electronic fiscal documents in the name of the supplier.
 
 ## Setup
 
-There are four key processes to prepare:
-
-- connect the **Documentos Fiscais Eletrônicos Brazil** app,
-- create the supplier registration workflow,
-- configure the supplier post-registration workflow,
-- prepare the invoicing workflows.
+Prepare the invoicing workflows for the document types you want to issue and cancel.
 
 <Info>
- These instructions apply to both the sandbox and live environments. Please note that the sandbox environment is simulated, and most responses are mocked. You'll still need to register suppliers in the sandbox, but the company details, certificates or passwords don't need to be valid or real.
+ These instructions apply to both the sandbox and live environments. Please note that the sandbox environment is simulated, and most responses are mocked. The **Documentos Fiscais Eletrônicos Brazil** app must already be connected and configured — this is covered in the [supplier registration guide](/guides/br-dfe-supplier).
 </Info>
 
 All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
-
-
-<Step title="Connect the Documentos Fiscais Eletrônicos Brazil app">
-Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **Documentos Fiscais Eletrônicos Brazil** app.
-
-<Frame>
-  <img src="/assets/guides/br-dfe-app.png" alt="DF-e Brazil App" width="400" noZoom />
-</Frame>
-
-</Step>
-
-<Step title="Create the supplier registration workflow">
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-<Tabs>
-  <Tab title="Template">
-
-    <Card iconType="duotone" title="DF-e register supplier" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-register-supplier" cta="Add to my workspace">
-    This workflow will start the registration of a supplier to issue electronic tax documents.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-    <RegisterSupplier />
-  </Tab>
-  <Tab title="Build from scratch">
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "NFS-e register supplier workflow".
-
-    The new workflow will need to perform three steps:
-
-    - **Sign envelope**
-    - **Register supplier in Brazil**
-    - **Set state** - with configuration set to `Processing`.
-
-    Add any additional steps you may need, and save the new workflow.
-
-  </Tab>
-</Tabs>
-
-</Step>
-
-<Step title="Configure the supplier post-registration workflow">
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="DF-e process supplier post-registration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-postregistration" cta="Add to my workspace">
-    This workflow should contain any processing that needs to happen after a supplier completes the registration process.
-    </Card>
-
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-    <PostRegistrationFlow />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "DF-e process supplier post-registration".
-
-      This workflow is composed of a single step:
-
-      1. **Set state** - To `Registered`.
-  </Tab>
-</Tabs>
-
-<Info>
-  This workflow will automatically be executed once a supplier completes the registration process. You can customize it to suit your needs (_e.g._, adding a webhook, or an email notification after a supplier has been registered.)
-</Info>
-
-Now you need to go back to **Configuration** > **Apps**, tap the **Configure** button on the **Documentos Fiscais Eletrônicos Brazil** app, choose the "Post-registration workflow" we just created and **Save** the changes.
-
-</Step>
 
 <Step title="Prepare NFS-e workflow">
 
@@ -374,47 +275,11 @@ Follow one of the methods below and ensure to **Save** and **Publish** the workf
 
 ## Running
 
-In this section, we'll provide details on how to first persist and register a supplier, followed by issuing invoices on their behalf.
+In this section, we'll provide details on how to issue invoices on behalf of a registered supplier, and how to cancel them.
 
 As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
 
 All operations described in the following sections can be performed manually via the Invopop Console, or programmatically via the API. The process is essentially the same in both cases, so we'll demonstrate the manual method for this guide.
-
-### Register a supplier
-
-Find the **Parties** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the example provided below (for testing purposes only, in production you'll need the details of an actual company). The example includes all the fields required to register a supplier for both NF-e/NFC-e and NFS-e issuance.
-
-<Supplier />
-
-Tap **Build**, ensure there are no errors, and click **Save**.
-
-We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run workflow**.
-
-The execution should be successful, and the silo entry will now be in the `Processing` state. Tap the **Meta** tab to see the registration link:
-
-<Frame>
-  <img src="/assets/guides/br-dfe-reg-link.png" width="420" alt= "Supplier Registration Link" noZoom/>
-</Frame>
-
-<Info>
- You can access the registration link via the API by [fetching the silo
- entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
- the `key` is set to `registration-link`.
-</Info>
-
-Tap the registration link. A new browser window will open with a form to upload the supplier's credentials. Note that this form can be shared directly with the supplier, if necessary.
-
-<Frame>
-  <img src="/assets/guides/br-dfe-reg-cer.png" width="500" alt="Supplier Registration Form"/>
-</Frame>
-
-The details from this form are sent securely to Invopop's local partner, PlugNotas, who will use them to authenticate the supplier in the corresponding tax authority.
-
-The supplier must ensure that the certificate and password are valid and accepted by the municipality or state where they operate.
-
-Once the form is submitted, the supplier will be registered, and the post-registration workflow will be executed, changing the supplier's state to `Registered`.
-
-From this point on, you can send service invoices on behalf of the supplier.
 
 ### Send invoices
 
@@ -457,32 +322,6 @@ Job arguments take precedence over the step configuration. To pass them when cre
   }
 }
 ```
-
-## Unregister a supplier
-
-Unregistering a supplier revokes their invoice issuing privileges from your workspace. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
-
-  <Tabs>
-      <Tab title="Template">
-        <Card title="DF-e unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-unregister-supplier" cta="Add to my workspace">
-          This workflow will revoke invoice issuing privileges for a supplier in Brazil.
-        </Card>
-      </Tab>
-      <Tab title="Code">
-        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-
-        <UnregisterSupplier />
-      </Tab>
-      <Tab title="Build from scratch">
-        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
-
-        1. **Unregister supplier in Brazil** - Removes the supplier's registration so it can no longer issue electronic fiscal documents from this workspace.
-        2. **Set state** - Select `void` to label the supplier accordingly.
-
-        In the Error Handling section, add the **Set state** action and select `Error`.
-
-      </Tab>
-    </Tabs>
 
 ## FAQ
 
