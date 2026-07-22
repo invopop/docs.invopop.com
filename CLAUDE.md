@@ -28,7 +28,7 @@ Supporting directories:
 - `openapi/` — OpenAPI 3 specs. Each YAML is registered in `docs.json` under `openapi`; Mintlify generates reference pages from operations the registry references.
 - `snippets/` — reusable MDX fragments imported by pages (see below).
 - `assets/` — images, logos, diagrams referenced from MDX.
-- `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`, `mark-generated.sh`).
+- `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`).
 - `gobl-build.sh`, `gobl-unbuild.rb` — GOBL invoice example tooling (see below).
 - `skills/` — packaged authoring skills (currently `manage-faqs` and `mermaid-style`). Read the skill's `SKILL.md` before doing the work it covers. Use `mermaid-style` whenever you add or edit a `mermaid` diagram in an `.mdx` page so the brand palette stays consistent.
 
@@ -72,12 +72,9 @@ Each operation under `api-ref/<service>/...` is a small `.mdx` page that points 
 
 ## FAQ tooling
 
-Two helper scripts maintain `snippets/faqs/`:
+One helper script maintains `snippets/faqs/`:
 
 - `scripts/fill-empty-faqs.sh` — generates a single placeholder `<Accordion>` for every empty `leaves/*/(compliance|invoicing|supplier|receiving|reporting).mdx`, with a question tailored to the (country, scope, task, category). The placeholders carry a `*Placeholder — to be replaced with reviewed content.*` body and exist so composers don't import empty files.
-- `scripts/mark-generated.sh` — prepends `¿ ` to every `<Accordion title>` in leaves that weren't on the hand-curated allowlist inside the script. The marker means "auto-drafted, not human-reviewed". To find unreviewed questions: `grep -rl '<Accordion title="¿' snippets/faqs/`. Strip the prefix when a human signs off on the answer.
-
-If you add a country or regime to the FAQ system, update the allowlist in `scripts/mark-generated.sh` so future runs don't re-mark curated cells.
 
 ## Local development
 
