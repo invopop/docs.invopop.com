@@ -1,0 +1,43 @@
+  <Accordion title="How do I configure my workspace for Norwegian invoicing?">
+    Install the Peppol app, register your supplier with their Norwegian organization number (scheme `0192`), and use a workflow that generates a Peppol BIS Billing 3.0 document and sends it via the Lookup → Send actions.
+  </Accordion>
+    <Accordion title="Do invoices need to be sent to the tax authority?">
+    No. Norway has no clearance or e-reporting requirement for invoices — they travel directly to the customer over the Peppol network. Skatteetaten only requests accounting data on demand via SAF-T during audits.
+  </Accordion>
+
+  <Accordion title="Where do I find Norway-specific GOBL documentation?">
+    See the [Norway tax regime in GOBL](https://docs.gobl.org/regimes/no) for tax IDs and category codes. The Peppol BIS Billing 3.0 mapping is shared across the network and lives in [`peppol-bis-v3`](https://docs.gobl.org/addons/peppol-bis-v3).
+  </Accordion>
+    <Accordion title="What is the difference between scheme 0192 and 9908 in Norway?">
+    Both schemes identify a company by its Norwegian organization number:
+
+    - **`0192` (organization number)** — This is the **preferred and default** scheme for Norway. It corresponds to the company's 9-digit organization number in the Enhetsregisteret (Central Coordinating Register) at the Brønnøysund Register Centre.
+    - **`9908` (NO:ORGNR)** — This is the legacy scheme for the same organization number, deprecated in favor of `0192`. Some older ELMA registrations may still use it.
+
+    **When you should use `0192`:** Always use `0192` as your first choice when sending invoices to Norwegian companies. This is the standard identifier and what the vast majority of Norwegian businesses are registered under.
+
+    **When `9908` may be needed:** If you get a "receiver not found" error when sending to a Norwegian company using `0192`, and you have confirmed the company exists in the [Peppol Directory](https://directory.peppol.eu), check whether they are still registered under the legacy `9908` scheme.
+
+    To specify the scheme when sending, include the customer's Peppol inbox in your GOBL document:
+
+    ```json
+    "customer": {
+      "name": "Example Company",
+      "tax_id": {
+        "country": "NO",
+        "code": "987654321MVA"
+      },
+      "inboxes": [
+        {
+          "key": "peppol",
+          "scheme": "0192",
+          "code": "987654321"
+        }
+      ]
+    }
+    ```
+
+    In both schemes the code is the bare 9-digit organization number, without the `NO` prefix or `MVA` suffix used in VAT numbers.
+
+    <Tip>Use the **Lookup Participant ID** workflow step to verify a recipient's Peppol registration before sending. If a lookup with `0192` fails, try again with `9908`.</Tip>
+  </Accordion>

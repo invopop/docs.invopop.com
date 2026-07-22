@@ -30,7 +30,7 @@ Supporting directories:
 - `assets/` — images, logos, diagrams referenced from MDX.
 - `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`, `mark-generated.sh`).
 - `gobl-build.sh`, `gobl-unbuild.rb` — GOBL invoice example tooling (see below).
-- `skills/` — packaged authoring skills (currently `manage-faqs`). Read the skill's `SKILL.md` before doing the work it covers.
+- `skills/` — packaged authoring skills (currently `manage-faqs` and `mermaid-style`). Read the skill's `SKILL.md` before doing the work it covers. Use `mermaid-style` whenever you add or edit a `mermaid` diagram in an `.mdx` page so the brand palette stays consistent.
 
 ## Navigation (`docs.json`)
 
@@ -97,7 +97,7 @@ There is no `package.json`, build step, or test suite at the repo root — Mintl
 
 - **Asterisks in MDX**: escape `*` inside body text where it would otherwise start emphasis (`VERI\*FACTU`). Inside `<Accordion title="…">` or other JSX prop strings, the literal `*` is fine.
 - **Imports**: snippets import paths are absolute and start `/snippets/...`. Page-to-page links are root-relative (`/guides/es-verifactu`), not file paths.
-- **Country folder slugs are ISO-2 lowercase** in `snippets/` (`ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `pl`, `pt`). Page filenames under `compliance/`, `faq/`, `timelines/` use the full country name (`compliance/spain.mdx`).
+- **Country folder slugs are ISO-2 lowercase** in `snippets/` (`ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`). Page filenames under `compliance/`, `faq/`, `timelines/` use the full country name (`compliance/spain.mdx`).
 - **Region pages** (`compliance/americas.mdx`, `compliance/europe.mdx`, etc.) are the parent pages of each regional group in the nav — they generally summarise their region.
 - **Redirects**: prefer adding to `docs.json` `redirects` over leaving stale slugs. Many existing redirects fold legacy `/guides/countries/...` and `/guides/features/...` paths into the flatter current structure.
 - **No README/doc creation by default**: only create new top-level `.md`/`.mdx` files when explicitly asked, or when adding a new documentation page that belongs in the nav.

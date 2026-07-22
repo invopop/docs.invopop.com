@@ -26,6 +26,14 @@ curated=(
   # Germany
   "de/leaves/peppol/invoicing/compliance.mdx"
   "de/leaves/peppol/invoicing/tech.mdx"
+  # Finland
+  "fi/leaves/general/compliance.mdx"
+  "fi/leaves/general/invoicing.mdx"
+  "fi/leaves/general/supplier.mdx"
+  # Norway
+  "no/leaves/general/compliance.mdx"
+  "no/leaves/general/invoicing.mdx"
+  "no/leaves/general/supplier.mdx"
   # Spain
   "es/leaves/general/invoicing/compliance.mdx"
   "es/leaves/general/invoicing/operations.mdx"
