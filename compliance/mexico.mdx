@@ -42,7 +42,7 @@ There are six CFDI document types:
 |-----|---------|---|:---:|
 | Ingreso | `I` |  Standard sales invoice. | Yes |
 | Egreso  | `E` |  Credit note (returns, discounts, post-sale adjustments). | Yes |
-| Pago    | `P` |  Payment receipt (REP) issued when collecting against a previously-issued PPD invoice. | Coming soon |
+| Pago    | `P` |  Payment receipt (REP) issued when collecting against a previously-issued PPD invoice. | Yes |
 | Nómina  | `N` |  Payroll receipt, one per employee per pay period. | No |
 | Traslado | `T` |  Movement of goods without a sale (carries the Carta Porte complement for transport). | No |
 | Retenciones e Información de Pagos | `R` | Withholding declaration, uses a separate XSD schema. | No |
@@ -83,7 +83,7 @@ Each document type has its own schema and business rules for how it relates to o
 
     **Deadline:** the REP must be issued no later than the fifth calendar day of the month following the one in which the payment was received (rule 2.7.1.35 of the RMF).
 
-    **Invopop coverage:** Invopop allows issuing invoices marked as PPD, but does not currently generate the subsequent payment receipts. Customers issuing PPD invoices through Invopop must produce REPs through another mechanism. Support for _complementos de pago_ is coming soon.
+    **Invopop coverage:** Invopop issues type-P documents. Model the receipt as a GOBL [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) referencing each PPD invoice being settled, and process it through the SAT payment workflow to stamp the CFDI de pago. See the [payment receipt example](/guides/mx-sat-issuing) in the issuing guide.
   </Accordion>
 
   <Accordion title="Nómina (payroll)">
@@ -182,7 +182,7 @@ Mexican invoices declare upfront whether the customer is paying at issuance or p
 
     Each REP must be issued by the fifth calendar day of the month following the one in which payment was received (rule 2.7.1.35 RMF). Missing the deadline doesn't invalidate the invoice but prevents the customer from deducting in the correct period.
 
-    Invopop supports issuing the PPD invoice itself, but does not generate the subsequent REPs.
+    Invopop supports issuing both the PPD invoice and the subsequent REPs as payments are received.
   </Accordion>
 </AccordionGroup>
 
