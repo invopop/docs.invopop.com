@@ -1,22 +1,12 @@
 ---
-title: "CFDI issuing invoices guide"
-sidebarTitle: "Issuing invoices"
+title: "CFDI issuing guide"
+sidebarTitle: "Issuing documents"
 description: Issue CFDI documents in Mexico using the SAT Mexico app.
 ---
 
 import IssueInvoice from '/snippets/workflows/mx/sat-issue-invoice.mdx';
-import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
-import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
-import B2CInvoiceMin from '/snippets/invoices/mx/sat-b2c.min.mdx';
-import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
-import SimplifiedInvoiceMin from '/snippets/invoices/mx/sat-simplified.min.mdx';
-import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
-import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
-import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
-import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
-import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
-import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
-import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
+import IssuePayment from '/snippets/workflows/mx/sat-issue-payment.mdx';
+import InvoiceAccordion from '/snippets/invoices/mx/accordion.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import FAQ from '/snippets/faqs/mx/composers/guide-sat-invoicing.mdx';
 
@@ -24,7 +14,7 @@ import FAQ from '/snippets/faqs/mx/composers/guide-sat-invoicing.mdx';
 
 The CFDI (_Comprobante Fiscal Digital por Internet_) is the standardized electronic invoicing format in Mexico, managed by the country's tax authority, the SAT (_Servicio de Administración Tributaria_). This system ensures that all fiscal documents are digitally generated, validated, and reported to SAT in compliance with national tax laws.
 
-In this guide you'll learn how to issue invoices in a supplier's name using the [SAT Mexico app](/apps/sat-mexico). For importing received invoices, see the companion guide: [Mexico: Receiving invoices](/guides/mx-sat-receiving).
+In this guide you'll learn how to issue documents — invoices, credit notes, and payment receipts (_comprobantes de pago_) — in a supplier's name using the [SAT Mexico app](/apps/sat-mexico). For importing received invoices, see the companion guide: [Mexico: Receiving invoices](/guides/mx-sat-receiving).
 
 ## Prerequisites
 
@@ -52,8 +42,10 @@ Configure your Invopop workspace for CFDI invoicing by following these steps in 
   These instructions apply to both the sandbox and live environments. The SAT Mexico app must already be connected and configured — this is covered in the [supplier registration guide](/guides/mx-sat-supplier).
 </Info>
 
+Prepare a separate workflow for each document type you plan to issue: one for invoices, and one for payment receipts (_comprobantes de pago_).
+
 <Steps>
-<Step title="Set up the SAT Issue Invoice Workflow">
+<Step title="Set up the SAT issue invoice workflow">
 
     <Tabs>
       <Tab title="Template">
@@ -74,7 +66,44 @@ Configure your Invopop workspace for CFDI invoicing by following these steps in 
 
         - **Add sequential code:**  with dynamic sequences, and name like "SAT Invoices".
         - **Sign envelope:** - no configuration needed
-        - **Send invoice to SAT:** no configuration needed.
+        - **Send document to SAT:** no configuration needed.
+        - **Generate PDF** - Set according to your needs. Layout "Letter" and locale "es - Spanish" are recommended.
+        - **Set state** - to "sent".
+
+        Finally, in the Error Handling area, add the **Set state** action and select `Error`.
+
+        Add any additional steps you may need, and save the new workflow.
+
+      </Tab>
+    </Tabs>
+  </Step>
+
+<Step title="Set up the SAT issue payment workflow">
+
+<Info>
+  You can skip this step if you don't plan to issue payment receipts (_comprobantes de pago_) against PPD invoices.
+</Info>
+
+    <Tabs>
+      <Tab title="Template">
+        <Card iconType="duotone" title="SAT issue payment workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-issue-payment" cta="Add to my workspace">
+        Issue a CFDI de pago (REP) through SAT.
+        </Card>
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) code view.
+        <IssuePayment />
+      </Tab>
+      <Tab title="Build from scratch">
+          Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
+
+          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Payment workflow](https://console.invopop.com/redirect/workflows/new?template=empty-payment) as the base. Then name the workflow with a descriptive label such as "Issue SAT Payments".
+
+        The new workflow will need to perform these steps:
+
+        - **Add sequential code:**  with dynamic sequences, and name like "SAT Payments".
+        - **Sign envelope:** - no configuration needed
+        - **Send document to SAT:** no configuration needed.
         - **Generate PDF** - Set according to your needs. Layout "Letter" and locale "es - Spanish" are recommended.
         - **Set state** - to "sent".
 
@@ -87,7 +116,7 @@ Configure your Invopop workspace for CFDI invoicing by following these steps in 
   </Step>
 </Steps>
 
-## Send an invoice
+## Send a document
 
 <Info>
   You can complete this process through the Invopop Console or the API. We'll walk through it using the Console, but don't worry, the steps are nearly identical for the API. We'll add notes along the way to clarify any differences.
@@ -100,118 +129,7 @@ The following examples are of partial [GOBL](https://docs.gobl.org) documents yo
 - `$regime` to be set to [`MX`](https://docs.gobl.org/regimes/mx)
 - `$addons` to include [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4)
 
-<AccordionGroup>
-<Accordion title="B2B Invoice (Personas Morales)">
-
-This main type of invoice is a standard B2B invoice from a Mexican supplier to another Mexican customer.
-
-Notice:
-
-- we've added the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon, this ensures the document will be validated using the CFDI v4 rules built into the [GOBL](https://docs.gobl.org) library,
-- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
-- VAT will be applied at the standard rate, the percentage will be set automatically, and,
-- there are no totals nor calculations, all of these will be made automatically when uploading.
-
-<CodeGroup>
-	<B2BInvoiceMin />
-	<B2BInvoice />
-</CodeGroup>
-
-</Accordion>
-
-<Accordion title="B2B Invoice on behalf of a third party (a cuenta de terceros)">
-
-This invoice is used when the **issuer (supplier)** bills the customer **on behalf of another taxpayer** who is the real seller — for example **consignment** sales. The **third party** is identified on each line in the `seller` object (RFC, fiscal regime, address), while `supplier` remains the party issuing the CFDI.
-
-Notice:
-
-- the line `seller` carries the third party’s tax identity and regime so SAT can relate the CFDI to **cuenta de terceros** rules,
-- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates extensions on supplier, customer, and line seller,
-- the minimal `tax.ext` only needs the place of issue; `gobl build` adds document type and payment method (`PPD` in the built example) like other B2B invoices,
-- there are no totals in the minimal version; upload or `gobl build` will compute IVA and totals, and,
-- the built example shows a consignment-style line (`Venta en consignación`) with full tax breakdown.
-
-<CodeGroup>
-	<ThirdPartyInvoiceMin />
-	<ThirdPartyInvoice />
-</CodeGroup>
-
-</Accordion>
-
-<Accordion title="B2C Invoice (Personas Físicas)">
-
-This is a standard B2C invoice from a Mexican supplier to a Mexican physical person with tax details, but no specific tax declaration requirements. This would be for a larger sale when the "Simplified" and "Global Invoice" do not apply.
-
-In addition to the observations for regular B2B invoices, note in the customer:
-
-- the presence of an RFC in the same format as for companies, and,
-- the [`mx-cfdi-fiscal-regime`](https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code) and [`mx-cfdi-use`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-use-code) extensions have been set to `616` and `S01` respectively reflecting that the customer is not subject to tax.
-
-It is important in Mexico to ensure the correct Fiscal Regime and CFDI Use codes are set correctly as the SAT will check these details and reject documents with unexpected combinations.
-
-<CodeGroup>
-	<B2CInvoiceMin />
-	<B2CInvoice />
-</CodeGroup>
-
-</Accordion>
-
-<Accordion title="Simplified Invoice (Factura al público en general)">
-
-In Mexico, a General Public Invoice (Factura al Público en General) is a type of tax document issued to record sales made to customers who do not request an invoice with a specific Federal Taxpayer Registry (RFC) number. Instead, a generic RFC is used to identify the recipient:
-
-- XAXX010101000 for domestic transactions
-
-- XEXX010101000 for foreign transactions
-
-This type of invoice is mandatory for businesses that sell to the general public and do not issue individual invoices for each transaction.
-
-To create this type of invoice in Invopop:
-
-- the `customer` field is not required
-- the `$tags` field is used to identify this as a simplified invoice.
-
-<CodeGroup>
-	<SimplifiedInvoiceMin />
-	<SimplifiedInvoice />
-</CodeGroup>
-
-</Accordion>
-
-<Accordion title="Global Invoice">
-
-The Global Invoice is used to group a set of invoices into a single CFDI document.
-
-Notice:
-
-- the `$tags` field has been used to identify this as a global invoice,
-- each `line` has a `ref` which is used to identify the invoice that it belongs to,
-- the [`tax.ext.mx-cfdi-global-month`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-month), [`mx-cfdi-global-period`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-period), and [`mx-cfdi-global-year`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-year) fields have been used to identify the global invoice period.
-
-<CodeGroup>
-	<GlobalInvoiceMin />
-	<GlobalInvoice />
-</CodeGroup>
-
-</Accordion>
-
-<Accordion title="Credit Note">
-
-The Credit Note is used to cancel an invoice.
-
-Notice:
-
-- the `type` field has been set to `credit-note`,
-- the `preceding` field has been used to identify the invoice that is being cancelled.
-
-<CodeGroup>
-	<CreditNoteMin />
-	<CreditNote />
-</CodeGroup>
-
-</Accordion>
-
-</AccordionGroup>
+<InvoiceAccordion />
 
 ## FAQ
 
