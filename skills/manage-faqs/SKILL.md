@@ -9,7 +9,7 @@ FAQ snippets are organized as a `country / scope / task` grid. **Leaves** hold t
 
 ## Axes
 
-- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `co`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
+- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `co`, `de`, `dk`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`. Plus `peppol`, a top-level pseudo-country (see below).
 - **Scope** — `country` (cross-regime, country-level answers) or one regime from the manifest.
 - **Task** — `invoicing`, `supplier`, `receiving`, `reporting`. Populate only the tasks that genuinely apply to the scope. Plus `compliance` as a special scope-wide file (see below).
 
@@ -71,6 +71,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Brazil | br | `nfe`, `nfse` |
 | Colombia | co | `dian` |
 | Croatia | hr | (country scope only; own eRačun regime) |
+| Denmark | dk | (uses `peppol` only; no country leaves yet — composers import Peppol leaves directly) |
 | Germany | de | (uses `peppol` only) |
 | Finland | fi | (uses `peppol` only) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
@@ -311,6 +312,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `faq/belgium.mdx` | `be/composers/page-faq.mdx` |
 | `compliance/belgium.mdx` | `be/composers/page-compliance.mdx` |
 | `guides/be-peppol.mdx` | `be/composers/guide-peppol-invoicing.mdx` |
+| `guides/cb-belgium.mdx` | `be/composers/guide-peppol-invoicing.mdx` |
 | `faq/brazil.mdx` | `br/composers/page-faq.mdx` |
 | `compliance/brazil.mdx` | `br/composers/page-compliance.mdx` |
 | `apps/documentos-fiscais-electronicos-brazil.mdx` | `br/composers/app-dfe.mdx` |
@@ -321,9 +323,11 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/dian-colombia.mdx` | `co/composers/app-dian.mdx` |
 | `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
 | `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
+| `guides/cb-denmark.mdx` | `dk/composers/guide-peppol-invoicing.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
 | `guides/de-ubl.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
+| `guides/cb-germany.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
 | `faq/finland.mdx` | `fi/composers/page-faq.mdx` |
 | `compliance/finland.mdx` | `fi/composers/page-compliance.mdx` |
 | `faq/croatia.mdx` | `hr/composers/page-faq.mdx` |
@@ -348,6 +352,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/france.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa-invoicing.mdx` | `fr/composers/guide-pa-invoicing.mdx` |
+| `guides/cb-france.mdx` | `fr/composers/guide-pa-invoicing.mdx` |
 | `guides/fr-pa-registration.mdx` | `fr/composers/guide-pa-supplier.mdx` |
 | `guides/fr-pa-reporting.mdx` | `fr/composers/guide-pa-reporting.mdx` |
 | `guides/fr-pa-status.mdx` | `fr/composers/guide-pa-reporting.mdx` |

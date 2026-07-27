@@ -1,0 +1,76 @@
+---
+title: "Chargebee in Belgium"
+sidebarTitle: "Belgium"
+icon: "https://assets.invopop.com/flags/be.svg"
+description: "Send compliant Peppol e-invoices from Chargebee to Belgian customers"
+---
+
+import PeppolExample from '/snippets/workflows/chargebee/cb-peppol.mdx'
+import FAQ from '/snippets/faqs/be/composers/guide-peppol-invoicing.mdx';
+
+Belgium uses the Peppol network for e-invoicing, which became mandatory in January 2026. The format used is Peppol BIS Billing UBL — the standard Peppol format — with one important Belgian-specific requirement: **customers always expect to receive a PDF alongside the XML**. To handle this, the workflow first downloads the existing Chargebee PDF and attaches it to the UBL document before sending it through Peppol.
+
+This guide assumes you have already connected the Chargebee app and completed the general setup — see the [Chargebee overview](/guides/chargebee) first if you haven't.
+
+**Required apps:** [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
+
+<Info>
+  Before processing any invoices, you must register your supplier on the Peppol network through Invopop. See the [Peppol guide](/guides/peppol) for registration steps, and the [Belgium Peppol guide](/guides/be-peppol) for Belgium-specific details.
+</Info>
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/Iyqmgw0cvFY"
+  title="Chargebee + Invopop | Setting up e-invoicing with Peppol"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  loading="lazy"
+></iframe>
+
+## Workflow
+
+<Tabs>
+  <Tab title="Template">
+    <Card title="Chargebee Peppol" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-peppol" cta="Add to my workspace">
+      Syncs with Chargebee, downloads the PDF, looks up the customer's Peppol participant ID, and sends via the Peppol network.
+    </Card>
+  </Tab>
+  <Tab title="Code">
+    <Note>
+      The **Lookup Peppol participant** step automatically looks up your customer's Peppol participant ID from the Peppol network at the time the invoice is processed. If you have already set the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) on your customers in Chargebee, Invopop will use that value directly and you can remove this step.
+    </Note>
+    <PeppolExample />
+  </Tab>
+</Tabs>
+
+## Participant ID lookup
+
+Belgium enforces a standard set of Peppol participant ID schemes, all derived from the customer's **BCE number** (Belgian company registration number). Since this number is typically available in Chargebee, the **Lookup Peppol participant** step can automatically resolve the correct Peppol ID for each customer — no manual setup required in most cases.
+
+If you want to specify a Peppol ID manually for a particular customer (or override the lookup result), you can do so with the following custom field:
+
+| Field | Metadata key | Custom field key | Example |
+| ----- | ------------ | ---------------- | ------- |
+| Peppol Participant ID | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0208:0123456789` |
+
+<Note>
+  The metadata keys listed above follow the Chargebee metadata format (hyphens, no `cf_` prefix). If you prefer to use custom fields instead, replace hyphens with underscores and add the `cf_` prefix. See [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) for details.
+</Note>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Belgium FAQ](/faq/belgium) section
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about your Chargebee integration →
+</Card>
