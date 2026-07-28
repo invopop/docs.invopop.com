@@ -1,0 +1,46 @@
+export const esNoverifactuCancelWorkflow = {
+    "name": "NO VERI*FACTU cancel invoice",
+    "description": "Cancel an invoice via NO VERI*FACTU",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000005",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "9f500280-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Generate cancellation for NO VERI*FACTU",
+            "provider": "gov-es.noverifactu.generate.cancel"
+        },
+        {
+            "id": "a6eeb180-3ca4-11f1-90b7-0d81b4010093",
+            "name": "Record for NO VERI*FACTU",
+            "provider": "gov-es.noverifactu.record"
+        },
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000003",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "b2c3d4e0-0002-11f1-a000-000000000004",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};

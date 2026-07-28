@@ -9,6 +9,9 @@ import SupplierRegistration from '/snippets/workflows/es/ticketbai-supplier-regi
 import SupplierAccordion from '/snippets/parties/es/accordion.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 import FAQ from '/snippets/faqs/es/composers/guide-ticketbai-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { esTicketbaiUnregisterWorkflow } from '/snippets/workflows/es/ticketbai-unregister-data.mdx';
+import { esTicketbaiSupplierRegistrationWorkflow } from '/snippets/workflows/es/ticketbai-supplier-registration-data.mdx';
 
 
 ## Introduction
@@ -43,37 +46,17 @@ This guide will...
   <Step title="Create a supplier registration workflow">
     Create a new workflow for registering suppliers. Start with the template below:
 
+    <Card title="TicketBAI supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-supplier-registration" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
-      <Tab title="Template">
-        <Card title="TicketBAI supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-supplier-registration" cta="Add to my workspace">
-          This workflow will issue a registration request for a supplier to complete.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esTicketbaiSupplierRegistrationWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
         <SupplierRegistration />
-      </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "TicketBAI Supplier Registration".
-
-        The new workflow will need to perform the following steps:
-
-        1. **Register supplier** - will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
-        2. **Set state** — select "Processing".
-        3. **Wait for supplier registration** - waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through TicketBAI immediately after the documents are uploaded.
-        4. **Set state** — select "Registered".
-        5. **Wait for supplier approval** - In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Upon rejection, the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
-        6. **Set state** — select "Registered"
-
-        Finally, in the Error Handling area, add the following steps:
-
-        1. **Set state** — select `Rejected`.
-        2. **Unregister supplier** - will clear the registration attempt allowing you to re-register them later.
-
-        Add any additional steps you may need, and save the new workflow.
       </Tab>
     </Tabs>
   </Step>
@@ -343,27 +326,19 @@ This wizard can be embedded as an `iframe` to onboard your customers without lea
 
 Unregistering a supplier is essentially revoking their invoice issuing privileges. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
 
+  <Card title="TicketBAI unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-unregister" horizontal>
+    Add to my workspace →
+  </Card>
   <Tabs>
-      <Tab title="Template">
-        <Card title="TicketBAI unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-unregister" cta="Add to my workspace">
-          This workflow will revoke invoice issuing privileges for a TicketBAI supplier.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esTicketbaiUnregisterWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
         <UnregisterExample />
       </Tab>
-      <Tab title="Build from scratch">
-        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
-
-        1. **Unregister supplier** - Revokes invoice issuing authorization by the corresponding Basque tax authority.
-        2. **Set state** - Select `void` to label the supplier accordingly.
-
-        In the Error Handling section, add the **Set state** action and select `Error`.
-
-      </Tab>
-    </Tabs>
+  </Tabs>
 
 ## Legal information
 

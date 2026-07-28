@@ -19,6 +19,11 @@ import BelgiumInvoiceExamples from '/snippets/invoices/be/peppol-accordion.mdx';
 import GermanyInvoiceExamples from '/snippets/invoices/de/peppol-accordion.mdx';
 import ItalyInvoiceExamples from '/snippets/invoices/it/peppol-accordion.mdx';
 import SpainInvoiceExamples from '/snippets/invoices/es/peppol-accordion.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { peppolSendWorkflow } from '/snippets/workflows/peppol/send-data.mdx';
+import { peppolReceiveWorkflow } from '/snippets/workflows/peppol/receive-data.mdx';
+import { peppolRegisterWorkflow } from '/snippets/workflows/peppol/register-data.mdx';
+import { peppolUnregisterWorkflow } from '/snippets/workflows/peppol/unregister-data.mdx';
 
 
 ## Introduction
@@ -69,27 +74,17 @@ Now we'll create the workflow that converts invoices to a valid Peppol format an
 
 Skip this step if you only want to _receive_ invoices via Peppol.
 
+<Card iconType="duotone" title="Peppol issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-send" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="Peppol issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-send" cta="Add to my workspace">
-      This workflow converts a [GOBL](https://docs.gobl.org) document into the Peppol format and sends it to the network
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={peppolSendWorkflow} />
   </Tab>
   <Tab title="Code">
   Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
   <PeppolSendWorkflow />
 
-  </Tab>
-  <Tab title="Build from scratch">
-    Use the [Console](https://console.invopop.com/) to build a [workflow](/guides/workflows) of the Invoice type. Include these essential steps:
-
-    1. **Set state** - to `Processing`.
-    2. **Sign envelope** - Signs the [GOBL](https://docs.gobl.org) document (can be substituted with `Add sequential code` with the `Sign Document` option enabled)
-    3. **Generate UBL document** - Converts the [GOBL](https://docs.gobl.org) document to a Peppol BIS Billing UBL 3.0 document and attaches it to the original invoice entry.
-    4. **Send Peppol document** - Sends the generated XML attachment through the Peppol network
-    5. **Set state** - to `Sent`.
-
-    Finally, in the Error Handling area, add the **Set state** action and select `Error`.
   </Tab>
 </Tabs>
 </Step>
@@ -97,25 +92,16 @@ Skip this step if you only want to _receive_ invoices via Peppol.
 <Step title="Configure a workflow to receive invoices">
 
 
+<Card iconType="duotone" title="Peppol receive document workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-receive" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="Peppol receive document workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-receive" cta="Add to my workspace">
-      This workflow receives incoming documents from the Peppol network and converts them to the [GOBL](https://docs.gobl.org) format.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={peppolReceiveWorkflow} />
   </Tab>
   <Tab title="Code">
   Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
   <PeppolReceiveWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
-    1. **Import Peppol document** - Add two conditions with codes UBL and CII to handle both formats.
-       - **Import UBL document** - Add this to the condition with UBL.
-       - **Import CII document** - Add this to the condition with CII.
-    2. **Set state** - to `Registered`.
-    3. **Send Webhook** (optional) - let your services know a Peppol document was received.
-
-    Finally, in the Error Handling area, add the **Set state** action and select `Error`.
   </Tab>
 </Tabs>
 </Step>
@@ -129,34 +115,17 @@ Within the [Console](https://console.invopop.com/), navigate to **Configuration*
 <Step title="Configure a Party registration workflow">
 This workflow onboards companies (Peppol participants) to Invopop before they can issue or receive invoices. If you're managing your own invoices only, you may use this workflow just once. However, if you're offering Peppol to your customers through Invopop ([white-label use case](/guides/white-label)), you'll run this workflow for each merchant you onboard.
 
-<Tabs>
-  <Tab title="Template">
 
-    <Card iconType="duotone" title="Peppol supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-register" cta="Add to my workspace">
-      Onboards Peppol participants by sending a registration link
-    </Card>
+<Card iconType="duotone" title="Peppol supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-register" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={peppolRegisterWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
     <PeppolRegisterWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "Register Peppol participant".
-
-      This workflow is composed of these steps:
-
-      1. **Register party for Peppol approval** - This generates a link to the registration wizard where proof of ownership will be collected.
-      2. **Set state** - select `Processing`.
-      3. **Wait for Peppol approval** - Invopop will validate the company identity and ownership. This can take up to 72 hours.
-      4. **Register party on Peppol** - Complete the normal registration process after approval.
-      5. **Set state** - select `Registered`.
-
-      Finally, in the Error Handling area, add the **Set state** action and select `Error`.
-
-
   </Tab>
 </Tabs>
 </Step>
@@ -278,7 +247,14 @@ The party can now send and/or receive invoices in Peppol via Invopop.
 
 If you need to unregister an entity (because the supplier is no longer your client, for example), use the following workflow template:
 
-<PeppolUnregisterWorkflow />
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={peppolUnregisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <PeppolUnregisterWorkflow />
+  </Tab>
+</Tabs>
 
 ### Sending invoices
 

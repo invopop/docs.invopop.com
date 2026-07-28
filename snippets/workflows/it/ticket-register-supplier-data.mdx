@@ -1,0 +1,37 @@
+export const itTicketRegisterSupplierWorkflow = {
+  "name": "Smart Receipts register supplier",
+  "description": "Register a supplier with AdE",
+  "schema": "org/party",
+  "steps": [
+    {
+      "id": "1a1be400-2b32-11f0-984e-0542d5f28f0b",
+      "name": "Sign envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "de116bb0-25b4-11f0-864a-193f213df097",
+      "name": "Register supplier with AdE",
+      "provider": "ticket-it.register"
+    },
+    {
+      "id": "e0a1b380-25b4-11f0-864a-193f213df097",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "1deb1470-2b32-11f0-984e-0542d5f28f0b",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+};

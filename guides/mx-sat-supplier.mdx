@@ -10,6 +10,10 @@ import UnregisterSupplier from '/snippets/workflows/mx/sat-unregister-supplier.m
 import Supplier from '/snippets/parties/mx/supplier.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import FAQ from '/snippets/faqs/mx/composers/guide-sat-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { mxSatPostregistrationWorkflow } from '/snippets/workflows/mx/sat-postregistration-data.mdx';
+import { mxSatRegisterSupplierWorkflow } from '/snippets/workflows/mx/sat-register-supplier-data.mdx';
+import { mxSatUnregisterSupplierWorkflow } from '/snippets/workflows/mx/sat-unregister-supplier-data.mdx';
 
 ## Introduction
 
@@ -46,59 +50,34 @@ Configure your Invopop workspace for supplier registration by following these st
 
 <Step title="Set up the Supplier Post-Registration Workflow">
 
-<Tabs>
-  <Tab title="Template">
 
-    <Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" cta="Add to my workspace">
-    This workflow marks Suppliers as `Registered`. You will select this workflow in the SAT (Mexico) app configuration later.
-    </Card>
+<Card iconType="duotone" title="SAT supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sat-postregistration" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={mxSatPostregistrationWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
     <PostRegistration />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Post-registration flow".
-
-      This workflow is composed of a single step:
-
-      1. **Set state** - To `Registered`.
-
-      Though you can customize it to suit your needs (adding a webhook, or an email notification after a supplier has been registered.)
-
   </Tab>
 </Tabs>
 </Step>
 
 <Step title="Set up the Supplier Registration Workflow">
 
-<Tabs>
-  <Tab title="Template">
 
-    <Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" cta="Add to my workspace">
-    Issues a registration request for a supplier to complete in order to issue invoices through SAT.
-    </Card>
+<Card iconType="duotone" title="SAT register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-register-supplier" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={mxSatRegisterSupplierWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
     <RegisterSupplier />
-  </Tab>
-  <Tab title="Build from scratch">
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SAT Register Supplier".
-
-    The new workflow will need to perform these steps:
-
-      - **Sign envelope**
-      - **Register supplier with SAT**
-      - **Set state** - with configuration set to `Processing`.
-
-    Add any additional steps you may need, and save the new workflow.
-
   </Tab>
 </Tabs>
 </Step>
@@ -202,27 +181,19 @@ At this point, you're ready to start sending documents on behalf of the supplier
 
 Unregistering a supplier revokes their invoice issuing privileges from your workspace. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
 
+  <Card title="SAT unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-unregister-supplier" horizontal>
+    Add to my workspace →
+  </Card>
   <Tabs>
-      <Tab title="Template">
-        <Card title="SAT unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-unregister-supplier" cta="Add to my workspace">
-          This workflow will revoke invoice issuing privileges for a SAT supplier.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={mxSatUnregisterSupplierWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
         <UnregisterSupplier />
       </Tab>
-      <Tab title="Build from scratch">
-        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
-
-        1. **Unregister supplier from SAT** - Removes the supplier's registration so it can no longer issue invoices from this workspace.
-        2. **Set state** - Select `void` to label the supplier accordingly.
-
-        In the Error Handling section, add the **Set state** action and select `Error`.
-
-      </Tab>
-    </Tabs>
+  </Tabs>
 
 ## FAQ
 
