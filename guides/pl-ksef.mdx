@@ -10,6 +10,10 @@ import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
 import ImportInvoiceWorkflow from '/snippets/workflows/pl/pl-import.mdx';
 import SyncInvoicesWorkflow from '/snippets/workflows/pl/pl-sync.mdx';
 import FAQ from '/snippets/faqs/pl/composers/guide-ksef-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { plSendWorkflow } from '/snippets/workflows/pl/pl-send-data.mdx';
+import { plImportWorkflow } from '/snippets/workflows/pl/pl-import-data.mdx';
+import { plSyncWorkflow } from '/snippets/workflows/pl/pl-sync-data.mdx';
 
 ## Introduction
 
@@ -62,30 +66,17 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 This workflow signs the GOBL document, converts it to FA(3) XML, and submits it to KSeF.
 
+<Card iconType="duotone" title="KSeF send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-send" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-send" cta="Add to my workspace">
-      Signs and converts the [GOBL](https://docs.gobl.org) document into the FA(3) XML format and sends it to KSeF.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plSendWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
     <SendInvoiceWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
-
-    1. **Set state** - To `Processing`
-    2. **Add sequential code** - Add the desired sequence for your invoices
-    3. **Sign envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications
-    4. **Generate FA(3) XML** - Generates the FA(3) XML
-    5. **Send invoice to KSeF** - Sends the FA(3) XML to KSeF
-    6. **Set state** - To `Sent`
-
-    In the **Error handling** section, add a **Set state** step with the state set to `Error` to capture and flag failed submissions.
   </Tab>
 </Tabs>
 
@@ -108,11 +99,12 @@ This workflow signs the GOBL document, converts it to FA(3) XML, and submits it 
 
 This workflow imports an individual invoice from KSeF when it is received. It is automatically triggered by the sync workflow (configured in the next step) for each invoice found.
 
+<Card iconType="duotone" title="KSeF import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-import" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-import" cta="Add to my workspace">
-      Imports a received invoice from KSeF and converts it to GOBL format.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plImportWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
@@ -122,23 +114,6 @@ This workflow imports an individual invoice from KSeF when it is received. It is
     </Note>
 
     <ImportInvoiceWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "KSeF Import Invoice".
-
-    The new workflow will need to perform these steps:
-
-    1. **Import invoice from KSeF** - Downloads the invoice from KSeF and converts it to GOBL format
-    2. **Set folder** - To `Invoices · Expenses` (or your preferred folder)
-    3. **Set state** - To `Registered`
-
-    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
-
-    <Note>
-      We recommend adding notification steps (email, Slack, etc.) in the error handling section to alert you when invoice imports fail.
-    </Note>
   </Tab>
 </Tabs>
 
@@ -158,29 +133,17 @@ Configure the **Sync received invoices from KSeF** step to reference the import 
   />
 </Frame>
 
+<Card iconType="duotone" title="KSeF sync received invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-sync" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF sync received invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-sync" cta="Add to my workspace">
-      Creates import jobs for each received invoice of a party in KSeF.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plSyncWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
     <SyncInvoicesWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Sync Received Invoices".
-
-    The new workflow will need to perform this step:
-
-    1. **Sync received invoices from KSeF** - Queries KSeF for all received invoices in the time range and creates import jobs
-
-    <Note>
-      When configuring the sync step, select the import workflow you created earlier. Each invoice found will trigger a new job using that workflow.
-    </Note>
   </Tab>
 </Tabs>
 

@@ -8,6 +8,9 @@ description: "Generate ZUGFeRD and XRechnung e-invoices from Chargebee for Germa
 import ZUGFeRDExample from '/snippets/workflows/chargebee/cb-zugferd.mdx'
 import XRechnungExample from '/snippets/workflows/chargebee/cb-xrechnung.mdx'
 import FAQ from '/snippets/faqs/de/composers/guide-peppol-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbZugferdWorkflow } from '/snippets/workflows/chargebee/cb-zugferd-data.mdx';
+import { chargebeeCbXrechnungWorkflow } from '/snippets/workflows/chargebee/cb-xrechnung-data.mdx';
 
 Germany supports two structured e-invoicing formats: **ZUGFeRD** and **XRechnung**. Both are valid and supported by Invopop, but they serve different purposes and have different requirements.
 
@@ -40,19 +43,24 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
 
 <Tabs>
   <Tab title="ZUGFeRD (B2B)">
-    <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-zugferd" cta="Add to my workspace">
-      Syncs with Chargebee, downloads the Chargebee PDF, generates a ZUGFeRD XML, and embeds both into a single hybrid PDF.
+    <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-zugferd" horizontal>
+      Add to my workspace →
     </Card>
-
     The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. No per-customer configuration is required beyond having a valid German supplier set up in Invopop.
 
-    <ZUGFeRDExample />
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={chargebeeCbZugferdWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        <ZUGFeRDExample />
+      </Tab>
+    </Tabs>
   </Tab>
   <Tab title="XRechnung (B2G)">
-    <Card title="Chargebee XRechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" cta="Add to my workspace">
-      Syncs with Chargebee and generates a validated XRechnung CII XML for invoicing German public authorities.
+    <Card title="Chargebee XRechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" horizontal>
+      Add to my workspace →
     </Card>
-
     XRechnung is used for invoicing German public authorities. The template includes a few additional steps compared to ZUGFeRD, each addressing a specific requirement:
 
     **1. Bank details**
@@ -90,7 +98,14 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
     <Note>
       The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that XRechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
     </Note>
-    <XRechnungExample />
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={chargebeeCbXrechnungWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        <XRechnungExample />
+      </Tab>
+    </Tabs>
   </Tab>
 </Tabs>
 

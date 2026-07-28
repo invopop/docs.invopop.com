@@ -8,6 +8,9 @@ import PolandResources from '/snippets/tables/poland-resources.mdx';
 import PartyRegistrationSendWorkflow from '/snippets/workflows/pl/pl-register.mdx';
 import PartyRegistrationReceiveWorkflow from '/snippets/workflows/pl/pl-register-receive.mdx';
 import FAQ from '/snippets/faqs/pl/composers/guide-ksef-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { plRegisterWorkflow } from '/snippets/workflows/pl/pl-register-data.mdx';
+import { plRegisterReceiveWorkflow } from '/snippets/workflows/pl/pl-register-receive-data.mdx';
 
 ## Introduction
 
@@ -74,11 +77,12 @@ In **live workspaces** no configuration is available, all suppliers are register
 
 #### Send only
 
+<Card iconType="duotone" title="KSeF party registration workflow (send)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF party registration workflow (send)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" cta="Add to my workspace">
-      Registers a party (supplier) with the KSeF system for sending invoices.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plRegisterWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
@@ -89,20 +93,6 @@ In **live workspaces** no configuration is available, all suppliers are register
 
     <PartyRegistrationSendWorkflow />
   </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Register Party (Send)".
-
-    The new workflow will need to perform these steps:
-
-    1. **Set state** - To `Processing`
-    2. **Register supplier with KSeF** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
-    3. **Wait for KSeF certificate upload** - Waits for the supplier to generate and upload their KSeF certificate (automatically skipped in test mode)
-    4. **Set state** - To `Registered`
-
-    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
-  </Tab>
 </Tabs>
 
 #### Send & receive
@@ -111,11 +101,12 @@ In **live workspaces** no configuration is available, all suppliers are register
   This variant requires the [Cron app](/apps/cron) to be connected and the import and sync workflows to be configured first — both are covered in the [issuing invoices guide setup](/guides/pl-ksef#setup).
 </Info>
 
+<Card iconType="duotone" title="KSeF party registration workflow (receive)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register-receive" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="KSeF party registration workflow (receive)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register-receive" cta="Add to my workspace">
-      Registers a party (supplier) with the KSeF system and subscribes them to periodic invoice imports.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plRegisterReceiveWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
@@ -125,21 +116,6 @@ In **live workspaces** no configuration is available, all suppliers are register
     </Note>
 
     <PartyRegistrationReceiveWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-    Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-    In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "KSeF Register Party (Receive)".
-
-    The new workflow will need to perform these steps:
-
-    1. **Set state** - To `Processing`
-    2. **Register supplier with KSeF** - Registers the party with KSeF and generates a registration link. Configure with your chosen environment (test, demo, or production).
-    3. **Wait for KSeF certificate upload** - Waits for the supplier to generate and upload their KSeF certificate (automatically skipped in test mode)
-    4. **Subscribe to periodic KSeF sync** - Uses the [Cron app](/apps/cron) to schedule periodic execution of the sync workflow. Configure with the sync workflow and your preferred interval.
-    5. **Set state** - To `Registered`
-
-    Finally, in the **Error handling** area, add the **Set state** action and select `Error`.
   </Tab>
 </Tabs>
 

@@ -1,0 +1,51 @@
+export const esTicketbaiSupplierRegistrationWorkflow = {
+    "name": "TicketBAI register supplier",
+    "description": "Register a supplier with TicketBAI",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "554c7040-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Register supplier with TicketBAI",
+            "provider": "gov-es.ticketbai.register"
+        },
+        {
+            "id": "62148880-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "5b924600-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for TicketBAI supplier agreement upload",
+            "provider": "gov-es.ticketbai.wait.upload"
+        },
+        {
+            "id": "6bec1080-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "670d1dc0-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Wait for TicketBAI supplier approval",
+            "provider": "gov-es.ticketbai.wait.approval"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "76c13260-66d7-11f0-a392-dfb6c99d6698",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};

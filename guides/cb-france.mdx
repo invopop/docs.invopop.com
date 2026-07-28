@@ -7,6 +7,8 @@ description: "Route Chargebee invoices through France's e-invoicing and e-report
 
 import FRExample from '/snippets/workflows/chargebee/cb-france.mdx'
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbFranceWorkflow } from '/snippets/workflows/chargebee/cb-france-data.mdx';
 
 France runs two parallel flows, and which one an invoice takes depends on whether the customer is registered in the **Annuaire** (the French directory).
 
@@ -39,11 +41,12 @@ A single template covers both French flows and picks between them automatically 
 - **found** result means the customer is subject to e-invoicing, so Invopop records the document in the Annuaire, forwards it to the PPF, and sends it over Peppol.
 - **not found** result means the transaction falls outside domestic e-invoicing — international B2B, B2C, or a customer in a territory excluded from the mandate — so it is recorded for e-reporting. For those, the **Can Send** action checks whether the customer is reachable on the Peppol network: if it is (a Belgian party, for example), the workflow sends the invoice over Peppol as well.
 
+<Card title="Chargebee France" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-france" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card title="Chargebee France" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-france" cta="Add to my workspace">
-      Syncs with Chargebee, looks the customer up in the French Annuaire, and branches automatically: registered parties are e-invoiced via Peppol France CIUS and forwarded to the PPF, while unregistered parties are recorded for e-reporting.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={chargebeeCbFranceWorkflow} />
   </Tab>
   <Tab title="Code">
     <Note>

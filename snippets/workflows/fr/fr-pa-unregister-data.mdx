@@ -1,0 +1,42 @@
+export const frPaUnregisterWorkflow = {
+    "name": "PPF unregister supplier",
+    "description": "Unregister a supplier from Peppol and the French Directory",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "453beac0-70a7-11f1-aca9-697108ec55ef",
+            "name": "Unregister supplier from Peppol",
+            "provider": "peppol.unregister"
+        },
+        {
+            "id": "13c84e60-5452-11f1-baf5-4f2c2882107f",
+            "name": "Disable party in Directory",
+            "provider": "gov-fr.directory.disable"
+        },
+        {
+            "id": "c91ae086-f830-425b-b67c-72af00efc22c",
+            "name": "Disable party for reporting",
+            "provider": "gov-fr.reporting.disable"
+        },
+        {
+            "id": "1b8a6b80-5452-11f1-baf5-4f2c2882107f",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "23e0d3a0-5452-11f1-baf5-4f2c2882107f",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};

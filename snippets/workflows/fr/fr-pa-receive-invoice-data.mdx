@@ -1,0 +1,129 @@
+export const frPaReceiveInvoiceWorkflow = {
+    "name": "PPF receive document",
+    "description": "Receive an invoice, status or payment via Peppol and register it with PPF",
+    "steps": [
+        {
+            "id": "db61c3c0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Import Peppol document",
+            "provider": "peppol.import",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "UBL",
+                    "steps": [
+                        {
+                            "id": "62e94570-8fdb-11f0-a8fb-61ec9e5a76ba",
+                            "name": "Import UBL document",
+                            "provider": "ubl.import"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "CII",
+                    "steps": [
+                        {
+                            "id": "6480ae50-8fdb-11f0-a8fb-61ec9e5a76ba",
+                            "name": "Import CII document",
+                            "provider": "cii.import"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "PDF",
+                    "steps": [
+                        {
+                            "id": "26ba4f80-1e2a-11f1-8bfb-2beaa1df60f0",
+                            "name": "Import Factur-X PDF",
+                            "provider": "cii.pdf.import"
+                        }
+                    ]
+                }
+            ],
+            "notes": "Receives the Peppol document and returns the format in a code (UBL/CII/PDF)"
+        },
+        {
+            "id": "9c15ac60-7b8c-11f1-bf7f-e1e339678581",
+            "name": "Document is invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "a48f03f0-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Sign Envelope",
+                            "provider": "silo.close",
+                            "next": [],
+                            "notes": "If it's an invoice, sign, generate a PDF and place it in the Expenses folder"
+                        },
+                        {
+                            "id": "a80b8080-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Generate PDF",
+                            "provider": "pdf",
+                            "next": [],
+                            "summary": "French - A4",
+                            "config": {
+                                "logo_height": 40,
+                                "locale": "fr",
+                                "date_format": "%Y-%m-%d",
+                                "time_format": "%H:%M",
+                                "layout": "A4",
+                                "scripting": false,
+                                "label": "",
+                                "watermark": "",
+                                "currency_template": "",
+                                "negative_template": "",
+                                "thousands_separator": "",
+                                "decimal_mark": "",
+                                "duplicate": false
+                            }
+                        },
+                        {
+                            "id": "ab7e1200-7b8c-11f1-bf7f-e1e339678581",
+                            "name": "Set Folder",
+                            "provider": "silo.folder",
+                            "next": [],
+                            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+                            "config": {
+                                "folder": "expenses"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "summary": "",
+            "config": {
+                "expr": "$schema endsWith \"bill/invoice\"",
+                "scope": "doc"
+            },
+            "notes": "Checks for bill/invoice document"
+        },
+        {
+            "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
+            "name": "Record document for e-invoicing",
+            "provider": "gov-fr.directory.record"
+        },
+        {
+            "id": "dd14a3e0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `received`{.state .received}",
+            "config": {
+                "state": "received"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e109d2e0-0fb5-11f0-b078-9fc456829eca",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};

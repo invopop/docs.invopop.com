@@ -8,6 +8,8 @@ import SDISendWorkflow from '/snippets/workflows/it/sdi-send.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { itSdiSendWorkflow } from '/snippets/workflows/it/sdi-send-data.mdx';
 
 ## Introduction
 
@@ -47,35 +49,16 @@ SDI does not have a sandbox environment. When `sandbox` mode is selected, Invopo
 </Info>
 
 
+<Card iconType="duotone" title="SDI send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-send" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="SDI send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-send" cta="Add to my workspace">
-      Signs and converts the [GOBL](https://docs.gobl.org) document into the FatturaPA XML format and then sends it to SDI.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSdiSendWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
     <SDISendWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
-
-        1. **Set state** - To `Processing`.
-        2. **Sign envelope** - Signs the [GOBL](https://docs.gobl.org) document preventing further modifications.
-        3. **Send invoice to SDI** - Generates the FatturaPA XML and sends it to SDI. Upon success, the XML file is attached to the invoice entry. If `sandbox` is chosen as the environment, the simulated response from SDI must be set.
-        4. **Set state** - To `Sent`.
-
-      In the **Error Handling** section, add a **Set state** step with the state set to `Error` to capture and flag failed imports.
-
-      This is the minimal workflow with state handling required to issue invoices through SDI. You may expand it with additional steps such as storing a backup copy, notifying clients, or integrating the documents into an ERP system.
-
-      <Frame caption="SDI Send Invoice workflow">
-        <img width="300" src="/assets/guides/it-sdi-sending-workflow.png" alt="Sending invoice workflow" />
-      </Frame>
-
   </Tab>
 </Tabs>
 

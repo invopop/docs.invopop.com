@@ -12,6 +12,9 @@ import CreditNote from '/snippets/invoices/es/verifactu-credit-note.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
 import ReplacementInvoiceMin from '/snippets/invoices/es/verifactu-replacement.min.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { esNoverifactuInvoiceWorkflow } from '/snippets/workflows/es/noverifactu-invoice-data.mdx';
+import { esNoverifactuCancelWorkflow } from '/snippets/workflows/es/noverifactu-cancel-data.mdx';
 
 ## Introduction
 
@@ -26,29 +29,17 @@ To issue your first NO VERI\*FACTU invoice, you must have registered at least on
 
 Add a new workflow to your workspace for issuing invoices. You can start with the template below.
 
+<Card title="NO VERI*FACTU invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-invoice" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card title="NO VERI*FACTU invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-invoice" cta="Add to my workspace">
-      This workflow will generate, sign, and store an invoice record locally, then produce a PDF.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={esNoverifactuInvoiceWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
     <WorkflowExample />
-  </Tab>
-  <Tab title="Build from scratch">
-    In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
-
-    1. **Set state** — select "Processing".
-    2. **Sign envelope** — Signs the GOBL envelope.
-    3. **Generate Invoice Record** — Generates the XML record from the GOBL invoice and digitally signs it using XAdES Enveloped Signature.
-    4. **Store Record** — Persists the signed record in the database for regulatory compliance.
-    5. **Generate PDF** — Creates the PDF invoice with the required QR code.
-    6. **Set state** — select "Registered".
-
-    In the Error Handling section, add the **Set state** action and select `Error`.
-
   </Tab>
 </Tabs>
 
@@ -213,30 +204,17 @@ In general, you should only cancel an invoice if it hasn't been handed to the cu
   <Step title="Add a cancel invoice workflow (only once)">
     To cancel an invoice, you need a workflow with the _Generate Cancellation Record_ and _Store Record_ steps. You can start with the template below.
 
+    <Card title="NO VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-cancel" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
-      <Tab title="Template">
-        <Card title="NO VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-cancel" cta="Add to my workspace">
-          This workflow will generate and store a cancellation record.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esNoverifactuCancelWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
         <CancelInvoice />
-      </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "NO VERI\*FACTU Cancel Invoice".
-
-        We recommend adding the following steps:
-
-        1. **Set state** — select "Processing".
-        2. **Generate Cancellation Record** — Generates and signs the cancellation XML record.
-        3. **Store Record** — Persists the signed cancellation record.
-        4. **Set state** — select _Void_ in the step configuration.
-
-        In the Error Handling area, **Set state** — select `Error`.
       </Tab>
     </Tabs>
   </Step>
