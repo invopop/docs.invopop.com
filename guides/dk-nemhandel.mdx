@@ -1,0 +1,133 @@
+---
+title: "NemHandel issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: Issue OIOUBL invoices and credit notes in Denmark over the NemHandel network, and import received documents.
+---
+
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/dk/dk-send.mdx';
+import ImportInvoiceWorkflow from '/snippets/workflows/dk/dk-import.mdx';
+import ExampleAccordion from '/snippets/invoices/dk/accordion.mdx';
+import FAQ from '/snippets/faqs/dk/composers/guide-nemhandel-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { dkSendWorkflow } from '/snippets/workflows/dk/dk-send-data.mdx';
+import { dkImportWorkflow } from '/snippets/workflows/dk/dk-import-data.mdx';
+
+## Introduction
+
+[NemHandel](https://erhvervsstyrelsen.dk/nemhandel) is Denmark's national e-invoicing network, managed by the Danish Business Authority (Erhvervsstyrelsen). Invoices to Danish public authorities must be submitted through it — mandatory since 2005 — and Danish businesses exchange B2B invoices over the same infrastructure. Documents travel as **OIOUBL 2.1**, Denmark's UBL-based national format.
+
+Invopop has partnered with [eCourier](https://ecourier.dk) as its NemHandel access point. The Denmark app converts [GOBL](https://docs.gobl.org) invoices and credit notes to OIOUBL, delivers them over the network, and imports documents your suppliers receive. For onboarding suppliers, see the companion guide: [Denmark: Supplier registration](/guides/dk-nemhandel-supplier).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Registered against the eCourier sandbox | Registered supplier required |
+| **Environment** | eCourier sandbox | eCourier production |
+
+Please refer to the docs of [GOBL's Denmark tax regime](https://docs.gobl.org/regimes/dk) to learn about the specifics of Danish GOBL documents.
+
+## Prerequisites
+
+In order to complete this guide, you will need:
+
+- **A registered supplier**: follow the [NemHandel supplier registration guide](/guides/dk-nemhandel-supplier) to connect the Denmark app, sign the authorization agreement, and register the supplier on the network before issuing.
+- Customer routing details: the EAN/GLN number for public institutions, or the CVR number for Danish companies.
+- Line and item details, including quantity, price, and description. Denmark applies a single 25% VAT rate (moms) with no reduced rates.
+
+## Setup
+
+<Info>
+  The supplier must already be registered on NemHandel — this is covered in the [supplier registration guide](/guides/dk-nemhandel-supplier).
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+  <Step title="Create the send workflow">
+    This workflow numbers and signs the invoice, converts it to OIOUBL 2.1, and submits it to the network, holding until eCourier confirms delivery.
+
+    <Card iconType="duotone" title="NemHandel send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-send" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={dkSendWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <SendInvoiceWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Create the import workflow">
+    <Info>You can skip this step if you don't plan to receive invoices.</Info>
+
+    This workflow runs once for each document delivered to one of your registered suppliers: it fetches the OIOUBL from the network, converts it to GOBL, and stores it as a new silo entry with the original XML and any embedded attachments.
+
+    <Card iconType="duotone" title="NemHandel import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-import" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={dkImportWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <ImportInvoiceWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Configure the Denmark app">
+    <Info>You can skip this step if you don't plan to receive invoices.</Info>
+
+    In **Configuration** → **Apps** → **Denmark**, select the import workflow you just created as the **incoming workflow**. Every document received on the network for one of your registered suppliers is handed to it automatically. See the [Denmark app](/apps/denmark) page for the full list of actions it provides.
+  </Step>
+</Steps>
+
+## Send an invoice
+
+Upload an invoice to the silo and run the **NemHandel send invoice** workflow on it, either from the Console or via the API.
+
+<Info>
+  The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).
+</Info>
+
+The workflow queues after submission until eCourier confirms the delivery, so an entry in the `sent` state means the recipient's access point accepted the document.
+
+### Correct an invoice
+
+There is no cancellation mechanism on the NemHandel network. To correct a delivered invoice, issue a **credit note** referencing the original in its `preceding` array and run the same send workflow on it — OIOUBL requires non-negative totals, so corrections are always credit notes in Denmark. See the [example credit note](#example-invoices) below.
+
+## Example invoices
+
+The following examples are [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, run the NemHandel send invoice workflow created during setup.
+
+[GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to NemHandel require the following properties:
+
+- `$schema` to be set to `https://gobl.org/draft-0/bill/invoice`
+- `supplier.tax_id.country` to be set to `DK`, with the supplier's 8-digit CVR number as the code
+- customer routing: an explicit `GLN:` endpoint for public institutions, or a Danish `tax_id` from which the participant is derived
+- the [`dk-oioubl-v2`](https://github.com/invopop/gobl.dk.oioubl) addon; the app adds it automatically during conversion if it's missing, but declaring it up front validates the document at upload time
+
+<ExampleAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Denmark →
+</Card>

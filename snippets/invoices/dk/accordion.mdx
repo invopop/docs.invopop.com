@@ -1,0 +1,59 @@
+import B2GInvoiceMin from '/snippets/invoices/dk/nemhandel-b2g.min.mdx';
+import B2GInvoice from '/snippets/invoices/dk/nemhandel-b2g.mdx';
+import B2BInvoiceMin from '/snippets/invoices/dk/nemhandel-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/dk/nemhandel-b2b.mdx';
+import CreditNoteMin from '/snippets/invoices/dk/nemhandel-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/dk/nemhandel-credit-note.mdx';
+
+<AccordionGroup>
+	<Accordion title="Example invoice to a public institution (B2G)">
+
+		In this example, we're issuing an invoice from a Danish supplier to a public institution — the classic NemHandel use case. Public entities are identified by their EAN/GLN number in the NemHandelsregisteret.
+
+		Notice:
+
+		- we've added the `dk-oioubl-v2` addon; this validates and normalizes the document using the OIOUBL 2.1 rules, and pulls in the `eu-en16931-v2017` addon automatically,
+		- the customer carries a GLN legal identity and a `GLN:` endpoint — this is how the document is routed to the institution on the NemHandel network,
+		- the supplier only sets its CVR number as the tax ID; the addon derives the `DK:CVR` endpoint from it automatically,
+		- the `debit-transfer` payment key maps to UNTDID payment means `31` (IBAN transfer), one of the codes OIOUBL allows; a BIC is required alongside the IBAN, and,
+		- there are no totals or calculations; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2GInvoiceMin />
+			<B2GInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example invoice between businesses (B2B)">
+
+		In this example, we're issuing an invoice from one Danish company to another. Both parties are identified by their CVR numbers alone.
+
+		Notice:
+
+		- neither party declares endpoints or inboxes explicitly; the `dk-oioubl-v2` addon derives each participant identifier (`DK:CVR:<number>`) from the Danish tax ID,
+		- only the [VAT rate](https://docs.gobl.org/regimes/dk) (`standard`) is specified on the lines; Denmark's single 25% rate and the amounts are calculated on build, and,
+		- there are no totals or calculations; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2BInvoiceMin />
+			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example credit note">
+
+		In this example, we're issuing a credit note that corrects a previously sent invoice. Corrections in Denmark are always credit notes — OIOUBL requires non-negative totals, so a negative invoice is not allowed.
+
+		Notice:
+
+		- the `type` is set to `credit-note`, which maps to UNTDID document type `381` on build,
+		- the `preceding` array references the original invoice by `series`, `code`, and `issue_date`, and,
+		- there are no totals or calculations; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+</AccordionGroup>
