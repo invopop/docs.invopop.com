@@ -17,12 +17,16 @@ import { dkUnregisterWorkflow } from '/snippets/workflows/dk/dk-unregister-data.
 
 [NemHandel](https://erhvervsstyrelsen.dk/nemhandel) is Denmark's national e-invoicing network, managed by the Danish Business Authority (Erhvervsstyrelsen). Invoicing Danish public authorities through it has been mandatory since 2005, and Danish businesses use the same network for B2B invoices.
 
-Invopop has partnered with [eCourier](https://ecourier.dk) as its NemHandel access point. Before a supplier can send or receive invoices on the network, the supplier must be registered as a NemHandel participant, which requires its representative to sign an authorization agreement. This guide walks you through that onboarding process. Once a supplier is registered, continue with the companion guide: [Denmark: Issuing invoices](/guides/dk-nemhandel).
+Before a supplier can send or receive invoices on the network through Invopop's NemHandel access point, the supplier must be registered as a NemHandel participant, which requires its representative to sign an authorization agreement. This guide walks you through that onboarding process. Once a supplier is registered, continue with the companion guide: [Denmark: Issuing invoices](/guides/dk-nemhandel).
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Environment** | eCourier sandbox | eCourier production |
-| **Agreement** | Signed with test data, no legal effect | Signed by the supplier's legal representative |
+| **Environment** | Official NemHandel test network | NemHandel production |
+| **Agreement** | Signed by the supplier's representative | Signed by the supplier's representative |
+
+<Note>
+  The authorization agreement must be signed in both environments — the sandbox targets NemHandel's official test network and follows the same signing and approval flow as production.
+</Note>
 
 ## Prerequisites
 
@@ -36,12 +40,12 @@ To register a supplier in Denmark, you will need:
 All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
-  <Step title="Connect the Denmark app">
+  <Step title="Connect the NemHandel Denmark app">
     1. Navigate to **Configuration** → **Apps**
-    2. Find **Denmark** in the app discovery list
+    2. Find **NemHandel Denmark** in the app discovery list
     3. Click **Connect** to activate
 
-    See the [Denmark app](/apps/denmark) page for the full list of actions it provides.
+    See the [NemHandel Denmark app](/apps/nemhandel-denmark) page for the full list of actions it provides.
   </Step>
   <Step title="Create the registration workflow">
     <Card iconType="duotone" title="NemHandel register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-register" horizontal>
@@ -100,7 +104,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 To take a supplier off the network, run the **Unregister from NemHandel** workflow on the same party entry. It releases the participant registration so the supplier no longer sends or receives invoices through Invopop, and sets the entry's state to `void`.
 
 <Warning>
-  Unregistering removes the participant from the NemHandel registry. To onboard the same supplier again later, you'll need to run the full registration workflow, including a new authorization agreement.
+  Unregistering removes the participant from the NemHandel registry, so the supplier stops sending and receiving invoices immediately. To onboard the supplier again, run the registration workflow on the same party entry — the signed authorization agreement is reused, so the representative doesn't need to sign again.
 </Warning>
 
 At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Denmark issuing invoices guide](/guides/dk-nemhandel) to continue.

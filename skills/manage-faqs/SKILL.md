@@ -325,7 +325,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
 | `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
 | `faq/denmark.mdx` | `dk/composers/page-faq.mdx` |
-| `apps/denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
+| `apps/nemhandel-denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
 | `guides/dk-nemhandel.mdx` | `dk/composers/guide-nemhandel-invoicing.mdx` |
 | `guides/dk-nemhandel-supplier.mdx` | `dk/composers/guide-nemhandel-supplier.mdx` |
 | `guides/cb-denmark.mdx` | `dk/composers/guide-peppol-invoicing.mdx` |

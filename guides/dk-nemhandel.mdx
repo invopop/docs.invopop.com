@@ -17,12 +17,12 @@ import { dkImportWorkflow } from '/snippets/workflows/dk/dk-import-data.mdx';
 
 [NemHandel](https://erhvervsstyrelsen.dk/nemhandel) is Denmark's national e-invoicing network, managed by the Danish Business Authority (Erhvervsstyrelsen). Invoices to Danish public authorities must be submitted through it — mandatory since 2005 — and Danish businesses exchange B2B invoices over the same infrastructure. Documents travel as **OIOUBL 2.1**, Denmark's UBL-based national format.
 
-Invopop has partnered with [eCourier](https://ecourier.dk) as its NemHandel access point. The Denmark app converts [GOBL](https://docs.gobl.org) invoices and credit notes to OIOUBL, delivers them over the network, and imports documents your suppliers receive. For onboarding suppliers, see the companion guide: [Denmark: Supplier registration](/guides/dk-nemhandel-supplier).
+The NemHandel Denmark app converts [GOBL](https://docs.gobl.org) invoices and credit notes to OIOUBL, delivers them over the network, and imports documents your suppliers receive. For onboarding suppliers, see the companion guide: [Denmark: Supplier registration](/guides/dk-nemhandel-supplier).
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Registered against the eCourier sandbox | Registered supplier required |
-| **Environment** | eCourier sandbox | eCourier production |
+| **Supplier** | Registered against the test network | Registered supplier required |
+| **Environment** | Official NemHandel test network | NemHandel production |
 
 Please refer to the docs of [GOBL's Denmark tax regime](https://docs.gobl.org/regimes/dk) to learn about the specifics of Danish GOBL documents.
 
@@ -30,7 +30,7 @@ Please refer to the docs of [GOBL's Denmark tax regime](https://docs.gobl.org/re
 
 In order to complete this guide, you will need:
 
-- **A registered supplier**: follow the [NemHandel supplier registration guide](/guides/dk-nemhandel-supplier) to connect the Denmark app, sign the authorization agreement, and register the supplier on the network before issuing.
+- **A registered supplier**: follow the [NemHandel supplier registration guide](/guides/dk-nemhandel-supplier) to connect the NemHandel Denmark app, sign the authorization agreement, and register the supplier on the network before issuing.
 - Customer routing details: the EAN/GLN number for public institutions, or the CVR number for Danish companies.
 - Line and item details, including quantity, price, and description. Denmark applies a single 25% VAT rate (moms) with no reduced rates.
 
@@ -44,7 +44,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
   <Step title="Create the send workflow">
-    This workflow numbers and signs the invoice, converts it to OIOUBL 2.1, and submits it to the network, holding until eCourier confirms delivery.
+    This workflow numbers and signs the invoice, converts it to OIOUBL 2.1, and submits it to the network, holding until the delivery is confirmed.
 
     <Card iconType="duotone" title="NemHandel send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-send" horizontal>
       Add to my workspace →
@@ -79,10 +79,10 @@ All of the following steps must be carried out from the [Invopop Console](https:
       </Tab>
     </Tabs>
   </Step>
-  <Step title="Configure the Denmark app">
+  <Step title="Configure the NemHandel Denmark app">
     <Info>You can skip this step if you don't plan to receive invoices.</Info>
 
-    In **Configuration** → **Apps** → **Denmark**, select the import workflow you just created as the **incoming workflow**. Every document received on the network for one of your registered suppliers is handed to it automatically. See the [Denmark app](/apps/denmark) page for the full list of actions it provides.
+    In **Configuration** → **Apps** → **NemHandel Denmark**, select the import workflow you just created as the **incoming workflow**. Every document received on the network for one of your registered suppliers is handed to it automatically. See the [NemHandel Denmark app](/apps/nemhandel-denmark) page for the full list of actions it provides.
   </Step>
 </Steps>
 
@@ -94,7 +94,7 @@ Upload an invoice to the silo and run the **NemHandel send invoice** workflow on
   The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).
 </Info>
 
-The workflow queues after submission until eCourier confirms the delivery, so an entry in the `sent` state means the recipient's access point accepted the document.
+The workflow queues after submission until the delivery is confirmed, so an entry in the `sent` state means the recipient's access point accepted the document.
 
 ### Correct an invoice
 
