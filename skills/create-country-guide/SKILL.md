@@ -159,10 +159,10 @@ Naming: FAQ composer → always `FAQ`; resources table → `<Country>Resources`;
 Each workflow lives as a **pair** under `snippets/workflows/<cc>/`:
 
 - `<name>.mdx` — frontmatter (`title`, `description`, `countryCode`, `appId`, `schema`) + one fenced ` ```json ` block. Rendered in the Code tab.
-- `<name>-data.mdx` — **only** `export const <export>Workflow = {…};`, nothing else. No frontmatter, no markdown — mixing content compiles to an `undefined` stub on a cold build and silently kills the section (warm `mint dev` masks it).
-- Export name = globally unique camelCase of `<dir>-<basename>` + `Workflow`: `co/dian-invoice-data.mdx` ⇒ `coDianInvoiceWorkflow`; acronyms camelCased (`Nfse`, not `NFSe`). Never `workflow`.
+- `<name>-data.mdx` — **generated, never hand-edited**: only `export const <export>Workflow = {…};`, nothing else. No frontmatter, no markdown — mixing content compiles to an `undefined` stub on a cold build and silently kills the section (warm `mint dev` masks it).
+- Export name = globally unique camelCase of `<dir>-<basename>` + `Workflow`, collapsing a duplicated leading country token: `co/dian-invoice-data.mdx` ⇒ `coDianInvoiceWorkflow`, `dk/dk-send-data.mdx` ⇒ `dkSendWorkflow`; acronyms camelCased (`Nfse`, not `NFSe`). Never `workflow`.
 - Import without aliasing — `{ x as y }` double-declares in Mintlify's inlining.
-- **When updating the JSON, paste it into both files** — they must stay in sync.
+- **Edit only the `.mdx` file, then run `scripts/build-workflow-data.sh`** to regenerate the `-data.mdx` (pass the source path to create a brand-new companion; `--check` verifies all pairs are in sync).
 - If the workflow uses an app new to `<WorkflowDiagram>`, add its provider key to `providerIcons` in `snippets/components/workflow.jsx` (longest-prefix match; static `className` literals only).
 
 ### Invoice / party examples

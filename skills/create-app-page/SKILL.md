@@ -219,7 +219,7 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import FAQ from '/snippets/faqs/mx/composers/app-sat.mdx';
 ```
 
-- App pages import the workflow **content** snippet (`<name>.mdx`, the fenced JSON) and render it bare (`<IssueInvoice />`). They do **not** use `<WorkflowDiagram>` or the `-data.mdx` exports — that pairing is for guides. If you touch a workflow JSON, still sync both files of the pair (see `skills/create-country-guide/SKILL.md`).
+- App pages import the workflow **content** snippet (`<name>.mdx`, the fenced JSON) and render it bare (`<IssueInvoice />`). They do **not** use `<WorkflowDiagram>` or the `-data.mdx` exports — that pairing is for guides. If you touch a workflow JSON, edit only the `.mdx` and run `scripts/build-workflow-data.sh` to refresh any `-data.mdx` companion (see `skills/create-country-guide/SKILL.md`).
 - FAQ composer: always exactly one, aliased `FAQ`, at `/snippets/faqs/<cc>/composers/app-<regime>.mdx` where `<regime>` is the *system* name. **Read `skills/manage-faqs/SKILL.md` before creating it**, and register the page in that skill's registry table. App composers are task-organised (Invoicing → Supplier → Receiving → Reporting), plain-text task headings, no compliance leaf.
 - Resources table: add the new app to the `Apps` row of `snippets/tables/<country>-resources.mdx`.
 - `snippets/coverage/` is for compliance pages, not apps.
