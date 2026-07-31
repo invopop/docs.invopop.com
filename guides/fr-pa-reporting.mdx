@@ -141,6 +141,42 @@ For multiple suppliers (whitelabel use cases) where different suppliers have dif
 
 The cadence must match the regime registered with the tax office. If in doubt, check with your local accountant.
 
+## Reading submitted reports
+
+The France dashboard's **Transactions Flow 8 / 9** tab lists every document submitted for e-reporting. In the Console, open the **Apps** view, select the **France** app, and switch to the **Transactions Flow 8 / 9** tab.
+
+The tab shows one sub-flow at a time: the **Flow type** filter is always active, defaults to International B2B invoices (`10.1`), and switches between the four [sub-flows](#sub-flows). It can be changed but not cleared.
+
+Each row shows the **Document code** and **Document date**, when it was **Recorded**, whether a report already covers it (**Generated report**), the **Supplier SIREN**, the **Flow type**, the **Role** (Seller or Buyer; domestic B2C rows carry no role), the **Silo entry**, and the amounts the report will carry: **Currency**, **Taxable total**, **Tax total (EUR)**, **Amount (EUR)**, and **FX rate**, plus the counterparty identification and, on B2C rows, the category code.
+
+Click options on this tab:
+
+* The **Generated report** column shows a check mark once a Flux 10 report covers the row; **clicking the magnifier** next to it opens the [Reporting Flow 10 tab](#reading-generated-reports) filtered to that report. A dash means the row is still waiting for its reporting window to close.
+* **Clicking the Silo entry value** copies the recorded document's full silo entry ID to the clipboard.
+
+Filter the table by **Document code**, **Supplier SIREN**, **Flow type**, **Role**, or the **Recorded** date range (with This month, Last month, This quarter, Last quarter, and custom presets).
+
+## Reading generated reports
+
+The **Reporting Flow 10** tab lists the generated Flux 10 XML reports, one row per report.
+
+Each row shows the **Reporting period** the report covers, the **Role** of the stream (Seller, Buyer, or B2C), the **Kind** (Transactions for invoice data, Payments for payment data), the **SIREN**, the submission **Status**, the report **Sequence** number, the PPF **Ack ref**, the **Submitted at** and **Generated at** timestamps, and the **Period ID**.
+
+| Status | Meaning |
+|---|---|
+| <Badge color="gray">Generated</Badge> | The XML is built but not yet sent. |
+| <Badge color="blue">Submitted</Badge> | Sent to the PPF; awaiting acknowledgement. |
+| <Badge color="green">Filed</Badge> | Acknowledged by the PPF. |
+| <Badge color="red">Rejected</Badge> | The PPF rejected the report. |
+
+Click options on this tab:
+
+* **Clicking the Reporting period link** goes back to the [Transactions tab](#reading-submitted-reports) filtered to the documents behind the report: its SIREN, role, and B2B flow type (`10.1` for transaction reports, `10.2` for payment reports). Flip the Flow type chip to `10.3` or `10.4` to see the B2C streams instead.
+* **Clicking Download** fetches the exact XML submitted to the PPF, the same payload the [`/xml` endpoint](#reading-whats-filed) returns.
+* **Clicking the Period ID** copies the reporting period's ID, the same value the [read endpoints](#reading-whats-filed) take as `period_id`.
+
+Filter the table by **SIREN**, **Period ID**, **Generated at**, the **Reporting period** window, **Kind**, or **Role**.
+
 ## Reading what's filed
 
 Four read endpoints expose submission status and the raw report XML, all scoped to the party's silo entry id:
