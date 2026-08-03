@@ -22,6 +22,7 @@ This guide walks through how to implement e-invoicing obligations in France:
 * [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
 * [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
 * [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
+* [Reading submitted invoices](#reading-submitted-invoices): follow every sent and received invoice, and its PPF state, from the France dashboard.
 * [Example invoices](#example-invoices): minimal GOBL documents and their built versions, ready to paste into the GOBL builder.
 
 ## Workflows
@@ -140,6 +141,27 @@ How each step of the self-billing use case maps to an action in Invopop, on both
 | 3 | Seller's PA | The seller's [receive workflow](#receiving) imports the invoice and records it, resolving the seller's registered party as the `supplier`. |
 | 4 | Seller | Upon reception of payment, the seller builds a `bill.Payment` referencing the invoice, sends it to the customer and forwards it to the PPF. |
 | 5 | Buyer | The buyer's receive workflow imports the inbound CDAR and records it against the invoice. |
+
+## Reading submitted invoices
+
+The France dashboard's **E-Invoicing Flow 2** tab lists every invoice the workspace has sent or received, newest first. In the Console, open the **Apps** view, select the **France** app, and switch to the **E-Invoicing Flow 2** tab.
+
+Each row shows the Invoice code, the Supplier and Customer SIREN, the PPF status of the mandatory F1 copy, the Role (Sender when you issued the invoice, Receiver when it arrived from a counterparty), the Silo entry that holds the invoice document, the Issue date, the Owner SIREN (the registered party the invoice belongs to), the document Type (standard, self-billed, corrected, credit note, …), and the Invoice ID.
+
+The PPF status column tracks the copy forwarded to the tax authority:
+
+| PPF status | Meaning |
+|---|---|
+| <Badge color="gray">Ready</Badge> | Recorded on the platform; nothing sent to the PPF yet. |
+| <Badge color="orange">Pending</Badge> | Sent; awaiting the PPF business acknowledgement. |
+| <Badge color="green">Accepted</Badge> | The PPF accepted the document. |
+| <Badge color="red">Rejected</Badge> | The PPF rejected the document. |
+
+<Note>
+Clicking the Invoice code looks up all associated statuses on the **E-Invoicing Flow 6** tab, filtered by the Invoice ID.
+</Note>
+
+Filter the table by **Supplier SIREN**, **Customer SIREN**, **Invoice code**, or **Invoice ID**.
 
 ## Example invoices
 
