@@ -5,11 +5,13 @@ description: "Receive and process electronic invoices from Italy's SDI system"
 ---
 
 import CustomerRegistrationWorkflow from '/snippets/workflows/it/sdi-register-customer.mdx';
+import CustomerUnregistrationWorkflow from '/snippets/workflows/it/sdi-unregister-customer.mdx';
 import ImportInvoicesWorkflow from '/snippets/workflows/it/sdi-import-invoices.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-receiving.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import { itSdiRegisterCustomerWorkflow } from '/snippets/workflows/it/sdi-register-customer-data.mdx';
+import { itSdiUnregisterCustomerWorkflow } from '/snippets/workflows/it/sdi-unregister-customer-data.mdx';
 import { itSdiImportInvoicesWorkflow } from '/snippets/workflows/it/sdi-import-invoices-data.mdx';
 
 
@@ -123,6 +125,34 @@ For each company you want to receive invoices, register the Recipient Code (Codi
 Once registered, any invoices addressed to the registered companies with the Recipient Code will be automatically received and processed through the Import Invoices workflow configured in the app settings. Received invoices will appear in your **Expenses** folder.
 
 If errors occur during the import process, they will trigger the rescue steps in the workflow, allowing users to check what went wrong and take appropriate action.
+
+## Unregistering a company
+
+Registering a tax ID claims it for a single party record, and only one party per environment can hold a given tax ID at a time. Unregister a company when it is no longer your client, or when you need to register the same tax ID again from a different party record.
+
+Use this workflow to stop a company from receiving invoices through SDI:
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSdiUnregisterCustomerWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <CustomerUnregistrationWorkflow />
+  </Tab>
+</Tabs>
+
+The `sdi-it.unregister` action turns off invoice receiving for the company and clears its SDI registration from the party record. Once it completes, the tax ID is free to register again, whether from another party record in the same workspace or from a different workspace. Running it on a party that is not registered skips the step rather than failing, so it is safe to re-run.
+
+<Warning>
+  Unregistering stops receiving only. Sending never required registration, so it is unaffected. Invoices addressed to the company after it is unregistered are no longer imported into your workspace.
+</Warning>
+
+<Note>
+  Unregistering does not affect legal archiving. Invoices already preserved under _conservazione a norma_ stay preserved, as the law requires.
+</Note>
+
+The Recipient Code registration at Agenzia delle Entrate is separate and stays in place. If the company should stop receiving through Invopop altogether, update its reception settings at the [Italian tax authority](https://ivaservizi.agenziaentrate.gov.it/portale/) as well.
 
 ## FAQ
 
