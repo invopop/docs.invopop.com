@@ -25,7 +25,7 @@ Important distinctions for the _Documento Commerciale_:
 - It is not an invoice (_fattura_) - invoices require detailed buyer information and follow different tax rules.
 - It does not replace transport documents (_documento di trasporto_).
 - It is not a simple internal receipt - it serves an official fiscal function requiring AdE transmission.
-- It must include VAT at the time of sale - deferred VAT payment is not permitted.
+- VAT is always calculated when the document is issued - unlike FatturaPA, there is no deferred VAT option. Amounts not collected at the time of sale are reported as _corrispettivo non riscosso_ (see [Payment collection](#payment-collection)).
 
 The AdE portal provides functionality to create tickets, void them entirely, and process refunds at the item level. Invopop's Smart Receipts implementation supports all these operations, allowing you to manage your electronic tickets programmatically through our API or manually via the Console.
 
@@ -128,6 +128,10 @@ Every receipt reports to the AdE how much of the total was collected at the time
 <Warning>
 Any part of the total not covered by `payment.advances` is reported to the AdE as not collected (_corrispettivo non riscosso_). An invoice with no `payment` block is reported as fully uncollected. If the customer paid at the point of sale, always include `payment.advances` covering the amount paid.
 </Warning>
+
+Receipts cannot be changed once the AdE has accepted them, so an amount reported as _corrispettivo non riscosso_ is not corrected by editing the original. If you need to report an amount collected later, issue a new receipt for that amount with `payment.advances` covering it in full. The AdE does not require the new receipt to reference the original; if you want the two to be traceable, include the original's number and date in the line description.
+
+Whether a later collection needs reporting depends on the operation: for goods, VAT is already chargeable at delivery regardless of collection; for services, it becomes chargeable when the payment is received. Which applies to your sales is a determination for you and your tax advisors.
 
 ### Refund an invoice
 
