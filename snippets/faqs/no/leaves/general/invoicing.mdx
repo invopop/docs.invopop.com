@@ -41,3 +41,28 @@
 
     <Tip>Use the **Lookup Participant ID** workflow step to verify a recipient's Peppol registration before sending. If a lookup with `0192` fails, try again with `9908`.</Tip>
   </Accordion>
+
+  <Accordion title="How do I include Foretaksregisteret on my invoices?">
+    Limited liability companies (AS), public limited companies (ASA) and branches of foreign companies must show the word "Foretaksregisteret" on their sales documents — see the [invoice content requirements](/compliance/norway). Add it as a tax-scoped identity on the supplier:
+
+    ```json
+    "supplier": {
+      "name": "Fjordlys AS",
+      "tax_id": {
+        "country": "NO",
+        "code": "123456785MVA"
+      },
+      "identities": [
+        {
+          "type": "TAX",
+          "code": "Foretaksregisteret",
+          "scope": "tax"
+        }
+      ]
+    }
+    ```
+
+    The identity becomes a second `PartyTaxScheme` on the supplier, under scheme `TAX`, which is where the Peppol rule NO-R-002 looks for it. Sole traders (enkeltpersonforetak) aren't covered by the requirement and should leave the identity out.
+
+    <Tip>NO-R-002 is a warning rather than a fatal rule, so an invoice without it still reaches the recipient and no workflow step will report the omission.</Tip>
+  </Accordion>
