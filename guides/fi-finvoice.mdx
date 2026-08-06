@@ -13,15 +13,15 @@ import { fiFinvoiceSendInvoiceWorkflow } from '/snippets/workflows/fi/finvoice-s
 
 ## Introduction
 
-Finnish businesses receive their e-invoices over two networks: the domestic operator network, where around 370,000 companies get theirs in the *Finvoice* format, and Peppol, with roughly 13,000 end users. The [Finland app](/apps/finland) covers both, delivering through the accredited Finnish operator Invopop has partnered with, in the format the receiver's network expects.
+Finnish businesses receive their e-invoices over two networks: the domestic operator network, where around 370,000 companies get theirs as *Finvoice* (or *TEAPPSXML*, depending on their operator), and Peppol, with roughly 13,000 end users. The [Finland app](/apps/finland) covers both, delivering through the accredited Finnish operator Invopop has partnered with, in the format the receiver's network expects.
 
-You never pick a network. Send one GOBL invoice carrying the receiver's e-invoice address and the routing is resolved for you — use this app for every Finnish receiver, including the ones reachable on Peppol.
+You never pick a network. Send one GOBL invoice carrying the receiver's e-invoice address and the routing is resolved for you. Use this app for every Finnish receiver, including the ones reachable on Peppol.
 
 For onboarding suppliers, see the companion guide: [Finvoice supplier registration](/guides/fi-finvoice-supplier).
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Party registered against the operator's test environment | Not yet available — production access is being finalised with the operator |
+| **Supplier** | Party registered against the operator's test environment | Not yet available (production access is being finalised with the operator) |
 | **Environment** | Operator sandbox | Not yet available |
 
 ## Payment data is mandatory
@@ -29,7 +29,7 @@ For onboarding suppliers, see the companion guide: [Finvoice supplier registrati
 Finvoice makes the payment order mandatory on **every** invoice, credit notes included. Since most Finnish receivers get their invoices as Finvoice, every Finnish invoice must carry:
 
 - **An IBAN**, in `payment.instructions.credit_transfer`, with the key `credit-transfer`.
-- **A payment reference**, in `payment.instructions.ref` — a Finnish *viitenumero* or an ISO 11649 `RF` reference.
+- **A payment reference**, in `payment.instructions.ref`: a Finnish *viitenumero* or an ISO 11649 `RF` reference.
 - **A dated due date**, in `payment.terms.due_dates`.
 
 The [`fi-finvoice-v3` addon](https://github.com/invopop/gobl.fi.finvoice) enforces these rules when the invoice is validated, so an incomplete invoice is rejected up front. This is deliberate: without the payment data, the invoice would fail on its way to the receiver *after* leaving the platform, where neither you nor Invopop can see it.
@@ -37,7 +37,7 @@ The [`fi-finvoice-v3` addon](https://github.com/invopop/gobl.fi.finvoice) enforc
 ## Prerequisites
 
 - **A registered supplier**: follow the [Finvoice supplier registration guide](/guides/fi-finvoice-supplier) to connect the Finland app and register the party before issuing.
-- **The receiver's e-invoice address** on the customer record, as an inbox with scheme `0216` and the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate — IBAN-style addresses and operator-prefixed ones such as `TE0037…` — but the OVT code is the one to use.
+- **The receiver's e-invoice address** on the customer record, as an inbox with scheme `0216` and the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
 - **Complete payment data** on every invoice, as described above.
 
 ## Setup
@@ -71,28 +71,25 @@ The send step checks the receiver is reachable, generates the e-invoice, and sub
 
 Three checks run before anything leaves the platform, each failing the job with its own code:
 
-- **`supplier-address-missing`** — the supplier has no electronic address. Add the OVT inbox to the supplier party.
-- **`payment-account-missing`** — the invoice carries no payment bank account. Add the `payment` block described above.
-- **`receiver-not-einvoice`** — the receiver is not set up to receive e-invoices. The error names the channel that would have been used instead — paper, email, or one of the consumer bank channels (e-lasku, suoramaksu, Netposti). Receivers like these are refused up front rather than quietly delivered another way; check the address, or agree on another delivery method with the receiver.
+- **`supplier-address-missing`**: the supplier has no electronic address. Add the OVT inbox to the supplier party.
+- **`payment-account-missing`**: the invoice carries no payment bank account. Add the `payment` block described above.
+- **`receiver-not-einvoice`**: the receiver is not set up to receive e-invoices. The error names the channel that would have been used instead: paper, email, or one of the consumer bank channels (e-lasku, suoramaksu, Netposti). Receivers like these are refused up front rather than quietly delivered another way; check the address, or agree on another delivery method with the receiver.
 
 ### After submission
 
-Two more states you may meet:
-
-- **`send-unconfirmed`** — the connection failed after the submission may have already been written, so the outcome couldn't be confirmed. The job reports the attempt and its timestamp rather than retrying, because resubmitting into the unknown could deliver the invoice twice. Check with [support](mailto:support@invopop.com) before sending again.
-- **`no-saldo`** — the sending account has run out of credit at the operator. The job retries and completes once the account is topped up.
+One more state you may meet is **`send-unconfirmed`**: the connection failed after the submission may have already been written, so the outcome couldn't be confirmed. The job reports the attempt and its timestamp rather than retrying, because resubmitting into the unknown could deliver the invoice twice. Check with [support](mailto:support@invopop.com) before sending again.
 
 Once the operator accepts the invoice, that is the final programmatic signal: there is no delivery status to poll afterwards. If a receiving operator later rejects the invoice, the rejection arrives by email in production.
 
 ### Invoicing the Finnish state
 
-Invoicing public bodies is the segment where e-invoicing is mandatory in Finland, and the state applies its own reference conventions — invoices that don't follow them are rejected by the receiving authority:
+Invoicing public bodies is the segment where e-invoicing is mandatory in Finland, and the state applies its own reference conventions: invoices that don't follow them are rejected by the receiving authority.
 
 - **Order numbers** must start with `V1`. Set them in `ordering.purchases` on the GOBL invoice.
 - **Agreement numbers** must start with `VSK1`. Set them in `ordering.contracts`.
 - At most **one of each** per invoice.
 
-Invopop doesn't validate or normalise these prefixes — format the references exactly as the contracting authority provided them. Posting references (`TK1…`) cannot be carried on the invoice yet; if a contracting authority requires one, contact [support](mailto:support@invopop.com).
+Invopop doesn't validate or normalise these prefixes, so format the references exactly as the contracting authority provided them. Posting references (`TK1…`) cannot be carried on the invoice yet; if a contracting authority requires one, contact [support](mailto:support@invopop.com).
 
 ## Example invoices
 

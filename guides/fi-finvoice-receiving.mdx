@@ -14,21 +14,21 @@ import { fiFinvoiceImportWorkflow } from '/snippets/workflows/fi/finvoice-import
 
 ## Introduction
 
-Invoices sent to a registered party's e-invoice address land in that party's own inbox at the operator the [Finland app](/apps/finland) works through. The operator has no push channel, so the app **polls** each registered party's inbox on a schedule — every five minutes by default. Received invoices appear within minutes, not instantly; when testing, allow up to a quarter of an hour before suspecting a problem.
+Invoices sent to a registered party's e-invoice address land in that party's own inbox at the operator the [Finland app](/apps/finland) works through. The operator has no push channel, so the app **polls** each registered party's inbox on a schedule, every five minutes by default. Received invoices appear within minutes, not instantly; when testing, allow up to a quarter of an hour before suspecting a problem.
 
-Each received document becomes exactly one silo entry carrying the GOBL invoice, the original XML, and a PDF rendering, and your import workflow runs on it — so received invoices show up like any other workflow-processed document.
+Each received document becomes exactly one silo entry carrying the GOBL invoice, the original XML, and a PDF rendering, and your import workflow runs on it, so received invoices show up like any other workflow-processed document.
 
 Registering the parties themselves is covered in the companion guide: [Finvoice supplier registration](/guides/fi-finvoice-supplier).
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Party** | Registered against the operator's test environment | Not yet available — production access is being finalised with the operator |
+| **Party** | Registered against the operator's test environment | Not yet available (production access is being finalised with the operator) |
 | **Environment** | Operator sandbox | Not yet available |
 
 ## Prerequisites
 
 - **The Finland app connected**: navigate to **Configuration** → **Apps**, find **Finland**, and click **Connect**.
-- **A party ready to register**: reception is per party, so the setup below has to be in place before you register it — registration checks the reception configuration and starts polling as soon as it completes.
+- **A party ready to register**: reception is per party, so the setup below has to be in place before you register it. Registration checks the reception configuration and starts polling as soon as it completes.
 
 ## Setup
 
@@ -48,7 +48,7 @@ This workflow is pure plumbing: the polling schedule fires it for each registere
 </Step>
 
 <Step title="Create the import workflow">
-The import step downloads one received document and files it as a silo entry; everything after it is yours to shape — routing to a folder, setting a state, or any other processing your operation needs.
+The import step downloads one received document and files it as a silo entry; everything after it is yours to shape: routing to a folder, setting a state, or any other processing your operation needs.
 <Tabs>
   <Tab title="Workflow">
     <WorkflowDiagram workflow={fiFinvoiceImportWorkflow} />
@@ -66,13 +66,13 @@ Navigate to **Configuration** → **Apps**, find the **Finland** app, tap **Conf
 </Step>
 
 <Step title="Register the party">
-Run the registration workflow on the party as described in the [supplier registration guide](/guides/fi-finvoice-supplier#register-a-supplier). Registration checks the reception configuration first — if the workflows aren't set, it fails with "reception not configured" — and polling starts automatically once it completes.
+Run the registration workflow on the party as described in the [supplier registration guide](/guides/fi-finvoice-supplier#register-a-supplier). Registration checks the reception configuration first and fails with "reception not configured" if the workflows aren't set; polling starts automatically once it completes.
 </Step>
 </Steps>
 
 ## Receiving invoices
 
-From then on, reception is automatic. Every few minutes the app checks each registered party's inbox, and each new document becomes one silo entry processed by your import workflow — in the example above, filed under **Expenses**.
+From then on, reception is automatic. Every few minutes the app checks each registered party's inbox, and each new document becomes one silo entry processed by your import workflow, filed under **Expenses** in the example above.
 
 A few behaviours worth knowing:
 
