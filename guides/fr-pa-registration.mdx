@@ -14,7 +14,7 @@ import FAQ from '/snippets/faqs/fr/composers/guide-pa-supplier.mdx';
 import Supplier from '/snippets/parties/fr/supplier.mdx';
 
   
-Registration on the French Directory is required for any SIREN that will issue, report or receive invoices through Invopop as its Plateforme Agréée. Each party (a SIREN) is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, publishes it on the Peppol network and registers for Reporting. After registration is completed, the party can both send and receive invoices as well as report transactions. The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries.
+Registration on the French Directory is required for any SIREN that will issue, report or receive invoices through Invopop as its Plateforme Agréée. Each party (a SIREN) is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, publishes it on the Peppol network and registers for Reporting. After registration is completed, the party can both send and receive invoices as well as report transactions. The Annuaire requires every entry to be receive-capable, so there is no send-only option as in other Peppol countries. For parties that only need to receive invoices for now — most SMEs and micro-businesses until September 2027 — see [Registering without e-reporting](#registering-without-e-reporting).
 
 | - | Sandbox | Live |
 |---|---|---|
@@ -137,6 +137,30 @@ If a SIREN's Annuaire line is already held by another Plateforme Agréée (PA), 
 <Warning>
   Due to recent changes in how PA migrations work, taking over a line is no longer performed automatically. Registration fails and asks the party to contact support, who will complete the switch manually. This is temporary, until further notice.
 </Warning>
+
+## Registering without e-reporting
+
+Obligations under the French mandate kick in separately: from 1 September 2026 every business must be registered in the Annuaire to *receive* e-invoices, but SMEs and micro-businesses are not required to issue e-invoices or e-report until 1 September 2027 (see the [timeline](/guides/fr-pa#timeline)). If you onboard many smaller suppliers, most of them initially need only an Annuaire line and a Peppol inbox — not a reporting registration.
+
+The default template registers the party for everything, including reporting. To register parties for receiving only, create a modified copy of the template:
+
+<Steps>
+  <Step title="Add the template">
+    Add the [PPF register supplier](#ppf-register-supplier-workflow) template to your workspace and rename the copy, e.g. "PPF register supplier — Annuaire only".
+  </Step>
+  <Step title="Remove the reporting step">
+    Delete the **Register party for reporting** (`gov-fr.reporting.register`) step. Keep the Directory and Peppol steps — every Annuaire entry is receive-capable, so nothing else needs to change.
+  </Step>
+  <Step title="Run it for receive-only parties">
+    Use this workflow for parties that don't yet have issuing or reporting obligations, and keep the unmodified template for those that do. Receive-only parties appear in the [Parties tab](#reading-parties-registrations) with a dash in the Reporting column.
+  </Step>
+</Steps>
+
+When a party's e-reporting obligations begin — for example when the September 2027 mandate reaches SMEs and micro-businesses — complete its registration by running the **Register party for reporting** step against the party's silo entry: create a workflow containing just that step and run it on the already-registered party. The [VAT regime](/guides/fr-pa-reporting#picking-a-vat-regime-at-supplier-registration) is picked the same way as in the full registration.
+
+<Note>
+  A party registered without the reporting step is not on any reporting cadence: Invopop only generates and files Flux 10 reports for parties registered for reporting. The signed agreement is the same in both cases, so no new mandate is needed when reporting is added later.
+</Note>
 
 ## PPF unregister supplier workflow
 
