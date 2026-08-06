@@ -1,0 +1,129 @@
+---
+title: "NemHandel supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register suppliers on the NemHandel network to send and receive invoices in Denmark.
+---
+
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import RegisterWorkflow from '/snippets/workflows/dk/dk-register.mdx';
+import UnregisterWorkflow from '/snippets/workflows/dk/dk-unregister.mdx';
+import Supplier from '/snippets/parties/dk/supplier.mdx';
+import FAQ from '/snippets/faqs/dk/composers/guide-nemhandel-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { dkRegisterWorkflow } from '/snippets/workflows/dk/dk-register-data.mdx';
+import { dkUnregisterWorkflow } from '/snippets/workflows/dk/dk-unregister-data.mdx';
+
+## Introduction
+
+[NemHandel](https://erhvervsstyrelsen.dk/nemhandel) is Denmark's national e-invoicing network, managed by the Danish Business Authority (Erhvervsstyrelsen). Invoicing Danish public authorities through it has been mandatory since 2005, and Danish businesses use the same network for B2B invoices.
+
+Before a supplier can send or receive invoices on the network through Invopop's NemHandel access point, the supplier must be registered as a NemHandel participant, which requires its representative to sign an authorization agreement. This guide walks you through that onboarding process. Once a supplier is registered, continue with the companion guide: [Denmark: Issuing invoices](/guides/dk-nemhandel).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Environment** | Official NemHandel test network | NemHandel production |
+| **Agreement** | Signed by the supplier's representative | Signed by the supplier's representative |
+
+<Note>
+  The authorization agreement must be signed in both environments — the sandbox targets NemHandel's official test network and follows the same signing and approval flow as production.
+</Note>
+
+## Prerequisites
+
+To register a supplier in Denmark, you will need:
+
+- Supplier details, including the company name, CVR number (8-digit Danish business registration number), address, and a contact email.
+- The supplier's representative — someone with signing authority, such as a director — available to sign the NemHandel authorization agreement online.
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+  <Step title="Connect the NemHandel Denmark app">
+    1. Navigate to **Configuration** → **Apps**
+    2. Find **NemHandel Denmark** in the app discovery list
+    3. Click **Connect** to activate
+
+    See the [NemHandel Denmark app](/apps/nemhandel-denmark) page for the full list of actions it provides.
+  </Step>
+  <Step title="Create the registration workflow">
+    <Card iconType="duotone" title="NemHandel register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-register" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={dkRegisterWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <RegisterWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Create the unregistration workflow">
+    <Info>You can skip this step if you don't plan to unregister suppliers.</Info>
+    <Card iconType="duotone" title="Unregister from NemHandel workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-dk-unregister" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={dkUnregisterWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Register a supplier
+
+<Steps>
+  <Step title="Upload the party">
+    Create a silo entry with the supplier's `org/party` document, either by pasting it in the Console or via the [API](/api-ref/silo/entries/create-an-entry-put). A Danish CVR number in the `tax_id` is enough — the NemHandel participant identifier is derived from it automatically:
+
+    <Supplier />
+  </Step>
+  <Step title="Run the registration workflow">
+    Run the **NemHandel register party** workflow on the party entry. The workflow publishes a public **signing link** in the entry's meta section and pauses.
+  </Step>
+  <Step title="Have the representative sign the agreement">
+    Share the signing link with the supplier's representative. They fill in their full name, their role in the company, and a contact email, then sign the authorization agreement by typing or drawing their signature.
+  </Step>
+  <Step title="Wait for approval">
+    Once signed, the agreement is submitted for approval. The workflow resumes automatically when it is approved, registers the supplier as a NemHandel participant, and sets the entry's state to `registered`. From that point the supplier can send invoices and receive documents addressed to its participant identifier.
+  </Step>
+</Steps>
+
+## Unregister a supplier
+
+To take a supplier off the network, run the **Unregister from NemHandel** workflow on the same party entry. It releases the participant registration so the supplier no longer sends or receives invoices through Invopop, and sets the entry's state to `void`.
+
+<Warning>
+  Unregistering removes the participant from the NemHandel registry, so the supplier stops sending and receiving invoices immediately. To onboard the supplier again, run the registration workflow on the same party entry — the signed authorization agreement is reused, so the representative doesn't need to sign again.
+</Warning>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Denmark issuing invoices guide](/guides/dk-nemhandel) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Denmark →
+</Card>

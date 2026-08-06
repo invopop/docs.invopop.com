@@ -1,0 +1,61 @@
+---
+title: "NemHandel register party"
+description: "Register a party to send and receive invoices via NemHandel"
+countryCode: "dk"
+appId: "gov-dk"
+schema: "org/party"
+---
+
+```json Example NemHandel register party workflow
+{
+    "name": "NemHandel register party",
+    "description": "Register a party to send and receive invoices via NemHandel",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "c3e2b400-4f6a-11f1-9c2d-0242ac120012",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "e3af78f6-88d1-11f1-8000-920007eb4d91",
+            "name": "Sign agreement for Denmark",
+            "provider": "gov-dk.sign"
+        },
+        {
+            "id": "e3af9d5e-88d1-11f1-8000-920007eb4d91",
+            "name": "Wait for Denmark agreement approval",
+            "provider": "gov-dk.wait.approval"
+        },
+        {
+            "id": "c3e2b401-4f6a-11f1-9c2d-0242ac120012",
+            "name": "Register party with NemHandel",
+            "provider": "gov-dk.register"
+        },
+        {
+            "id": "c3e2b402-4f6a-11f1-9c2d-0242ac120012",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c3e2b403-4f6a-11f1-9c2d-0242ac120012",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
