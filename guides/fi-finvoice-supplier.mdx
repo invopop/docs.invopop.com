@@ -1,0 +1,112 @@
+---
+title: "Finvoice supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register Finnish parties with the Apix operator so they can send and receive e-invoices.
+---
+
+import RegisterWorkflow from '/snippets/workflows/fi/finvoice-register.mdx';
+import Supplier from '/snippets/parties/fi/supplier.mdx';
+import FinlandResources from '/snippets/tables/finland-resources.mdx';
+import FAQ from '/snippets/faqs/fi/composers/guide-finvoice-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { fiFinvoiceRegisterWorkflow } from '/snippets/workflows/fi/finvoice-register-data.mdx';
+
+## Introduction
+
+Finland has no government clearance system: e-invoices travel through accredited operators, and every sender and receiver works through an operator account. Invopop has partnered with [Apix Messaging](https://www.apix.fi), an accredited Finnish operator, and the [Finland app](/apps/finland)'s registration provisions each of your Finnish parties its **own** account with Apix, activates its services, and allocates its e-invoice address.
+
+A party must be registered before it can send or receive anything — there is no shared account to work through. A workspace can hold several Finnish parties, each registered and polled on its own.
+
+Once a supplier is registered, continue with the companion guide: [Finvoice issuing invoices](/guides/fi-finvoice).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Party** | Registered against the Apix test environment | Not yet available — production access is being finalised with the operator |
+| **Environment** | Apix sandbox | Not yet available |
+
+## Prerequisites
+
+- **The party's details**: legal name, Business ID (*y-tunnus*, e.g. `2617416-4`), and a Finnish address. The Business ID is uploaded without its hyphen as the GOBL `tax_id.code`.
+- **Reception workflows configured**: registration checks that the Finland app has a sync and an import workflow configured, and fails with "reception not configured" otherwise. Follow the [receiving guide's setup](/guides/fi-finvoice-receiving#setup) first.
+
+## E-invoice addresses
+
+A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, sometimes with a five-character suffix for routing inside large organisations. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
+
+Registration allocates the party's address on the operator's side, so you don't need to provide one — but counterparties will ask for it, and you'll need your customers' addresses to send. Look any Finnish organisation up in the national registry at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi): since 2024 it mirrors the Peppol address list too, so one lookup covers both networks.
+
+You may also meet other address forms that circulate on the Finnish network — IBAN-style addresses from the older bank channel, and operator-prefixed ones such as `TE0037…`. On party records, always use the OVT code under scheme `0216`.
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Connect the Finland app">
+1. Navigate to **Configuration** → **Apps**
+2. Find **Finland** in the app discovery list
+3. Click **Connect** to activate
+</Step>
+
+<Step title="Set up reception">
+<Info>Registration requires the reception workflows to be configured first, because a registered party's inbox starts being polled right away. Create the sync and import workflows and have them set on the app as described in the [receiving guide](/guides/fi-finvoice-receiving#setup), then come back here.</Info>
+</Step>
+
+<Step title="Create the registration workflow">
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={fiFinvoiceRegisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+</Steps>
+
+## Register a supplier
+
+<Steps>
+<Step title="Upload the party">
+Create a silo entry with the party's details. The example below shows the fields a Finnish party carries — for registration, the name and the y-tunnus are what matters:
+
+<Supplier />
+</Step>
+
+<Step title="Run the registration workflow">
+Run the registration workflow on the party's silo entry, from the Console or [via the API](/api-ref/transform/jobs/create-a-job-post).
+</Step>
+
+<Step title="Wait for the registration to complete">
+Registration finds or creates the party's company under Invopop's partner account at Apix, activates its services, and waits until the operator reports every service in force and the party's e-invoice address allocated. Until then the job stays queued rather than reporting success on an account that can't yet receive.
+</Step>
+</Steps>
+
+Once registration completes, the party can send and receive e-invoices, and its inbox at the operator starts being polled automatically.
+
+<Warning>
+  There is no self-serve deregistration yet. To offboard a party, contact [support@invopop.com](mailto:support@invopop.com).
+</Warning>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Finland FAQ](/faq/finland) section
+
+---
+
+<FinlandResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Finland →
+</Card>

@@ -1,0 +1,100 @@
+---
+title: "Finvoice receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: Import the invoices Finnish trading partners send to your registered parties.
+---
+
+import SyncWorkflow from '/snippets/workflows/fi/finvoice-sync.mdx';
+import ImportWorkflow from '/snippets/workflows/fi/finvoice-import.mdx';
+import FinlandResources from '/snippets/tables/finland-resources.mdx';
+import FAQ from '/snippets/faqs/fi/composers/guide-finvoice-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { fiFinvoiceSyncWorkflow } from '/snippets/workflows/fi/finvoice-sync-data.mdx';
+import { fiFinvoiceImportWorkflow } from '/snippets/workflows/fi/finvoice-import-data.mdx';
+
+## Introduction
+
+Invoices sent to a registered party's e-invoice address land in that party's own inbox at [Apix Messaging](https://www.apix.fi), the operator the [Finland app](/apps/finland) works through. The operator has no push channel, so the app **polls** each registered party's inbox on a schedule — every five minutes by default. Received invoices appear within minutes, not instantly; when testing, allow up to a quarter of an hour before suspecting a problem.
+
+Each received document becomes exactly one silo entry carrying the GOBL invoice, the original XML, and a PDF rendering, and your import workflow runs on it — so received invoices show up like any other workflow-processed document. Documents arrive as Peppol BIS Billing 3.0 UBL even where the sender issued Finvoice; the operator converts before handing them over.
+
+Registering the parties themselves is covered in the companion guide: [Finvoice supplier registration](/guides/fi-finvoice-supplier).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Party** | Registered against the Apix test environment | Not yet available — production access is being finalised with the operator |
+| **Environment** | Apix sandbox | Not yet available |
+
+## Prerequisites
+
+- **The Finland app connected**: navigate to **Configuration** → **Apps**, find **Finland**, and click **Connect**.
+- **A party ready to register**: reception is per party, so the setup below has to be in place before you register it — registration checks the reception configuration and starts polling as soon as it completes.
+
+## Setup
+
+<Steps>
+<Step title="Create the sync workflow">
+This workflow is pure plumbing: the polling schedule fires it for each registered party, and its one step checks the party's inbox and queues one import job per new document.
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={fiFinvoiceSyncWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <SyncWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Create the import workflow">
+The import step downloads one received document and files it as a silo entry; everything after it is yours to shape — routing to a folder, setting a state, or any other processing your operation needs.
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={fiFinvoiceImportWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <ImportWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Configure the app with both workflows">
+The Finland app doesn't have a settings screen yet, so the two workflow IDs are set on the app's configuration by our team. Copy each workflow's ID from its page in the Console and send both to [support@invopop.com](mailto:support@invopop.com), indicating which is the sync workflow and which is the import workflow.
+</Step>
+
+<Step title="Register the party">
+Run the registration workflow on the party as described in the [supplier registration guide](/guides/fi-finvoice-supplier#register-a-supplier). Registration checks the reception configuration first — if the workflows aren't set, it fails with "reception not configured" — and polling starts automatically once it completes.
+</Step>
+</Steps>
+
+## Receiving invoices
+
+From then on, reception is automatic. Every few minutes the app checks each registered party's inbox, and each new document becomes one silo entry processed by your import workflow — in the example above, filed under **Expenses**.
+
+A few behaviours worth knowing:
+
+- **Duplicates collapse.** The operator can occasionally deliver the same document twice; the app keys every entry by the document's own identity, so a repeated delivery updates the existing entry instead of creating a second one.
+- **Errors stay visible.** A document that fails to import leaves a failed job behind, and the rescue steps of your import workflow run so you can see what went wrong and act on it.
+- **Retention at the operator is limited.** Received documents stay downloadable at the operator for three calendar months; the silo entry and its attachments are yours permanently.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Finland FAQ](/faq/finland) section
+
+---
+
+<FinlandResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Finland →
+</Card>
