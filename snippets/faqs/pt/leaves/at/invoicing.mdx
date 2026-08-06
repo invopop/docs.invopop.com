@@ -27,6 +27,23 @@
     Adjust your GOBL customer block (or equivalent) accordingly and re-run the workflow.
   </Accordion>
 
+  <Accordion title="Why does my credit note fail with 'The credit note line #N cannot be applied to any line available to credit'?">
+    **What it means:** when a credit note references an invoice issued through Invopop, every credit note line must be matched against the quantity and price still available to credit on the original invoice's lines. Line `#N` could not be matched to any of them.
+
+    For a credit note line to be applied to an invoice line:
+
+    1. Its `item.name` must be **exactly identical** to the invoice line's, and both lines must have the same VAT treatment — the same rate and, where applicable, the same exemption.
+    2. Among the lines matching by name and VAT, it must satisfy one of:
+       - **Same unit price** as the invoice line, with a quantity up to the remaining quantity — to credit fewer units at the original price.
+       - **Same quantity** as the invoice line, with a unit price up to the remaining price — to credit part of the amount for the full quantity.
+
+    Include only the lines you are crediting — the credit note does not need to mirror the full invoice — and the order of the lines is irrelevant. Availability is cumulative: every accepted credit note reduces the remaining quantity or price, so the total credited per line can never exceed the original invoice amount.
+
+    **What to do:** check that line `#N`'s item name and VAT rate or exemption exactly match a line on the referenced invoice (watch for typos or renamed items), and that it keeps either the original unit price or the original quantity as described above. If everything matches, review credit notes previously issued against the same invoice — the remaining quantity or amount may already have been credited.
+
+    Note that a credit note supports exactly **one** `preceding` reference, and line matching only applies when the referenced invoice was issued through Invopop — references to external series (for example, invoices issued by a previous provider) are accepted without matching.
+  </Accordion>
+
   <Accordion title="Why does my payment workflow fail with 'payment type RG is not supported for real-time reporting'?">
     This error means your workflow includes the **Send to the AT** step for a payment receipt. Payment receipts are not supported for real-time reporting — the AT does not accept them via the real-time webservice.
 
