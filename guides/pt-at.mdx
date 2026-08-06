@@ -11,6 +11,8 @@ import CancelPayment from '/snippets/workflows/pt/at-cancel-payment.mdx';
 import IssueDelivery from '/snippets/workflows/pt/at-issue-delivery.mdx';
 import CancelDelivery from '/snippets/workflows/pt/at-cancel-delivery.mdx';
 import DocumentAccordion from '/snippets/documents/pt/accordion.mdx';
+import ATCreditNoteMin from '/snippets/invoices/pt/at-creditnote.min.mdx';
+import ATCreditNote from '/snippets/invoices/pt/at-creditnote.mdx';
 import PortugalResources from '/snippets/tables/portugal-resources.mdx';
 import FAQ from '/snippets/faqs/pt/composers/guide-at-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
@@ -192,6 +194,38 @@ The following examples show partial [GOBL](https://docs.gobl.org) documents you 
 </Note>
 
 <DocumentAccordion />
+
+### Credit notes
+
+To rectify an invoice that has already been issued, send a credit note: an invoice document with `type` set to `credit-note` whose `preceding` array references the invoice being credited. Credit notes run through the same invoice processing workflow as regular invoices and are issued under a series with the `NC ` prefix.
+
+<CodeGroup>
+  <ATCreditNoteMin />
+  <ATCreditNote />
+</CodeGroup>
+
+#### The preceding reference
+
+- A credit note supports exactly **one** preceding reference, identifying the credited invoice by `series` and `code`.
+- If the referenced invoice was issued through Invopop, it must exist, must not be canceled, and — when the reference includes an `issue_date` — the date must match the recorded one. Each credit note line is then validated against the amounts still available to credit on the invoice, as described below.
+- If the referenced series is not managed through Invopop (for example, the invoice was issued by a previous provider), the reference is accepted as external and no line matching is performed.
+
+#### How credit note lines are matched
+
+Invopop keeps track of the quantity and price still available to credit on every line of every issued invoice. Each credit note line must be matched to one of those lines, following these rules:
+
+1. The credit note line's `item.name` must be **exactly identical** to the invoice line's, and both lines must have the same VAT treatment — the same rate and, where applicable, the same exemption extension.
+2. Among the lines that match by name and VAT, the credit note line must satisfy one of:
+   - **Same unit price** as the invoice line, with a quantity up to the remaining quantity — use this to credit fewer units at the original price.
+   - **Same quantity** as the invoice line, with a unit price up to the remaining price — use this to credit part of the amount for the full quantity.
+
+Some practical consequences of these rules:
+
+- Include **only the lines you are crediting** — the credit note does not need to mirror the full invoice.
+- The order of the lines is irrelevant; each credit note line is matched independently.
+- Availability is cumulative across credit notes: every accepted credit note reduces the remaining quantity or price on the invoice's lines, so the total credited per line can never exceed the original invoice amount.
+
+If a line cannot be matched, the workflow fails with the error `The credit note line #N cannot be applied to any line available to credit`. This means either that no invoice line matches the credit note line's item name and VAT treatment (check for typos or differences in the name, rate, or exemption), or that the matching lines don't have enough quantity or amount left to credit (check previously issued credit notes against the same invoice).
 
 ### Cancel a document
 
