@@ -30,13 +30,13 @@ Finland applies standard VAT (ALV) at **25.5%**, with reduced rates of **13.5%**
 
 ## Invoicing in Finland
 
-Finland's e-invoicing framework is administered by the Finnish Tax Administration (Verohallinto) and governed for e-invoicing purposes by the Act on Electronic Invoicing to Public Procurers and Contracting Entities (241/2019). The framework rests on the Peppol network as the shared backbone for both B2G and voluntary B2B exchange, with a local bank/operator fallback (Finvoice or TEAPPSXML) for domestic-only recipients not reachable on Peppol.
+Finland's e-invoicing framework is administered by the Finnish Tax Administration (Verohallinto) and governed for e-invoicing purposes by the Act on Electronic Invoicing to Public Procurers and Contracting Entities (241/2019). Two networks run side by side: Peppol, the mandatory channel for B2G exchange, and the domestic operator network (Finvoice or TEAPPSXML), where most Finnish businesses receive their invoices.
 
 * [Peppol BIS Billing 3.0](#peppol-network-b2g) mandatory since April 2019 (central government) and April 2020 (all contracting authorities).
 * [Right to request e-invoicing](#right-to-request-e-invoicing-b2b) lets B2B buyers above the EUR 10,000 turnover threshold compel suppliers to issue e-invoices, without a blanket mandate.
 * [Finvoice and TEAPPSXML](#domestic-channels-finvoice-and-teappsxml) remain the dominant domestic formats for recipients outside the Peppol network.
 
-The diagram below shows how an outbound invoice is routed depending on whether the recipient is reachable on Peppol:
+The diagram below shows how an outbound invoice reaches the buyer through the operator, on whichever network the buyer lives:
 
 ```mermaid actions={false}
 %%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
@@ -44,15 +44,15 @@ sequenceDiagram
     autonumber
     participant S as Supplier
     participant IV as Invopop
-    participant P as Peppol network
+    participant AX as Operator
     participant B as Buyer
     S->>IV: Invoice (GOBL)
-    IV->>IV: Generate Peppol BIS (UBL)
-    alt Buyer is registered on Peppol
-        IV->>P: Send via Access Point
-        P->>B: Deliver e-invoice
-    else Domestic-only buyer
-        IV->>B: Deliver via domestic network (Finvoice / TEAPPSXML)
+    IV->>IV: Generate the e-invoice
+    IV->>AX: Submit to the operator
+    alt Buyer on the domestic network
+        AX->>B: Deliver as Finvoice or TEAPPSXMLXML
+    else Buyer on Peppol
+        AX->>B: Deliver over Peppol
     end
 ```
 
@@ -61,16 +61,16 @@ sequenceDiagram
     The supplier's system sends the invoice to Invopop as a GOBL document.
   </Step>
   <Step title="Generate the e-invoice">
-    Invopop produces the appropriate XML document (Peppol BIS 3, TEAPPSXML or Finvoice).
+    Invopop generates a compliant e-invoice from the GOBL document.
   </Step>
-  <Step title="Send via Peppol">
-    If the buyer is reachable on Peppol, Invopop sends the invoice through our Peppol Access Point.
+  <Step title="Submit to the operator">
+    Invopop submits the invoice to the accredited Finnish operator it partners with, which resolves how the buyer is reachable and refuses anything that would not arrive as a true e-invoice.
   </Step>
-  <Step title="Deliver to the buyer">
-    The buyer receives the invoice at their Peppol Access Point.
+  <Step title="Deliver on the domestic network">
+    If the buyer receives through the domestic operator network, the invoice is delivered there as Finvoice, or TEAPPSXML where the buyer's operator uses it.
   </Step>
-  <Step title="Domestic-registered buyers">
-    If the buyer is not on Peppol, Invopop routes the invoice through the Finnish bank network or an operator network, delivered as Finvoice or TEAPPSXML.
+  <Step title="Deliver over Peppol">
+    If the buyer is registered on Peppol, the invoice is delivered over Peppol instead.
   </Step>
 </Steps>
 
@@ -87,9 +87,9 @@ sequenceDiagram
     | **Model**           | Decentralized (access point network)                                                               |
     | **Effective date**  | Mandatory since **April 2019** (central government); **April 2020** (all contracting authorities); EN 16931-only since **April 2021** |
     | **Agency**          | Valtiokonttori (Finnish State Treasury), national Peppol Authority                                 |
-    | **Invopop support** | [Peppol App](/apps/peppol)                                                                         |
+    | **Invopop support** | [Finland App](/apps/finland)                                                                       |
 
-    <Card title="Peppol" size="20" icon="https://assets.invopop.com/apps/peppol/icon.svg" href="/apps/peppol" horizontal>
+    <Card title="Finland" size="20" icon="https://assets.invopop.com/flags/fi.svg" href="/apps/finland" horizontal>
       Connect the app to send invoices to Finnish public authorities →
     </Card>
   </Accordion>
@@ -105,13 +105,17 @@ sequenceDiagram
     | **Format**          | Peppol BIS Billing 3.0, Finvoice 3.0                                                        |
     | **Trigger**         | Buyer turnover above EUR 10,000                                                             |
     | **Mandate status**  | No transmission mandate; ViDA harmonized B2B reporting expected **1 July 2030**             |
-    | **Invopop support** | [Peppol App](/apps/peppol)                                                                  |
+    | **Invopop support** | [Finland App](/apps/finland)                                                                |
   </Accordion>
 
   <Accordion title="Domestic channels: Finvoice and TEAPPSXML">
-    <Note>Native support for Finvoice 3.0 and TEAPPSXML 3.0 is on the Invopop roadmap. Peppol BIS Billing 3.0 is the recommended channel today; contact [support@invopop.com](mailto:support@invopop.com) to confirm current availability before go-live.</Note>
+    <Note>Invopop reaches receivers on this network through the [Finland App](/apps/finland): invoices are delivered through an accredited Finnish operator, in the format the receiver expects.</Note>
 
-    For domestic recipients not reachable on Peppol, delivery happens through Finnish banks and invoicing operators (e.g. Maventa, Basware) acting as licensed intermediaries. **Finvoice 3.0**, maintained by Finance Finland, is the dominant proprietary domestic format, exchanged over the Finnish bank network. **TEAPPSXML 3.0**, a proprietary operator format from Tietoevry, is used mainly for inter-operator exchange and by larger enterprises and public administration. Both are EN 16931-compliant, so conversion to and from Peppol BIS is largely lossless for core invoice data.
+    Around 370,000 Finnish companies (most of the market) receive their e-invoices through this network of accredited operators and banks rather than Peppol. **Finvoice 3.0**, maintained by Finance Finland, is the dominant domestic format, exchanged over the Finnish bank network. **TEAPPSXML 3.0**, a proprietary operator format from Tietoevry, is used mainly for inter-operator exchange and by larger enterprises and public administration. Both are EN 16931-compliant, so conversion to and from Peppol BIS is largely lossless for core invoice data.
+
+    |                     |                                                    |
+    | ------------------- | -------------------------------------------------- |
+    | **Invopop support** | [Finland App](/apps/finland)                       |
 
     |                     |                                                    |                                                    |
     | ------------------- | -------------------------------------------------- | -------------------------------------------------- |
@@ -173,7 +177,7 @@ Finland has no real-time or periodic e-reporting requirement layered on top of e
   </Accordion>
 
   <Accordion title="Archival period">
-    Under the **Kirjanpitolaki** (Finnish Accounting Act), accounting records, including invoices and supporting documentation, must generally be retained for **6 years** from the end of the financial year. Some categories of documentation may be subject to longer sector-specific retention rules; confirm exact figures with local counsel before relying on them for edge cases.
+    Under the **Kirjanpitolaki** (Finnish Accounting Act, 1336/1997), vouchers (invoices and supporting documentation included) must be retained for **6 years** from the end of the calendar year in which the financial year closed (in practice "6+1"), and financial statements for **10 years**, with authenticity, integrity, and readability preserved throughout. Some categories of documentation may be subject to longer sector-specific retention rules; confirm exact figures with local counsel before relying on them for edge cases.
   </Accordion>
 
   <Accordion title="More information">

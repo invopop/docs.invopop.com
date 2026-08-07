@@ -73,7 +73,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Croatia | hr | (country scope only; own eRačun regime) |
 | Denmark | dk | (uses `peppol` only; no country leaves yet — composers import Peppol leaves directly) |
 | Germany | de | (uses `peppol` only) |
-| Finland | fi | (uses `peppol` only) |
+| Finland | fi | `finvoice` (also uses `peppol`) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
 | Romania | ro | (country scope only; own RO e-Factura regime) |
 | UAE | ae | (country scope only; own EIS / PINT AE regime) |
@@ -96,6 +96,7 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 |---|---|
 | `arca` | ARCA |
 | `dian` | DIAN |
+| `finvoice` | Finvoice |
 | `peppol` | Peppol |
 | `nfe` | NF-e |
 | `nfse` | NFS-e |
@@ -330,6 +331,10 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/cb-germany.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
 | `faq/finland.mdx` | `fi/composers/page-faq.mdx` |
 | `compliance/finland.mdx` | `fi/composers/page-compliance.mdx` |
+| `apps/finland.mdx` | `fi/composers/app-finvoice.mdx` |
+| `guides/fi-finvoice.mdx` | `fi/composers/guide-finvoice-invoicing.mdx` |
+| `guides/fi-finvoice-supplier.mdx` | `fi/composers/guide-finvoice-supplier.mdx` |
+| `guides/fi-finvoice-receiving.mdx` | `fi/composers/guide-finvoice-receiving.mdx` |
 | `faq/croatia.mdx` | `hr/composers/page-faq.mdx` |
 | `compliance/croatia.mdx` | `hr/composers/page-compliance.mdx` |
 | `faq/hungary.mdx` | `hu/composers/page-faq.mdx` |
