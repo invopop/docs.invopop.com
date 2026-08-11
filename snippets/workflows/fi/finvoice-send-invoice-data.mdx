@@ -1,0 +1,57 @@
+export const fiFinvoiceSendInvoiceWorkflow = {
+    "name": "Finvoice send invoice",
+    "description": "Issue an invoice to a Finnish receiver",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "bc138fa6-9172-11f1-b7bf-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "bc177c32-9172-11f1-9d66-92000767c8b7",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · Finvoice · 000001",
+            "config": {
+                "name": "Finvoice",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "bc177d5b-9172-11f1-b7a4-92000767c8b7",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "bc177de4-9172-11f1-83e5-92000767c8b7",
+            "name": "Send invoice",
+            "provider": "gov-fi.send"
+        },
+        {
+            "id": "bc177e3d-9172-11f1-8812-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "bc177e9e-9172-11f1-8438-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};

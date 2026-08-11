@@ -4,6 +4,8 @@ import ServiceInvoiceRTCMin from '/snippets/invoices/br/dfe-service-invoice-rtc.
 import ServiceInvoiceRTC from '/snippets/invoices/br/dfe-service-invoice-rtc.mdx';
 import ConsumerInvoiceMin from '/snippets/invoices/br/dfe-consumer-invoice.min.mdx';
 import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
+import ConsumerInvoiceSimplesMin from '/snippets/invoices/br/dfe-consumer-invoice-simples.min.mdx';
+import ConsumerInvoiceSimples from '/snippets/invoices/br/dfe-consumer-invoice-simples.mdx';
 import ProductInvoiceMin from '/snippets/invoices/br/dfe-product-invoice.min.mdx';
 import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 import ProductInvoiceSimplesMin from '/snippets/invoices/br/dfe-product-invoice-simples.min.mdx';
@@ -79,8 +81,10 @@ import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 
 		Notice the differences from the previous example:
 
-		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_); use `2` for _Simples Nacional, Excess_ or `4` for _MEI_ — omitting it defaults to `3` (normal regime),
+		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_); `4` (_MEI_) behaves the same, while `2` (_Simples Nacional, Excess_) uses CST codes like the normal regime (`3`, the default),
 		- each ICMS line carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension (here `101`, taxed with credit permission) instead of the `br-nfe-icms-cst` code that normal-regime issuers use,
+		- with CSOSN `101` the ICMS `percent` is not a charged tax: it represents the _Simples Nacional_ credit rate (`pCredSN` in the NF-e XML) and the resulting amount becomes the credit value the buyer may take (`vCredICMSSN`),
+		- CSOSN `101` transfers a tax credit and is only accepted when the customer is an ICMS taxpayer, so the customer includes a `br-nfe-state-reg` identity with its state registration number,
 		- PIS and COFINS are still required on every line but are not levied per item under _Simples Nacional_, so they use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
 		- make sure to process it with the "DF-e issue product invoice (NF-e)" workflow created during setup.
@@ -121,6 +125,7 @@ import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
 		- the customer is optional and in this example we've omitted it,
 		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
+		- each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation, just as on an NF-e,
 		- the payment instructions key is set to `card`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `03` (cartão de crédito),
 		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
 		- there are no totals or calculations; all these will be made automatically when uploading, and,
@@ -129,6 +134,26 @@ import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 		<CodeGroup>
 			<ConsumerInvoiceMin />
 			<ConsumerInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example B2C consumer invoice for a Simples Nacional issuer (NFC-e)">
+
+		In this example, we're issuing a consumer invoice (NFC-e) from a supplier enrolled in the _Simples Nacional_ tax regime.
+
+		Notice the differences from the previous example:
+
+		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_),
+		- ICMS carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension set to `102` (taxed without credit permission) with a `0%` percent,
+		- PIS and COFINS use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
+		- the line carries a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension set to `5102`,
+		- all of these fields must be set explicitly (i.e., you have them in the minimal example), since the automatic defaults are the normal-regime ones: an ICMS line that omits the CSOSN fails validation, while an omitted PIS or COFINS CST silently falls back to `01`,
+		- there are no totals or calculations; all these will be made automatically when uploading, and,
+		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
+
+		<CodeGroup>
+			<ConsumerInvoiceSimplesMin />
+			<ConsumerInvoiceSimples />
 		</CodeGroup>
 	</Accordion>
 

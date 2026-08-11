@@ -76,6 +76,7 @@ This guide assumes that you already have a Chargebee site configured and using P
     - **Supplier:** The supplier that will issue the invoices. You can select the one you created earlier.
     - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
     - **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
+    - **Exclude customers by default:** If enabled, Invopop will not process a customer's invoices unless the `cf_invopop_include` custom field is present and set to `true` on that customer. This is the recommended way to allowlist a subset of customers — see [Controlling which customers are processed](#controlling-which-customers-are-processed) below.
 
     Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
 
@@ -152,7 +153,7 @@ Depending on where your customers are located, you'll need a different workflow 
 
 By default, Invopop will process invoices for all your customers. If you only need to send e-invoices to a subset of them, you have two options — pick one, not both:
 
-- **Allowlist**: Create the `cf_invopop_include` custom field and set it to `true` for the customers you want to process and `false` for everyone else.
+- **Allowlist**: Enable the **Exclude customers by default** checkbox in the app's configuration form, then set the `cf_invopop_include` custom field to `true` on each customer you want to process. Everyone else is excluded automatically — no back-populating required.
 - **Denylist**: Create the `cf_invopop_exclude` custom field and set it to `true` for customers you want to exclude. Everyone else will be processed by default.
 
 ## Retriggering invoices
@@ -249,11 +250,15 @@ Finally, you can use the following custom fields to choose which customer's invo
 ></iframe>
 
 <Tip>
-  You would typically use either `cf_invopop_include` to allowlist the customers to be imported, or `cf_invopop_exclude` to denylist them, but not both of them. They are optional, though, and if not set, all customers' invoices will be imported.
+  You would typically use either `cf_invopop_include` to allowlist the customers to be imported, or `cf_invopop_exclude` to denylist them, but not both of them. They are optional, though, and if not set, all customers' invoices will be imported — unless the **Exclude customers by default** checkbox is enabled, which flips that default (see below).
 </Tip>
 
+By default, a customer's invoices are imported unless `cf_invopop_exclude` is set to `true`, or the **Exclude customers by default** checkbox in the app's configuration form is enabled and `cf_invopop_include` isn't set to `true` for that customer.
+
 <Warning>
-  When you configure a new custom field in Chargebee, it is not immediately added to any preexisting entities. The custom field is only attached to an entity after you edit and save it. This is particularly relevant to the `cf_invopop_include` field. The importer will always import a Customer unless the field is present and set to "False". To ensure the expected behavior, you should probably [back-populate the field in bulk](https://www.chargebee.com/docs/2.0/bulk-operations.html) for all your Customers to "False" right after configuring the field.
+  Enabling the **Exclude customers by default** checkbox is the recommended way to allowlist a subset of customers with `cf_invopop_include` — the app skips any customer where the field isn't set to `true`, so there's no need to back-populate anything across your existing customers.
+
+  If you use `cf_invopop_include` **without** enabling that checkbox, keep in mind that a new custom field is not immediately attached to preexisting Chargebee entities — it's only attached once you edit and save that customer. In that mode, the importer will always import a customer unless the field is present and set to `false`, so you'd need to [back-populate the field in bulk](https://www.chargebee.com/docs/2.0/bulk-operations.html) to `false` for all your customers to get the expected allowlist behavior.
 </Warning>
 
 ---
