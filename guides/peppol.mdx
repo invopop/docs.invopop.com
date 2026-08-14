@@ -256,6 +256,39 @@ If you need to unregister an entity (because the supplier is no longer your clie
   </Tab>
 </Tabs>
 
+#### Migrating a participant from another provider
+
+If a party is already registered with another Peppol Access Point, you don't need to unregister it there first. Peppol supports migrating an existing participant to a new provider using a **migration key** issued by their current one.
+
+To migrate a participant into Invopop:
+
+1. Request a migration key for the participant from their current Peppol provider. This step happens outside Invopop — each provider has its own process for issuing migration keys.
+2. Pass the key as a `peppol-migration-key` argument when running the **Register party on Peppol** step:
+   - **From the Console**: run the registration workflow directly from the workflow editor or list (see [Running from the Console](/guides/workflows#running-from-the-console)) and add `peppol-migration-key` in the **Arguments** field of the run panel.
+   - **Via the API**: include it in the `args` map when calling the [Create a Job](/api-ref/transform/jobs/create-a-job-post) endpoint:
+
+```json
+{
+  "workflow_id": "your-workflow-uuid",
+  "silo_entry_id": "your-silo-entry-uuid",
+  "args": {
+    "peppol-migration-key": "the-migration-key-from-the-current-provider"
+  }
+}
+```
+
+The party still needs to go through Invopop's own proof-of-ownership approval before this step, same as a fresh registration — the migration key only determines how the final **Register party on Peppol** step brings the participant onto our Access Point.
+
+When `peppol-migration-key` is provided:
+
+- Invopop uses it to accept the inbound migration on our SMP — there are no eligibility checks of our own, so the key must genuinely have been issued for this participant.
+- If the key is invalid or has expired, the job fails with a `migration key is not valid` error and no registration takes place.
+- If the key is valid, registration proceeds as usual.
+
+<Note>
+Invopop doesn't currently support the reverse direction — generating a migration key so a participant can move away to another provider.
+</Note>
+
 ### Sending invoices
 
 To send an invoice:

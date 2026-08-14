@@ -1,12 +1,15 @@
-<Accordion title="How are invoices routed to the right recipient?">
-  Documents on NemHandel are addressed by participant identifier. If the customer declares an endpoint (for example `GLN:5798009883735` for a public institution's EAN/GLN number), that identifier is used. If a Danish customer only carries a CVR number in its tax ID, the `dk-oioubl-v2` GOBL addon derives the participant identifier (`DK:CVR:<number>`) automatically. Explicit endpoints always win over derived ones.
+<Accordion title="What documents can I send over NemHandel with the Denmark app?">
+  Invoices and credit notes, as **OIOUBL 2.1** documents. Declare the [`dk-oioubl-v2` addon](https://docs.gobl.org/addons/dk-oioubl-v2) in `$addons` on the GOBL invoice: it layers the OIOUBL rules on top of the European EN 16931 baseline and rejects documents that would fail on the network before anything is sent. Reminders and invoice responses (OIOUBL ApplicationResponse) are not supported yet — they are planned for a follow-up release.
 </Accordion>
-<Accordion title="How do I correct or cancel an invoice sent to NemHandel?">
-  Issue a credit note referencing the original invoice in the `preceding` array. OIOUBL requires non-negative totals, so corrections in Denmark are always credit notes — a negative invoice will fail validation. There is no cancellation mechanism on the network itself: once delivered, a document can only be countered by a credit note.
+<Accordion title="How do I know an invoice was actually delivered?">
+  The send step doesn't report success on submission — it submits the OIOUBL document and then **waits until the network confirms delivery**. The job stays queued, re-checking the document's status when eCourier reports a change (and every few minutes on its own), and only completes when the document is delivered. If delivery fails, the job fails and your workflow's rescue steps run.
 </Accordion>
-<Accordion title="Which payment means does OIOUBL support?">
-  OIOUBL restricts the UNTDID 4461 payment means codes to a fixed list. The most common mappings from GOBL are `debit-transfer` for IBAN bank transfers (code `31`, requires a BIC), domestic Danish bank transfers (code `42`, account number plus bank registration number), Giro (code `50`), and FIK (code `93`). A generic `credit-transfer` (code `30`) is rejected by the format.
+<Accordion title="Can I issue a VAT-exempt invoice?">
+  Not as "exempt". OIOUBL's tax category codelist supports standard-rated, zero-rated, and reverse-charge VAT, but has **no exempt category** on the wire. The `dk-oioubl-v2` addon rejects an exempt VAT key up front rather than silently relabelling it — state the supply as **zero-rated** instead.
 </Accordion>
-<Accordion title="When is an invoice considered sent?">
-  The send step submits the OIOUBL document to the network and then queues until the delivery is confirmed by Invopop's NemHandel access point. The workflow's state only advances to `sent` once the network reports the document as delivered, so a `sent` entry means the recipient's access point accepted it.
+<Accordion title="What happens if I run the send workflow twice on the same invoice?">
+  Nothing bad. A later run that finds the entry already delivered skips with a `Duplicated Invoice` result instead of resubmitting, so the receiver never gets the document twice.
+</Accordion>
+<Accordion title="Can I generate the OIOUBL file without sending it?">
+  Yes. The convert step works on its own: it converts the GOBL invoice to OIOUBL 2.1, validates it against the official schematron, and stores the XML as an attachment on the silo entry under the `oioubl` file key. A workflow that only converts lets you inspect or download the file without submitting anything to the network.
 </Accordion>

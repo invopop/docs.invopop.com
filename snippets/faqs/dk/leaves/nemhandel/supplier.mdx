@@ -1,9 +1,15 @@
-<Accordion title="What is the NemHandel authorization agreement?">
-  Before a company can be registered on NemHandel, its representative must sign an authorization agreement allowing Invopop and its NemHandel access point to exchange documents on the company's behalf. The registration workflow publishes a public signing link on the party entry; the representative opens it, fills in their name, role, and contact email, signs, and the agreement is submitted for approval. The workflow waits until the agreement is approved before registering the participant.
+<Accordion title="Why does registration involve signing an agreement?">
+  NemHandel registration runs through Invopop's partner **eCourier**, which requires a signed authorisation agreement from the supplier before it can create the supplier's NemHandel participant. That's why the registration workflow has three steps: publish the agreement for signing, wait until the supplier's representative signs it, and only then register the participant.
 </Accordion>
-<Accordion title="Who should sign the agreement?">
-  Someone entitled to represent the company — typically a director or another person with signing authority. The signer provides their full name, their role in the company, and a contact email, and can sign by typing or drawing their signature.
+<Accordion title="Who signs the agreement, and how?">
+  A representative of the supplier — typically a director or other authorized signatory. The registration workflow publishes a **public signing link** on the party's silo entry; share it with the representative and they complete a short hosted wizard: confirm their details, review the agreement, and sign. If the party's `people` list carries a person with a name and role, the wizard prefills them as the signer. Integrators building their own onboarding UI can drive the same flow [over the API](/guides/dk-nemhandel-supplier#sign-the-agreement-via-the-api).
 </Accordion>
-<Accordion title="Can I run the registration workflow more than once?">
-  Yes. The registration steps are safe to re-run: an already-signed agreement or an already-registered participant is detected and skipped, so retrying a failed or interrupted registration won't create duplicates.
+<Accordion title="What identifier is the party registered under?">
+  Its NemHandel participant identifier: the party's first GOBL `endpoints` entry if it has one (for example a `GLN:` number), otherwise the **`DK:CVR`** identifier derived from the party's Danish tax ID. NemHandel uses symbolic schemes (`DK:CVR`, `DK:SE`, `GLN`) rather than Peppol's numeric ISO 6523 codes.
+</Accordion>
+<Accordion title="Why was my registration refused with “registered on NemHandel by a different workspace”?">
+  Each NemHandel participant can only be held by one Invopop workspace. If another workspace has already registered the same identifier, registration is refused — which workspace holds it is not disclosed. Re-running registration for a party your own workspace already registered is fine: it's treated as a retry, not an error.
+</Accordion>
+<Accordion title="Can I unregister a party?">
+  Yes. Run the unregister workflow on the party's silo entry: it releases the NemHandel registration, removing the participant and the routing that delivered inbound documents to your workspace. To send or receive on behalf of that party again, you'll need to register it again.
 </Accordion>

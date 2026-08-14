@@ -1,6 +1,12 @@
-<Accordion title="How do invoices received via NemHandel reach my workspace?">
-  Once a party is registered, documents addressed to its participant identifier are delivered to Invopop's access point. Each delivery triggers the import workflow you selected in the NemHandel Denmark app's configuration: the import step fetches the OIOUBL document, converts it to GOBL, creates the silo entry, and attaches the original XML along with any embedded binary attachments (such as PDFs).
+<Accordion title="How do received invoices arrive?">
+  By push, not polling. When a document addressed to one of your registered parties lands on the network, eCourier notifies Invopop by webhook, and the Denmark app starts your configured import workflow for it. The import step fetches the document, parses the OIOUBL, converts it to a GOBL invoice, and creates a silo entry carrying the GOBL document, the original XML, and any binary attachments embedded in it.
 </Accordion>
-<Accordion title="What happens if a received document fails to import?">
-  Deliveries are only acknowledged to the network after the import completes, so a transient failure leaves the document ready to be retried. An hourly reconciliation loop also picks up any deliveries missed by the real-time path. Documents that can never be processed are flagged for review instead of being retried forever.
+<Accordion title="Which workflow processes inbound documents?">
+  The one you select in the Denmark app's configuration (**Configuration** → **Apps** → **Denmark** → **Configure**). Every inbound document is handed to that workflow, so create it before registering any party — its first step must be the app's import action, and everything after it is yours to shape: setting a state, filing into a folder, or any other processing.
+</Accordion>
+<Accordion title="What happens to document types Invopop cannot process?">
+  The current release imports invoices and credit notes. If something else arrives — an OIOUBL ApplicationResponse or a Reminder — the app acknowledges it on the network once and fails the import job with a message naming the document type that arrived and the participant it was addressed to, so it's visible rather than silently retried forever. Support for these document types is planned for a follow-up release.
+</Accordion>
+<Accordion title="Can a document be delivered twice?">
+  The network redelivers its webhook until it is acknowledged, but the import step only acknowledges a document after it has been fully processed — and a document that was already imported isn't imported again. A failure partway through leaves the document ready to retry rather than lost.
 </Accordion>

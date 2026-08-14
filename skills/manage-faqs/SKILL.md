@@ -97,6 +97,7 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 | `arca` | ARCA |
 | `dian` | DIAN |
 | `finvoice` | Finvoice |
+| `nemhandel` | NemHandel |
 | `peppol` | Peppol |
 | `nfe` | NF-e |
 | `nfse` | NFS-e |
@@ -108,7 +109,6 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 | `pa` | PA (Plateforme Agréée) |
 | `choruspro` | Chorus Pro |
 | `mydata` | myDATA |
-| `nemhandel` | NemHandel |
 | `sdi` | SDI |
 | `ticket` | Smart Receipts |
 | `sat` | SAT/CFDI |
@@ -326,9 +326,11 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
 | `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
 | `faq/denmark.mdx` | `dk/composers/page-faq.mdx` |
-| `apps/nemhandel-denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
+| `compliance/denmark.mdx` | `dk/composers/page-compliance.mdx` |
+| `apps/denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
 | `guides/dk-nemhandel.mdx` | `dk/composers/guide-nemhandel-invoicing.mdx` |
 | `guides/dk-nemhandel-supplier.mdx` | `dk/composers/guide-nemhandel-supplier.mdx` |
+| `guides/dk-nemhandel-receiving.mdx` | `dk/composers/guide-nemhandel-receiving.mdx` |
 | `guides/cb-denmark.mdx` | `dk/composers/guide-peppol-invoicing.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
