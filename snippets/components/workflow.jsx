@@ -5,6 +5,8 @@ export const WorkflowDiagram = ({ workflow }) => {
     received: "blue",
     registered: "green",
     completed: "green",
+    accepted: "green",
+    rejected: "red",
     error: "red",
   };
 

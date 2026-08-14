@@ -14,7 +14,7 @@ import { dkNemhandelImportWorkflow } from '/snippets/workflows/dk/nemhandel-impo
 
 Documents sent to a registered party's NemHandel participant are pushed to Invopop the moment they arrive: eCourier notifies the [Denmark app](/apps/denmark) by webhook, and the app starts your import workflow for each document. There is no polling schedule to wait for — received invoices show up as soon as the network delivers them.
 
-Each received document becomes exactly one silo entry carrying the GOBL invoice, the original OIOUBL XML, and any binary attachments embedded in it, so received invoices show up like any other workflow-processed document.
+Each received document becomes exactly one silo entry carrying the GOBL document, the original OIOUBL XML, and any binary attachments embedded in it, so received invoices show up like any other workflow-processed document.
 
 Registering the parties themselves is covered in the companion guide: [NemHandel supplier registration](/guides/dk-nemhandel-supplier).
 
@@ -65,7 +65,8 @@ A few behaviours worth knowing:
 
 - **Delivery is push, not polling.** The network's webhook triggers the import within moments of a document arriving.
 - **Documents are acknowledged only after import succeeds.** A failure partway through leaves the document ready on the network to retry, so nothing is lost to a transient error; the network redelivers on its own schedule.
-- **Unsupported document types are surfaced, not looped.** The current release imports invoices and credit notes. An OIOUBL ApplicationResponse or Reminder is acknowledged once and the import job fails with a message naming the document type and the participant it was addressed to, so it's visible instead of being retried forever.
+- **Invoice responses become status entries.** An OIOUBL ApplicationResponse — the message a customer sends back accepting or rejecting an invoice — is imported as its own `bill/status` silo entry, with the original XML attached. The import job's result carries the outcome (`accepted`, `rejected`, …), and the workflow template above branches on it to mark the entry's state.
+- **Unsupported document types are surfaced, not looped.** An OIOUBL Reminder, or a response profile the app cannot process, is acknowledged once and the import job fails with a message naming what arrived and the participant it was addressed to, so it's visible instead of being retried forever.
 - **Embedded attachments are preserved.** Binary attachments carried inside the OIOUBL document are extracted and stored on the silo entry alongside the XML.
 
 ## FAQ
