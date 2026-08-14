@@ -1,0 +1,132 @@
+import B2GInvoiceMin from '/snippets/invoices/dk/b2g-invoice.min.mdx';
+import B2GInvoice from '/snippets/invoices/dk/b2g-invoice.mdx';
+import B2BInvoiceMin from '/snippets/invoices/dk/b2b-invoice.min.mdx';
+import B2BInvoice from '/snippets/invoices/dk/b2b-invoice.mdx';
+import CreditNoteMin from '/snippets/invoices/dk/credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/dk/credit-note.mdx';
+import ZeroRateMin from '/snippets/invoices/dk/zero-rate.min.mdx';
+import ZeroRate from '/snippets/invoices/dk/zero-rate.mdx';
+import ReverseChargeMin from '/snippets/invoices/dk/reverse-charge.min.mdx';
+import ReverseCharge from '/snippets/invoices/dk/reverse-charge.mdx';
+import IntraCommunityMin from '/snippets/invoices/dk/intra-community.min.mdx';
+import IntraCommunity from '/snippets/invoices/dk/intra-community.mdx';
+import ExportMin from '/snippets/invoices/dk/export.min.mdx';
+import Export from '/snippets/invoices/dk/export.mdx';
+
+<AccordionGroup>
+	<Accordion title="Example B2G invoice">
+
+		In this example, we're invoicing a Danish public institution, the segment where e-invoicing is mandatory.
+
+		Notice:
+
+		- the `$addons` field is set to `dk-oioubl-v2`, which layers the OIOUBL 2.1 rules on top of the European EN 16931 baseline,
+		- the customer carries its **EAN/GLN number** as an endpoint (`GLN:5798009883735`) — this is how public entities are identified in the NemHandelsregisteret,
+		- the supplier declares no endpoint: the addon derives its `DK:CVR` endpoint automatically from the Danish tax ID,
+		- the `ordering.purchases` block carries the order reference the receiving institution asked for,
+		- the payment instructions use a SEPA credit transfer with an IBAN, and,
+		- there are no calculations in some fields; these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2GInvoiceMin />
+			<B2GInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example B2B invoice">
+
+		In this example, we're issuing a B2B invoice from a Danish supplier to another Danish business.
+
+		Notice:
+
+		- both parties are identified by their **CVR number** as the GOBL `tax_id.code`; the addon derives each party's `DK:CVR` endpoint from it,
+		- the payment instructions describe a Danish domestic bank transfer (UNTDID payment means `42`): the account number plus the four-digit bank registration (clearing) code the OIOUBL rules require, and,
+		- there are no calculations in some fields; these will be made automatically when uploading.
+
+		<CodeGroup>
+			<B2BInvoiceMin />
+			<B2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example zero-rated invoice">
+
+		In this example, we're issuing a domestic invoice for a zero-rated supply — newspapers, one of the few zero-rated categories under Momslovens §34.
+
+		Notice:
+
+		- the line's tax uses the `zero` VAT key: the supply is taxable at 0% with input VAT recovery, unlike an exempt supply,
+		- OIOUBL has **no exempt category** on the wire, so genuinely exempt supplies (healthcare, education, financial services) cannot be invoiced through NemHandel as "exempt" — the addon rejects the `exempt` key and zero-rated is the closest the format supports, and,
+		- everything else works exactly like the standard B2B invoice.
+
+		<CodeGroup>
+			<ZeroRateMin />
+			<ZeroRate />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example reverse charge invoice">
+
+		In this example, we're issuing a domestic reverse charge invoice for copper scrap — one of the supplies (along with certain metals and electronics) where Denmark shifts the VAT liability to the buyer.
+
+		Notice:
+
+		- the line's tax uses the `reverse-charge` VAT key, so no VAT is charged and the customer accounts for it instead,
+		- the `cef-vatex` extension carries the exemption reason code `VATEX-EU-AE` (reverse charge), which OIOUBL maps to its reverse-charge tax category, and,
+		- both parties are Danish businesses identified by their CVR numbers.
+
+		<CodeGroup>
+			<ReverseChargeMin />
+			<ReverseCharge />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example intra-community invoice">
+
+		In this example, we're invoicing a VAT-registered business in another EU member state — an intra-Community supply of goods, zero-rated under Momslovens §34.
+
+		Notice:
+
+		- the line's tax uses the `intra-community` VAT key with the `VATEX-EU-IC` exemption reason code,
+		- the customer carries its own country's tax ID (a German VAT number here) and a **GLN endpoint** so NemHandel can route the document, and,
+		- no Danish VAT is charged; the customer self-accounts for the acquisition in their own country.
+
+		<CodeGroup>
+			<IntraCommunityMin />
+			<IntraCommunity />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example export invoice">
+
+		In this example, we're invoicing a customer outside the EU — an export of goods, zero-rated under Momslovens §34.
+
+		Notice:
+
+		- the line's tax uses the `export` VAT key with the `VATEX-EU-G` exemption reason code,
+		- the customer is a Norwegian business with its organisation number as tax ID and a GLN endpoint for routing, and,
+		- no Danish VAT is charged on exports outside the EU.
+
+		<CodeGroup>
+			<ExportMin />
+			<Export />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example credit note">
+
+		In this example, we're issuing a credit note that corrects a previously issued invoice.
+
+		Notice:
+
+		- the `type` is set to `credit-note`, which OIOUBL maps to its own CreditNote document (type code `381`),
+		- the `preceding` array references the original invoice by its `series`, `code`, and `issue_date`, along with a `reason`, and,
+		- there are no calculations in some fields; these will be made automatically when uploading.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+</AccordionGroup>
