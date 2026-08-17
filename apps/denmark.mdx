@@ -1,0 +1,188 @@
+---
+title: "Denmark"
+description: "Send and receive OIOUBL invoices over Denmark's NemHandel network."
+keywords: ['denmark', 'nemhandel', 'oioubl', 'cvr', 'ean', 'gln', 'ecourier', 'dk']
+mode: wide
+---
+
+import SendInvoiceWorkflow from '/snippets/workflows/dk/nemhandel-send-invoice.mdx';
+import RegisterWorkflow from '/snippets/workflows/dk/nemhandel-register.mdx';
+import UnregisterWorkflow from '/snippets/workflows/dk/nemhandel-unregister.mdx';
+import ImportWorkflow from '/snippets/workflows/dk/nemhandel-import.mdx';
+import Supplier from '/snippets/parties/dk/supplier.mdx';
+import Customer from '/snippets/parties/dk/customer.mdx';
+import InvoiceAccordion from '/snippets/invoices/dk/accordion.mdx';
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import FAQ from '/snippets/faqs/dk/composers/app-nemhandel.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Register suppliers" icon="https://assets.invopop.com/flags/dk.svg"
+				  href="/guides/dk-nemhandel-supplier" horizontal>
+				  Supplier registration guide ›
+				</Card>
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/dk.svg"
+				  href="/guides/dk-nemhandel" horizontal>
+				  Issuing guide ›
+				</Card>
+				<Card title="Receive invoices" icon="https://assets.invopop.com/flags/dk.svg"
+				  href="/guides/dk-nemhandel-receiving" horizontal>
+				  Receiving guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | B2B, B2G                               |
+				| System    | NemHandel (Erhvervsstyrelsen)          |
+				| Country   | [Denmark](/compliance/denmark)         |
+		</Columns>
+
+		**NemHandel** is Denmark's national e-invoicing network, run by the Danish Business Authority (*Erhvervsstyrelsen*). Denmark was the first country in Europe to mandate B2G e-invoicing, back in 2005: public authorities only accept electronic invoices, delivered over NemHandel or Peppol, and the Digital Bookkeeping Act now requires nearly every Danish business to be able to send and receive e-invoices as well.
+
+		Documents travel on NemHandel as **OIOUBL 2.1**, Denmark's national UBL dialect. This app owns the full journey in both directions: it converts GOBL invoices and credit notes to OIOUBL, validates them against the official schematron before anything is sent, delivers them over the network, and imports the documents your parties receive back into GOBL.
+
+		Invopop has partnered with [eCourier](https://ecourier.dk), a Danish NemHandel access point, to transmit documents and onboard suppliers onto the network. Registering a supplier includes a signing step: the supplier's representative signs an authorisation agreement through a hosted wizard (or your own UI over the API), and the app completes the network registration once it's signed.
+
+		#### Key features
+
+		* **Workflow automation:** Register parties, issue invoices, and import received ones as steps in your workflows.
+		* **OIOUBL 2.1 both ways:** GOBL → OIOUBL conversion for sending and OIOUBL → GOBL for received documents, including embedded attachments.
+		* **Schematron validation up front:** Every generated document is validated against the official OIOUBL schematron (v1.17) before it leaves the platform.
+		* **Delivery confirmation:** The send step waits until the network confirms delivery — submission alone doesn't complete the job, and duplicates are never resubmitted.
+		* **Hosted supplier onboarding:** The authorisation agreement is signed through a hosted wizard, with API endpoints for integrators building their own onboarding UI.
+		* **Push reception:** Inbound documents are delivered by webhook the moment they arrive and handed to your import workflow.
+
+		Check out the guides below to get started:
+		- [Supplier registration](/guides/dk-nemhandel-supplier) · [Issuing invoices](/guides/dk-nemhandel) · [Receiving invoices](/guides/dk-nemhandel-receiving)
+
+	## FAQ
+
+	<FAQ />
+
+	More answers in our [Denmark FAQ](/faq/denmark) section
+
+	</Tab>
+
+	<Tab title="Limitations">
+
+		| Capability | Status | Notes |
+		|---|---|---|
+		| Party registration | <Badge color="green">Available</Badge> | Includes the hosted agreement-signing wizard |
+		| Invoice delivery | <Badge color="green">Available</Badge> | OIOUBL 2.1 invoices and credit notes, delivery-confirmed |
+		| Invoice reception | <Badge color="green">Available</Badge> | Webhook push into your import workflow |
+		| Party deregistration | <Badge color="green">Available</Badge> | Releases the participant and its inbound routing |
+		| Reminders | <Badge color="yellow">In development</Badge> | OIOUBL Reminder documents are planned for a follow-up release |
+		| Invoice responses | <Badge color="yellow">In development</Badge> | The OIOUBL ApplicationResponse leg is planned for a follow-up release |
+
+	</Tab>
+
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		Invoicing
+
+		<Card title="Generate OIOUBL" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Convert a GOBL invoice or credit note to OIOUBL 2.1, validate it against the official schematron, and attach the XML to the entry under the `oioubl` file key.
+		</Card>
+
+		<Card title="Send to NemHandel" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Submit the attached OIOUBL document to the network and queue until delivery is confirmed. Requires a preceding Generate OIOUBL step.
+		</Card>
+
+		Registration
+
+		<Card title="Sign NemHandel Agreement" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Publish the authorisation agreement for the supplier's representative to sign, adding a public signing link to the party's entry.
+		</Card>
+
+		<Card title="Wait for NemHandel Agreement" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Pause the workflow until the agreement is signed, then upload it to the network partner.
+		</Card>
+
+		<Card title="Register on NemHandel" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Create the party's NemHandel participant and record the routing that delivers its inbound documents to your workspace.
+		</Card>
+
+		<Card title="Unregister from NemHandel" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Release the registration, removing the participant and its inbound routing.
+		</Card>
+
+		Reception
+
+		<Card title="Load from NemHandel" icon="https://assets.invopop.com/flags/dk.svg" horizontal>
+		 Fetch one received document, parse the OIOUBL, and create a GOBL silo entry with the original XML and its embedded attachments.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="Send NemHandel invoice">
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=dk-send)
+
+				<SendInvoiceWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Party workflows
+		<AccordionGroup>
+			<Accordion title="Register on NemHandel">
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=dk-register)
+
+				<RegisterWorkflow />
+			</Accordion>
+			<Accordion title="Unregister from NemHandel">
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=dk-unregister)
+
+				<UnregisterWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Reception workflows
+		<AccordionGroup>
+			<Accordion title="Import NemHandel invoice">
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=dk-import)
+
+				<ImportWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+	</Tab>
+
+	<Tab title="Documents">
+		<AccordionGroup>
+			<Accordion title="Denmark supplier">
+				A Danish company with its CVR number as the tax ID and a contact person with a name and role — the prefilled signer for the registration agreement. The `DK:CVR` endpoint is derived from the tax ID automatically.
+				<Supplier />
+			</Accordion>
+			<Accordion title="Denmark customer">
+				A Danish public institution identified by its EAN/GLN number as an endpoint (`GLN:…`), the identifier public entities carry in the NemHandelsregisteret. Business customers can carry just their CVR tax ID instead.
+				<Customer />
+			</Accordion>
+		</AccordionGroup>
+
+		<InvoiceAccordion />
+
+		Copy and paste these documents into the [GOBL builder](https://build.gobl.org) in order to preview and verify them.
+	</Tab>
+
+</Tabs>
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Denmark app →
+</Card>

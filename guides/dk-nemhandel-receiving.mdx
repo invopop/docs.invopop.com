@@ -1,0 +1,88 @@
+---
+title: "NemHandel receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: Import the OIOUBL documents Danish trading partners send to your registered parties.
+---
+
+import ImportWorkflow from '/snippets/workflows/dk/nemhandel-import.mdx';
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import FAQ from '/snippets/faqs/dk/composers/guide-nemhandel-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { dkNemhandelImportWorkflow } from '/snippets/workflows/dk/nemhandel-import-data.mdx';
+
+## Introduction
+
+Documents sent to a registered party's NemHandel participant are pushed to Invopop the moment they arrive: eCourier notifies the [Denmark app](/apps/denmark) by webhook, and the app starts your import workflow for each document. There is no polling schedule to wait for — received invoices show up as soon as the network delivers them.
+
+Each received document becomes exactly one silo entry carrying the GOBL invoice, the original OIOUBL XML, and any binary attachments embedded in it, so received invoices show up like any other workflow-processed document.
+
+Registering the parties themselves is covered in the companion guide: [NemHandel supplier registration](/guides/dk-nemhandel-supplier).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Party** | Registered against eCourier's test environment | Registered on the live NemHandel network |
+| **Environment** | eCourier sandbox | eCourier production |
+
+## Prerequisites
+
+- **The Denmark app connected**: navigate to **Configuration** → **Apps**, find **Denmark**, and click **Connect**.
+- **A party ready to register**: inbound routing is created when a party is registered, so set up the import workflow below before registering it.
+
+## Setup
+
+<Steps>
+<Step title="Create the import workflow">
+The import step fetches one received document, parses the OIOUBL, and files it as a GOBL silo entry with the original XML and its embedded attachments; everything after it is yours to shape: routing to a folder, setting a state, or any other processing your operation needs.
+<Card iconType="duotone" title="Import NemHandel invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-import" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={dkNemhandelImportWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <ImportWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Configure the app with the import workflow">
+Navigate to **Configuration** → **Apps**, find the **Denmark** app, tap **Configure**, and select the import workflow you just created. Every inbound document is handed to this workflow, so save the configuration before registering any party.
+</Step>
+
+<Step title="Register the party">
+Run the registration workflow on the party as described in the [supplier registration guide](/guides/dk-nemhandel-supplier#register-a-supplier). Registration records the participant → workspace routing that inbound delivery depends on.
+</Step>
+</Steps>
+
+## Receiving invoices
+
+From then on, reception is automatic: each document sent to a registered party becomes one silo entry processed by your import workflow.
+
+A few behaviours worth knowing:
+
+- **Delivery is push, not polling.** The network's webhook triggers the import within moments of a document arriving.
+- **Documents are acknowledged only after import succeeds.** A failure partway through leaves the document ready on the network to retry, so nothing is lost to a transient error; the network redelivers on its own schedule.
+- **Unsupported document types are surfaced, not looped.** The current release imports invoices and credit notes. An OIOUBL ApplicationResponse or Reminder is acknowledged once and the import job fails with a message naming the document type and the participant it was addressed to, so it's visible instead of being retried forever.
+- **Embedded attachments are preserved.** Binary attachments carried inside the OIOUBL document are extracted and stored on the silo entry alongside the XML.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Denmark →
+</Card>

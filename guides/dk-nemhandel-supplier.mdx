@@ -1,0 +1,154 @@
+---
+title: "NemHandel supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register Danish parties on the NemHandel network so they can send and receive invoices.
+---
+
+import RegisterWorkflow from '/snippets/workflows/dk/nemhandel-register.mdx';
+import UnregisterWorkflow from '/snippets/workflows/dk/nemhandel-unregister.mdx';
+import Supplier from '/snippets/parties/dk/supplier.mdx';
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import FAQ from '/snippets/faqs/dk/composers/guide-nemhandel-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { dkNemhandelRegisterWorkflow } from '/snippets/workflows/dk/nemhandel-register-data.mdx';
+import { dkNemhandelUnregisterWorkflow } from '/snippets/workflows/dk/nemhandel-unregister-data.mdx';
+
+## Introduction
+
+**NemHandel** is Denmark's national e-invoicing network, run by the Danish Business Authority (Erhvervsstyrelsen). The [Denmark app](/apps/denmark) registers each of your Danish parties as a NemHandel participant through Invopop's partner [eCourier](https://ecourier.dk), so the party can send and receive OIOUBL invoices over the network.
+
+Registration includes one step no other party in the flow can do for you: the supplier's representative must **sign an authorisation agreement** before the network participant can be created. The registration workflow publishes a signing link you share with them, and continues automatically once they've signed.
+
+Once a supplier is registered, continue with the companion guide: [NemHandel issuing invoices](/guides/dk-nemhandel).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Party** | Registered against eCourier's test environment | Registered on the live NemHandel network |
+| **Environment** | eCourier sandbox | eCourier production |
+
+## Prerequisites
+
+- **The party's details**: legal name, **CVR number** (8-digit business registration number, uploaded as the GOBL `tax_id.code`), and a Danish address.
+- **A contact person on the party**: the first entry in the party's `people` list, with a name and a role in the company. The signing wizard prefills this person as the agreement's signer, and the API signing flow requires it.
+- **The representative's availability**: someone authorized to sign on the supplier's behalf has to complete the signing step before registration can finish.
+
+<Info>
+  A registered party starts receiving inbound documents right away, so configure reception first: follow the [receiving guide's setup](/guides/dk-nemhandel-receiving#setup) to create the import workflow and select it in the app's configuration, then come back here.
+</Info>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Connect the Denmark app">
+1. Navigate to **Configuration** → **Apps**
+2. Find **Denmark** in the app discovery list
+3. Click **Connect** to activate
+</Step>
+
+<Step title="Create the registration workflow">
+<Card iconType="duotone" title="Register on NemHandel workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-register" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={dkNemhandelRegisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+</Steps>
+
+## Register a supplier
+
+<Steps>
+<Step title="Upload the party">
+Create a silo entry with the party's details. The example below shows the fields a Danish party carries; the name, the CVR number, and the contact person are what registration uses:
+
+<Supplier />
+</Step>
+
+<Step title="Run the registration workflow">
+Run the registration workflow on the party's silo entry, from the Console or [via the API](/api-ref/transform/jobs/create-a-job-post). The workflow publishes the authorisation agreement and pauses at the **wait for approval** step until it is signed.
+</Step>
+
+<Step title="Share the signing link">
+The workflow adds a public **agreement signing link** to the party's silo entry. Open the party in the Console to copy it, and send it to the supplier's representative.
+</Step>
+
+<Step title="Have the representative sign">
+The link opens a short hosted wizard: the representative confirms their name and role (prefilled from the party's contact person), reviews the agreement document, and signs it — drawing a signature that is stamped onto the agreement.
+</Step>
+
+<Step title="Wait for registration to complete">
+As soon as the agreement is signed, the workflow resumes on its own: it uploads the signed agreement, creates the party's NemHandel participant, and records the routing that delivers the party's inbound documents to your workspace. The party's entry ends in the `registered` state.
+</Step>
+</Steps>
+
+<Note>
+  The party is registered under its NemHandel participant identifier: the first `endpoints` entry on the party if it has one (a `GLN:` number, for example), otherwise the `DK:CVR` identifier derived from its Danish tax ID.
+</Note>
+
+<Warning>
+  A participant can only be held by one Invopop workspace. If another workspace has already registered the same identifier, registration fails with `this party is registered on NemHandel by a different workspace`.
+</Warning>
+
+## Sign the agreement via the API
+
+Integrators building their own onboarding UI can drive the signing step without the hosted wizard. The Denmark app exposes two endpoints on its service, authenticated per enrollment; both take `?sandbox=true` (or `"sandbox": true` in the body) to address the sandbox environment:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /v1/entry/:silo_entry_id/agreement` | The agreement PDF to render on screen: the signed one once it exists, the unsigned document before that. |
+| `POST /v1/entry/:silo_entry_id/sign` | Sign it. Send `document` with a PDF you signed yourself, or `signature` with a drawn PNG/JPEG to have it stamped onto ours; send neither and the signer's typed name is used. |
+
+Both endpoints read the signer from the party entry, so the first person in the party's `people` list must carry a name and a role before either is called.
+
+## Unregister a supplier
+
+To offboard a party, create the unregister workflow and run it on the party's silo entry: it releases the registration, removing the NemHandel participant along with the routing that delivered its inbound documents to your workspace.
+
+<Card iconType="duotone" title="Unregister from NemHandel workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-unregister" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={dkNemhandelUnregisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
+
+<Warning>
+  An unregistered party can no longer send or receive over NemHandel, and documents addressed to it after unregistration will not reach your workspace. To operate on its behalf again, run the registration workflow again.
+</Warning>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [NemHandel issuing invoices guide](/guides/dk-nemhandel) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Denmark →
+</Card>
