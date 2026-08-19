@@ -1,0 +1,83 @@
+---
+title: "Invoice schema"
+description: "The bill/invoice schema, its type values, and the tags that change how an invoice is interpreted."
+sidebarTitle: Invoices
+---
+
+[`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice) represents a payment claim for goods or services supplied under conditions agreed between the supplier and the customer. It is the most widely used schema and the basis of most workflows.
+
+Invoices carry the [shared billing properties](/console/doc-schemas#shared-properties) alongside the type and tag values below.
+
+## Types
+
+An invoice's `type` sets its legal meaning. Invopop defaults to `standard` when no type is given.
+
+| Type | UNTDID 1001 | Meaning |
+| ---- | ----------- | ------- |
+| `standard` | 380 | A regular commercial invoice between a supplier and a customer. |
+| `proforma` | 325 | A preview sent for the customer's validation before the final invoice. Tax authorities do not treat it as a fiscal document, but approving one can still create a contractual obligation. |
+| `credit-note` | 381 | A partial or complete refund of a preceding document. A credit note *extends* the original, which remains valid. This is the most widely accepted correction method. |
+| `debit-note` | 383 | Additional charges added to a preceding document, for example an omitted shipping cost. Valid but rarely used — issuing a new invoice is usually cleaner. |
+| `corrective` | 384 | A new document that *replaces* the preceding one entirely. Used for material errors in fields that cannot be adjusted by value, such as the customer's name, tax ID or the issue date. |
+| `other` | — | A custom type for use with extensions. Selecting it disables the scenarios defined by regimes and addons, so it is not recommended for general use. |
+
+<Note>
+The correction types available to a document depend on its regime and addons. See [correction types by regime](/console/doc-correct#correction-types-by-regime).
+</Note>
+
+## Tags
+
+Tags sit alongside `type` and describe circumstances that change how the invoice must be handled. Regimes and addons map them onto their own document classifications.
+
+| Tag | Effect |
+| --- | ------ |
+| `simplified` | B2C invoice issued without the customer's fiscal details. Local authorities usually cap the amount. |
+| `reverse-charge` | The customer, not the supplier, accounts for the tax. |
+| `self-billed` | The customer or a third party issues the invoice on the supplier's behalf. |
+| `customer-rates` | Tax rates are determined by the customer's location rather than the supplier's. Typically used for digital goods and services. |
+| `partial` | Not the final invoice for the transaction, for example a staged invoice on a construction project. |
+| `prepayment` | Charges amounts in advance; the amounts are deducted from the final invoice. |
+| `factoring` | The invoice has been assigned to a third party for collection. |
+| `bypass` | Skips tax and total calculation while still normalising and validating. Reserved for importing historical data where original calculations must be preserved. |
+
+Regimes and addons also add their own tags. For how tags and types combine into regime-specific document classifications, see [invoice scenarios](https://docs.gobl.org/use-cases/invoicing#invoice-scenarios) in the GOBL docs.
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Is a simplified invoice a separate document type?">
+
+No. `simplified` is a tag, not a type. A simplified invoice is a `bill/invoice` with `simplified` in its `$tags` array, which allows the `customer` block to be omitted. Each regime decides how to classify the resulting document and what value limits apply.
+
+</Accordion>
+
+<Accordion title="What is the difference between a simplified invoice and a receipt?">
+
+The key difference lies in *what* each document proves.
+
+A **receipt** confirms that a **payment has been made**. It is produced by a payment or cash-register device (for example, a card reader or POS terminal) and serves as proof of transaction settlement.
+
+An **invoice** documents the **sale of goods or services**. It is issued by a billing system (such as a POS, PMS, or ERP) and includes a breakdown of items, taxes, and totals.
+
+A **simplified invoice** is a type of invoice commonly used for **B2C transactions** and usually **does not include customer identification details**.
+
+**Example:**
+In a restaurant, the printed bill showing the items and taxes is the *simplified invoice*. After you pay by card, the slip produced by the card reader is the *receipt*. The first documents the sale; the second documents the payment.
+
+From a regulatory perspective:
+
+* **Fiscalization rules** typically apply to **payment recording devices** (cash registers, card readers) → *receipts*
+* **E-invoicing and e-reporting rules** apply to **billing systems** (POS, PMS, ERP) → *invoices*
+
+In some countries, these systems overlap; in others (like Italy), they are separate or mutually exclusive. This is why businesses often require **both** a fiscalization provider and an e-invoicing provider to remain fully compliant.
+
+</Accordion>
+</AccordionGroup>
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  Console | <Icon icon="book" /> [Create documents](/console/doc-create)<br /><Icon icon="book" /> [Correct an invoice](/console/doc-correct)<br /><Icon icon="book" /> [Document references](/console/doc-references) |
+|  Related Guides | <Icon icon="book" /> [Correct an invoice](/guides/correct-invoice)<br /><Icon icon="book" /> [PDF invoice](/guides/pdf-invoice) |
+|  GOBL | <Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Invoice schema](https://docs.gobl.org/draft-0/bill/invoice)<br /><Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Invoicing use cases](https://docs.gobl.org/use-cases/invoicing) |
