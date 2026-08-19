@@ -1,24 +1,24 @@
 ---
 title: "Document schemas"
-description: "The GOBL schemas Invopop supports, their type values, and how they reference each other."
-sidebarTitle: Schemas
+description: "The GOBL schemas Invopop supports and the properties they share."
+sidebarTitle: Overview
 ---
 
 Invopop stores every business document as a [GOBL](https://docs.gobl.org) envelope. The envelope wraps the document payload with headers and digital signatures, and the payload's `$schema` property declares which document type it is.
 
-A document's schema determines which properties are valid, which workflow templates can process it, and which apps and tax regimes will accept it. This page is the reference for those schemas.
+A document's schema determines which properties are valid, which workflow templates can process it, and which apps and tax regimes will accept it.
 
 ## Supported schemas
 
 | Schema | Console section | Purpose |
 | ------ | --------------- | ------- |
-| [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice) | Invoices | A payment claim for goods or services supplied under agreed conditions. The most widely used type and the basis of most workflows. |
-| [`bill/order`](https://docs.gobl.org/draft-0/bill/order) | Orders | The opening step of an order-to-invoice process, where a buyer requests goods or services from a seller. |
-| [`bill/delivery`](https://docs.gobl.org/draft-0/bill/delivery) | Deliveries | The movement of goods, or occasionally services, between parties. |
-| [`bill/payment`](https://docs.gobl.org/draft-0/bill/payment) | Payments | Links one or more invoices to a payment transaction. |
-| [`bill/status`](https://docs.gobl.org/draft-0/bill/status) | Statuses | A lifecycle event reported against a document, such as an acknowledgement, approval or refusal. Usually created by workflows and by inbound network messages rather than by hand. |
-| [`org/party`](https://docs.gobl.org/draft-0/org/party) | Parties | A legal entity or individual involved in a transaction, stored independently so it can be registered with a tax authority or network and referenced by other documents. |
-| [`org/item`](https://docs.gobl.org/draft-0/org/item) | Items | A product or service offered for sale, stored independently to keep a consistent catalogue across documents. |
+| `bill/invoice` | [Invoices](/console/schema-invoice) | A payment claim for goods or services supplied under agreed conditions. The most widely used schema and the basis of most workflows. |
+| `bill/order` | [Orders](/console/schema-order) | The opening step of an order-to-invoice process, where a buyer requests goods or services from a seller. |
+| `bill/delivery` | [Deliveries](/console/schema-delivery) | The movement of goods, or occasionally services, between parties. |
+| `bill/payment` | [Payments](/console/schema-payment) | Links one or more invoices to a payment transaction. |
+| `bill/status` | [Statuses](/console/schema-status) | A lifecycle event reported against a document, such as an acknowledgement, approval or refusal. |
+| `org/party` | [Parties](/console/schema-party) | A legal entity or individual involved in a transaction, stored independently so it can be registered with a tax authority or network. |
+| `org/item` | [Items](/console/schema-item) | A product or service offered for sale, stored independently to keep a consistent catalogue across documents. |
 
 Every document is wrapped in a signed [envelope](https://docs.gobl.org/draft-0/envelope) whose `doc` property carries the business document. The envelope and its header hold metadata about the document rather than business data, and are covered in [Document contents](/console/doc-content).
 
@@ -30,231 +30,27 @@ The four billing schemas — invoice, order, delivery and payment — share a co
 | -------- | ----- |
 | `$regime` | The tax regime the document belongs to, as an ISO country code. Determines default currency, tax categories and which correction types are available. |
 | `$addons` | Regime or format extensions applied to the document, such as `es-verifactu-v1` or `pt-saft-v1`. Addons add their own normalisation, validation and extension keys. |
-| `$tags` | Modifiers that change how the document is interpreted. See [invoice tags](#invoice-tags). |
-| `type` | The subtype within the schema. Each schema has its own set of values, listed in the sections below. |
+| `$tags` | Modifiers that change how the document is interpreted. See [invoice tags](/console/schema-invoice#tags). |
+| `type` | The subtype within the schema. Each schema has its own set of values, listed on its own page. |
 | `series`, `code` | The document's identifier. `code` is required before a document can be signed, and is usually generated from a [series](/console/series). |
 | `issue_date`, `issue_time` | When the document was issued. Defaults to today, and to the current time where the regime requires it. |
-| `supplier`, `customer` | The parties to the transaction, as [`org/party`](https://docs.gobl.org/draft-0/org/party) objects. `customer` may be omitted on simplified invoices. |
-| `preceding` | References to documents this one replaces or extends. See [document references](#document-references). |
+| `supplier`, `customer` | The parties to the transaction, as [party](/console/schema-party) objects. `customer` may be omitted on simplified invoices. |
+| `preceding` | References to documents this one replaces or extends. See [document references](/console/doc-references). |
+| `lines` | The items, charges or referenced documents that make up the document body. |
 | `meta` | Semi-structured data that has no home in the document body. |
-
-## Invoices
-
-An invoice's `type` sets its legal meaning. Invopop defaults to `standard` when no type is given.
-
-| Type | UNTDID 1001 | Meaning |
-| ---- | ----------- | ------- |
-| `standard` | 380 | A regular commercial invoice between a supplier and a customer. |
-| `proforma` | 325 | A preview sent for the customer's validation before the final invoice. Tax authorities do not treat it as a fiscal document, but approving one can still create a contractual obligation. |
-| `credit-note` | 381 | A partial or complete refund of a preceding document. A credit note *extends* the original, which remains valid. This is the most widely accepted correction method. |
-| `debit-note` | 383 | Additional charges added to a preceding document, for example an omitted shipping cost. Valid but rarely used — issuing a new invoice is usually cleaner. |
-| `corrective` | 384 | A new document that *replaces* the preceding one entirely. Used for material errors in fields that cannot be adjusted by value, such as the customer's name, tax ID or the issue date. |
-| `other` | — | A custom type for use with extensions. Selecting it disables the scenarios defined by regimes and addons, so it is not recommended for general use. |
-
-<Note>
-`corrective` is only available where the document's regime and addons allow it. See [correction types by regime](#correction-types-by-regime).
-</Note>
-
-### Invoice tags
-
-Tags sit alongside `type` and describe circumstances that change how the invoice must be handled. Regimes and addons map them onto their own document classifications.
-
-| Tag | Effect |
-| --- | ------ |
-| `simplified` | B2C invoice issued without the customer's fiscal details. Local authorities usually cap the amount. |
-| `reverse-charge` | The customer, not the supplier, accounts for the tax. |
-| `self-billed` | The customer or a third party issues the invoice on the supplier's behalf. |
-| `customer-rates` | Tax rates are determined by the customer's location rather than the supplier's. Typically used for digital goods and services. |
-| `partial` | Not the final invoice for the transaction, for example a staged invoice on a construction project. |
-| `prepayment` | Charges amounts in advance; the amounts are deducted from the final invoice. |
-| `factoring` | The invoice has been assigned to a third party for collection. |
-| `bypass` | Skips tax and total calculation while still normalising and validating. Reserved for importing historical data where original calculations must be preserved. |
-
-Regimes and addons also add their own tags. For how tags and types combine into regime-specific document classifications, see [invoice scenarios](https://docs.gobl.org/use-cases/invoicing#invoice-scenarios) in the GOBL docs.
-
-## Orders
-
-Orders cover the request and confirmation stages before an invoice exists. Invopop defaults to `purchase`.
-
-| Type | Meaning |
-| ---- | ------- |
-| `purchase` | A purchase order sent by a buyer to a seller requesting goods or services. |
-| `sale` | A sales order sent by a seller to a buyer confirming the sale. |
-| `quote` | A quote sent by a seller to a buyer giving a price for goods or services. |
-
-Orders are reported to the tax authority under Portugal's SAF-T regime. See the [Portugal AT app](/apps/at-portugal).
-
-## Deliveries
-
-Deliveries record the transfer of goods. Invopop defaults to `advice`.
-
-| Type | Meaning |
-| ---- | ------- |
-| `advice` | A despatch advice sent by the supplier setting out how an order is to be delivered. |
-| `note` | A delivery note accompanying a shipment, listing the items included. |
-| `waybill` | A carrier's document with details and instructions for a consignment. |
-| `receipt` | A delivery receipt signed by the recipient confirming that goods arrived. |
-| `other` | A custom type for use with extensions. Disables regime and addon scenarios. |
-
-Deliveries are reported to the tax authority under Portugal's SAF-T regime, which also covers returns and global transport documents. See the [Portugal AT app](/apps/at-portugal).
-
-## Payments
-
-Payments link a transaction to the documents it settles. Invopop defaults to `receipt`.
-
-| Type | Direction | Meaning |
-| ---- | --------- | ------- |
-| `receipt` | Supplier → customer | Confirms that funds have been received. Required by some regimes in order to report the payment of specific invoices. |
-| `request` | Supplier → customer | Requests a transfer of funds for specific documents. |
-| `advice` | Customer → supplier | Remittance advice confirming that payment for the referenced documents has been made. |
-
-Payments carry regulatory weight in several regimes: Mexico's SAT payment complements, Portugal's SAF-T receipts, and France's payment lifecycle events. See the [SAT issuing guide](/guides/mx-sat-issuing), the [Portugal AT app](/apps/at-portugal) and the [France status guide](/guides/fr-pa-status).
-
-## Status documents
-
-A status document reports a lifecycle event against one or more existing documents. Each `lines` entry names the document it concerns and the status being reported.
-
-| Type | Meaning |
-| ---- | ------- |
-| `response` | A reply to a submitted document, used for two-way communication between customer and supplier. |
-| `update` | Issued by the supplier and shared with the customer, a government agency, or both. |
-| `system` | An event not tied to a single document but recorded for compliance purposes. |
-
-Status line keys include `issued`, `acknowledged`, `processing`, `querying`, `accepted`, `rejected`, `paid` and `error`, and a rejection or partial approval must also carry a reason. Invopop creates status documents from workflow steps and from inbound network messages, so you rarely author them directly. France's Flow 6 lifecycle codes are the fullest worked example — see the [France status guide](/guides/fr-pa-status).
-
-<Note>
-Statuses have their own Console section. Where a regime tracks its own lifecycle flow, the statuses also appear in that app's dashboard — France lists them on the **E-Invoicing Flow 6** tab.
-</Note>
-
-## Parties
-
-A party describes a person or business entity. Storing parties as documents in their own right lets you register them with a tax authority or network, and lets Invopop link every document that references them.
-
-| Property | Notes |
-| -------- | ----- |
-| `name`, `alias`, `label` | Legal name, trading name, and a role label such as `Supplier`. |
-| `tax_id` | Country and tax code. Validated against the regime's rules. |
-| `identities` | Additional registered identifiers, such as a SIREN or a national ID. |
-| `endpoints`, `inboxes` | Routing addresses for networks such as Peppol. |
-| `addresses`, `emails`, `telephones`, `websites` | Contact details. |
-| `people` | Named contacts within the organisation. |
-| `registration` | Commercial register details, required by some regimes. |
-
-Party documents drive supplier and customer registration across most regimes and networks, including VERI\*FACTU, TicketBAI, KSeF, SDI and Peppol. Each regime's supplier guide covers what its registration requires.
-
-<Note>
-A party must be signed before documents that reference it will appear on its **Related** tab. See the [related documents guide](/guides/related-docs).
-</Note>
-
-## Items
-
-An item describes a product or service. Minimal use is a name and a price; fuller use adds catalogue data that invoice, order and delivery lines can reference.
-
-| Property | Notes |
-| -------- | ----- |
-| `name`, `description` | What is being sold. `name` is required. |
-| `ref` | Your general-purpose reference, SKU or article code. |
-| `identities` | Further coded identifiers, each with a type agreed between supplier and customer. |
-| `price`, `currency`, `alt_prices` | Unit price, its currency, and equivalents in other currencies. |
-| `unit` | Unit of measure. |
-| `origin` | Country of origin, required by some customs and reporting formats. |
-| `attributes`, `ext`, `meta` | Additional descriptive, regime-specific and internal data. |
-
-## Document references
-
-Documents point at each other by envelope UUID. Each schema carries those references in its own properties.
-
-| Reference | Property |
-| ------------ | --------- |
-| Credit or debit note → invoice | `preceding` reference on the correcting document. The original stays valid. |
-| Corrective invoice → invoice | `preceding` reference. The corrective document replaces the original. |
-| Payment → invoices | A `document` reference on each `lines` entry, naming the document being settled. |
-| Status → document | A `doc` reference on each `lines` entry, naming the document the event concerns. |
-| Invoice → order or despatch advice | `ordering.purchases`, `ordering.sales`, `ordering.despatch` and `ordering.receiving` references to the earlier documents. |
-| Document → party or item | UUID reference on the embedded `supplier`, `customer` or line `item`. |
-
-Some regimes require more than a reference. Colombia's credit notes must carry the original invoice's CUFE code, and VERI\*FACTU credit notes must reproduce a breakdown of the original taxes. Correcting from the Console or the API builds these references for you — see [Correct an invoice](/console/doc-correct).
-
-To see which documents Invopop has actually linked to a given entry, use its **Related** tab, described in [Document contents](/console/doc-content#related).
-
-## Correction types by regime
-
-The Console's **Correct** dialog only offers the types the document's regime and addons permit.
-
-| Regime | Available types | Notes |
-| ------ | --------------- | ----- |
-| Spain | `credit-note`, `corrective`, `debit-note` | VERI\*FACTU, TicketBAI and SII map corrections onto the R1–R5 rectification codes. |
-| France | `credit-note`, `corrective` | Both methods are recognised for invoice corrections. |
-| Italy | `credit-note`, `debit-note` | SDI reports these as document types TD04 and TD05. |
-| Portugal | `credit-note`, `debit-note` | SAF-T requires the series name to carry a document type prefix. |
-| Poland | `credit-note` | KSeF's FA VAT addon accepts credit notes only. |
-| Mexico | `credit-note` | Requires the original invoice's SAT UUID stamp. |
-| Colombia | `credit-note`, `debit-note` | Requires the original invoice's CUFE code. |
-| Greece, Belgium, Norway, Switzerland, UAE | `credit-note` | |
-| United States, India | `credit-note`, `debit-note` | |
-
-Regimes not listed here place no constraint of their own, so the types on offer come from whichever addon is applied to the document.
-
-For a step-by-step walkthrough, see the [correct an invoice guide](/guides/correct-invoice).
-
-## Series and document types
-
-A document needs a `code` before it can be signed, usually generated from a [series](/console/series). Document types normally draw on separate series, because regimes expect corrections to be numbered independently of invoices.
-
-| Regime expectation | Example |
-| ------------------ | ------- |
-| Separate series per document type | `INV-00001` for invoices, `CN-00001` for credit notes |
-| Series name must start with a document type prefix (Portugal) | `FT A001` for invoices, `NC 2024-01` for credit notes, `GR SERIES-A` for deliveries |
-| Numbering tied to the tax ID and the originating document's series | The **Add sequential code** step's dynamic sequence option |
-
-## Workflows and document types
-
-Each workflow processes one schema, and the steps available to it depend on that schema and on the regime and addons in play. When you create a workflow you pick a template matched to the document type you intend to send it.
-
-A single workflow can handle more than one schema when a regime's flows overlap — France's invoicing workflows accept both invoices and status documents, branching on the schema of the incoming entry. See the [workflows overview](/console/workflow-intro).
 
 ## FAQ
 
 <AccordionGroup>
-<Accordion title="What is the difference between a simplified invoice and a receipt?">
+<Accordion title="Can I change a document's schema or type after it has been signed?">
 
-The key difference lies in *what* each document proves.
-
-A **receipt** confirms that a **payment has been made**. It is produced by a payment or cash-register device (for example, a card reader or POS terminal) and serves as proof of transaction settlement.
-
-An **invoice** documents the **sale of goods or services**. It is issued by a billing system (such as a POS, PMS, or ERP) and includes a breakdown of items, taxes, and totals.
-
-A **simplified invoice** is a type of invoice commonly used for **B2C transactions** and usually **does not include customer identification details**.
-
-**Example:**
-In a restaurant, the printed bill showing the items and taxes is the *simplified invoice*. After you pay by card, the slip produced by the card reader is the *receipt*. The first documents the sale; the second documents the payment.
-
-From a regulatory perspective:
-
-* **Fiscalization rules** typically apply to **payment recording devices** (cash registers, card readers) → *receipts*
-* **E-invoicing and e-reporting rules** apply to **billing systems** (POS, PMS, ERP) → *invoices*
-
-In some countries, these systems overlap; in others (like Italy), they are separate or mutually exclusive. This is why businesses often require **both** a fiscalization provider and an e-invoicing provider to remain fully compliant.
+No. Signing fixes the document's digest, and both the schema and the type form part of the signed payload. Issue a correction against the original instead, or [replicate](/console/doc-replicate) it into a new document if it was never issued.
 
 </Accordion>
 
-<Accordion title="Is a simplified invoice a separate document type?">
+<Accordion title="Can one workflow process more than one schema?">
 
-No. `simplified` is a tag, not a type. A simplified invoice is a `bill/invoice` with `simplified` in its `$tags` array, which allows the `customer` block to be omitted. Each regime decides how to classify the resulting document and what value limits apply.
-
-</Accordion>
-
-<Accordion title="Should I use a credit note or a corrective invoice?">
-
-Use a credit note when the amount charged was wrong, goods were returned, or you need to refund part or all of an invoice. The original document stays valid and the credit note extends it. This is the correction method regimes accept most widely.
-
-Use a corrective invoice when the error is in a field that cannot be fixed by adjusting a value — the customer's name, their tax ID, or the issue date — and the original must be replaced outright. Corrective invoices are only available in some regimes, so check the [correction types table](#correction-types-by-regime) first.
-
-</Accordion>
-
-<Accordion title="Can I change a document's type after it has been signed?">
-
-No. Signing fixes the document's digest, and the type forms part of the signed payload. Issue a correction against the original instead, or [replicate](/console/doc-replicate) it into a new document if it was never issued.
+Yes. A workflow can branch on the schema of the incoming entry, which is how regimes with overlapping flows are handled — France's invoicing workflows accept both invoices and status documents. See [workflows and document schemas](/console/workflow-intro#workflows-and-document-schemas).
 
 </Accordion>
 </AccordionGroup>
@@ -263,7 +59,6 @@ No. Signing fixes the document's digest, and the type forms part of the signed p
 
 |    |    |
 |-----------|------------|
-|  Console | <Icon icon="book" /> [Create documents](/console/doc-create)<br /><Icon icon="book" /> [Edit documents](/console/doc-edit)<br /><Icon icon="book" /> [Correct an invoice](/console/doc-correct)<br /><Icon icon="book" /> [Document contents](/console/doc-content)<br /><Icon icon="book" /> [Document states](/console/doc-states)<br /><Icon icon="book" /> [Series](/console/series) |
-|  Related Guides | <Icon icon="book" /> [Related documents](/guides/related-docs)<br /><Icon icon="book" /> [Correct an invoice](/guides/correct-invoice) |
-|  API Reference | <Icon icon="code" /> [Create an entry (POST)](/api-ref/silo/entries/create-an-entry-post)<br /><Icon icon="code" /> [Create an entry (PUT)](/api-ref/silo/entries/create-an-entry-put)<br /><Icon icon="code" /> [Fetch all entries](/api-ref/silo/entries/fetch-all-entries)<br /><Icon icon="code" /> [Find related entries](/api-ref/silo/entries/find-related) |
+|  Console | <Icon icon="book" /> [Document references](/console/doc-references)<br /><Icon icon="book" /> [Document contents](/console/doc-content)<br /><Icon icon="book" /> [Document states](/console/doc-states)<br /><Icon icon="book" /> [Create documents](/console/doc-create)<br /><Icon icon="book" /> [Series](/console/series) |
+|  API Reference | <Icon icon="code" /> [Create an entry (POST)](/api-ref/silo/entries/create-an-entry-post)<br /><Icon icon="code" /> [Create an entry (PUT)](/api-ref/silo/entries/create-an-entry-put)<br /><Icon icon="code" /> [Fetch all entries](/api-ref/silo/entries/fetch-all-entries) |
 |  GOBL | <Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Envelope schema](https://docs.gobl.org/draft-0/envelope)<br /><Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Invoicing use cases](https://docs.gobl.org/use-cases/invoicing) |

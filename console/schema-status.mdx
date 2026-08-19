@@ -1,0 +1,51 @@
+---
+title: "Status schema"
+description: "The bill/status schema, used to report lifecycle events such as acknowledgements, approvals and refusals against a document."
+sidebarTitle: Statuses
+---
+
+[`bill/status`](https://docs.gobl.org/draft-0/bill/status) reports a lifecycle event against one or more existing documents — an acknowledgement, an approval, a refusal. Each `lines` entry names the document it concerns and the status being reported.
+
+Invopop usually creates status documents from workflow steps and from inbound network messages, so you rarely author them by hand.
+
+## Types
+
+| Type | Meaning |
+| ---- | ------- |
+| `response` | A reply to a submitted document, used for two-way communication between customer and supplier. |
+| `update` | Issued by the supplier and shared with the customer, a government agency, or both. |
+| `system` | An event not tied to a single document but recorded for compliance purposes. |
+
+## Status line keys
+
+Each `lines` entry carries a `key` naming the event being reported.
+
+| Key | Meaning |
+| --- | ------- |
+| `issued` | Document submitted, pending review by the recipient. |
+| `acknowledged` | A readable document was received and can be submitted for processing. |
+| `processing` | The referenced document or transaction is being processed. |
+| `querying` | The buyer will not accept the document without further information from the seller. |
+| `accepted` | Final approval given; the next step is payment. |
+| `rejected` | The buyer will not process the document further, though not necessarily rejecting the commercial transaction. |
+| `paid` | Payment initiated, or receipt of payment acknowledged. Used only where a [payment document](/console/schema-payment) cannot be. |
+| `error` | A technical issue with the document caused it to be rejected. |
+| `other` | Determined by other codes or details on the line. |
+
+A rejection or a partial approval must also carry a `reason`, and may carry an `action` suggesting what the recipient should do next.
+
+<Note>
+Statuses have their own Console section. Where a regime tracks its own lifecycle flow, the statuses also appear in that app's dashboard — France lists them on the **E-Invoicing Flow 6** tab.
+</Note>
+
+## Regime requirements
+
+France's Chorus Pro Flow 6 lifecycle codes are the fullest worked example: each CDV `ProcessConditionCode` maps onto a status document, except the payment codes which use [`bill/payment`](/console/schema-payment) instead. Spain's NO VERI\*FACTU workflows also send status documents for supplier registration and summary events.
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  Related Guides | <Icon icon="book" /> [France statuses](/guides/fr-pa-status)<br /><Icon icon="book" /> [France invoicing](/guides/fr-pa-invoicing) |
+|  Console | <Icon icon="book" /> [Document references](/console/doc-references)<br /><Icon icon="book" /> [Document states](/console/doc-states) |
+|  GOBL | <Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Status schema](https://docs.gobl.org/draft-0/bill/status) |
