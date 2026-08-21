@@ -75,23 +75,40 @@ appId: "gov-fr"
             "provider": "gov-fr.directory.record"
         },
         {
-            "id": "ab598990-16f0-11f1-86ba-d13d91b4f398",
-            "name": "Send Peppol document",
-            "provider": "peppol.send"
-        },
-        {
-            "id": "79bd38d0-1a17-11f1-a82f-e740c226ef51",
-            "name": "Set state",
-            "provider": "silo.state",
-            "summary": "Set state to `sent`{.state .sent}",
-            "config": {
-                "state": "sent"
-            }
-        },
-        {
-            "id": "e1f6ce90-16eb-11f1-86ba-d13d91b4f398",
-            "name": "Forward document to PPF",
-            "provider": "gov-fr.directory.forward"
+            "id": "e7f2da30-9d6b-11f1-b2d5-9fc4b0622900",
+            "name": "Verify document can be sent",
+            "provider": "peppol.validate.endpoint",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "062087a0-9d6c-11f1-b2d5-9fc4b0622900",
+                            "name": "Send Peppol document",
+                            "provider": "peppol.send"
+                        },
+                        {
+                            "id": "ff644960-9d6b-11f1-b2d5-9fc4b0622900",
+                            "name": "Forward document to PPF",
+                            "provider": "gov-fr.directory.forward"
+                        }
+                    ]
+                },
+                {
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "03120f20-9d6c-11f1-b2d5-9fc4b0622900",
+                            "name": "Forward document to PPF",
+                            "provider": "gov-fr.directory.forward",
+                            "summary": "Forward to PPF (déposée – non transmise)",
+                            "config": {
+                                "not_transmitted": true
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         {
             "id": "80a9d5e0-1a17-11f1-a82f-e740c226ef51",
