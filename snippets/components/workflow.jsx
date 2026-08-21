@@ -38,6 +38,8 @@ export const WorkflowDiagram = ({ workflow }) => {
     peppol: "https://assets.invopop.com/apps/peppol/icon.svg",
     ubl: "https://assets.invopop.com/apps/ubl/logo.svg",
     cii: "https://assets.invopop.com/apps/cii/logo.svg",
+    "gov-dk": "https://assets.invopop.com/flags/dk.svg",
+    "gov-fi": "https://assets.invopop.com/flags/fi.svg",
     "gov-fr": "https://assets.invopop.com/flags/fr.svg",
     "chorus-pro": "https://assets.invopop.com/apps/chroruspro/icon.svg",
     "gov-es": "https://assets.invopop.com/apps/gov-es/icon.svg",

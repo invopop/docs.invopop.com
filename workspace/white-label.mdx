@@ -2,88 +2,114 @@
 title: "White label guide"
 sidebarTitle: "White Label"
 icon: "tag"
-description: Integrate Invopop in your platform to offer e-invoicing to your customers.
+description: Issue compliant invoices on behalf of your customers, under your own brand.
 ---
-## Introduction
-Many software platforms use Invopop, from Point-of-Sale (POS) and Enterprise Resource Planning (ERP) systems to vertical SaaS solutions. These platforms typically have basic invoicing features and integrate Invopop to provide compliant e-invoicing to their customers. We call this use case **white-labeling**, and we've built Invopop to excel at supporting it programmatically.
 
-To illustrate this integration, we'll follow the example of **Hotelpop**, a hotel management SaaS platform. Through Hotelpop's interface, front desk staff can input customer information, add charges, and create PDF invoices. As the platform expands internationally, hotels need to comply with local e-invoicing regulations that require converting invoices to XML formats and submitting them to tax authorities.
+## What white labeling means
 
-To meet these requirements, Hotelpop chose to white-label Invopop.
+White labeling — also called **B2B2B** — is when your platform issues invoices *on behalf of* your customers. Your customers keep working in your product, and Invopop does the compliance work behind your API calls without ever appearing in their interface.
 
-## Prerequisites
+```mermaid
+flowchart LR
+    U["Your customer<br/>(the supplier)"] <--> A["Your platform"]
+    A <-->|"Invopop API"| I["Invopop"]
+    I <--> T["Tax authority<br/>or network"]
 
-Before starting, you should understand Invopop basics, including our API, GOBL, workflows. You should have followed a country-specific guide (or the PDF guide) and tested uploading an invoice to Invopop and sending it to a workflow.
+    %% Invopop palette - skills/mermaid-style
+    classDef actor fill:#ffffff,stroke:#169958,stroke-width:1px,color:#103830
+    classDef system fill:#e8f5ee,stroke:#169958,stroke-width:1px,color:#103830
+    classDef authority fill:#169958,stroke:#0f7a45,stroke-width:1.5px,color:#ffffff
+    classDef decision fill:#f4faf6,stroke:#169958,stroke-width:1px,color:#103830
+    classDef muted fill:#f4f4f5,stroke:#9ca3af,stroke-width:1px,color:#4b5563
+    linkStyle default stroke:#94a3b8
 
-## Main workflows
-Hotelpop needs to handle three main processes:
-1. **Issuing invoices:** Receptionists create new invoices through a form where they input guest billing details and add line items from a product catalog or sales list.
-2. **Correcting invoices:** Receptionists correct issued invoices when needed (e.g., wrong product charges or rejected tax IDs). Since submitted invoices can't be edited, this process creates a credit note to cancel the original invoice and issues a new one.
-3. **Onboarding issuers:** Some jurisdictions require onboarding of entities before they can issue their first e-invoice through Invopop. For example, Mexican hotels must upload a digital certificate to Invopop. This process is fully automated using Invopop's API.
+    class U actor
+    class A,I system
+    class T authority
+```
 
-## Issuing invoices
+This is how Point-of-Sale, ERP and vertical SaaS platforms use Invopop. Take a hotel management platform: the hotel's front desk creates an invoice in the platform's own UI, and the platform submits it to the tax authority through Invopop, in the hotel's name.
 
-Let's examine the process of issuing a new invoice from the perspective of a receptionist using Hotelpop.
+The one thing that changes compared to invoicing under your own name is who the **supplier** is:
+
+|  | Invoicing yourself | White label |
+| --- | --- | --- |
+| **Supplier** | Your company, the same on every invoice | Your customer, different on every invoice |
+| **Onboarding** | Once, when you set up your workspace | Once per customer, before their first invoice |
+| **Credentials and authorizations** | Yours | Each customer's, collected through your UI |
+| **Who sees Invopop** | Your team, in the Console | Nobody — your platform is the only interface |
+
+Everything else is identical: the same [GOBL](/guides/gobl) documents, the same [workflows](/guides/workflows), the same [API](/api-ref/introduction). A white-label integration is the standard integration plus a supplier onboarding step, repeated for each customer.
+
+<Info>
+Before starting, work through the [Quickstart](/get-started/quickstart) and the guide for your target country so you have uploaded an invoice and run it through a workflow at least once.
+</Info>
+
+## Set up your workspaces
+
+Your customers do not get their own Invopop account. You own the organization, and every supplier and document your platform creates lives in one of your [workspaces](/api-ref/glossary).
+
+Use [one workspace per tax regime](/workspace/multi-country) rather than one per customer. There is no limit or extra charge for extra workspaces, and each one gets its own apps, workflows, series and [API keys](/console/api-keys) — so your platform routes each request to the workspace for that supplier's country. See the [authentication guide](/guides/authentication) for how to manage those keys.
+
+## Onboard each supplier
+
+Most jurisdictions require a company to be registered before it can issue its first e-invoice. This is the step that only exists in a white-label setup, and it runs once per customer.
+
+The mechanics mirror invoicing: build an [`org.party`](https://docs.gobl.org/draft-0/org/party) GOBL document with your customer's details, upload it as a silo entry, and send it to a registration workflow. When the workflow completes, the entry is left in the [`Registered`](/console/doc-states) state.
+
+What that workflow needs depends on the country:
+
+- **Nothing beyond the party details** in regimes with no pre-registration, such as [Germany](/guides/de-ubl).
+- **Credentials or a certificate** from your customer, such as [Mexico's CSD](/guides/mx-sat-supplier) or a [qualified certificate in Poland](/guides/pl-ksef-supplier).
+- **A signed authorization** letting Invopop invoice on their behalf, as in [VERI\*FACTU](/guides/es-verifactu-supplier) or [Portugal](/guides/pt-at-supplier).
+
+Where a signature or credential upload is needed, Invopop provides a hosted onboarding wizard you can send customers to. In a white-label setup you will usually prefer the equivalent [app APIs](/api-ref/introduction) instead, so the whole flow stays inside your product — for example [uploading a signed agreement](/api-ref/apps/verifactu/agreement-upload) or a [certificate](/api-ref/apps/gov-pl/certificate-upload).
+
+Pick your country's supplier registration guide from the [Guides](/guides/index) section for the exact requirements and a ready-made workflow template.
+
+## Issue an invoice
+
+Once a supplier is registered, issuing an invoice in their name is the standard four-step loop.
 
 <Steps>
 
-<Step title="Upload a Silo Entry">
-The process begins when a receptionist fills out an invoice form in Hotelpop. At this stage, the invoice remains in "draft" status within Hotelpop, allowing the user to edit or save it without fiscal impact.
+<Step title="Upload the invoice">
+When your user confirms an invoice, convert it to GOBL and upload it with [**Create an Entry**](/api-ref/silo/entries/create-an-entry-put), using a UUID your system owns so the call is [idempotent](/api-ref/idempotency).
 
-When ready to issue the invoice, the receptionist clicks **Send Invoice.** Hotelpop converts the invoice to GOBL and uploads it using the [**Create an Entry**](/api-ref/silo/entries/create-an-entry-put) endpoint, which requires a unique UUID from Hotelpop.
+The call is synchronous and typically answers in milliseconds, so you can block your UI on it. Invopop validates the document, recalculates its totals, and stores it as a silo entry. A `4xx` response means nothing was stored: surface the message to your user, keep the invoice as a draft on your side, and let them retry.
 
-This endpoint performs three functions:
-
-1. **Validation:** Invopop verifies invoice fields, ensuring correct formatting and required fields. For example, it checks whether a Tax ID has the correct number of digits (e.g., 11 in Italy) or whether a mandatory Municipality Code is present (as required in Colombia).
-2. **Calculation:** Invopop calculates tax totals, discounts, and invoice totals. If your system has already calculated these, Invopop overwrites them to align with tax authority requirements, preventing failures due to rounding differences. More on this in section "Ensuring Calculation Consistency" below.
-3. **Storage in the Silo:** If validation and calculation succeed, the invoice is stored in Invopop, and the API call will return **200 status**. Invopop's storage is called the Silo, and each document, such as an invoice, is called a **Silo Entry.** If there's any error in the validation and calculation step, Invopop will not store the invoice and return a **4xx status** and an error message.
-
-<Accordion title="422 returned by the API when uploading an invoice with an incorrect Tax ID code">
-    ```json
-    {
-       "key": "validation",
-       "message": "validation",
-       "fields": {
-           "data": {
-               "doc": {
-                   "customer": {
-                       "tax_id": {
-                           "code": "unknown type"
-                       }
+<Accordion title="422 returned when uploading an invoice with an incorrect tax ID">
+```json
+{
+   "key": "validation",
+   "message": "validation",
+   "fields": {
+       "data": {
+           "doc": {
+               "customer": {
+                   "tax_id": {
+                       "code": "unknown type"
                    }
                }
            }
        }
-    }
-    ```
+   }
+}
+```
 </Accordion>
 </Step>
 
-<Step title="Create a Job">
-The **Create an Entry** endpoint is synchronous, typically responding in milliseconds. Consequently, when the receptionist presses <kbd>Send Invoice</kbd>, Hotelpop can wait for Invopop's feedback, for example, with a spinner on the button or a "pressed" animation on the button.
+<Step title="Start a job">
+Send the stored entry to a workflow with [**Create a Job**](/api-ref/transform/jobs/create-a-job-put). The workflow handles format conversion, submission to the tax authority, and webhooks.
 
-**Successful Upload**
-
-After successful storage, Hotelpop sends the entry to an Invopop workflow using the [**Create a Job**](/api-ref/transform/jobs/create-a-job-put) endpoint. Each workflow instance is a "job" that handles tasks like format conversion, tax authority submission, and webhook triggers.
-
-Since this endpoint performs minimal validation and responds quickly, Hotelpop should maintain the button's spinner/pressed status until receiving a successful response. Once confirmed, Hotelpop displays a confirmation message indicating the invoice was sent for e-invoicing and updates its internal invoice status to **processing**.
-
-While most tax authorities respond within seconds, some may experience delays. For example, Italy's tax authority can take up to two days to respond. Consider these potential delays when designing your global user experience.
-
-**Unsuccessful Upload**
-
-If **Create an Entry** returns an error, Hotelpop will parse the error (e.g., Tax ID of customer is incorrect) and show it to the receptionist. The invoice will stay in "draft" status in Hotelpop, so the receptionist can correct the error and click on **"Send Invoice"** again, going back to Step 1.
+This endpoint also responds quickly, so keep your spinner up until it returns, then mark the invoice as processing in your own database. Most tax authorities answer within seconds, but some take much longer — Italy's SDI can take up to two days — so design your UI for an asynchronous outcome.
 </Step>
 
-<Step title="Receive Webhook">
-Once the job is running, Hotelpop needs a way to receive feedback from it. If successful, it may want to fetch the XML and PDF invoices for user display and update the invoice status. On the other hand, if errors occur, Hotelpop wants to notify users to correct the invoice or create a new one.
+<Step title="Receive a webhook">
+Rather than polling the job, add a [**Send Webhook**](/guides/webhooks) step to your workflow and use the callback as the trigger for the next step. Add one to the error-handling branch too, so failures notify you just as successes do.
 
-While you could poll regularly for the job until it's finished, our recommended approach is to include webhooks in the workflow, listen to them, and use them as triggers to fetch the **Silo Entry** (step 4).
-
-<Accordion title="Example of workflow with error-handling and webhooks">
-In this workflow, Hotelpop will receive a webhook when the job completes, and the state of the Silo Entry will be **Sent** if there were no errors along the job and **Error** if there were any KOs.
-
-After creating a job, Hotelpop waits for the webhook and then uses the Silo Entry ID included in it to fetch the state from the corresponding Silo entry (Step 4). This is our recommended approach.
+<Accordion title="Example workflow with error handling and webhooks">
+This workflow sends a webhook when the job completes, leaving the silo entry in the `Sent` state if every step succeeded and `Error` if any of them failed.
 
 <Frame>
   <img
@@ -95,185 +121,39 @@ After creating a job, Hotelpop waits for the webhook and then uses the Silo Entr
 </Accordion>
 </Step>
 
-<Step title="Fetch the Silo Entry">
-After receiving the webhook, fetch the [**Silo Entry**](/api-ref/silo/entries/fetch-an-entry) to update invoice status, show errors, and manage output files.
-
-The **Silo Entry** contains:
-
-- **State:** Indicates whether the workflow completed successfully.
-- **Faults Array:** Lists errors encountered, helping users correct the invoice.
-- **Attachments:** Includes generated files such as PDF and XML invoices.
+<Step title="Fetch the silo entry">
+Use the entry ID from the webhook to [fetch the entry](/api-ref/silo/entries/fetch-an-entry). It gives you the [state](/console/doc-states) to mirror in your UI, a `faults` array explaining anything that went wrong, and the attachments — typically the PDF and XML — to store or show to your user.
 </Step>
 
 </Steps>
 
-## Correcting invoices
-Correcting an invoice follows a similar process to issuing a new one: you upload a document to the Silo and send it to a workflow. The key difference is that this document will be a [GOBL](https://docs.gobl.org) document of `credit-note` type. A credit note contains all fields from the original invoice plus a `preceding` field that references the original invoice.
+## Correct an invoice
 
-To see an example of a credit note, you can visit the [GOBL builder](https://build.gobl.org/) and click `correct document`. A modal will prompt you for the information needed to correct the invoice. Once completed, the builder will display the credit note that your system should generate and upload to Invopop.
+An issued invoice should never be edited; it is corrected with a credit note, a debit note, or a corrective invoice, depending on the country. The [correct invoices guide](/guides/correct-invoice) covers all three, including how to auto-generate a credit note from an existing entry with the [correct](/api-ref/silo/gobl/correct) endpoint. From your platform's point of view the flow is the same as issuing: upload a document, start a job, wait for the webhook.
 
-You can also find examples of credit notes for your jurisdiction in the [GOBL repository](https://github.com/invopop/gobl/tree/main/examples).
+Corrections also matter for the errors that only surface *after* a job has started. Invopop catches most problems synchronously through GOBL validations, but some checks only the tax authority can make — such as whether a well-formed tax ID belongs to a registered business. When a job fails, you can either:
 
-<Frame>
-  <img
-    alt="Correcting an invoice in the GOBL builder"
-    src="/assets/guides/correcting-invoice.gif"
-  />
-</Frame>
+1. **Fix and resend.** Let the user edit the invoice, [update the entry](/api-ref/silo/entries/update-an-entry), and send it to the workflow again.
+2. **Void and reissue.** Cancel the original with a credit note and issue a corrected invoice.
 
-    ```json Invoice example in Germany expandable
-    {
-		"$schema": "https://gobl.org/draft-0/bill/invoice",
-		"$regime": "DE",
-		"$addons": [
-			"eu-en16931-v2017",
-			"de-xrechnung-v3"
-		],
-		"$tags": [
-			"reverse-charge"
-		],
-		"uuid": "3aea7b56-59d8-4beb-90bd-f8f280d852a0",
-		"type": "standard",
-		"series": "SAMPLE",
-		"code": "001",
-		"issue_date": "2022-02-01",
-		"currency": "EUR",
-		"tax": {
-			"ext": {
-				"untdid-document-type": "380"
-			}
-		},
-		"supplier": {
-			"name": "Provide One GmbH",
-			"tax_id": {
-				"country": "DE",
-				"code": "111111125"
-			},
-			"addresses": [
-				{
-					"num": "16",
-					"street": "Dietmar-Hopp-Allee",
-					"locality": "Walldorf",
-					"code": "69190",
-					"country": "DE"
-				}
-			],
-			"emails": [
-				{
-					"addr": "billing@example.com"
-				}
-			]
-		},
-		"customer": {
-			"name": "Provide One S.L.",
-			"tax_id": {
-				"country": "ES",
-				"code": "B98602642"
-			},
-			"addresses": [
-				{
-					"num": "42",
-					"street": "Calle Pradillo",
-					"locality": "Madrid",
-					"region": "Madrid",
-					"code": "28002",
-					"country": "ES"
-				}
-			],
-			"emails": [
-				{
-					"addr": "billing@example.com"
-				}
-			]
-		},
-		"lines": [
-			{
-				"i": 1,
-				"quantity": "20",
-				"item": {
-					"name": "Development services",
-					"price": "90.00",
-					"unit": "h"
-				},
-				"discounts": [
-					{
-						"reason": "Special discount",
-						"percent": "10%",
-						"amount": "180.00"
-					}
-				],
-				"taxes": [
-					{
-						"cat": "VAT",
-						"rate": "exempt+reverse-charge",
-						"ext": {
-							"untdid-tax-category": "AE"
-						}
-					}
-				]
-			}
-		],
-		"payment": {
-			"instructions": {
-				"key": "credit-transfer+sepa",
-				"credit_transfer": [
-					{
-						"iban": "DE89370400440532013000",
-						"name": "Random Bank Co."
-					}
-				],
-				"ext": {
-					"untdid-payment-means": "58"
-				}
-			}
-		},
-		"notes": [
-			{
-				"key": "legal",
-				"src": "reverse-charge",
-				"text": "Reverse Charge / Umkehr der Steuerschuld."
-			}
-		]
-	}
-    ```
+The first is simpler, but fiscalized regimes such as [TicketBAI](/guides/es-ticketbai), [VERI\*FACTU](/guides/es-verifactu) and [Portugal](/guides/pt-at) do not allow an invoice to change past a certain point, so plan for the second.
 
-## Onboarding issuers
+## Keep calculations consistent
 
-Every time Hotelpop onboards a new customer, they configure their company details (name, tax ID, address) in a configuration page in Hotelpop. When the hotel clicks on "Enable invoicing" in Hotelpop, the system creates an [org.party](https://docs.gobl.org/draft-0/org/party) [GOBL](https://docs.gobl.org) document, uploads it to Invopop, and sends it to a registration workflow.
+Invopop recalculates line sums, taxes and totals on upload, because each tax authority defines its own rounding and aggregation rules. If your platform shows totals before sending — and it almost certainly does — those numbers need to match. Three ways to get there:
 
-This process is similar to issuing an invoice: upload a document, send it to a workflow, and wait for the webhook. The specific requirements depend on the country. We recommend following the guide for your target country to learn the details of the onboarding process.
-
-## Other considerations
-
-### Errors after job created
-
-In Step 1, we discussed that most invoice errors are caught by [GOBL](https://docs.gobl.org) validations and returned to you synchronously when uploading the invoice. At Invopop, we put a lot of effort into including as many validations in GOBL as possible to catch errors early.
-
-However, some validations can only be performed by the tax authority, such as whether a business with a seemingly valid tax ID is actually registered in the country. As a result, some invoices may fail during processing. So, how can the user correct these cases?
-
-If an invoice fails within a job, users can correct it in two ways:
-
-1. **Correct the same Silo Entry:** Allow users to edit the invoice in your UI, PATCH the original Silo Entry, and resend it to the workflow.
-2. **Void and reissue:** Void the original invoice by creating a credit note and generating a new, corrected Silo Entry.
-
-While option 1 is simpler, some jurisdictions, especially those with fiscalization requirements (e.g., TicketBAI, VERI\*FACTU, Portugal), do not allow invoice modifications past a certain stage.
-
-### Calculation consistency
-
-As discussed in Step 1, Invopop recalculates invoice fields to ensure compliance with tax authorities. Each tax authority defines its own calculation algorithm, and we must align with their requirements. For example, some authorities require adding all line items under the same tax rate before applying the rate, while others prefer multiplying each line item by the rate before adding. These different approaches can lead to inconsistencies if not handled correctly.
-
-Since Hotelpop calculates invoice line sums, totals, and discounts before sending them to Invopop, how can they ensure their calculations match Invopop's?
-
-Here are three ways to achieve this:
-1. **Match GOBL's algorithms:** Invopop's calculation algorithm is included in the open-source [GOBL](https://docs.gobl.org) library. Hotelpop can use this information to align their algorithm with GOBL's implementation.
-2. **Use the Build GOBL Document endpoint:** Invopop provides a [Build GOBL Document](/api-ref/silo/gobl/build) endpoint that validates and calculates all invoice fields. Hotelpop can call this endpoint when calculating draft invoices to ensure accurate calculations.
-3. **Implement the GOBL library:** Hotelpop can integrate the [GOBL](https://docs.gobl.org) library directly into their system for all calculations. This approach is particularly beneficial for systems using Go internally.
+- **Call [Build GOBL Document](/api-ref/silo/gobl/build)** while the invoice is still a draft. It validates and calculates without storing anything, so your UI can display exactly what Invopop will store.
+- **Embed the [GOBL library](https://docs.gobl.org)** and calculate locally. The best option if your backend is written in Go.
+- **Match GOBL's algorithms** in your own code, using the open-source implementation as the reference.
 
 ## FAQs
 
 <AccordionGroup>
-<Accordion title="Can I fetch the Job instead of the Silo Entry?">
-While you can check invoice status by fetching the Job, using the Silo Entry simplifies error handling and retry processes.
+<Accordion title="Can I fetch the job instead of the silo entry?">
+You can, but the silo entry is the better source of truth: it carries the document state, the faults array and the attachments in one response, which makes error handling and retries simpler.
+</Accordion>
+<Accordion title="Does each of my customers need their own workspace?">
+No. Group workspaces by tax regime, not by customer. A single workspace holds as many registered suppliers as you need, and each invoice names the supplier it belongs to.
 </Accordion>
 </AccordionGroup>
 

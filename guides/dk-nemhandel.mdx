@@ -1,0 +1,100 @@
+---
+title: "NemHandel issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: Issue OIOUBL invoices and credit notes in Denmark over the NemHandel network.
+---
+
+import SendInvoiceWorkflow from '/snippets/workflows/dk/nemhandel-send-invoice.mdx';
+import ExampleAccordion from '/snippets/invoices/dk/accordion.mdx';
+import DenmarkResources from '/snippets/tables/denmark-resources.mdx';
+import FAQ from '/snippets/faqs/dk/composers/guide-nemhandel-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { dkNemhandelSendInvoiceWorkflow } from '/snippets/workflows/dk/nemhandel-send-invoice-data.mdx';
+
+## Introduction
+
+**NemHandel** is the Danish e-invoicing network all public authorities — and a large share of businesses — receive their invoices through. Documents travel as **OIOUBL 2.1**, Denmark's national UBL dialect. The [Denmark app](/apps/denmark) converts GOBL invoices and credit notes to OIOUBL, validates them against the official schematron, and delivers them over the network through Invopop's partner [eCourier](https://ecourier.dk).
+
+For onboarding suppliers, see the companion guide: [NemHandel supplier registration](/guides/dk-nemhandel-supplier). For importing the invoices your parties receive, see [NemHandel receiving invoices](/guides/dk-nemhandel-receiving).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Party registered against eCourier's test environment | Registered party required |
+| **Environment** | eCourier sandbox | eCourier production |
+
+## Prerequisites
+
+- **A registered supplier**: follow the [NemHandel supplier registration guide](/guides/dk-nemhandel-supplier) to connect the Denmark app, have the supplier sign the authorisation agreement, and register their NemHandel participant before issuing.
+- **The [`dk-oioubl-v2` addon](https://docs.gobl.org/addons/dk-oioubl-v2)** declared in `$addons` on every invoice, so the OIOUBL rules are validated before signing.
+- **A routable customer**: the customer must resolve to a NemHandel endpoint. Public entities carry their **EAN/GLN number** as an endpoint (`GLN:5798000000000`-style); a Danish business with only a tax ID gets its `DK:CVR` endpoint derived automatically.
+- **OIOUBL-compatible payment data**, if you include payment instructions: OIOUBL supports IBAN transfers plus the Danish channels (Giro, FIK, domestic bank transfer with its four-digit registration number, and NemKonto).
+
+<Note>
+  OIOUBL has no VAT-exempt category: invoices are standard-rated, zero-rated, or reverse-charge. An exempt VAT key is rejected up front — state the supply as zero-rated instead.
+</Note>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Create the send workflow">
+<Card iconType="duotone" title="Send NemHandel invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=dk-send" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={dkNemhandelSendInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+</Steps>
+
+## Send an invoice
+
+Upload the invoice as a silo entry and run the send workflow on it.
+
+<Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
+
+The workflow's two app steps split the work:
+
+- **Generate OIOUBL** converts the signed GOBL envelope into an OIOUBL 2.1 document, validates it against the official schematron (v1.17), and stores the XML as an attachment on the entry under the `oioubl` file key. An invoice that would be rejected by the network fails here, before anything leaves the platform.
+- **Send to NemHandel** submits that attachment and then waits: the job stays queued until eCourier confirms the document is delivered, re-checking whenever the network reports a status change. Delivery — not submission — is what completes the job.
+
+The bytes stored on the entry are exactly the bytes that reached the network, so you can always download the OIOUBL file that was actually delivered.
+
+### Duplicates are skipped
+
+Running the send workflow again on an invoice that was already delivered skips with a `Duplicated Invoice` result instead of resubmitting, so a retried or repeated run never delivers the document twice.
+
+### Generating without sending
+
+The convert step also works on its own: a workflow that ends after **Generate OIOUBL** produces the validated XML attachment without submitting anything, which is useful for previewing the exact document a customer will receive.
+
+## Example invoices
+
+<ExampleAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<DenmarkResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Denmark →
+</Card>

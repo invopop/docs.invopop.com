@@ -1,0 +1,19 @@
+<Accordion title="Why does every Finnish invoice need bank account details?">
+  Because in Finland an e-invoice doubles as a payment order. Finvoice was created by the banks (it's published by Finance Finland, the banking association) and grew out of the bank network, where the receiver approves the invoice for payment directly in their bank. That's why every Finvoice invoice, credit notes included, must carry the payment order: an IBAN, a payment reference, and a dated due date. Most Finnish receivers get their invoices as Finvoice, and one missing this data would fail on its way to the receiver, where we can't see it, so the [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) rejects it up front instead.
+</Accordion>
+
+<Accordion title="Why was my invoice refused before it was sent anywhere?">
+  Three checks run before anything leaves the platform: the supplier must have an electronic address (`supplier-address-missing`), the invoice must carry a payment bank account (`payment-account-missing`), and the receiver must be reachable as a true e-invoice (`receiver-not-einvoice`). The last one matters most: receivers only reachable on paper, by email, or through the consumer bank channels (e-lasku, suoramaksu, Netposti) are rejected up front, with the channel the operator would have used named in the error, rather than quietly delivered another way.
+</Accordion>
+
+<Accordion title="What does a submission with an unknown outcome mean?">
+  If the connection to the operator fails after the request may have already been written, we can't tell whether the invoice was accepted, and resubmitting could deliver it twice. The job reports the attempt with its timestamp under the `send-unconfirmed` code instead of retrying. Check with support before sending the invoice again.
+</Accordion>
+
+<Accordion title="How do I invoice the Finnish state?">
+  Business-to-government is the segment where e-invoicing is mandatory in Finland, and the state applies its own reference conventions: order numbers must start with `V1`, agreement numbers with `VSK1`, and posting references with `TK1`, with at most one of each per invoice. Set the order number in `ordering.purchases` and the agreement number in `ordering.contracts` on the GOBL invoice. Invopop doesn't validate or normalise these prefixes, so format them exactly as the contracting authority provided them, or the state will reject the invoice.
+</Accordion>
+
+<Accordion title="What happens after the invoice is accepted?">
+  The operator's synchronous accept is the final programmatic signal: there is no delivery status API to poll afterwards. If a receiving operator later rejects the invoice, that rejection arrives by email in production. No news after acceptance is good news.
+</Accordion>

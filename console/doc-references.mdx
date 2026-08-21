@@ -1,0 +1,47 @@
+---
+title: "Document references"
+description: "How documents point at each other by envelope UUID, and which property carries each reference."
+sidebarTitle: References
+---
+
+Documents point at each other by envelope UUID. Provide your own UUIDs if you want to use internal identifiers, or leave the field blank and Invopop will generate one.
+
+Each schema carries those references in its own properties.
+
+| Reference | Property |
+| --------- | -------- |
+| Credit or debit note → invoice | `preceding` reference on the correcting document. The original stays valid. |
+| Corrective invoice → invoice | `preceding` reference. The corrective document replaces the original. |
+| Payment → invoices | A `document` reference on each `lines` entry, naming the document being settled. |
+| Status → document | A `doc` reference on each `lines` entry, naming the document the event concerns. |
+| Invoice → order or despatch advice | `ordering.purchases`, `ordering.sales`, `ordering.despatch` and `ordering.receiving` references to the earlier documents. |
+| Document → party or item | UUID reference on the embedded `supplier`, `customer` or line `item`. |
+
+## Regimes that require more
+
+Some regimes require more than a reference to the original document.
+
+| Regime | Requirement |
+| ------ | ----------- |
+| Colombia | Credit notes must carry the original invoice's CUFE code. |
+| Spain | VERI\*FACTU credit notes must reproduce a breakdown of the original invoice's taxes. |
+| Mexico | Corrections must carry the original invoice's SAT UUID stamp. |
+| Greece | Corrections must carry the original invoice's IAPR mark. |
+
+Correcting from the Console or the API builds these references for you — see [Correct an invoice](/console/doc-correct).
+
+## Seeing what is linked
+
+To see which documents Invopop has actually linked to a given entry, use its **Related** tab, described in [Document contents](/console/doc-content#related).
+
+<Warning>
+Related lookups run in one direction. A supplier's Related tab lists its invoices, but an invoice does not show a link back to the supplier. A referenced party must also be signed before its documents appear.
+</Warning>
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  Console | <Icon icon="book" /> [Document schemas](/console/doc-schemas)<br /><Icon icon="book" /> [Document contents](/console/doc-content)<br /><Icon icon="book" /> [Correct an invoice](/console/doc-correct) |
+|  Related Guides | <Icon icon="book" /> [Related documents](/guides/related-docs) |
+|  API Reference | <Icon icon="code" /> [Find related entries](/api-ref/silo/entries/find-related) |

@@ -71,9 +71,9 @@ The country scope only populates a task if the corresponding country-level flow 
 | Brazil | br | `nfe`, `nfse` |
 | Colombia | co | `dian` |
 | Croatia | hr | (country scope only; own eRačun regime) |
-| Denmark | dk | (uses `peppol` only; no country leaves yet — composers import Peppol leaves directly) |
+| Denmark | dk | `nemhandel` (also uses `peppol`) |
 | Germany | de | (uses `peppol` only) |
-| Finland | fi | (uses `peppol` only) |
+| Finland | fi | `finvoice` (also uses `peppol`) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
 | Romania | ro | (country scope only; own RO e-Factura regime) |
 | UAE | ae | (country scope only; own EIS / PINT AE regime) |
@@ -96,6 +96,8 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 |---|---|
 | `arca` | ARCA |
 | `dian` | DIAN |
+| `finvoice` | Finvoice |
+| `nemhandel` | NemHandel |
 | `peppol` | Peppol |
 | `nfe` | NF-e |
 | `nfse` | NFS-e |
@@ -323,6 +325,12 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/dian-colombia.mdx` | `co/composers/app-dian.mdx` |
 | `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
 | `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
+| `faq/denmark.mdx` | `dk/composers/page-faq.mdx` |
+| `compliance/denmark.mdx` | `dk/composers/page-compliance.mdx` |
+| `apps/denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
+| `guides/dk-nemhandel.mdx` | `dk/composers/guide-nemhandel-invoicing.mdx` |
+| `guides/dk-nemhandel-supplier.mdx` | `dk/composers/guide-nemhandel-supplier.mdx` |
+| `guides/dk-nemhandel-receiving.mdx` | `dk/composers/guide-nemhandel-receiving.mdx` |
 | `guides/cb-denmark.mdx` | `dk/composers/guide-peppol-invoicing.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
@@ -330,6 +338,10 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/cb-germany.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
 | `faq/finland.mdx` | `fi/composers/page-faq.mdx` |
 | `compliance/finland.mdx` | `fi/composers/page-compliance.mdx` |
+| `apps/finland.mdx` | `fi/composers/app-finvoice.mdx` |
+| `guides/fi-finvoice.mdx` | `fi/composers/guide-finvoice-invoicing.mdx` |
+| `guides/fi-finvoice-supplier.mdx` | `fi/composers/guide-finvoice-supplier.mdx` |
+| `guides/fi-finvoice-receiving.mdx` | `fi/composers/guide-finvoice-receiving.mdx` |
 | `faq/croatia.mdx` | `hr/composers/page-faq.mdx` |
 | `compliance/croatia.mdx` | `hr/composers/page-compliance.mdx` |
 | `faq/hungary.mdx` | `hu/composers/page-faq.mdx` |

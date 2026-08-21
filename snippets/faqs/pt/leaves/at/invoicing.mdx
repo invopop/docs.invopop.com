@@ -5,6 +5,8 @@
     2. **Real-time transmission** – instead of a monthly file, each invoice is sent individually to the AT at the time of issuance, using the authority's API.
 
     Whether one model or the other is used usually depends on the issuer's accountant's preference (who typically uploads the SAF-T monthly report should they choose that model). Invopop's [AT Portugal app](/apps/at-portugal) supports both reporting methods, so each supplier can pick the one that best fits their needs.
+
+    If a supplier uses real-time transmission — the **Send document to AT** step in the workflow — the documents submitted this way are already communicated to the AT, so they don't need to upload a monthly SAF-T file for them. The only documents that still require the monthly SAF-T upload are those not reported in real time, such as RG payment receipts, which the AT's webservice does not accept.
   </Accordion>
 
   <Accordion title="How do I configure my workspace for Portuguese invoicing?">
@@ -25,6 +27,23 @@
     - For transactions **above €1,000**, the law also expects **name and address** on the document. The AT may not always reject submissions that omit some of that detail, but you should follow the rule for full compliance.
 
     Adjust your GOBL customer block (or equivalent) accordingly and re-run the workflow.
+  </Accordion>
+
+  <Accordion title="Why does my credit note fail with 'The credit note line #N cannot be applied to any line available to credit'?">
+    **What it means:** when a credit note references an invoice issued through Invopop, every credit note line must be matched against the quantity and price still available to credit on the original invoice's lines. Line `#N` could not be matched to any of them.
+
+    For a credit note line to be applied to an invoice line:
+
+    1. Its `item.name` must be **exactly identical** to the invoice line's, and both lines must have the same VAT treatment — the same rate and, where applicable, the same exemption.
+    2. Among the lines matching by name and VAT, it must satisfy one of:
+       - **Same unit price** as the invoice line, with a quantity up to the remaining quantity — to credit fewer units at the original price.
+       - **Same quantity** as the invoice line, with a unit price up to the remaining price — to credit part of the amount for the full quantity.
+
+    Include only the lines you are crediting — the credit note does not need to mirror the full invoice — and the order of the lines is irrelevant. Availability is cumulative: every accepted credit note reduces the remaining quantity or price, so the total credited per line can never exceed the original invoice amount.
+
+    **What to do:** check that line `#N`'s item name and VAT rate or exemption exactly match a line on the referenced invoice (watch for typos or renamed items), and that it keeps either the original unit price or the original quantity as described above. If everything matches, review credit notes previously issued against the same invoice — the remaining quantity or amount may already have been credited.
+
+    Note that a credit note supports exactly **one** `preceding` reference, and line matching only applies when the referenced invoice was issued through Invopop — references to external series (for example, invoices issued by a previous provider) are accepted without matching.
   </Accordion>
 
   <Accordion title="Why does my payment workflow fail with 'payment type RG is not supported for real-time reporting'?">

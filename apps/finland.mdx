@@ -1,0 +1,168 @@
+---
+title: "Finland"
+description: "Send and receive Finnish e-invoices across the domestic operator network and Peppol."
+keywords: ['finland', 'finvoice', 'apix', 'ovt', 'verkkolasku', 'peppol', 'fi']
+mode: wide
+---
+
+import SendInvoiceWorkflow from '/snippets/workflows/fi/finvoice-send-invoice.mdx';
+import RegisterWorkflow from '/snippets/workflows/fi/finvoice-register.mdx';
+import SyncWorkflow from '/snippets/workflows/fi/finvoice-sync.mdx';
+import ImportWorkflow from '/snippets/workflows/fi/finvoice-import.mdx';
+import Supplier from '/snippets/parties/fi/supplier.mdx';
+import Customer from '/snippets/parties/fi/customer.mdx';
+import InvoiceAccordion from '/snippets/invoices/fi/accordion.mdx';
+import FinlandResources from '/snippets/tables/finland-resources.mdx';
+import FAQ from '/snippets/faqs/fi/composers/app-finvoice.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Register suppliers" icon="https://assets.invopop.com/flags/fi.svg"
+				  href="/guides/fi-finvoice-supplier" horizontal>
+				  Supplier registration guide ›
+				</Card>
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/fi.svg"
+				  href="/guides/fi-finvoice" horizontal>
+				  Issuing guide ›
+				</Card>
+				<Card title="Receive invoices" icon="https://assets.invopop.com/flags/fi.svg"
+				  href="/guides/fi-finvoice-receiving" horizontal>
+				  Receiving guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | B2B, B2G                               |
+				| Country   | [Finland](/compliance/finland)         |
+		</Columns>
+
+		Finland has no government clearance system for invoices. Instead, e-invoices travel over two networks that run side by side: the domestic operator network, an unbranded mesh of accredited operators where around 370,000 companies receive their invoices as *Finvoice* or *TEAPPSXML*, and Peppol, with roughly 13,000 Finnish end users (about 0.24% of annual volume). Neither network alone covers Finnish receivers.
+
+		Invopop has partnered with [Apix Messaging](https://www.apix.fi), an accredited Finnish operator, to cover both networks through one app: you send one GOBL invoice carrying the receiver's e-invoice address, and it is delivered as a compliant e-invoice in the format the receiver's network expects.
+
+		Because the routing is resolved per receiver, you never pick a network. Use this app for every Finnish receiver, including the ones reachable on Peppol. Before anything is sent, the app checks how the receiver would be reached and refuses the invoice unless the answer is a networked e-invoice, naming the channel that would have been used instead.
+
+		E-invoicing is mandatory for invoices to Finnish public bodies under Act 241/2019, and voluntary between businesses, though businesses above a EUR 10,000 turnover threshold have a statutory right to request e-invoices from their suppliers.
+
+		#### Key features
+
+		* **Workflow automation:** Register parties, issue invoices, and import received ones as steps in your workflows.
+		* **Both networks through one app:** Domestic-network and Peppol receivers are reached through the same action, with routing resolved per receiver.
+		* **Per-party provisioning:** Each registered party gets its own operator account and its own e-invoice address.
+		* **Finvoice-safe validation:** The [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) requires the payment data Finvoice makes mandatory, so invoices that would fail conversion are rejected before they are sent.
+		* **Reachability pre-check:** Receivers that would get paper, email, or a consumer bank channel are refused up front, never silently delivered another way.
+		* **Invoice reception:** Each registered party's inbox is polled on a schedule and received invoices are imported automatically.
+
+		Check out the guides below to get started:
+		- [Supplier registration](/guides/fi-finvoice-supplier) · [Issuing invoices](/guides/fi-finvoice) · [Receiving invoices](/guides/fi-finvoice-receiving)
+
+	## FAQ
+
+	<FAQ />
+
+	More answers in our [Finland FAQ](/faq/finland) section
+
+	</Tab>
+
+	<Tab title="Limitations">
+
+		| Capability | Status | Notes |
+		|---|---|---|
+		| Party registration | <Badge color="green">Available</Badge> | Provisions a per-party operator account |
+		| Invoice delivery | <Badge color="green">Available</Badge> | Both networks, routing resolved per receiver |
+		| Invoice reception | <Badge color="green">Available</Badge> | Polled per registered party, five-minute default |
+		| Delivery status tracking | <Badge color="yellow">Not available</Badge> | The synchronous accept is the final programmatic signal; later rejections arrive by email |
+		| Party deregistration | <Badge color="yellow">In development</Badge> | Contact [support](mailto:support@invopop.com) to offboard a party |
+		| Invopop PDF for receivers | <Badge color="yellow">In development</Badge> | Domestic-network receivers get the operator's PDF rendering |
+		| Delivered document retrieval | <Badge color="yellow">Not available</Badge> | The Finvoice the operator delivers cannot be fetched back |
+		| B2G reference validation | <Badge color="yellow">Not available</Badge> | Format state references (`V1`, `VSK1`) yourself; posting references (`TK1`) cannot be carried yet |
+
+	</Tab>
+
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		<Card title="Send invoice" icon="https://assets.invopop.com/flags/fi.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 2</div>
+		 Deliver a signed GOBL invoice to the receiver's network as a compliant e-invoice. Checks the receiver is reachable as a true e-invoice before anything is sent.
+		</Card>
+
+		<Card title="Register party in Finland" icon="https://assets.invopop.com/flags/fi.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 100</div>
+		 Provision the party its own operator account, activate its services, and allocate its e-invoice address. A party must be registered before it can send or receive.
+		</Card>
+
+		<Card title="Sync received invoices" icon="https://assets.invopop.com/flags/fi.svg" horizontal>
+		 Sweep a registered party's inbox at the operator and queue one import job for each new document. Runs automatically on the reception polling schedule.
+		</Card>
+
+		<Card title="Import received invoice" icon="https://assets.invopop.com/flags/fi.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 3</div>
+		 Download one received document and convert it into a GOBL invoice, attaching the original XML and the PDF.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="Finvoice send invoice">
+				<SendInvoiceWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Party workflows
+		<AccordionGroup>
+			<Accordion title="Finvoice register party">
+				<RegisterWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Reception workflows
+		<AccordionGroup>
+			<Accordion title="Finvoice sync received invoices">
+				<SyncWorkflow />
+			</Accordion>
+			<Accordion title="Finvoice import invoice">
+				<ImportWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+	</Tab>
+
+	<Tab title="Documents">
+		<AccordionGroup>
+			<Accordion title="Finland supplier">
+				A Finnish company with its Business ID (y-tunnus) as the tax ID and its e-invoice address as an inbox: the OVT code (`0037` plus the Business ID without its hyphen) under scheme `0216`.
+				<Supplier />
+			</Accordion>
+			<Accordion title="Finland customer">
+				The receiving side of a Finnish invoice, with the same identity shape as the supplier: y-tunnus tax ID and an OVT e-invoice address under scheme `0216`. Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi).
+				<Customer />
+			</Accordion>
+		</AccordionGroup>
+
+		<InvoiceAccordion />
+
+		Copy and paste these documents into the [GOBL builder](https://build.gobl.org) in order to preview and verify them.
+	</Tab>
+
+</Tabs>
+
+---
+
+<FinlandResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Finland app →
+</Card>

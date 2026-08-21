@@ -1,0 +1,43 @@
+---
+title: "Import NemHandel invoice"
+description: "Import a received OIOUBL document delivered via NemHandel"
+countryCode: "dk"
+appId: "gov-dk"
+schema: "bill/invoice"
+---
+
+```json Example Import NemHandel invoice workflow
+{
+    "name": "Import NemHandel invoice",
+    "description": "Import a received OIOUBL document delivered via NemHandel",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "a1c0f2df-4f6a-11f1-9c2d-0242ac120010",
+            "name": "Load from NemHandel",
+            "provider": "gov-dk.import",
+            "summary": "Fetches, parses OIOUBL, and converts to GOBL in one step"
+        },
+        {
+            "id": "a1c0f2e2-4f6a-11f1-9c2d-0242ac120010",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `received`{.state .received}",
+            "config": {
+                "state": "received"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a1c0f2e3-4f6a-11f1-9c2d-0242ac120010",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

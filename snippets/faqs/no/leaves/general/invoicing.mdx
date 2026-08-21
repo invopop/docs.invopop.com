@@ -6,7 +6,7 @@
   </Accordion>
 
   <Accordion title="Where do I find Norway-specific GOBL documentation?">
-    See the [Norway tax regime in GOBL](https://docs.gobl.org/regimes/no) for tax IDs and category codes. The Peppol BIS Billing 3.0 mapping is shared across the network and lives in [`peppol-bis-v3`](https://docs.gobl.org/addons/peppol-bis-v3).
+    See the [Norway tax regime in GOBL](https://docs.gobl.org/regimes/no) for tax IDs and category codes. The Peppol BIS Billing 3.0 mapping is shared across the network and comes from the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon.
   </Accordion>
     <Accordion title="What is the difference between scheme 0192 and 9908 in Norway?">
     Both schemes identify a company by its Norwegian organization number:
@@ -40,4 +40,64 @@
     In both schemes the code is the bare 9-digit organization number, without the `NO` prefix or `MVA` suffix used in VAT numbers.
 
     <Tip>Use the **Lookup Participant ID** workflow step to verify a recipient's Peppol registration before sending. If a lookup with `0192` fails, try again with `9908`.</Tip>
+  </Accordion>
+
+  <Accordion title="How do I include Foretaksregisteret on my invoices?">
+    Limited liability companies (AS), public limited companies (ASA) and branches of foreign companies must show the word "Foretaksregisteret" on their sales documents — see the [invoice content requirements](/compliance/norway). Add it as a tax-scoped identity on the supplier:
+
+    ```json
+    "supplier": {
+      "name": "Fjordlys AS",
+      "tax_id": {
+        "country": "NO",
+        "code": "123456785MVA"
+      },
+      "identities": [
+        {
+          "type": "TAX",
+          "code": "Foretaksregisteret",
+          "scope": "tax"
+        }
+      ]
+    }
+    ```
+
+    The identity becomes a second `PartyTaxScheme` on the supplier, under scheme `TAX`, which is where the Peppol rule NO-R-002 looks for it. Sole traders (enkeltpersonforetak) aren't covered by the requirement and should leave the identity out.
+
+    <Tip>NO-R-002 is a warning rather than a fatal rule, so an invoice without it still reaches the recipient and no workflow step will report the omission.</Tip>
+  </Accordion>
+
+  <Accordion title="Which VAT rates and tax categories apply in Norway?">
+    Norway has four positive VAT rates. All of them are category `S` in Peppol — the percentage carries the distinction, not the category code.
+
+    | Rate | Percentage | Applies to |
+    |------|-----------|------------|
+    | Standard | 25% | Most goods and services |
+    | Reduced (food) | 15% | Foodstuffs, water and wastewater services |
+    | Reduced (services) | 12% | Passenger transport, accommodation, cinema, museums, sporting events, public broadcasting |
+    | Special (marine) | 11.11% | Wild marine resources sold through a fiskesalgslag |
+
+    Set the percentage on the line tax and tag it with the [`untdid-tax-category`](https://docs.gobl.org/addons/eu-en16931-v2017) extension:
+
+    ```json
+    "taxes": [
+      {
+        "cat": "VAT",
+        "percent": "25.0%",
+        "ext": { "untdid-tax-category": "S" }
+      }
+    ]
+    ```
+
+    Supplies that carry no VAT use a different category and omit the percentage:
+
+    | Category | Meaning |
+    |----------|---------|
+    | `Z` | Zero rated goods — exports, international transport, newspapers, books |
+    | `E` | Exempt from tax |
+    | `K` | VAT exempt for EEA intra-community supply of goods and services |
+    | `AE` | VAT reverse charge |
+    | `G` | Free export item, tax not charged |
+
+    See the [Norway compliance page](/compliance/norway) for what each rate covers and the registration threshold.
   </Accordion>
