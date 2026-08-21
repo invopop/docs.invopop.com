@@ -92,4 +92,7 @@ You can use the CLI to check your OpenAPI file for errors using the following co
 
 ```
 mint openapi-check <openapiFilenameOrUrl>
+
+
+Thanks for reading!
 ```
