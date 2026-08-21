@@ -31,9 +31,11 @@ These workflows are shared between invoice and [status documents](/guides/fr-pa-
 
 ### Sending
 
-The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is transmitted automatically alongside the F1: by default it reports the standard *déposée*, or *déposée – non transmise* when the forward step's **Deposited and not transmitted** toggle is enabled for recipients without an active receiving address.
+The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is transmitted automatically alongside the F1. 
 
 The **PPF record document** step validates SIRENs and checks both parties against the Annuaire. Documents where either side is missing are rejected and should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
+
+The **Forward document to PPF** step generates and transmits to the PPF the the F1 copy of the invoice and its `200` Déposée status. When the step's **Deposited and not transmitted** toggle is enabled, the status carries the `NON_TRANSMISE` reason and reports a *déposée – non transmise* instead of the standard *déposée*. This should be used when the recipient has no active receiving address. Gate that branch on the Peppol [Validate endpoint](/guides/peppol#validating-the-endpoint-before-sending) action: when it returns `false`, the invoice can't be delivered over Peppol and the workflow should route into a forward step configured as not transmitted.
 
 <Card iconType="duotone" title="PPF send invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" horizontal>
   Add to my workspace →
