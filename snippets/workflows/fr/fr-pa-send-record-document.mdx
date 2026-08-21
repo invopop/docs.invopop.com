@@ -46,6 +46,42 @@ schema: "bill/invoice"
                             "provider": "gov-fr.directory.record"
                         },
                         {
+                            "id": "e7f2da30-9d6b-11f1-b2d5-9fc4b0622900",
+                            "name": "Verify document can be sent",
+                            "provider": "peppol.validate.endpoint",
+                            "next": [
+                                {
+                                    "code": "true",
+                                    "steps": [
+                                        {
+                                            "id": "062087a0-9d6c-11f1-b2d5-9fc4b0622900",
+                                            "name": "Send Peppol document",
+                                            "provider": "peppol.send"
+                                        },
+                                        {
+                                            "id": "ff644960-9d6b-11f1-b2d5-9fc4b0622900",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "code": "false",
+                                    "steps": [
+                                        {
+                                            "id": "03120f20-9d6c-11f1-b2d5-9fc4b0622900",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward",
+                                            "summary": "Forward to PPF (déposée – non transmise)",
+                                            "config": {
+                                                "not_transmitted": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
                             "id": "407ecad0-5e72-11f1-82b2-4d1e6d092169",
                             "name": "Send Peppol document",
                             "provider": "peppol.send"
