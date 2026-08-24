@@ -1,0 +1,74 @@
+---
+title: "Send invoice to SDI"
+description: "Issue an invoice through Italy's SDI system"
+countryCode: "it"
+appId: "gov-it"
+schema: "bill/invoice"
+---
+
+```json Example send invoice workflow
+{
+  "name": "Send invoice to SDI",
+  "description": "Issue an invoice through Italy's SDI system",
+  "schema": "bill/invoice",
+  "steps": [
+    {
+      "id": "1be52e94-4bde-4055-be23-e5323bc3b69e",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "959540b4-2cd6-4449-afdf-9fb86eabbf3d",
+      "name": "Sign envelope",
+      "provider": "silo.close"
+    },
+    {
+      "id": "39cbc61d-a538-4d4a-b6b7-ef5f735793cf",
+      "name": "Send invoice to SDI",
+      "provider": "gov-it.sdi.send.invoice",
+      "summary": "Submit the FatturaPA document to SDI"
+    },
+    {
+      "id": "39aa8757-fe21-4897-b8d3-677de28dd7df",
+      "name": "Archive document",
+      "provider": "gov-it.archive.store",
+      "summary": "Preserve the invoice and attach its receipt"
+    },
+    {
+      "id": "60ef750d-f69a-4834-b948-0decb2538c60",
+      "name": "Generate PDF",
+      "provider": "pdf",
+      "summary": "Italian · A4",
+      "config": {
+        "date_format": "%Y-%m-%d",
+        "locale": "it",
+        "logo_height": 40
+      }
+    },
+    {
+      "id": "8fd64430-a270-4c91-b869-a145961886f7",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `sent`{.state .sent}",
+      "config": {
+        "state": "sent"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "7ac9b539-9a25-43d5-a4e0-54b718f19df2",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+}
+```

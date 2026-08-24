@@ -1,0 +1,58 @@
+---
+title: "Register party with SDI"
+description: "Register a company to receive invoices through SDI"
+countryCode: "it"
+appId: "gov-it"
+schema: "org/party"
+---
+
+```json Example register party workflow
+{
+  "name": "Register party with SDI",
+  "description": "Register a company to receive invoices through SDI",
+  "schema": "org/party",
+  "steps": [
+    {
+      "id": "ab62576c-e73a-445c-90b8-236b3dcef34e",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `processing`{.state .processing}",
+      "config": {
+        "state": "processing"
+      }
+    },
+    {
+      "id": "6af7e0dc-ef2f-4625-91fd-7e8942fdab26",
+      "name": "Register party with SDI",
+      "provider": "gov-it.sdi.register",
+      "summary": "Claim the company's fiscal ID for this workspace"
+    },
+    {
+      "id": "d6add454-0f8a-4aa2-8226-c50446ebe6a5",
+      "name": "Register party for e-archiving",
+      "provider": "gov-it.archive.register",
+      "summary": "Enable certified preservation for this company"
+    },
+    {
+      "id": "83dd9dc5-8afe-4d82-8eed-1400073d583b",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `registered`{.state .registered}",
+      "config": {
+        "state": "registered"
+      }
+    }
+  ],
+  "rescue": [
+    {
+      "id": "a3e12148-8559-4d6e-b16a-f311b3bebbf2",
+      "name": "Set state",
+      "provider": "silo.state",
+      "summary": "Set state to `error`{.state .error}",
+      "config": {
+        "state": "error"
+      }
+    }
+  ]
+}
+```

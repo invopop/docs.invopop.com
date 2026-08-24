@@ -1,0 +1,174 @@
+---
+title: "Italy"
+description: "Send and receive FatturaPA invoices through Invopop's own accredited SDI channel."
+keywords: ['italy', 'sdi', 'fatturapa', 'sdicoop', 'codice destinatario', 'conservazione', 'it']
+mode: wide
+---
+
+import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
+import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
+import RegisterPartyWorkflow from '/snippets/workflows/it/italy-register-party.mdx';
+import ImportInvoiceWorkflow from '/snippets/workflows/it/italy-import-invoice.mdx';
+import Supplier from '/snippets/parties/it/supplier.mdx';
+import Customer from '/snippets/parties/it/customer.mdx';
+import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/it.svg"
+				  href="/guides/it-sdi-invoicing" horizontal>
+				  Issuing guide ›
+				</Card>
+				<Card title="Receive invoices" icon="https://assets.invopop.com/flags/it.svg"
+				  href="/guides/it-sdi-reception" horizontal>
+				  Receiving guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | B2B, B2C                               |
+				| System    | Sistema di Interscambio (Agenzia delle Entrate) |
+				| Country   | [Italy](/compliance/italy)             |
+		</Columns>
+
+		The **Sistema di Interscambio** (SDI) is Italy's central e-invoicing hub, run by the tax authority (*Agenzia delle Entrate*). Electronic invoicing is mandatory for essentially every VAT-registered business in Italy: SDI validates each invoice, delivers it to the buyer, and the cleared XML — not any PDF you send alongside it — is the legal invoice.
+
+		Documents travel as **FatturaPA** XML. This app owns both directions of that exchange over **Invopop's own accredited SDICoop channel**: Invopop is registered with the tax authority as a transmission and reception channel in its own right, so invoices go straight to SDI with no intermediary in between, and SDI delivers inbound invoices straight back.
+
+		Sending is non-blocking. The send step finishes as soon as SDI accepts the file; SDI's verdict — delivered, rejected, undeliverable — arrives minutes or days later and is recorded against the invoice as a separate status entry, so a slow response from SDI never holds a workflow open.
+
+		#### Key features
+
+		* **Direct accredited channel:** Invopop transmits and receives under its own SDI accreditation. No third-party gateway sits between you and the tax authority.
+		* **FatturaPA both ways:** GOBL → FatturaPA for issuing, FatturaPA → GOBL for received invoices, with the original XML kept attached exactly as it was exchanged.
+		* **Statuses as documents:** Every SDI notification becomes a status entry on the invoice, carrying the original Italian code and a plain-language description.
+		* **Certified archiving:** Issued and received invoices are preserved under *conservazione a norma*, with the preservation receipt attached to the entry.
+		* **Full sandbox lifecycle:** The sandbox simulates SDI end to end — including rejections and non-delivery — so you can exercise every outcome before going live.
+
+		Check out the guides below to get started:
+		- [Issuing invoices](/guides/it-sdi-invoicing) · [Receiving invoices](/guides/it-sdi-reception)
+
+	</Tab>
+
+	<Tab title="Limitations">
+
+		| Capability | Status | Notes |
+		|---|---|---|
+		| Invoice delivery (B2B, B2C) | <Badge color="green">Available</Badge> | FatturaPA `FPR12`, delivered by *codice destinatario* or PEC |
+		| Invoice reception | <Badge color="green">Available</Badge> | Invoices addressed to a registered company, routed into your import workflow |
+		| Status notifications | <Badge color="green">Available</Badge> | `RC`, `NS`, `MC`, `AT`, `NE` and `DT` recorded as status entries |
+		| Party registration | <Badge color="green">Available</Badge> | Claims a fiscal ID for reception in your workspace |
+		| Party deregistration | <Badge color="green">Available</Badge> | Releases the fiscal ID so it can be registered again |
+		| Certified archiving | <Badge color="green">Available</Badge> | *Conservazione a norma* for issued and received invoices |
+		| Invoices to public administrations (B2G) | <Badge color="yellow">In development</Badge> | `FPA12` invoices require a qualified electronic signature. Sending one raises a clear error rather than failing at SDI |
+		| Simplified invoices | <Badge color="yellow">In development</Badge> | `FSM10` (*fattura semplificata*, `TD07`–`TD09`) is not yet converted |
+		| Accepting or rejecting as a public body | <Badge color="red">Unavailable</Badge> | Invopop receives on behalf of businesses, not public administrations, so the outbound *Notifica Esito* leg does not apply |
+
+	</Tab>
+
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		Invoicing
+
+		<Card title="Send invoice to SDI" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Convert a GOBL invoice to FatturaPA, submit it to SDI over Invopop's accredited channel, and attach the transmitted XML to the entry. Completes as soon as SDI accepts the file.
+		</Card>
+
+		<Card title="Import status from SDI" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Turn an SDI notification about an invoice you sent into a status entry, recording the Italian notification code and what it means.
+		</Card>
+
+		Registration
+
+		<Card title="Register party with SDI" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Claim a company's fiscal identity for your workspace so SDI deliveries addressed to it are routed to you.
+		</Card>
+
+		<Card title="Unregister party from SDI" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Stop receiving for a company and release its fiscal ID so it can be registered again.
+		</Card>
+
+		Reception
+
+		<Card title="Import invoice from SDI" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Parse a received FatturaPA document into GOBL and create the invoice entry, with the original XML and SDI's delivery metadata attached.
+		</Card>
+
+		Archiving
+
+		<Card title="Register party for e-archiving" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Enable certified preservation (*conservazione a norma*) for a company. Requires a valid Italian tax ID.
+		</Card>
+
+		<Card title="Archive document" icon="https://assets.invopop.com/flags/it.svg" horizontal>
+		 Preserve the exact XML exchanged with SDI and attach the preservation receipt to the entry.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="Send invoice to SDI">
+				<SendInvoiceWorkflow />
+			</Accordion>
+			<Accordion title="Import invoice status">
+				<ImportStatusWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Party workflows
+		<AccordionGroup>
+			<Accordion title="Register party with SDI">
+				<RegisterPartyWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Reception workflows
+		<AccordionGroup>
+			<Accordion title="Import invoice from SDI">
+				<ImportInvoiceWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+	</Tab>
+
+	<Tab title="Documents">
+		Parties
+		<AccordionGroup>
+			<Accordion title="Supplier">
+				An Italian company with its *partita IVA* and the mandatory `it-sdi-fiscal-regime` extension (here `RF01`, the ordinary regime).
+				<Supplier />
+			</Accordion>
+			<Accordion title="Customer">
+				An Italian business customer with its *partita IVA* and an `it-sdi-code` inbox — the *codice destinatario* SDI uses to route the invoice.
+				<Customer />
+			</Accordion>
+		</AccordionGroup>
+
+		<InvoiceAccordion />
+
+		Copy and paste these documents into the [GOBL builder](https://build.gobl.org) in order to preview and verify them.
+	</Tab>
+
+</Tabs>
+
+---
+
+<ItalyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Italy app →
+</Card>
