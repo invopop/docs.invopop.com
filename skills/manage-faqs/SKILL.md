@@ -396,6 +396,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/poland.mdx` | `pl/composers/app-ksef.mdx` |
 | `guides/pl-ksef.mdx` | `pl/composers/guide-ksef-invoicing.mdx` |
 | `guides/pl-ksef-supplier.mdx` | `pl/composers/guide-ksef-supplier.mdx` |
+| `guides/pl-ksef-receiving.mdx` | `pl/composers/guide-ksef-receiving.mdx` |
 | `faq/portugal.mdx` | `pt/composers/page-faq.mdx` |
 | `compliance/portugal.mdx` | `pt/composers/page-compliance.mdx` |
 | `apps/at-portugal.mdx` | `pt/composers/app-at.mdx` |
