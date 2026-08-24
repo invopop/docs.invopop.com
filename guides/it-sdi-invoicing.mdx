@@ -18,7 +18,7 @@ Electronic invoicing is mandatory for essentially every VAT-registered business 
 
 Invopop converts your [GOBL](https://docs.gobl.org) invoice into FatturaPA and transmits it over **its own accredited SDICoop channel**, registered with the tax authority in Invopop's name. Nothing sits between your workspace and SDI.
 
-For receiving invoices through the same channel, see the companion guide: [Receiving invoices](/guides/it-sdi-reception). For preserving them, see [Archiving](/guides/it-sdi-archiving).
+Companion guides: [Status](/guides/it-sdi-status) for what SDI reports back about an invoice, [Receiving invoices](/guides/it-sdi-reception), and [Archiving](/guides/it-sdi-archiving).
 
 | - | Sandbox | Live |
 |---|---|---|
@@ -107,27 +107,9 @@ Invoices addressed to a public administration (`FPA12`) are not yet supported: t
 
 ## Invoice statuses
 
-Every notification SDI sends about an invoice you issued becomes a **status entry** attached to that invoice, carrying the original Italian code and a plain-language description of what it means. The status workflow you configured above is what creates them.
+SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
 
-For ordinary business invoices, three notifications occur in practice:
-
-| Notification | Status | Meaning |
-|---|---|---|
-| `RC` — *ricevuta di consegna* | `acknowledged` | SDI delivered the invoice to the recipient |
-| `NS` — *notifica di scarto* | `error` | SDI rejected the invoice. It has no legal existence, so correct it and send a fresh one rather than issuing a credit note |
-| `MC` — *mancata consegna* | `acknowledged` | SDI accepted the invoice but could not deliver it. It is available to the recipient in their tax drawer (*cassetto fiscale*) |
-
-Three more relate to invoices sent to public administrations, and apply once B2G sending is available:
-
-| Notification | Status | Meaning |
-|---|---|---|
-| `AT` — *attestazione di trasmissione* | `error` | SDI could not deliver to the public body. The invoice stays valid, but you must deliver it, with the attestation, outside SDI |
-| `NE` — *notifica esito* | `accepted` / `rejected` | The public body accepted (`EC01`) or rejected (`EC02`) the invoice |
-| `DT` — *decorrenza termini* | `accepted` | The public body did not answer within 15 days. SDI closed the process and the invoice can no longer be rejected |
-
-### Reacting to a status
-
-Recording the status is where the app's job ends. What should follow — updating the invoice, alerting someone, telling your own systems — is yours to decide, and you build it as steps after the import. To make that easy, the import step reports the status it recorded as its result code, so your workflow can treat `acknowledged` differently from `rejected`.
+Each notification and what it means for the invoice is covered in the [Status](/guides/it-sdi-status) guide.
 
 ## Archiving (conservazione a norma)
 
