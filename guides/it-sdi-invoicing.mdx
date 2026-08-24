@@ -6,21 +6,19 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
-import ArchiveDocumentWorkflow from '/snippets/workflows/it/italy-archive-document.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import { itSendInvoiceWorkflow } from '/snippets/workflows/it/italy-send-invoice-data.mdx';
 import { itImportStatusWorkflow } from '/snippets/workflows/it/italy-import-status-data.mdx';
-import { itArchiveDocumentWorkflow } from '/snippets/workflows/it/italy-archive-document-data.mdx';
 
 ## Introduction
 
-Electronic invoicing is mandatory for essentially every VAT-registered business in Italy. The *Sistema di Interscambio* (SDI) is the tax authority's central hub: it validates every invoice, delivers it to the buyer, and the cleared XML is the legal invoice — a PDF you send alongside it has no standing on its own.
+Electronic invoicing is mandatory for essentially every VAT-registered business in Italy. The *Sistema di Interscambio* (SDI) is the tax authority's central hub: it validates every invoice and delivers it to the buyer. The legal invoice is the cleared FatturaPA XML file.
 
-Invoices travel as **FatturaPA** XML. Invopop converts your [GOBL](https://docs.gobl.org) invoice into FatturaPA and transmits it over **its own accredited SDICoop channel**, registered with the tax authority in Invopop's name. Nothing sits between your workspace and SDI.
+Invopop converts your [GOBL](https://docs.gobl.org) invoice into FatturaPA and transmits it over **its own accredited SDICoop channel**, registered with the tax authority in Invopop's name. Nothing sits between your workspace and SDI.
 
-To receive invoices through the same channel, see the companion guide: [Receiving invoices](/guides/it-sdi-reception).
+For receiving invoices through the same channel, see the companion guide: [Receiving invoices](/guides/it-sdi-reception). For preserving them, see [Archiving](/guides/it-sdi-archiving).
 
 | - | Sandbox | Live |
 |---|---|---|
@@ -29,7 +27,9 @@ To receive invoices through the same channel, see the companion guide: [Receivin
 | **Archiving** | Test preservation, no legal validity | Certified preservation |
 | **Legal validity** | None | The invoice is legally filed with SDI |
 
-The environment is a property of the job, not of the workflow: the same workflow runs the simulation when a sandbox job triggers it, and files a real invoice when a live one does.
+<Info>
+The Italy app sends your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
+</Info>
 
 ## Setup
 
@@ -75,20 +75,6 @@ Add whatever your integration needs after the import step — calling a webhook,
 
 </Step>
 
-<Step title="Configure the archiving workflow (optional)">
-
-Certified preservation runs as its own workflow on the invoice. See [Archiving](#archiving-conservazione-a-norma) below.
-
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={itArchiveDocumentWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    <ArchiveDocumentWorkflow />
-  </Tab>
-</Tabs>
-
-</Step>
 </Steps>
 
 ## Sending invoices
@@ -145,14 +131,7 @@ Recording the status is where the app's job ends. What should follow — updatin
 
 ## Archiving (conservazione a norma)
 
-Italian law requires issued electronic invoices to be preserved long-term through a certified process known as *conservazione a norma*. Keeping a copy of the XML on your own systems is not enough — preservation must follow the rules set by the Italian authorities.
-
-Archiving takes two things:
-
-- **The company must be enabled for preservation.** The party registration workflow does this, and requires a valid Italian tax ID. The [Receiving invoices](/guides/it-sdi-reception) guide sets that workflow up.
-- **Each document must be archived.** The archiving workflow preserves the exact FatturaPA file exchanged with SDI and attaches the preservation receipt to the entry as `archive-receipt.pdf` and `archive-receipt.xml`, with an indexed `archive-uuid` field identifying the preserved document. Run it on the invoice after it has been sent — as a step in your own sending workflow, or as a separate job.
-
-Preservation is asynchronous: the step stays `Queued` until the receipt is ready, then completes with `OK`. It is safe to retry — an already-archived invoice completes without uploading again or duplicating attachments.
+Italian law requires issued electronic invoices to be preserved long-term through a certified process. Add the **Archive document** step after the send step to preserve each invoice as you issue it. See the [Archiving](/guides/it-sdi-archiving) guide for the full setup.
 
 ## Testing in the sandbox
 

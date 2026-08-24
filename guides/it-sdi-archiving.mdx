@@ -1,0 +1,116 @@
+---
+title: "Italy archiving guide"
+sidebarTitle: "Archiving"
+description: "Preserve the invoices you exchange through SDI under Italy's certified archiving rules"
+---
+
+import RegisterPartyWorkflow from '/snippets/workflows/it/italy-register-party.mdx';
+import ArchiveDocumentWorkflow from '/snippets/workflows/it/italy-archive-document.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { itRegisterPartyWorkflow } from '/snippets/workflows/it/italy-register-party-data.mdx';
+import { itArchiveDocumentWorkflow } from '/snippets/workflows/it/italy-archive-document-data.mdx';
+
+## Introduction
+
+Sending an invoice through SDI is not the end of its legal life. Italian businesses must also preserve their electronic invoices long-term through a certified process known as *conservazione a norma* (also called *conservazione sostitutiva*). Keeping a copy of the XML on your own systems does not satisfy it: preservation has to follow the rules set by the Italian authorities, which in practice means an accredited provider.
+
+Invopop handles this through [A-Cube](https://www.acubeapi.com), whose preservation service performs the certified archiving and issues a signed receipt for every preserved document. What gets preserved is the exact FatturaPA file exchanged with SDI, so the archived document matches what the tax authority saw.
+
+Archiving covers both directions. The rules apply to the invoices you issue and the invoices you receive, and both are preserved the same way — only the metadata differs, recording each document as issued or received.
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Preservation service** | Test environment | Production |
+| **Legal validity** | None, for testing only | Certified preservation |
+
+## Setup
+
+Archiving takes two things: the company has to be enabled for preservation, and each document has to be archived.
+
+<Steps>
+<Step title="Enable the company for preservation">
+
+Before any of its invoices can be preserved, a company must be registered with the preservation service. The **Register party for e-archiving** step does this, and the registration workflow from the [receiving invoices](/guides/it-sdi-reception) guide already includes it — one registration covers both directions.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itRegisterPartyWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <RegisterPartyWorkflow />
+  </Tab>
+</Tabs>
+
+The step reads the company's Italian tax ID from the party, so the party must carry one. Re-running it on an already-enabled company completes without doing anything.
+
+</Step>
+
+<Step title="Archive the documents">
+
+Add the **Archive document** step to your invoice workflows, after the step that exchanges the document with SDI — after **Send invoice to SDI** when issuing, after **Import invoice from SDI** when receiving. It preserves the FatturaPA file that step put on the entry, so it has nothing to work with if it runs first.
+
+You can equally run it on its own, as a separate workflow over invoices that are already exchanged:
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itArchiveDocumentWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ArchiveDocumentWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+</Steps>
+
+## How the archive step works
+
+The step needs no configuration. It works out whether the document is issued or received from the file it finds on the entry — an invoice that arrived from SDI is preserved as received, anything else as issued — and records the right party as the document's owner either way.
+
+When it runs, it:
+
+1. Uploads the exact FatturaPA bytes exchanged with SDI.
+2. Sends the preservation metadata built from the GOBL invoice.
+3. Records the preservation service's identifier for the document as an indexed `archive-uuid` field on the entry, so it can be traced later.
+4. Waits for the service to confirm the document is preserved and its receipt is ready.
+5. Attaches the receipt to the entry in both formats the service provides.
+
+Preservation is asynchronous, so the step stays `Queued` while it waits, then completes with `OK`. The document itself is usually preserved within seconds, though the receipt can take a few minutes to become available. It is safe to retry: re-running it on an already-archived invoice completes without uploading again or duplicating attachments.
+
+The step returns:
+
+- `OK` when the invoice was preserved and its receipt stored
+- `KO` when there is no FatturaPA file on the entry — the invoice was never exchanged with SDI, or the step ran before the send or import step
+
+## What ends up on the entry
+
+| Attachment | What it is |
+|---|---|
+| `archive-receipt.pdf` | The preservation receipt, readable |
+| `archive-receipt.xml` | The preservation receipt as a signed XML document |
+
+| Metadata | What it is |
+|---|---|
+| `archive-uuid` | The preservation service's identifier for the archived document. Indexed, so the entry can be looked up by it |
+
+## Troubleshooting
+
+| Symptom | Cause |
+|---|---|
+| The step fails saying no FatturaPA file was found | It ran before the send or import step, or on an invoice never exchanged with SDI. Archiving preserves the transmitted file, so the exchange has to happen first. |
+| Registering the company fails on its tax ID | The party has no Italian tax ID. Preservation is only available for Italian companies. |
+| The step stays `Queued` longer than expected | The receipt is not ready yet. The step keeps checking and completes on its own once it is. |
+
+---
+
+<ItalyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Italy →
+</Card>
