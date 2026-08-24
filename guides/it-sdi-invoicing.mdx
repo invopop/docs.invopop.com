@@ -6,7 +6,6 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
-import InvoiceStateWorkflow from '/snippets/workflows/it/italy-invoice-state.mdx';
 import ArchiveDocumentWorkflow from '/snippets/workflows/it/italy-archive-document.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
@@ -59,17 +58,9 @@ This workflow numbers the invoice, seals the envelope, and submits it to SDI.
 
 </Step>
 
-<Step title="Configure the state workflows">
-
-SDI's verdict arrives after the invoice has left your workflow, so moving the invoice to its new state is a job of its own. Create one small workflow per state — `sent`, `completed`, `rejected` and `error` — each a single **Set invoice state** step:
-
-<InvoiceStateWorkflow />
-
-</Step>
-
 <Step title="Configure the status workflow">
 
-This workflow runs on each notification SDI sends. It records the notification as a status entry, then routes to the matching state workflow from the previous step. Select it in the Italy app's configuration so incoming notifications run it automatically.
+This workflow runs on each notification SDI sends about an invoice you issued, and records it as a status entry. Select it in the Italy app's configuration so incoming notifications run it automatically.
 
 <Tabs>
   <Tab title="Workflow">
@@ -80,7 +71,7 @@ This workflow runs on each notification SDI sends. It records the notification a
   </Tab>
 </Tabs>
 
-Fill each branch's `workflow_id` with the state workflow it should run. The `silo_entry_meta_key` is what carries the job back to the original invoice rather than leaving it on the status entry.
+Add whatever your integration needs after the import step — calling a webhook, notifying your systems, or moving the invoice itself.
 
 </Step>
 
@@ -132,15 +123,6 @@ Invoices addressed to a public administration (`FPA12`) are not yet supported: t
 
 Every notification SDI sends about an invoice you issued becomes a **status entry** attached to that invoice, carrying the original Italian code and a plain-language description of what it means. The status workflow you configured above is what creates them.
 
-The import step reports the status it recorded as its result code, and the workflow branches on that to move the invoice itself:
-
-| Result code | Invoice state |
-|---|---|
-| `acknowledged` | `sent` |
-| `accepted` | `completed` |
-| `rejected` | `rejected` |
-| `error` | `error` |
-
 For ordinary business invoices, three notifications occur in practice:
 
 | Notification | Status | Meaning |
@@ -156,6 +138,10 @@ Three more relate to invoices sent to public administrations, and apply once B2G
 | `AT` — *attestazione di trasmissione* | `error` | SDI could not deliver to the public body. The invoice stays valid, but you must deliver it, with the attestation, outside SDI |
 | `NE` — *notifica esito* | `accepted` / `rejected` | The public body accepted (`EC01`) or rejected (`EC02`) the invoice |
 | `DT` — *decorrenza termini* | `accepted` | The public body did not answer within 15 days. SDI closed the process and the invoice can no longer be rejected |
+
+### Reacting to a status
+
+Recording the status is where the app's job ends. What should follow — updating the invoice, alerting someone, telling your own systems — is yours to decide, and you build it as steps after the import. To make that easy, the import step reports the status it recorded as its result code, so your workflow can treat `acknowledged` differently from `rejected`.
 
 ## Archiving (conservazione a norma)
 
