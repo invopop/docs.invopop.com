@@ -5,9 +5,14 @@ description: "Receive and process electronic invoices from Italy's SDI system"
 ---
 
 import RegisterPartyWorkflow from '/snippets/workflows/it/italy-register-party.mdx';
+import UnregisterPartyWorkflow from '/snippets/workflows/it/italy-unregister-party.mdx';
 import ImportInvoiceWorkflow from '/snippets/workflows/it/italy-import-invoice.mdx';
 import ItCustomer from '/snippets/parties/it/customer.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { itRegisterPartyWorkflow } from '/snippets/workflows/it/italy-register-party-data.mdx';
+import { itUnregisterPartyWorkflow } from '/snippets/workflows/it/italy-unregister-party-data.mdx';
+import { itImportInvoiceWorkflow } from '/snippets/workflows/it/italy-import-invoice-data.mdx';
 
 ## Introduction
 
@@ -43,7 +48,15 @@ Receiving takes more setup than sending. Invopop needs to know which companies b
 
 This workflow claims a company's fiscal identity for your workspace and enables certified archiving for it.
 
-<RegisterPartyWorkflow />
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itRegisterPartyWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterPartyWorkflow />
+  </Tab>
+</Tabs>
 
 The party entry must carry an Italian VAT number or a *codice fiscale* — registration fails with a clear error otherwise. Re-running it on an already-registered company is safe.
 </Step>
@@ -51,7 +64,15 @@ The party entry must carry an Italian VAT number or a *codice fiscale* — regis
 <Step title="Set up the import workflow">
 This workflow runs on every invoice SDI delivers. Extend it freely — generate a PDF, notify your systems through a webhook, push the invoice into an ERP.
 
-<ImportInvoiceWorkflow />
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itImportInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <ImportInvoiceWorkflow />
+  </Tab>
+</Tabs>
 </Step>
 
 <Step title="Configure the app for receiving">
@@ -100,6 +121,16 @@ Received invoices appear in your **Expenses** folder. If conversion fails, the s
 ## Unregistering a company
 
 Registering a tax ID claims it for a single party record, and only one party per environment can hold a given tax ID at a time. Unregister a company when it is no longer your client, or when you need to register the same tax ID from a different party record.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itUnregisterPartyWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <UnregisterPartyWorkflow />
+  </Tab>
+</Tabs>
 
 The unregister action turns off receiving and clears the company's registration, freeing the tax ID to be claimed again — from another party record in the same workspace, or from a different workspace. Running it on a company that is not registered skips rather than fails, so it is safe to re-run.
 

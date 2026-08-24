@@ -6,8 +6,14 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
+import InvoiceStateWorkflow from '/snippets/workflows/it/italy-invoice-state.mdx';
+import ArchiveDocumentWorkflow from '/snippets/workflows/it/italy-archive-document.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { itSendInvoiceWorkflow } from '/snippets/workflows/it/italy-send-invoice-data.mdx';
+import { itImportStatusWorkflow } from '/snippets/workflows/it/italy-import-status-data.mdx';
+import { itArchiveDocumentWorkflow } from '/snippets/workflows/it/italy-archive-document-data.mdx';
 
 ## Introduction
 
@@ -39,17 +45,57 @@ The initial connection requires no configuration for sending invoices.
 
 <Step title="Configure the sending workflow">
 
-This workflow converts the invoice, submits it, preserves it, and renders a PDF for your own records.
+This workflow numbers the invoice, seals the envelope, and submits it to SDI.
 
-<SendInvoiceWorkflow />
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSendInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the state workflows">
+
+SDI's verdict arrives after the invoice has left your workflow, so moving the invoice to its new state is a job of its own. Create one small workflow per state — `sent`, `completed`, `rejected` and `error` — each a single **Set invoice state** step:
+
+<InvoiceStateWorkflow />
 
 </Step>
 
 <Step title="Configure the status workflow">
 
-SDI's verdict on an invoice arrives separately, some time after you send it. This workflow turns each notification into a status entry on the invoice. Select it in the Italy app's configuration so incoming notifications run it automatically.
+This workflow runs on each notification SDI sends. It records the notification as a status entry, then routes to the matching state workflow from the previous step. Select it in the Italy app's configuration so incoming notifications run it automatically.
 
-<ImportStatusWorkflow />
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itImportStatusWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ImportStatusWorkflow />
+  </Tab>
+</Tabs>
+
+Fill each branch's `workflow_id` with the state workflow it should run. The `silo_entry_meta_key` is what carries the job back to the original invoice rather than leaving it on the status entry.
+
+</Step>
+
+<Step title="Configure the archiving workflow (optional)">
+
+Certified preservation runs as its own workflow on the invoice. See [Archiving](#archiving-conservazione-a-norma) below.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itArchiveDocumentWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ArchiveDocumentWorkflow />
+  </Tab>
+</Tabs>
 
 </Step>
 </Steps>
@@ -86,6 +132,15 @@ Invoices addressed to a public administration (`FPA12`) are not yet supported: t
 
 Every notification SDI sends about an invoice you issued becomes a **status entry** attached to that invoice, carrying the original Italian code and a plain-language description of what it means. The status workflow you configured above is what creates them.
 
+The import step reports the status it recorded as its result code, and the workflow branches on that to move the invoice itself:
+
+| Result code | Invoice state |
+|---|---|
+| `acknowledged` | `sent` |
+| `accepted` | `completed` |
+| `rejected` | `rejected` |
+| `error` | `error` |
+
 For ordinary business invoices, three notifications occur in practice:
 
 | Notification | Status | Meaning |
@@ -106,10 +161,10 @@ Three more relate to invoices sent to public administrations, and apply once B2G
 
 Italian law requires issued electronic invoices to be preserved long-term through a certified process known as *conservazione a norma*. Keeping a copy of the XML on your own systems is not enough — preservation must follow the rules set by the Italian authorities.
 
-Archiving is a step in the workflow, so it costs no extra setup beyond including it:
+Archiving takes two things:
 
-- The party registration workflow enables archiving for a company. It requires a valid Italian tax ID. The [Receiving invoices](/guides/it-sdi-reception) guide sets that workflow up.
-- The send workflow archives the invoice after the send step. It preserves the exact FatturaPA file transmitted to SDI and attaches the preservation receipt to the entry as `archive-receipt.pdf` and `archive-receipt.xml`, with an indexed `archive-uuid` field identifying the preserved document.
+- **The company must be enabled for preservation.** The party registration workflow does this, and requires a valid Italian tax ID. The [Receiving invoices](/guides/it-sdi-reception) guide sets that workflow up.
+- **Each document must be archived.** The archiving workflow preserves the exact FatturaPA file exchanged with SDI and attaches the preservation receipt to the entry as `archive-receipt.pdf` and `archive-receipt.xml`, with an indexed `archive-uuid` field identifying the preserved document. Run it on the invoice after it has been sent — as a step in your own sending workflow, or as a separate job.
 
 Preservation is asynchronous: the step stays `Queued` until the receipt is ready, then completes with `OK`. It is safe to retry — an already-archived invoice completes without uploading again or duplicating attachments.
 
