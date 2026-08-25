@@ -49,6 +49,9 @@ The initial connection requires no configuration for sending invoices.
 
 This workflow numbers the invoice, seals the envelope, and submits it to SDI.
 
+<Card iconType="duotone" title="Italy send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-send-invoice" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
   <Tab title="Workflow">
     <WorkflowDiagram workflow={itSendInvoiceWorkflow} />
@@ -65,6 +68,9 @@ This workflow numbers the invoice, seals the envelope, and submits it to SDI.
 
 This workflow runs on each notification SDI sends about an invoice you issued, and records it as a status entry. Select it in the Italy app's configuration so incoming notifications run it automatically.
 
+<Card iconType="duotone" title="Italy import invoice status workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-import-status" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
   <Tab title="Workflow">
     <WorkflowDiagram workflow={itImportStatusWorkflow} />
@@ -122,6 +128,8 @@ Italian law requires issued electronic invoices to be preserved long-term throug
 
 There is no public SDI test environment you can point a workflow at. In sandbox, the app plays SDI's part itself: it accepts the file, then feeds the status notifications a real exchange would produce back through the same intake the live channel uses. Your workflow cannot tell the difference, and nothing leaves the platform.
 
+### Choosing the outcome
+
 You choose which outcome to rehearse by setting a reserved *codice destinatario* on the customer. In GOBL that is an inbox with the key `it-sdi-code`:
 
 ```json
@@ -149,10 +157,12 @@ You choose which outcome to rehearse by setting a reserved *codice destinatario*
 The codes are sized to real FatturaPA recipient-code lengths, so they pass validation. Any code not in this list — including a real customer's — resolves to a successful delivery.
 
 <Note>
-The sandbox simulates SDI's *responses*, not its validation. A malformed invoice that sandbox delivers happily may still be rejected by the real SDI.
+The sandbox simulates SDI's *responses*, not its validation. In practice this distinction rarely matters: the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon validates invoices against the same rules SDI applies, so an invoice that builds cleanly should only rarely be rejected live — though edge cases can still slip through.
 </Note>
 
-If you send a sandbox invoice to a company you have registered for reception, the app also loops it back to you as an inbound delivery — the only way to receive an invoice in sandbox, and a way to exercise sending and receiving in a single run.
+### Receiving your own invoices
+
+Send a sandbox invoice to a company you have [registered for reception](/guides/it-sdi-reception) and the app also loops it back to you as an inbound delivery, running your import workflow exactly as a live delivery would. This is the only way to receive an invoice in sandbox, and a convenient way to exercise sending and receiving in a single run.
 
 ## Example invoices
 
