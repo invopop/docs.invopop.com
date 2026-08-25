@@ -1,9 +1,5 @@
   <Accordion title="What happens if a received invoice contains errors?">
-    If an invoice received through SDI contains errors:
-
-    1. The import process will still attempt to convert it to [GOBL](https://docs.gobl.org) format
-    2. Any validation errors will be logged, and the rescue steps in your workflow will be triggered
-    3. You can review the errors and decide how to handle the invoice
+    The import step attempts to convert the FatturaPA document into [GOBL](https://docs.gobl.org). If conversion fails, the step returns `KO`, but the original file stays stored — the invoice can be re-processed later without SDI needing to redeliver it.
 
     If the invoice has significant structural issues that prevent conversion, you may need to contact the sender to request a corrected invoice.
   </Accordion>
@@ -12,29 +8,29 @@
   </Accordion>
   <Accordion title="Can I register multiple companies to receive invoices?">
     Yes, multiple companies can be registered to receive invoices through a single Invopop workspace. For each company, you must:
-    1. Register the Recipient Code `JKKZDGR` with the Italian tax authority for that specific company
-    2. Have its tax ID registered using the Customer Registration workflow in Invopop
-    3. Use the same Import Invoices workflow configured in the app settings
+    1. Register the recipient code `BDCS3JD` with the Italian tax authority for that specific company
+    2. Have its tax ID registered by running the registration workflow on the company's party entry
+    3. Use the same import workflow configured in the app settings
 
     This two-step registration process (with the tax authority and with Invopop) must be completed for each company you want to register. This is particularly useful for white-labeling scenarios where a user manages multiple entities.
   </Accordion>
   <Accordion title="Can I register the same tax ID again from a different party?">
-    Yes, but only one party at a time can hold a given tax ID. Run the [unregister workflow](/guides/it-sdi-receiving#unregistering-a-company) on the party that currently holds it, then register the new one.
+    Yes, but only one party at a time can hold a given tax ID. Run the [unregister workflow](/guides/it-sdi-reception#unregistering-a-company) on the party that currently holds it, then register the new one.
 
-    Registering a tax ID that another party already holds fails with `supplier already registered in a different workspace or with a different entry`.
+    Registering a tax ID that another party already holds fails with a clear error.
 
     Sandbox and live are counted separately, so the same tax ID can be registered in both at the same time.
   </Accordion>
   <Accordion title="What is the difference between registering with the tax authority and registering with Invopop?">
     The two-step registration process serves different purposes:
 
-    1. **Registering with the Italian tax authority** - Tells SDI to route invoices addressed to your company to Invopop's system using the _Codice Destinatario_ `JKKZDGR`.
+    1. **Registering with the Italian tax authority** - Tells SDI to route invoices addressed to your company to Invopop's channel using the _Codice Destinatario_ `BDCS3JD`.
 
-    2. **Registering with Invopop** (Customer Registration workflow) - Tells Invopop's system which invoices to accept and process for your workspace.
+    2. **Registering with Invopop** (the registration workflow) - Tells Invopop which invoices to accept and process for your workspace.
 
     Both steps are necessary: the first routes the invoices to Invopop, and the second ensures Invopop knows which workspace should receive those invoices.
   </Accordion>
 
   <Accordion title="What format do received SDI invoices arrive in?">
-    Signed FatturaPA XML (versions 1.2.x), conforming to the Agenzia delle Entrate schema. The signature is XAdES; SDI's own *Notifica di Esito Committente* envelopes the document during transmission.
+    Signed FatturaPA XML (versions 1.2.x), conforming to the Agenzia delle Entrate schema. The original file is kept attached to the entry exactly as SDI delivered it, alongside SDI's delivery metadata.
   </Accordion>
