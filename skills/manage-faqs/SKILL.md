@@ -377,8 +377,13 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/gr-iapr-supplier.mdx` | `gr/composers/guide-mydata-supplier.mdx` |
 | `faq/italy.mdx` | `it/composers/page-faq.mdx` |
 | `compliance/italy.mdx` | `it/composers/page-compliance.mdx` |
+| `apps/italy.mdx` | `it/composers/app-italy.mdx` |
 | `apps/sdi-italy.mdx` | `it/composers/app-sdi.mdx` |
 | `apps/smart-receipts-italy.mdx` | `it/composers/app-ticket.mdx` |
+| `guides/it-sdi-invoicing.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
+| `guides/it-sdi-status.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
+| `guides/it-sdi-reception.mdx` | `it/composers/guide-sdi-receiving.mdx` |
+| `guides/it-sdi-archiving.mdx` | `it/composers/guide-sdi-reporting.mdx` |
 | `guides/it-sdi-sending.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
 | `guides/it-sdi-receiving.mdx` | `it/composers/guide-sdi-receiving.mdx` |
 | `guides/it-ticket.mdx` | `it/composers/guide-ticket-invoicing.mdx` |
