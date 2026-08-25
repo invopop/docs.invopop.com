@@ -15,6 +15,8 @@ import { fiFinvoiceRegisterWorkflow } from '/snippets/workflows/fi/finvoice-regi
 
 In Finland, e-invoices travel through accredited operators without government clearance. The [Finland app](/apps/finland)'s registration provisions each of your Finnish parties its **own** account with Invopop's operator partner, activates its services, and allocates its e-invoice address.
 
+Registration includes one step no one in the flow can do for the supplier: their representative must **sign an authorization agreement and verify their identity** before the party is registered. The registration workflow publishes a signing link you share with them, and continues automatically once the signed authorization is approved.
+
 A party must be registered before it can send or receive documents. A workspace can hold several Finnish parties, each registered and polled on its own.
 
 | - | Sandbox | Live |
@@ -25,6 +27,8 @@ A party must be registered before it can send or receive documents. A workspace 
 ## Prerequisites
 
 - **The party's details**: legal name, Business ID (*y-tunnus*, e.g. `2617416-4`), and a Finnish address. The Business ID is uploaded without its hyphen as the GOBL `tax_id.code`.
+- **A representative on the party**: the first entry in the party's `people` list, with a name, a role in the company, and the number of their identity document under `identities`. The signing wizard prefills this person as the signer, and the identity check matches the uploaded document against that number.
+- **The representative's availability**: someone authorized to sign on the supplier's behalf has to complete the signing step, with their identity document at hand, before registration can finish.
 - **Reception workflows configured**: registration checks that the Finland app has a sync and an import workflow configured, and fails with "reception not configured" otherwise. 
 
 <Warning>
@@ -55,6 +59,9 @@ All of the following steps must be carried out from the [Invopop Console](https:
 </Step>
 
 <Step title="Create the registration workflow">
+<Card iconType="duotone" title="Finvoice register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fi-finvoice-register" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
   <Tab title="Workflow">
     <WorkflowDiagram workflow={fiFinvoiceRegisterWorkflow} />
@@ -72,17 +79,31 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 <Step title="Upload the party">
-Create a silo entry with the party's details. The example below shows the fields a Finnish party carries; for registration, the name and the y-tunnus are what matter:
+Create a silo entry with the party's details. The example below shows the fields a Finnish party carries; for registration, the name, the y-tunnus and the representative under `people` are what matter:
 
 <Supplier />
 </Step>
 
 <Step title="Run the registration workflow">
-Run the registration workflow on the party's silo entry, from the Console or [via the API](/api-ref/transform/jobs/create-a-job-post).
+Run the registration workflow on the party's silo entry, from the Console or [via the API](/api-ref/transform/jobs/create-a-job-post). The workflow publishes the signing link and pauses at the **Wait for approval** step until the signed authorization is approved.
+</Step>
+
+<Step title="Share the signing link">
+The workflow adds a public **signing link** to the party's silo entry. Open the party in the Console to copy it, and send it to the supplier's representative.
+</Step>
+
+<Step title="Have the representative sign">
+The link opens a short hosted wizard: the representative confirms their name, role and identity document number (prefilled from the party's `people` entry), uploads a photo of that document, reviews the authorization agreement, and signs it — typing their name or drawing a signature that is stamped onto the document.
+
+When the identity check passes, the authorization is approved on the spot. Otherwise it goes to Invopop's team for review, and the representative sees the outcome on the same page.
+
+<Note>
+  In sandbox workspaces the identity check is skipped: any image is accepted and the authorization is approved as soon as it is signed.
+</Note>
 </Step>
 
 <Step title="Wait for the registration to complete">
-Registration finds or creates the party's company under Invopop's partner account at the operator, activates its services, and waits until the operator reports every service in force and the party's e-invoice address allocated. Until then the job stays queued rather than reporting success on an account that can't yet receive.
+As soon as the authorization is approved, the workflow resumes on its own. Registration finds or creates the party's company under Invopop's partner account at the operator, activates its services, and waits until the operator reports every service in force and the party's e-invoice address allocated. Until then the job stays queued rather than reporting success on an account that can't yet receive.
 </Step>
 </Steps>
 
@@ -97,6 +118,16 @@ Once registration completes, the party can send and receive e-invoices, and its 
 </Warning>
 
 At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue.
+
+## Sign the agreement via the API
+
+Integrators building their own onboarding UI can drive the signing step without the hosted wizard. The Finland app exposes three endpoints on its service, authenticated per enrollment. All three read the signer from the party entry, so the first person in the party's `people` list must carry a name, a role and an identity document number before they are called.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /v1/entry/:silo_entry_id/agreement` | The agreement PDF to render on screen: the signed one once it exists, the unsigned document before that. |
+| `POST /v1/entry/:silo_entry_id/identity` | Upload the identity document as base64 images: `{"front": "...", "back": "..."}`; `back` is optional for single-page documents. |
+| `POST /v1/entry/:silo_entry_id/sign` | Sign the agreement and submit the authorization. Send `{"signature": "..."}` with a drawn PNG/JPEG to have it stamped, or an empty body to use the signer's typed name. Returns `{"status": "accepted" \| "awaiting"}`. |
 
 ## FAQ
 
