@@ -102,21 +102,19 @@ Detailed information about the SDI-specific extensions and validations can be fo
 
 Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
 
-### Identifying the parties
+### Identifying the customer
 
-Every invoice has to identify both parties fiscally, and Italy has two identifiers for the job: the *partita IVA* (VAT number) and the *codice fiscale*. Which one you provide depends on who the party is.
-
-The supplier always needs a *partita IVA*, in `tax_id`. For the customer:
+Italy has two fiscal identifiers — the *partita IVA* (VAT number) and the *codice fiscale* — and which one you put on the customer depends on who they are.
 
 | Your customer is | What to put on the party |
 |---|---|
 | An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario* — or an `it-sdi-pec` inbox holding their PEC address |
 | An Italian private individual | An `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
-| Anyone outside Italy | `tax_id` with their country. Include their VAT number if they are in the EU — elsewhere the country is all SDI uses. No inbox |
+| Anyone outside Italy | `tax_id` with their country, and their VAT number if they have one. No inbox |
 
-An Italian customer needs at least one of the two identifiers and may carry both. SDI cannot deliver outside Italy, so send foreign customers the invoice yourself, as a PDF.
+Codes never carry a country prefix, because the country has its own field: write a *partita IVA* as `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters, and a *codice fiscale* is 16 for a person or 11 digits for a company. If you don't have a code for a party, leave it out rather than inventing a placeholder.
 
-The country always lives in its own field, so none of these codes carries a country prefix: write a *partita IVA* as `09876543217`, not `IT09876543217`. Send the prefix anyway and it is stripped when the invoice is built. A *codice destinatario* is 7 characters; a personal *codice fiscale* is 16, while a company's is the same 11 digits as its VAT number.
+SDI cannot deliver outside Italy, so send foreign customers the invoice yourself, as a PDF.
 
 <AccordionGroup>
   <Accordion title="Italian business customer">
@@ -131,14 +129,6 @@ The country always lives in its own field, so none of these codes carries a coun
     <ItCustomerForeign />
   </Accordion>
 </AccordionGroup>
-
-<Note>
-  When you don't have a code for a party, leave it out rather than inventing a placeholder. SDI expects particular filler values in these cases and the conversion writes them for you: `0000000` where the customer has no tax number, and `XXXXXXX` as the delivery address for anyone outside Italy. An `it-sdi-code` inbox on a foreign customer is ignored for the same reason.
-</Note>
-
-<Warning>
-  Certified archiving needs a real *partita IVA* or *codice fiscale* on both parties. If you archive the invoices you issue, collect one before issuing rather than relying on the filler values above.
-</Warning>
 
 ### How the send step works
 
