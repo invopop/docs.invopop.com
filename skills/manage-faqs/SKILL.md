@@ -322,9 +322,9 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/br-dfe-supplier.mdx` | `br/composers/guide-dfe-supplier.mdx` |
 | `faq/colombia.mdx` | `co/composers/page-faq.mdx` |
 | `compliance/colombia.mdx` | `co/composers/page-compliance.mdx` |
-| `apps/dian-colombia.mdx` | `co/composers/app-dian.mdx` |
-| `guides/co-dian.mdx` | `co/composers/guide-dian-invoicing.mdx` |
-| `guides/co-dian-supplier.mdx` | `co/composers/guide-dian-supplier.mdx` |
+| `apps/colombia.mdx` | `co/composers/app-colombia.mdx` |
+| `guides/co-dian-invoicing.mdx` | `co/composers/guide-dian-invoicing.mdx` |
+| `guides/co-dian-registration.mdx` | `co/composers/guide-dian-supplier.mdx` |
 | `faq/denmark.mdx` | `dk/composers/page-faq.mdx` |
 | `compliance/denmark.mdx` | `dk/composers/page-compliance.mdx` |
 | `apps/denmark.mdx` | `dk/composers/app-nemhandel.mdx` |
