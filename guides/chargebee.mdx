@@ -267,11 +267,11 @@ By default, a customer's invoices are imported unless `cf_invopop_exclude` is se
 
 The [Custom Fields & Metadata](#custom-fields-metadata) section above covers data flowing _into_ GOBL. The **Update invoice details** step does the reverse: it writes values produced during your workflow back onto the originating Chargebee document. A typical use case is recording the official reference number returned by a tax authority — for example, the Polish KSeF number — into a Chargebee custom field so it stays visible and searchable in Chargebee.
 
-For invoices, the resolved values are written through Chargebee's [`update_details`](https://apidocs.chargebee.com/docs/api/invoices?lang=curl#update_invoice_details) endpoint. Credit notes can't be updated in Chargebee, so for them the same values are recorded as a comment on the credit note instead.
+The values are stored as **custom fields** (keys starting with `cf_`) on the document: invoices are written through Chargebee's [`update_details`](https://apidocs.chargebee.com/docs/api/invoices?lang=curl#update_invoice_details) endpoint, and credit notes through the [`update`](https://apidocs.chargebee.com/docs/api/credit_notes/update-credit-note-details?lang=curl) endpoint.
 
-<Note>
-  Today this step is geared towards **custom fields** (keys starting with `cf_`), but field keys are sent to Chargebee verbatim, so other `update_details` parameters can be targeted as well.
-</Note>
+<Warning>
+  Custom fields must be defined on the corresponding entity (Invoices and/or Credit Notes) in your Chargebee site under **Settings** → **Configure Chargebee** → **Custom Fields** before the step runs. Chargebee silently ignores fields that are not defined on the entity: the step will report success, but nothing will be written.
+</Warning>
 
 ### Configuration
 
