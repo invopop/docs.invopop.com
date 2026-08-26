@@ -121,8 +121,16 @@ This workflow sends a webhook when the job completes, leaving the silo entry in 
 </Accordion>
 </Step>
 
-<Step title="Fetch the silo entry">
-Use the entry ID from the webhook to [fetch the entry](/api-ref/silo/entries/fetch-an-entry). It gives you the [state](/console/doc-states) to mirror in your UI, a `faults` array explaining anything that went wrong, and the attachments — typically the PDF and XML — to store or show to your user.
+<Step title="Fetch the results">
+Use the `silo_entry_id` from the webhook to [fetch the entry](/api-ref/silo/entries/fetch-an-entry). It gives you the [state](/console/doc-states) to mirror in your UI and the attachments — typically the PDF and XML — to store or show to your user.
+
+When something went wrong, read the errors from the **job**, not the entry: take the `transform_job_id` from the same webhook and [fetch the job](/api-ref/transform/jobs/fetch-a-job), then map its `faults` array onto your own error types. The webhook payload already carries that job's faults, so in many cases you can act on it without a second call.
+
+<Warning>
+Don't build fault handling on the `faults` field of the **silo entry**. A single entry can be processed by many jobs, and the entry only exposes faults as a backwards-compatible convenience: they are copied from the job that assigned the entry's most recent state, and only when that state is an error or failure. One job has exactly one set of faults, which makes the job the deterministic source.
+
+The exception is entries uploaded with `allow_invalid`, where the entry's faults describe why the stored document itself is invalid.
+</Warning>
 </Step>
 
 </Steps>
@@ -149,8 +157,8 @@ Invopop recalculates line sums, taxes and totals on upload, because each tax aut
 ## FAQs
 
 <AccordionGroup>
-<Accordion title="Can I fetch the job instead of the silo entry?">
-You can, but the silo entry is the better source of truth: it carries the document state, the faults array and the attachments in one response, which makes error handling and retries simpler.
+<Accordion title="Should I fetch the silo entry or the job?">
+Both, for different things. The silo entry is the source of truth for the document itself — its current [state](/console/doc-states), its contents and its attachments — and it is what you mirror in your UI. The job is the source of truth for one execution of a workflow, so it is where you read `faults` from when a job errors or fails. Fetch the entry for the outcome, the job for the reason.
 </Accordion>
 <Accordion title="Does each of my customers need their own workspace?">
 No. Group workspaces by tax regime, not by customer. A single workspace holds as many registered suppliers as you need, and each invoice names the supplier it belongs to.
