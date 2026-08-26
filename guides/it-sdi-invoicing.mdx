@@ -6,6 +6,8 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
+import ItCustomer from '/snippets/parties/it/customer.mdx';
+import ItCustomerPrivate from '/snippets/parties/it/customer-private.mdx';
 import ItCustomerForeign from '/snippets/parties/it/customer-foreign-private.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
@@ -114,14 +116,25 @@ The supplier always needs a *partita IVA*, in `tax_id`. For the customer:
 
 An Italian customer needs at least one of the two identifiers and may carry both. SDI cannot deliver outside Italy, so send foreign customers the invoice yourself, as a PDF.
 
+The country always lives in its own field, so none of these codes carries a country prefix: write a *partita IVA* as `09876543217`, not `IT09876543217`. Send the prefix anyway and it is stripped when the invoice is built. A *codice destinatario* is 7 characters; a personal *codice fiscale* is 16, while a company's is the same 11 digits as its VAT number.
+
+<AccordionGroup>
+  <Accordion title="Italian business customer">
+    <ItCustomer />
+  </Accordion>
+  <Accordion title="Italian private individual">
+    No `tax_id` at all — the *codice fiscale* identifies them, and SDI delivers through whichever channel they registered for themselves.
+    <ItCustomerPrivate />
+  </Accordion>
+  <Accordion title="Customer outside Italy">
+    A country and no tax number is enough.
+    <ItCustomerForeign />
+  </Accordion>
+</AccordionGroup>
+
 <Note>
   When you don't have a code for a party, leave it out rather than inventing a placeholder. SDI expects particular filler values in these cases and the conversion writes them for you: `0000000` where the customer has no tax number, and `XXXXXXX` as the delivery address for anyone outside Italy. An `it-sdi-code` inbox on a foreign customer is ignored for the same reason.
 </Note>
-
-<Accordion title="Foreign private customer example">
-  A country and no tax number is enough.
-  <ItCustomerForeign />
-</Accordion>
 
 <Warning>
   If you archive your invoices, collect a real identifier before issuing. Certified archiving needs a VAT number or *codice fiscale* for both parties, and the filler values that satisfy SDI don't satisfy it — the invoice transmits, then fails preservation with `party has no usable fiscal ID`.
