@@ -14,7 +14,7 @@ Reference implementations, newest first: `apps/france.mdx` (preferred country ap
 `apps/<slug>.mdx` → `/apps/<slug>`:
 
 - **Country umbrella app (preferred for new country apps)**: `<country>.mdx` — `france.mdx`, `poland.mdx`, `argentina.mdx`, `saudi-arabia.mdx`, `spain.mdx`. Invopop is moving to one app per country grouping several regimes.
-- Regime-specific app (legacy direction, still valid when the system name is the brand): `<regime>-<country>.mdx` — `verifactu-spain.mdx`, `dian-colombia.mdx`, `sdi-italy.mdx`, `at-portugal.mdx`.
+- Regime-specific app (legacy direction, still valid when the system name is the brand): `<regime>-<country>.mdx` — `verifactu-spain.mdx`, `sdi-italy.mdx`, `at-portugal.mdx`.
 - Utility / format / integration: `<vendor-or-function>.mdx` — `pdf-generator.mdx`, `email.mdx`, `chargebee.mdx`, `peppol.mdx`.
 
 Renames get a `docs.json` `redirects` entry (e.g. `/apps/ksef-poland` → `/apps/poland`).
@@ -65,13 +65,13 @@ Two-column header: guide cards left, metadata table right.
 	<Tab title="Description">
 		<Columns cols="2">
 			<div class="flex flex-col grow items-center justify-center">
-				<Card title="Register suppliers" icon="https://assets.invopop.com/apps/dian-colombia/icon.svg"
-				  href="/guides/co-dian-supplier" horizontal>
+				<Card title="Register suppliers" icon="https://assets.invopop.com/flags/co.svg"
+				  href="/guides/co-dian-registration" horizontal>
 				  Supplier registration guide ›
 				</Card>
-				<Card title="Issue invoices" icon="https://assets.invopop.com/apps/dian-colombia/icon.svg"
-				  href="/guides/co-dian" horizontal>
-				  Issuing guide ›
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/co.svg"
+				  href="/guides/co-dian-invoicing" horizontal>
+				  Invoicing guide ›
 				</Card>
 			</div>
 
@@ -92,7 +92,7 @@ Two-column header: guide cards left, metadata table right.
 
 Then, in order:
 
-1. **2–4 paragraphs of prose** — what the authority/system is (outbound link, local-language name in italics), whether e-invoicing is mandatory and on what model, how Invopop simplifies it, and any partner/PSP disclosure ("Invopop has partnered with [Plemsi](https://plemsi.com) to issue invoices in Colombia…").
+1. **2–4 paragraphs of prose** — what the authority/system is (outbound link, local-language name in italics), whether e-invoicing is mandatory and on what model, how Invopop simplifies it, and any partner/PSP disclosure ("Invopop has partnered with [Alegra](https://www.alegra.com) … to onboard suppliers and issue documents on their behalf").
 2. **`#### Key features`** — `**Bold label:** Sentence.` bullets. Near-universal first item: `**Workflow automation:**`.
 3. **Guide pointer** — newest shape is a middot-joined list: `Check out the guides below to get started:` then `- [Registration](/guides/fr-pa-registration) · [Invoicing](/guides/fr-pa-invoicing) · [Reporting](/guides/fr-pa-reporting)`.
 4. **`## FAQ`** — always last in the tab, the only `##` on the page:

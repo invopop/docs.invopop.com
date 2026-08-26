@@ -1,0 +1,128 @@
+---
+title: "Invoicing in Colombia"
+sidebarTitle: "Issuing invoices"
+description: Issue invoices, credit notes, and debit notes in Colombia through the DIAN.
+---
+
+import SendWorkflow from '/snippets/workflows/co/co-send-invoice.mdx';
+import ExampleAccordion from '/snippets/invoices/co/accordion.mdx';
+import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
+import FAQ from '/snippets/faqs/co/composers/guide-dian-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { coSendInvoiceWorkflow } from '/snippets/workflows/co/co-send-invoice-data.mdx';
+
+## Introduction
+
+The [DIAN](https://www.dian.gov.co/) in Colombia stands for _Dirección de Impuestos y Aduanas Nacionales_ (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+
+Electronic invoicing in Colombia is mandatory and operates on a real-time clearance model whereby every invoice must receive a unique identifier called a CUFE (_Código Único de Factura Electrónica_) issued by the DIAN; credit and debit notes receive the equivalent CUDE.
+
+Invopop has partnered with [Alegra](https://www.alegra.com), an authorized technology provider for DIAN electronic invoicing, to issue documents in Colombia. This guide walks you through setting up the workflow that issues [GOBL](https://docs.gobl.org) documents through the DIAN. For onboarding suppliers, see the companion guide: [Supplier registration in Colombia](/guides/co-dian-registration).
+
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Only Alegra's test NIT (`9005590882`) | Registered supplier required |
+| **Series** | `SETP` with codes `990000000`–`995000000` (shared range) | Series from the supplier's DIAN numbering resolutions |
+
+Please refer to the docs of the [GOBL Colombia tax regime](https://docs.gobl.org/regimes/co) and the [DIAN add-on](https://docs.gobl.org/addons/co-dian-v2) to learn about the specifics of Colombian GOBL documents.
+
+## Prerequisites
+
+In order to complete this guide, you will need:
+
+- **A registered supplier**: follow the [supplier registration guide](/guides/co-dian-registration) to create the supplier's Alegra account and complete the DIAN habilitación before issuing.
+- Customer details for B2B transactions, including name, NIT or international ID, address, and municipality code for national transactions.
+- Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
+
+## Document types
+
+The same workflow handles all three DIAN document types:
+
+| Type | DIAN identifier | Requirements |
+|---|---|---|
+| `standard` invoice | CUFE | Series and code within an active numbering resolution |
+| `credit-note` | CUDE | References the corrected invoice in `preceding`; the correction concept comes from the [`co-dian-credit-code`](https://docs.gobl.org/addons/co-dian-v2) extension. When the preceding entry carries no `dian-cude` stamp, the note is cleared as a _nota crédito sin referencia_ |
+| `debit-note` | CUDE | Every `preceding` entry must carry the `dian-cude` stamp of the original invoice; the concept comes from the `co-dian-debit-code` extension |
+
+## Setup
+
+<Info>
+  The supplier must already be registered and habilitated with the DIAN. This is covered in the [supplier registration guide](/guides/co-dian-registration).
+</Info>
+
+<Steps>
+  <Step title="Create the send workflow">
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={coSendInvoiceWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <SendWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+Setup is complete. You can now use the workflow you created to issue invoices, credit notes, and debit notes in Colombia.
+
+## Send an invoice
+
+Upload the invoice as a silo entry and run the workflow on it, either from the [Invopop Console](https://console.invopop.com) or via the API.
+
+<Info>
+  The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).
+</Info>
+
+On success, the workflow:
+
+- adds the `dian-cude` stamp to the envelope, holding the CUFE (invoices) or CUDE (credit and debit notes),
+- adds the `dian-qr` stamp with the DIAN QR code content, used by the PDF step to render a compliant invoice, and,
+- attaches the signed DIAN XML (AttachedDocument) to the entry as a file.
+
+### Validation notes
+
+Before sending, the document is validated against the [DIAN add-on](https://docs.gobl.org/addons/co-dian-v2) rules plus a few DIAN transmission requirements:
+
+- The issue date must be the current date in Colombia: the DIAN rejects back-dated documents.
+- For invoices, the series must match one of the supplier's numbering resolutions, and the code must be within the authorized range and validity dates. Resolutions are refreshed from the DIAN automatically.
+- Every tax combo must include a percent; you can set percents explicitly or use one of the supported rates of the [GOBL Colombia tax regime](https://docs.gobl.org/regimes/co).
+- All line items must have a price greater than zero, and due dates cannot be earlier than the issue date.
+- Amounts in other currencies are converted to COP automatically. Invoices in a currency other than COP must include `exchange_rates` with a rate to COP, or the conversion fails.
+
+## Examples
+
+The following examples are of [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the Colombia workflow created during setup.
+
+[GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to the DIAN require the following properties to perform the correct normalization and validation steps:
+
+- `$schema` to be set to `https://gobl.org/draft-0/bill/invoice`
+- `supplier.tax_id.country` to be set to `CO`
+- `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Colombian customers need it too.
+
+<Warning>
+  When testing in the sandbox, adjust the examples to use the supplier NIT `9005590882`, the `SETP` series with a code between `990000000` and `995000000`, and today's date as the issue date.
+</Warning>
+
+<ExampleAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Colombia FAQ](/faq/colombia) section
+
+---
+
+<ColombiaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Colombia →
+</Card>
