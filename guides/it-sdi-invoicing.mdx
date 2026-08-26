@@ -6,6 +6,7 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow from '/snippets/workflows/it/italy-import-status.mdx';
+import ItCustomerAccordion from '/snippets/parties/it/accordion.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
@@ -98,6 +99,22 @@ Detailed information about the SDI-specific extensions and validations can be fo
 - [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
 
 Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
+
+### Identifying the customer
+
+Italy has two fiscal identifiers — the *partita IVA* (VAT number) and the *codice fiscale* — and which one you put on the customer depends on who they are.
+
+| Your customer is | What to put on the party |
+|---|---|
+| An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario* — or an `it-sdi-pec` inbox holding their PEC address |
+| An Italian private individual | An `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
+| Anyone outside Italy | `tax_id` with their country, and their VAT number if they have one. No inbox |
+
+Codes never carry a country prefix, because the country has its own field: write a *partita IVA* as `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters, and a *codice fiscale* is 16 for a person or 11 digits for a company. If you don't have a code for a party, leave it out rather than inventing a placeholder.
+
+Here is each case as a customer [party](https://docs.gobl.org/draft-0/org/party):
+
+<ItCustomerAccordion />
 
 ### How the send step works
 
