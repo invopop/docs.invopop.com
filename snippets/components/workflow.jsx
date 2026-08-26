@@ -38,6 +38,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     peppol: "https://assets.invopop.com/apps/peppol/icon.svg",
     ubl: "https://assets.invopop.com/apps/ubl/logo.svg",
     cii: "https://assets.invopop.com/apps/cii/logo.svg",
+    "gov-co": "https://assets.invopop.com/flags/co.svg",
     "gov-dk": "https://assets.invopop.com/flags/dk.svg",
     "gov-fi": "https://assets.invopop.com/flags/fi.svg",
     "gov-fr": "https://assets.invopop.com/flags/fr.svg",
@@ -62,7 +63,6 @@ export const WorkflowDiagram = ({ workflow }) => {
     cron: "https://assets.invopop.com/apps/cron/icon.svg",
     ilyda: "https://assets.invopop.com/apps/ilyda/icon.svg",
     invoicexpress: "https://assets.invopop.com/apps/invoicexpress/icon.svg",
-    plemsi: "https://assets.invopop.com/flags/co.svg",
   };
 
   const iconFor = (provider) => {

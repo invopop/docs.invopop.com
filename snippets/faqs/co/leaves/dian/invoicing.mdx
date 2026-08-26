@@ -2,22 +2,22 @@
     The DIAN requires a [Municipal Code](https://www.dian.gov.co/atencionciudadano/formulariosinstructivos/Formularios/2007/Codigos_municipios_2007.pdf) rather than a postal code to specify the municipality of the supplier. Make sure you are setting a municipal code (5 digits) and not a postal code (6 digits) in the supplier's [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension.
   </Accordion>
 
-  <Accordion title="How does Invopop issue invoices in Colombia?">
-    Through [Plemsi](https://plemsi.com), an authorized technology provider for DIAN electronic invoicing. The [DIAN Colombia workflow](/guides/co-dian) signs the GOBL envelope, sends the invoice to the DIAN via Plemsi, receives the CUFE, and generates a compliant PDF with the DIAN QR code.
-  </Accordion>
-
   <Accordion title="What does a GOBL invoice need to be accepted by the DIAN?">
     Set `$schema` to `https://gobl.org/draft-0/bill/invoice`, the supplier's `tax_id.country` to `CO`, and include the supplier's and customer's DIAN municipality codes via the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension in each party's `ext`. See the [GOBL Colombia tax regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) for the full field reference and examples.
   </Accordion>
 
   <Accordion title="Which taxes can appear on a Colombian invoice?">
-    VAT (IVA, 19% standard or 5% reduced), consumption taxes (IC, INC), the industry and commerce tax (ICA), and the retained taxes ReteIVA, ReteICA, and Retefuente. A single invoice may need to combine up to three value added and retained taxes — all are supported by the [GOBL Colombia tax regime](https://docs.gobl.org/regimes/co#tax-categories).
+    VAT (IVA, 19% standard or 5% reduced), consumption taxes (IC, INC), the industry and commerce tax (ICA), and the retained taxes ReteIVA, ReteICA, and Retefuente. A single invoice may need to combine up to three value added and retained taxes, all supported by the [GOBL Colombia tax regime](https://docs.gobl.org/regimes/co#tax-categories).
   </Accordion>
 
-  <Accordion title="Can I issue credit notes through Invopop in Colombia?">
-    Yes. The same DIAN Colombia workflow handles invoices and credit notes when configured with a dynamic sequential code, so each document type draws from its own authorized numbering range.
+  <Accordion title="Which document types can I issue in Colombia?">
+    Invoices, credit notes, and debit notes. Credit and debit notes reference the corrected invoice in the `preceding` array; debit notes require every preceding entry to carry the `dian-cude` stamp of the original invoice.
   </Accordion>
 
   <Accordion title="What are the sandbox limitations for Colombia?">
-    Plemsi's sandbox has a single enabled supplier (tax code `9015852843`) and one series per document type: `SETT` for invoices and `NCTT` for credit notes. The series are shared across users, so we assign you a specific number range to avoid collisions. Contact us via Slack or [support@invopop.com](mailto:support@invopop.com) to enable the sandbox in your workspace.
+    Only Alegra's own NIT (`9005590882`) can be registered as a supplier, since the DIAN test registry accepts documents from that emitter alone. Invoices must use the fixed DIAN test resolution: series `SETP` with codes between `990000000` and `995000000`. The range is shared across users, so pick codes unlikely to collide. Issue dates must be the current date in Colombia.
+  </Accordion>
+
+  <Accordion title="Why was my invoice rejected for its series or number?">
+    Invoice numbers must fall within an active DIAN numbering resolution: the series must match, the code must be inside the authorized range, and the issue date must be within the resolution's validity dates. Invopop refreshes the supplier's resolutions automatically before sending, so a rejection usually means the resolution has expired or the range ran out, and the supplier needs to request a new authorization from the DIAN.
   </Accordion>
