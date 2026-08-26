@@ -102,31 +102,29 @@ Example invoices are provided below, or you can use the [GOBL Builder](https://b
 
 ### Identifying the parties
 
-Every FatturaPA invoice has to identify both parties fiscally, and Italy has two identifiers for the job: the *partita IVA* (VAT number, in `tax_id`) and the *codice fiscale* (in `identities`, under the key `it-fiscal-code`). Which one a party carries depends on what that party is.
+Every invoice has to identify both parties fiscally, and Italy has two identifiers for the job: the *partita IVA* (VAT number) and the *codice fiscale*. Which one you provide depends on who the party is.
 
-An Italian supplier always needs a *partita IVA*. An Italian customer needs at least one of the two — a business normally has the VAT number, a private individual only the *codice fiscale*, and both may be present. A foreign customer needs neither.
+The supplier always needs a *partita IVA*, in `tax_id`. For the customer:
 
-Where a party has no identifier of its own, SDI expects a placeholder in its place. You never write those placeholders yourself: the conversion fills them in.
-
-| Customer | What the FatturaPA carries |
+| Your customer is | What to put on the party |
 |---|---|
-| Italian, with *partita IVA* | `IdFiscaleIVA` — `IT` plus the code from `tax_id` |
-| Italian, *codice fiscale* only | `CodiceFiscale`, and no `IdFiscaleIVA` |
-| Foreign business inside the EU | `IdFiscaleIVA` with its own country and VAT number |
-| Foreign business outside the EU | `IdCodice` `OO99999999999`, whatever its own tax number is |
-| Foreign, no tax ID at all | `IdCodice` `0000000` — treated as a private individual |
+| An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario* — or an `it-sdi-pec` inbox holding their PEC address |
+| An Italian private individual | An `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
+| Anyone outside Italy | `tax_id` with their country. Include their VAT number if they are in the EU — elsewhere the country is all SDI uses. No inbox |
 
-Only EU VAT numbers mean anything to SDI, so a non-EU company's own tax number never reaches the XML — knowing the country is enough.
+An Italian customer needs at least one of the two identifiers and may carry both. SDI cannot deliver outside Italy, so send foreign customers the invoice yourself, as a PDF.
 
-Routing follows the same principle, but keys off the country rather than the identifier. An Italian customer with no `it-sdi-code` inbox is addressed as `0000000`, which tells SDI to deliver through whatever channel the recipient registered for itself. A customer whose `tax_id` names any country other than Italy is addressed as `XXXXXXX` — always, even when it carries an inbox, because SDI has no way to deliver outside Italy. Send that invoice to the customer yourself, as a PDF.
+<Note>
+  When you don't have a code for a party, leave it out rather than inventing a placeholder. SDI expects particular filler values in these cases and the conversion writes them for you: `0000000` where the customer has no tax number, and `XXXXXXX` as the delivery address for anyone outside Italy. An `it-sdi-code` inbox on a foreign customer is ignored for the same reason.
+</Note>
 
 <Accordion title="Foreign private customer example">
-  A country and no tax number. The conversion writes `IdCodice` `0000000` for the identity and addresses the delivery as `XXXXXXX`, because the customer is not Italian.
+  A country and no tax number is enough.
   <ItCustomerForeign />
 </Accordion>
 
 <Warning>
-  A customer carrying no fiscal identifier converts and sends, but **cannot be archived**. Certified archiving needs a real VAT number or *codice fiscale* for both parties and fails with `party has no usable fiscal ID` — the placeholders that satisfy SDI do not satisfy it. If you archive what you issue, collect an identifier before issuing rather than relying on the placeholder.
+  If you archive your invoices, collect a real identifier before issuing. Certified archiving needs a VAT number or *codice fiscale* for both parties, and the filler values that satisfy SDI don't satisfy it — the invoice transmits, then fails preservation with `party has no usable fiscal ID`.
 </Warning>
 
 ### How the send step works
