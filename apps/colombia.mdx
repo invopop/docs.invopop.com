@@ -1,0 +1,122 @@
+---
+title: "Colombia"
+description: "Issue invoices, credit notes, and debit notes through the Colombian DIAN system."
+keywords: ['colombia', 'dian', 'alegra', 'fev', 'cufe', 'co']
+mode: wide
+---
+
+import RegisterSupplierWorkflow from '/snippets/workflows/co/co-register.mdx';
+import SendInvoiceWorkflow from '/snippets/workflows/co/co-send-invoice.mdx';
+import Supplier from '/snippets/parties/co/supplier.mdx';
+import ExampleAccordion from '/snippets/invoices/co/accordion.mdx';
+import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
+import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Register suppliers" icon="https://assets.invopop.com/flags/co.svg"
+				  href="/guides/co-dian-registration" horizontal>
+				  Supplier registration guide ›
+				</Card>
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/co.svg"
+				  href="/guides/co-dian-invoicing" horizontal>
+				  Invoicing guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | B2B, B2C                               |
+				| Country   | [Colombia](/compliance/colombia)       |
+				| System    | DIAN                                   |
+		</Columns>
+
+		The [DIAN](https://www.dian.gov.co/) in Colombia stands for _Dirección de Impuestos y Aduanas Nacionales_ (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+
+		Electronic invoicing in Colombia is mandatory and operates on a real-time clearance model whereby every invoice must receive a unique identifier called a CUFE (_Código Único de Factura Electrónica_) issued by the DIAN; credit and debit notes receive the equivalent CUDE.
+
+		Invopop's **Colombia app** has partnered with [Alegra](https://www.alegra.com), an authorized technology provider for DIAN electronic invoicing, to onboard suppliers and issue documents on their behalf. The app handles the DIAN _habilitación_ through a hosted portal, keeps track of the supplier's billing numbering resolutions, and clears invoices, credit notes, and debit notes in real time.
+
+		**Key features**
+
+		* **Workflow automation:** Automated workflows for registering suppliers and issuing invoices, credit notes, and debit notes through the DIAN system.
+		* **Clearance:** Every document is validated by the DIAN before it's issued, receiving its unique CUFE or CUDE code as the `dian-cude` stamp on the envelope.
+		* **Supplier onboarding:** A hosted portal walks suppliers through the DIAN habilitación test set, with the workflow resuming automatically once the DIAN accepts it.
+		* **Resolution management:** Billing numbering resolutions are fetched from the DIAN automatically and invoice numbers are validated against them before sending.
+		* **UBL 2.1 generation:** The signed DIAN XML (AttachedDocument) is stored as a file on the silo entry.
+		* **QR code:** The DIAN QR code is added as the `dian-qr` stamp, ready for legally compliant PDF generation.
+
+		Check out the guides below to get started:
+		- [Supplier registration](/guides/co-dian-registration) · [Invoicing](/guides/co-dian-invoicing)
+
+	## FAQ
+
+	<FAQ />
+
+	More answers in our [Colombia FAQ](/faq/colombia) section
+
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		Registration
+		<Card title="Register supplier" icon="https://assets.invopop.com/flags/co.svg" horizontal>
+			Validates the supplier party, creates its Alegra company, and publishes the DIAN habilitación portal link in the entry's `meta` section.
+		</Card>
+		<Card title="Wait for DIAN habilitación" icon="https://assets.invopop.com/flags/co.svg" horizontal>
+			Pauses the workflow until the DIAN accepts the habilitación test set the supplier submits from the portal.
+		</Card>
+
+		Invoicing
+		<Card title="Send to DIAN" icon="https://assets.invopop.com/flags/co.svg" horizontal>
+			Converts the GOBL invoice, credit note, or debit note to the DIAN UBL format and clears it, stamping the envelope with the CUFE/CUDE and QR code once the DIAN validates it.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+
+		Registration
+		<AccordionGroup>
+			<Accordion title="Colombia register supplier">
+				<RegisterSupplierWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Invoicing
+		<AccordionGroup>
+			<Accordion title="Colombia send invoice">
+				<SendInvoiceWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+	</Tab>
+	<Tab title="Documents">
+		<AccordionGroup>
+			<Accordion title="Colombia supplier">
+				A NIT with the verification digit, an email address, and the `co-dian-municipality` extension identifying where the supplier is registered.
+				<Supplier />
+			</Accordion>
+		</AccordionGroup>
+
+		<ExampleAccordion />
+
+		Copy and paste these documents into the [GOBL builder](https://build.gobl.org) in order to preview and verify them.
+	</Tab>
+</Tabs>
+
+---
+
+<ColombiaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Colombia app →
+</Card>

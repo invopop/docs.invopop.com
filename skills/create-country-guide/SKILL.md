@@ -5,13 +5,13 @@ description: Create a new country guide (supplier registration + issuing invoice
 
 # Creating country guides
 
-A country's docs ship as a **guide family**: one supplier registration guide plus one issuing/invoicing guide per regime (split established in #498), optionally extended with receiving, reporting, or status guides. Guides are tutorials — the paired `apps/` page is the catalogue/reference. Reference implementations, newest first: `guides/sa-zatca-*.mdx`, `guides/fr-pa-*.mdx` (large families), and the canonical two-page shape in `guides/co-dian.mdx` + `guides/co-dian-supplier.mdx` (also `pt-at`, `pl-ksef`, `gr-iapr`, `br-dfe`). Don't copy the older Spain pages (`es-verifactu*`) — they predate the current pattern.
+A country's docs ship as a **guide family**: one supplier registration guide plus one issuing/invoicing guide per regime (split established in #498), optionally extended with receiving, reporting, or status guides. Guides are tutorials — the paired `apps/` page is the catalogue/reference. Reference implementations, newest first: `guides/sa-zatca-*.mdx`, `guides/fr-pa-*.mdx` (large families), and the canonical two-page shape in `guides/co-dian-registration.mdx` + `guides/co-dian-invoicing.mdx` (also `pt-at`, `pl-ksef`, `gr-iapr`, `br-dfe`). Don't copy the older Spain pages (`es-verifactu*`) — they predate the current pattern.
 
 ## File naming
 
 Flat files in `guides/`, slug `<iso2>-<regime>[-<task>].mdx`:
 
-- Issuing guide: bare `<iso2>-<regime>.mdx` (`co-dian.mdx`, `pl-ksef.mdx`) — or explicit task when the family has several flows (`mx-sat-issuing.mdx`, `it-sdi-sending.mdx`, `fr-pa-invoicing.mdx`, `sa-zatca-clearance-reporting.mdx`).
+- Issuing guide: bare `<iso2>-<regime>.mdx` (`pt-at.mdx`, `pl-ksef.mdx`) — or explicit task when the family has several flows (`co-dian-invoicing.mdx`, `mx-sat-issuing.mdx`, `it-sdi-sending.mdx`, `fr-pa-invoicing.mdx`, `sa-zatca-clearance-reporting.mdx`).
 - Supplier guide: `<iso2>-<regime>-supplier.mdx` (or `-registration` in the newest families: `fr-pa-registration.mdx`, `sa-zatca-registration.mdx`).
 - Other tasks: `-receiving`, `-reporting`, `-status`, `-lookup`.
 - Family hub: when a family has ≥3 pages, the bare slug becomes an overview page (`fr-pa.mdx`, sidebarTitle "Overview") with one horizontal `<Card>` per child guide.
@@ -70,7 +70,7 @@ No "Next steps" section, no `<CardGroup>` — the FAQ + resources + community ca
 
 Stock idioms:
 
-- Companion link in the intro: `For onboarding suppliers with the DIAN and Plemsi, see the companion guide: [Colombia: Supplier registration](/guides/co-dian-supplier).`
+- Companion link in the intro: `For onboarding suppliers, see the companion guide: [Supplier registration in Colombia](/guides/co-dian-registration).`
 - Sandbox/live table right after the intro, with a literal `-` first header cell:
 
   ```mdx
@@ -111,7 +111,7 @@ Differences vs the issuing guide:
 - Imports `/snippets/parties/<cc>/supplier.mdx` (or a party accordion), not invoice examples.
 - FAQ composer is `guide-<regime>-supplier.mdx`.
 - Registration wizard walkthroughs are `<Steps>` with one `<Frame>` screenshot per screen.
-- Closing handoff: `At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [DIAN issuing invoices guide](/guides/co-dian) to continue.`
+- Closing handoff: `At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Invoicing in Colombia guide](/guides/co-dian-invoicing) to continue.`
 
 ## The workflow block (most repeated shape)
 
@@ -143,13 +143,13 @@ Every workflow a guide asks the reader to create uses this Card + Tabs pair:
 Import block right after frontmatter — plain snippet imports first, then the component, then workflow data exports (`guides/es-verifactu.mdx:8-18` shape):
 
 ```mdx
-import WorkflowExample from '/snippets/workflows/co/dian-invoice.mdx';
+import WorkflowExample from '/snippets/workflows/co/co-send-invoice.mdx';
 import ExampleAccordion from '/snippets/invoices/co/accordion.mdx';
 import Supplier from '/snippets/parties/co/supplier.mdx';
 import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
 import FAQ from '/snippets/faqs/co/composers/guide-dian-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { coDianInvoiceWorkflow } from '/snippets/workflows/co/dian-invoice-data.mdx';
+import { coSendInvoiceWorkflow } from '/snippets/workflows/co/co-send-invoice-data.mdx';
 ```
 
 Naming: FAQ composer → always `FAQ`; resources table → `<Country>Resources`; example accordion → `ExampleAccordion`; workflow JSON snippet → descriptive PascalCase (`SendInvoiceWorkflow`, `RegisterWorkflow`). Country-prefix component names when a page composes several countries.
@@ -160,7 +160,7 @@ Each workflow lives as a **pair** under `snippets/workflows/<cc>/`:
 
 - `<name>.mdx` — frontmatter (`title`, `description`, `countryCode`, `appId`, `schema`) + one fenced ` ```json ` block. Rendered in the Code tab.
 - `<name>-data.mdx` — **only** `export const <export>Workflow = {…};`, nothing else. No frontmatter, no markdown — mixing content compiles to an `undefined` stub on a cold build and silently kills the section (warm `mint dev` masks it).
-- Export name = globally unique camelCase of `<dir>-<basename>` + `Workflow`: `co/dian-invoice-data.mdx` ⇒ `coDianInvoiceWorkflow`; acronyms camelCased (`Nfse`, not `NFSe`). Never `workflow`.
+- Export name = globally unique camelCase of `<dir>-<basename>` + `Workflow`: `pt/at-issue-invoice-data.mdx` ⇒ `ptAtIssueInvoiceWorkflow`; when the basename already starts with the country code, don't repeat it (`co/co-send-invoice-data.mdx` ⇒ `coSendInvoiceWorkflow`); acronyms camelCased (`Nfse`, not `NFSe`). Never `workflow`.
 - Import without aliasing — `{ x as y }` double-declares in Mintlify's inlining.
 - **When updating the JSON, paste it into both files** — they must stay in sync.
 - If the workflow uses an app new to `<WorkflowDiagram>`, add its provider key to `providerIcons` in `snippets/components/workflow.jsx` (longest-prefix match; static `className` literals only).
@@ -204,8 +204,8 @@ Guides live in the Guides tab under the `Countries` group, one flag-icon group p
   "group": "Colombia",
   "icon": "https://assets.invopop.com/flags/co.svg",
   "pages": [
-    "/guides/co-dian-supplier",
-    "/guides/co-dian"
+    "/guides/co-dian-registration",
+    "/guides/co-dian-invoicing"
   ]
 }
 ```
