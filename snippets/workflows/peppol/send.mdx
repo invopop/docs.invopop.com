@@ -1,11 +1,74 @@
----
-title: "Peppol send invoice"
-description: "Send a Peppol BIS invoice through the Peppol network"
-appId: "peppol"
-schema: "bill/invoice"
----
+export const peppolSendWorkflow = {
+    "name": "Peppol send invoice",
+    "description": "Send a Peppol BIS invoice through the Peppol network",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "33e23480-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "2354afd0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · Peppol · PPL000001",
+            "config": {
+                "name": "PPL",
+                "padding": 6,
+                "prefix": "PPL",
+                "start": 1
+            }
+        },
+        {
+            "id": "fb06b190-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "fc5aa8d0-10aa-11f0-a09e-7b63571a4ae2",
+            "name": "Generate UBL document",
+            "provider": "ubl.generate",
+            "summary": "Peppol BIS Billing v3",
+            "config": {
+                "doc_type": "bis-invoice-v3",
+                "private": false,
+                "validate_ubl": true
+            }
+        },
+        {
+            "id": "075442a0-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Send Peppol document",
+            "provider": "peppol.send"
+        },
+        {
+            "id": "3037a310-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "39513240-10ab-11f0-a09e-7b63571a4ae2",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
 
-```json Example Peppol send invoice workflow
+```json Peppol send invoice workflow
 {
     "name": "Peppol send invoice",
     "description": "Send a Peppol BIS invoice through the Peppol network",

@@ -1,50 +1,83 @@
----
-title: "Italy send invoice"
-description: "Issue an invoice through Italy's SDI system"
-countryCode: "it"
-appId: "gov-it"
-schema: "bill/invoice"
----
+export const itSendInvoiceWorkflow = {
+    "name": "Italy send invoice",
+    "description": "Issue an invoice through Italy's SDI system",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "019ed592-0763-79c1-9ca1-a2f7795e2b16",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · SDI · 000001",
+            "config": {
+                "name": "SDI",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "019ed592-0763-793f-8fbe-bc977455d784",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "019ed592-0763-7ce4-beb0-2c95c77399d3",
+            "name": "Send invoice to SDI",
+            "provider": "gov-it.sdi.send.invoice",
+            "summary": "Submit the FatturaPA document to SDI"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "019ed592-0763-7426-9bbf-6ed466d5749f",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
 
-```json Example send invoice workflow
+```json Italy send invoice workflow
 {
-  "name": "Send invoice to SDI",
-  "description": "Issue an invoice through Italy's SDI system",
-  "schema": "bill/invoice",
-  "steps": [
-    {
-      "id": "019ed592-0763-79c1-9ca1-a2f7795e2b16",
-      "name": "Add sequential code",
-      "provider": "sequence.enumerate",
-      "summary": "Dynamic · SDI · 000001",
-      "config": {
-        "name": "SDI",
-        "padding": 6,
-        "start": 1
-      }
-    },
-    {
-      "id": "019ed592-0763-793f-8fbe-bc977455d784",
-      "name": "Sign envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "019ed592-0763-7ce4-beb0-2c95c77399d3",
-      "name": "Send invoice to SDI",
-      "provider": "gov-it.sdi.send.invoice",
-      "summary": "Submit the FatturaPA document to SDI"
-    }
-  ],
-  "rescue": [
-    {
-      "id": "019ed592-0763-7426-9bbf-6ed466d5749f",
-      "name": "Set state",
-      "provider": "silo.state",
-      "summary": "Set state to `error`{.state .error}",
-      "config": {
-        "state": "error"
-      }
-    }
-  ]
+    "name": "Italy send invoice",
+    "description": "Issue an invoice through Italy's SDI system",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "019ed592-0763-79c1-9ca1-a2f7795e2b16",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · SDI · 000001",
+            "config": {
+                "name": "SDI",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "019ed592-0763-793f-8fbe-bc977455d784",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "019ed592-0763-7ce4-beb0-2c95c77399d3",
+            "name": "Send invoice to SDI",
+            "provider": "gov-it.sdi.send.invoice",
+            "summary": "Submit the FatturaPA document to SDI"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "019ed592-0763-7426-9bbf-6ed466d5749f",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
 }
 ```
