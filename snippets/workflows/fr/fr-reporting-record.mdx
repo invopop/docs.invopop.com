@@ -1,9 +1,45 @@
----
-title: "PPF record document for reporting"
-description: "Record a document as a Flux 10 row for French e-reporting"
-countryCode: "fr"
-appId: "gov-fr"
----
+export const frReportingRecordWorkflow = {
+    "name": "PPF record document for reporting",
+    "description": "Record a document as a Flux 10 row for French e-reporting",
+    "steps": [
+        {
+            "id": "753fdc8d-80ce-4a3f-a8ca-c01158e64cf9",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "7d204bc6-f42d-4f55-b08a-fca3c19bee15",
+            "name": "Record document for reporting",
+            "provider": "gov-fr.reporting.record",
+            "notes": "Records an invoice/payment for reporting in the local database."
+        },
+        {
+            "id": "d0660d9a-31b0-4428-b9da-bef14f7ae200",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "7ec292ea-36f2-49bb-b2ce-bb97bd6a1782",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
 ```json PPF record document for reporting workflow
 {
     "name": "PPF record document for reporting",

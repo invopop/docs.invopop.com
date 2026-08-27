@@ -1,10 +1,36 @@
----
-title: "SAT import CFDI"
-description: "Import a CFDI received through SAT"
-countryCode: "mx"
-appId: "sat-mx"
-schema: "bill/invoice"
----
+export const mxSatConvertCfdiWorkflow = {
+    "name": "SAT import CFDI",
+    "description": "Import a CFDI received through SAT",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "6346e330-14cc-11f1-85d2-9d77c04210bc",
+            "name": "Import CFDI from SAT",
+            "provider": "sat-mx.import"
+        },
+        {
+            "id": "74f01110-14cc-11f1-85d2-9d77c04210bc",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `received`{.state .received}",
+            "config": {
+                "state": "received"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e5f6a7b0-1a2b-11f0-b001-4a5b6c7d8e9f",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
 ```json SAT import CFDI workflow
 {
     "name": "SAT import CFDI",

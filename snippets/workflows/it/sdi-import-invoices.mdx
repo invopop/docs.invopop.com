@@ -1,10 +1,61 @@
----
-title: "SDI import invoice"
-description: "Import an invoice received through SDI"
-countryCode: "it"
-appId: "sdi-it"
-schema: "bill/invoice"
----
+export const itSdiImportInvoicesWorkflow = {
+    "name": "SDI import invoice",
+    "description": "Import an invoice received through SDI",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "6e8f0b30-fd13-11ef-998c-e97f18c9212e",
+            "name": "Import invoice from SDI",
+            "provider": "sdi-it.import",
+            "summary": "Convert received FatturaPA to GOBL",
+            "config": {
+                "environment": "production"
+            }
+        },
+        {
+            "id": "b3e17a92-7c5d-11f1-9c40-92000767c8b7",
+            "name": "Archive document for legal preservation",
+            "provider": "sdi-it.archive.store",
+            "summary": "Preserve invoice and store its receipt",
+            "config": {
+                "environment": "production",
+                "flow": "received"
+            }
+        },
+        {
+            "id": "7f9a1c40-fd13-11ef-998c-e97f18c9212e",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Italian · A4",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "locale": "it",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "8a0b2d50-fd13-11ef-998c-e97f18c9212e",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "9b1c3e60-fd13-11ef-998c-e97f18c9212e",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
 ```json SDI import invoice workflow
 {
     "name": "SDI import invoice",

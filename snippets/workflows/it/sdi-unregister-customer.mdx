@@ -1,10 +1,46 @@
----
-title: "SDI unregister customer"
-description: "Unregister a customer from SDI to stop receiving invoices"
-countryCode: "it"
-appId: "sdi-it"
-schema: "org/party"
----
+export const itSdiUnregisterCustomerWorkflow = {
+    "name": "SDI unregister customer",
+    "description": "Unregister a customer from SDI to stop receiving invoices",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "b56b1f70-90e1-11f1-9fc8-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "b56e7f7c-90e1-11f1-8a81-92000767c8b7",
+            "name": "Unregister party from SDI",
+            "provider": "sdi-it.unregister",
+            "summary": "Stop receiving invoices for this company"
+        },
+        {
+            "id": "b56e8088-90e1-11f1-b95f-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "cf5af04f-90e1-11f1-8a24-92000767c8b7",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
 ```json SDI unregister customer workflow
 {
     "name": "SDI unregister customer",
