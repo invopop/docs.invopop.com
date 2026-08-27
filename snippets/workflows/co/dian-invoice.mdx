@@ -1,80 +1,143 @@
----
-title: "DIAN issue invoice"
-description: "Issue an invoice through DIAN and generate PDF"
-countryCode: "co"
-appId: "dian-co"
-schema: "bill/invoice"
----
+export const coDianInvoiceWorkflow = {
+    "name": "DIAN issue invoice",
+    "description": "Issue an invoice through DIAN and generate PDF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ece780f0-322c-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "7d803770-322c-11f0-bbb5-9da15d555d80",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · DIAN · 1",
+            "config": {
+                "name": "Colombia",
+                "padding": 1,
+                "prefix": "",
+                "start": 1
+            }
+        },
+        {
+            "id": "fc75e4f0-8721-11ef-a962-73e3f2037a52",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "bde49770-322c-11f0-bbb5-9da15d555d80",
+            "name": "Send invoice to DIAN",
+            "provider": "plemsi"
+        },
+        {
+            "id": "cdf59920-322c-11f0-bbb5-9da15d555d80",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Spanish · Letter",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "layout": "Letter",
+                "locale": "es",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "9cebc6a0-322d-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e57671a0-322c-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
 
-```json Example DIAN issue invoice workflow
+```json DIAN issue invoice workflow
 {
-  "name": "DIAN issue invoice",
-  "description": "Issue an invoice through DIAN and generate PDF",
-  "schema": "bill/invoice",
-  "steps": [
-    {
-      "id": "ece780f0-322c-11f0-bbb5-9da15d555d80",
-      "name": "Set state",
-      "provider": "silo.state",
-      "summary": "Set state to `processing`{.state .processing}",
-      "config": {
-        "state": "processing"
-      }
-    },
-    {
-      "id": "7d803770-322c-11f0-bbb5-9da15d555d80",
-      "name": "Add sequential code",
-      "provider": "sequence.enumerate",
-      "summary": "Dynamic · DIAN · 1",
-      "config": {
-        "name": "Colombia",
-        "padding": 1,
-        "prefix": "",
-        "start": 1
-      }
-    },
-    {
-      "id": "fc75e4f0-8721-11ef-a962-73e3f2037a52",
-      "name": "Sign envelope",
-      "provider": "silo.close"
-    },
-    {
-      "id": "bde49770-322c-11f0-bbb5-9da15d555d80",
-      "name": "Send invoice to DIAN",
-      "provider": "plemsi"
-    },
-    {
-      "id": "cdf59920-322c-11f0-bbb5-9da15d555d80",
-      "name": "Generate PDF",
-      "provider": "pdf",
-      "summary": "Spanish · Letter",
-      "config": {
-        "date_format": "%Y-%m-%d",
-        "layout": "Letter",
-        "locale": "es",
-        "logo_height": 40
-      }
-    },
-    {
-      "id": "9cebc6a0-322d-11f0-bbb5-9da15d555d80",
-      "name": "Set state",
-      "provider": "silo.state",
-      "summary": "Set state to `sent`{.state .sent}",
-      "config": {
-        "state": "sent"
-      }
-    }
-  ],
-  "rescue": [
-    {
-      "id": "e57671a0-322c-11f0-bbb5-9da15d555d80",
-      "name": "Set state",
-      "provider": "silo.state",
-      "summary": "Set state to `error`{.state .error}",
-      "config": {
-        "state": "error"
-      }
-    }
-  ]
+    "name": "DIAN issue invoice",
+    "description": "Issue an invoice through DIAN and generate PDF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ece780f0-322c-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "7d803770-322c-11f0-bbb5-9da15d555d80",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · DIAN · 1",
+            "config": {
+                "name": "Colombia",
+                "padding": 1,
+                "prefix": "",
+                "start": 1
+            }
+        },
+        {
+            "id": "fc75e4f0-8721-11ef-a962-73e3f2037a52",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "bde49770-322c-11f0-bbb5-9da15d555d80",
+            "name": "Send invoice to DIAN",
+            "provider": "plemsi"
+        },
+        {
+            "id": "cdf59920-322c-11f0-bbb5-9da15d555d80",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Spanish · Letter",
+            "config": {
+                "date_format": "%Y-%m-%d",
+                "layout": "Letter",
+                "locale": "es",
+                "logo_height": 40
+            }
+        },
+        {
+            "id": "9cebc6a0-322d-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e57671a0-322c-11f0-bbb5-9da15d555d80",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
 }
 ```
