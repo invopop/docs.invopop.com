@@ -38,16 +38,12 @@ The two modes target different ZATCA sandbox endpoints and differ mainly in how 
 
 Registration spans two parts: a workflow you run against the party document, and a hosted onboarding wizard the supplier completes to provide the FATOORA OTP.
 
-<Frame caption="ZATCA register supplier">
-  <img src="/assets/guides/sa-register-supplier.png" width="640" />
-</Frame>
-
 <Steps>
   <Step title="Set State → Processing">
     Sets the state of the silo entry as "Processing".
   </Step>
   <Step title="Register supplier with ZATCA">
-    Validates the party's identity and full address, then publishes a public onboarding link in the meta section of the party. The supplier follows this link to complete the onboarding wizard.
+    Validates the party's tax ID, [supplier identity](#multi-branch-entities), and full address, stakes the claim on that VAT number and identity, then publishes a public onboarding link in the meta section of the party. The supplier follows this link to complete the onboarding wizard.
   </Step>
   <Step title="Wait for ZATCA certificate upload">
     Pauses until the supplier uploads the compliance CSID. It will then submit the mandatory compliance sample invoices and swaps the Compliance CSID with the Production CSID.
@@ -125,10 +121,10 @@ Each row carries the registration's details: Name, Branch Name, Identity Code, I
 
 Unregistering a party from ZATCA in production environment is handled by the **taxpayers**, directly in the **FATOORA portal**, signing in with their own credentials.
 
-Invopop also provides an unregister action that removes the party and its stored credentials from **Invopop's internal systems only**. It does not touch the party's registration with ZATCA.
+Invopop also provides an unregister action that removes the party and its stored credentials from **Invopop's internal systems only**. It does not touch the party's registration with ZATCA. It targets a single registration, the one that matches the party's VAT number and [supplier identity](#multi-branch-entities), so unregistering one branch leaves the other registrations under the same VAT number untouched.
 
 <Warning>
-  This action is intended for **testing in sandbox** — for example, to re-onboard the same VAT during development. It is **not** for live environments; unregistering at ZATCA is always done by the taxpayer in the FATOORA portal.
+  This action is intended for **testing in sandbox** — for example, to re-onboard the same VAT number and identity during development. It is **not** for live environments; unregistering at ZATCA is always done by the taxpayer in the FATOORA portal.
 </Warning>
 
 <Card iconType="duotone" title="ZATCA unregister supplier workflow (sandbox only)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-unregister" horizontal>
@@ -143,6 +139,23 @@ Invopop also provides an unregister action that removes the party and its stored
     <UnregisterWorkflow />
   </Tab>
 </Tabs>
+
+## Multi-branch entities
+
+A business can run several branches that all share the same VAT number while each branch onboards its own device or system. A single VAT number therefore often needs more than one registration, and Invopop supports this through the [GOBL identities](https://docs.gobl.org/draft-0/org/identity) field.
+
+Every party registered with ZATCA is linked to a unique CSID certificate that identifies both its VAT number and its branch. Invopop gives each unique combination of VAT number and supplier identity its own CSID certificate, allowing them to act independently and through their own invoice chain.
+
+Set the identity on the [`org.Party`](https://docs.gobl.org/draft-0/org/party) document as an entry in `identities` whose `type` is one of:
+
+| `type` | Identity |
+|---|---|
+| `CRN` | Commercial Registration Number |
+| `MOM` | Momrah license (Ministry of Municipality, Rural Affairs and Housing) |
+| `MLS` | MLSD license (Ministry of Human Resources and Social Development) |
+| `700` | 700 number (unified national number) |
+| `SAG` | Sagia license (Ministry of Investment, formerly SAGIA) |
+| `OTH` | Other identifier |
 
 ## FAQ
 
