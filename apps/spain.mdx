@@ -22,10 +22,13 @@ import NoverifactuEventWorkflow from '/snippets/workflows/es/noverifactu-event.m
 import NoverifactuSummaryEventWorkflow from '/snippets/workflows/es/noverifactu-summary-event.mdx';
 import InvoiceAccordion from '/snippets/invoices/es/sii-accordion.mdx';
 import TicketBAIInvoiceAccordion from '/snippets/invoices/es/ticketbai-accordion.mdx';
+import CreditNoteMin from '/snippets/invoices/es/sii-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/es/sii-credit-note.mdx';
+import CorrectiveInvoiceMin from '/snippets/invoices/es/sii-corrective.min.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/sii-corrective.mdx';
 import FacturaeAccordion from '/snippets/invoices/es/facturae-accordion.mdx';
-import Supplier from '/snippets/suppliers/es/company.mdx';
+import Supplier from '/snippets/parties/es/supplier.mdx';
+import Customer from '/snippets/parties/es/customer.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 
@@ -78,20 +81,20 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 				| Country   | [Spain](/compliance/spain)             |
 		</Columns>
 
-	Invopop's **Spain app** provides comprehensive integration with Spanish tax agencies, centralizing all compliance requirements for electronic invoicing and tax reporting in Spain.
+	Invopop's **Spain app** provides integration with Spanish tax agencies, centralizing all compliance requirements for electronic invoicing and tax reporting in Spain.
 
 	| Feature | TicketBAI | SII |
 	|---|---|---|
 	| **Scope** | Basque Country (Álava, Gipuzkoa, Bizkaia) | Rest of Spain (AEAT) |
 	| **Workflow automation** | Issue invoices and onboard suppliers | Report invoices and onboard suppliers |
-	| **Compliant documents** | XML generation and PDF with QR codes | Invoice reporting to AEAT via SII API ([with limitations](#limitations)) |
+	| **Compliant documents** | XML generation and PDF with QR codes | Invoice reporting to AEAT via SII API ([with limitations](#sii-implementation-scope)) |
 	| **Supplier registration** | Registration wizard and agreement signing | Registration wizard and agreement signing |
 	| **White-label** | Issue on behalf of clients or directly | Report on behalf of clients or directly |
 	| **Tax ID verification** | Via AEAT Lookup | Via AEAT Lookup |
 
 	Check out the guides below to get started:
 	- [TicketBAI invoicing guide](/guides/es-ticketbai) · [TicketBAI supplier onboarding](/guides/es-ticketbai-supplier)
-	- [NO VERI*FACTU invoicing guide](/guides/es-noverifactu) · [NO VERI*FACTU supplier onboarding](/guides/es-noverifactu-supplier)
+	- [NO VERI\*FACTU invoicing guide](/guides/es-noverifactu) · [NO VERI\*FACTU supplier onboarding](/guides/es-noverifactu-supplier)
 	- [SII invoicing guide](/guides/es-sii) · [SII supplier onboarding](/guides/es-sii-supplier)
 	- [Spanish Tax ID Lookup guide](/guides/es-lookup) · [Facturae guide](/guides/es-facturae)
 
@@ -111,14 +114,14 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 
 	The current SII integration provides a foundational implementation covering the primary VAT registry books required for most businesses operating in Spain. Understanding what is and isn't supported will help you determine if this solution meets your compliance needs.
 
-	#### Supported Registry Books
+	#### Supported registry books
 
 	We currently support the two most commonly used VAT registry books:
 
 	- **_Libro de Registro de Facturas Expedidas_** (Issued Invoices Registry)
 	- **_Libro de Registro de Facturas Recibidas_** (Received Invoices Registry) - [with specific limitations](#received-invoices-limitations)
 
-	#### Unsupported Registry Books
+	#### Unsupported registry books
 
 	The following VAT registry books are **not supported** at the moment:
 
@@ -126,7 +129,7 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 	- **_Libro de Registro de Determinadas Operaciones Intracomunitarias_** (Specific Intra-Community Operations Registry)
 	- Other registries such as cash payments (*pagos en metálico*), travel agency operations (*operaciones de agencias de viajes*), etc.
 
-	#### Received Invoices Limitations
+	#### Received invoices limitations
 
 	When reporting to the *_Libro de Registro de Facturas Recibidas_*, the following key limitations apply:
 
@@ -138,7 +141,7 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 
 	These represent the primary limitations in the current implementation.
 
-	#### Regional Endpoints
+	#### Regional endpoints
 
 	Currently, only the **AEAT (Agencia Estatal de Administración Tributaria)** endpoint is supported for SII reporting. This covers businesses operating under the standard Spanish tax framework.
 
@@ -335,7 +338,12 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 	<Tab title="Documents">
 		<AccordionGroup>
 			<Accordion title="Supplier">
+				A Spanish company with its NIF and the legal representative required for supplier registration.
 				<Supplier />
+			</Accordion>
+			<Accordion title="Customer">
+				A Spanish business customer identified by NIF with a full address.
+				<Customer />
 			</Accordion>
 		</AccordionGroup>
 
@@ -353,10 +361,16 @@ import FAQ from '/snippets/faqs/es/composers/app-spain.mdx';
 
 		<AccordionGroup>
 			<Accordion title="Credit Note">
-				<CreditNote />
+				<CodeGroup>
+					<CreditNoteMin />
+					<CreditNote />
+				</CodeGroup>
 			</Accordion>
 			<Accordion title="Corrective Invoice">
-				<CorrectiveInvoice />
+				<CodeGroup>
+					<CorrectiveInvoiceMin />
+					<CorrectiveInvoice />
+				</CodeGroup>
 			</Accordion>
 		</AccordionGroup>
 

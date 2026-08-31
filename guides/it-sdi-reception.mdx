@@ -1,0 +1,181 @@
+---
+title: "Italy receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: "Receive and process electronic invoices from Italy's SDI system."
+---
+
+import RegisterPartyWorkflow, { itRegisterPartyWorkflow } from '/snippets/workflows/it/italy-register-party.mdx';
+import UnregisterPartyWorkflow, { itUnregisterPartyWorkflow } from '/snippets/workflows/it/italy-unregister-party.mdx';
+import ImportInvoiceWorkflow, { itImportInvoiceWorkflow } from '/snippets/workflows/it/italy-import-invoice.mdx';
+import ItCustomer from '/snippets/parties/it/customer.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import FAQ from '/snippets/faqs/it/composers/guide-sdi-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+In Italy, businesses receive their invoices through the *Sistema di Interscambio* (SDI), which delivers each one as a FatturaPA XML document to the channel the recipient has registered with the tax authority.
+
+Invopop is registered as such a channel in its own right. SDI delivers invoices straight to Invopop, which works out which company each one is for, converts the FatturaPA document into [GOBL](https://docs.gobl.org) using the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library, and runs your workflow on the result. The original XML is kept attached exactly as SDI delivered it, alongside the delivery metadata that came with it.
+
+Detailed information about the SDI-specific extensions can be found in:
+- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
+- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Deliveries** | Only invoices you send to yourself, looped back | Real invoices from your suppliers |
+| **Tax authority** | Nothing to register | Each company registers Invopop's recipient code |
+
+## Setup
+
+Receiving takes more setup than sending. Invopop needs to know which companies belong to your workspace, and the tax authority needs to know that those companies receive through Invopop.
+
+<Steps>
+<Step title="Connect the Italy app">
+1. Navigate to **Configuration** → **Apps**
+2. Find **Italy** in the app discovery list
+3. Click **Connect** to activate
+</Step>
+
+<Step title="Set up the registration workflow">
+<Accordion title="Italian company example">
+  The `tax_id` contains the company's *partita IVA* without the `IT` prefix.
+  <ItCustomer />
+</Accordion>
+
+This workflow claims a company's fiscal identity for your workspace and enables certified archiving for it.
+
+<Card iconType="duotone" title="Italy register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-register-party" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itRegisterPartyWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterPartyWorkflow />
+  </Tab>
+</Tabs>
+
+The party entry must carry an Italian VAT number or a *codice fiscale* — registration fails with a clear error otherwise. Re-running it on an already-registered company is safe.
+</Step>
+
+<Step title="Set up the import workflow">
+This workflow runs on every invoice SDI delivers. Extend it freely — generate a PDF, notify your systems through a webhook, push the invoice into an ERP.
+
+<Card iconType="duotone" title="Italy import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-import-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itImportInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <ImportInvoiceWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Configure the app for receiving">
+Navigate to **Configuration** → **Apps**, find the **Italy** app, click **Configure**, and select the import workflow you just created. It will run automatically whenever an invoice arrives.
+</Step>
+
+<Step title="Register the recipient code with the tax authority (live only)">
+  <Note>
+    Skip this in sandbox — there is no tax authority to tell.
+  </Note>
+
+For each company that should receive through Invopop, register Invopop's recipient code (*codice destinatario*) at Agenzia delle Entrate:
+
+1. Go to the [tax authority's portal](https://ivaservizi.agenziaentrate.gov.it/portale/) and log in with credentials for the company being registered.
+2. Open the **Fatture e Corrispettivi** section.
+3. Under **Fatturazione elettronica**, choose **Registrazione delle modalità di ricezione della fattura elettronica**.
+4. Select the *Codice Destinatario* option and enter `BDCS3JD`.
+5. Click **Conferma**.
+
+<Tip>
+The recipient code is a routing address: it tells SDI where to deliver the company's incoming invoices. Suppliers who address an invoice to an old code will not reach you, so tell the company's suppliers whenever it changes.
+</Tip>
+</Step>
+
+<Step title="Run the registration workflow">
+Run the registration workflow on the company's party entry to complete the setup on the Invopop side.
+</Step>
+</Steps>
+
+<Warning>
+In live workspaces both halves are needed: the recipient code registered at Agenzia delle Entrate, and the registration workflow run in Invopop. Sending never required either.
+</Warning>
+
+## How receiving works
+
+Every delivery goes through three stages.
+
+1. **Receive.** SDI posts the invoice to Invopop, which stores the original FatturaPA file and its delivery metadata before doing anything else, then acknowledges the delivery. Once acknowledged, SDI considers the invoice delivered and will not send it again — which is why the original bytes are stored first. Repeat deliveries of the same invoice are recognised by SDI's delivery identifier and never duplicate.
+
+2. **Route.** Invopop reads the addressee's fiscal ID out of the invoice itself and looks it up among the registered companies. On a match, it starts your import workflow in the owning workspace. An invoice addressed to a company nobody registered is held rather than lost, but it is not processed until that is resolved.
+
+3. **Import.** The import step converts the FatturaPA document into a GOBL invoice and creates the entry, with two files attached: the original XML exactly as delivered (`sdi-inbound-invoice`) and SDI's delivery metadata (`sdi-inbound-metadata`), when SDI provided one.
+
+Received invoices appear in your **Expenses** folder. If conversion fails, the step returns `KO`, but the original file stays stored — the invoice can be re-processed later without SDI needing to redeliver it.
+
+Italian preservation rules cover the invoices you receive as well as the ones you issue. Add the **Archive document** step after the import step to preserve each one — see the [Archiving](/guides/it-sdi-archiving) guide.
+
+## Unregistering a company
+
+Registering a tax ID claims it for a single party record, and only one party per environment can hold a given tax ID at a time. Unregister a company when it is no longer your client, or when you need to register the same tax ID from a different party record.
+
+<Card iconType="duotone" title="Italy unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-unregister-party" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itUnregisterPartyWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <UnregisterPartyWorkflow />
+  </Tab>
+</Tabs>
+
+The unregister action turns off receiving and clears the company's registration, freeing the tax ID to be claimed again — from another party record in the same workspace, or from a different workspace. Running it on a company that is not registered skips rather than fails, so it is safe to re-run.
+
+<Warning>
+Unregistering stops receiving only. Sending never required registration, so it is unaffected. Invoices addressed to the company afterwards are no longer imported into your workspace.
+</Warning>
+
+<Note>
+Unregistering does not affect legal archiving. Invoices already preserved under *conservazione a norma* stay preserved, as the law requires.
+</Note>
+
+The recipient code registration at Agenzia delle Entrate is separate and stays in place. If the company should stop receiving through Invopop altogether, update its reception settings at the [tax authority's portal](https://ivaservizi.agenziaentrate.gov.it/portale/) as well.
+
+## Troubleshooting
+
+| Symptom | Cause |
+|---|---|
+| Registration fails complaining about the fiscal ID | The party entry has neither an Italian VAT number nor a *codice fiscale*. Add one and re-run. |
+| An expected invoice never arrives | The company was not registered before the delivery, so the invoice is being held — or the supplier addressed it to a different recipient code. Check the company's reception settings at the tax authority. |
+| The import step fails with `KO` | The document has a structure the converter does not handle yet. The original file is retained, so the import can be replayed after a fix. |
+
+## FAQ
+
+<FAQ />
+
+More available in our [Italy FAQ](/faq/italy) section
+
+---
+
+<ItalyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Italy →
+</Card>

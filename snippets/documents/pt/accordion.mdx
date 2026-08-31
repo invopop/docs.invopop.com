@@ -1,5 +1,7 @@
 import ATB2BInvoiceMin from '/snippets/invoices/pt/at-b2b.min.mdx';
 import ATB2BInvoice from '/snippets/invoices/pt/at-b2b.mdx';
+import ATCashVATInvoiceMin from '/snippets/invoices/pt/at-cash-vat.min.mdx';
+import ATCashVATInvoice from '/snippets/invoices/pt/at-cash-vat.mdx';
 import DeliveryMin from '/snippets/deliveries/pt/delivery.min.mdx';
 import Delivery from '/snippets/deliveries/pt/delivery.mdx';
 import ReturnMin from '/snippets/deliveries/pt/return.min.mdx';
@@ -12,6 +14,12 @@ import ReturnFromGlobalMin from '/snippets/deliveries/pt/return-from-global.min.
 import ReturnFromGlobal from '/snippets/deliveries/pt/return-from-global.mdx';
 import PaymentMin from '/snippets/payments/pt/payment.min.mdx';
 import Payment from '/snippets/payments/pt/payment.mdx';
+import WithholdingMin from '/snippets/invoices/pt/at-withholding.min.mdx';
+import Withholding from '/snippets/invoices/pt/at-withholding.mdx';
+import CashVATReceiptMin from '/snippets/payments/pt/cash-vat.min.mdx';
+import CashVATReceipt from '/snippets/payments/pt/cash-vat.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/pt/at-simplified.min.mdx';
+import SimplifiedInvoice from '/snippets/invoices/pt/at-simplified.mdx';
 
 <AccordionGroup>
 	<Accordion title="AT B2B invoice">
@@ -22,7 +30,7 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 
 		- the minimal version in the first tab contains only the essential fields required to create the invoice, without totals or calculations,
 		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](/guides/pt-at#series-management) for details),
+		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series management](/guides/pt-at-supplier#series-management) for details),
 		- when running `gobl build`, or uploading the file, the system automatically calculates totals, assigns the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension to `FT` (Fatura), sets the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension to `CC` for card payment, and applies the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension to `NOR` for standard VAT,
 		- the built version in the second tab shows the normalized document with calculated totals, line item sums (including advance payment deductions), tax breakdowns, and automatically generated fields, and,
 		- the `h` item unit causes the [`pt-saft-product-type`](https://docs.gobl.org/addons/pt-saft-v1#product-type) extension to be set to `S` (Serviço), and the [`pt-region`](https://docs.gobl.org/regimes/pt#region-code) extension is automatically set to `PT`.
@@ -30,6 +38,55 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 		<CodeGroup>
 			<ATB2BInvoiceMin />
 			<ATB2BInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT invoice with IRS withholding">
+
+		In this example, a self-employed professional (_trabalhador independente_) invoices a Portuguese company for consulting services. On top of the standard VAT, the customer retains personal income tax (_IRS_) at source.
+
+		Notice:
+
+		- the minimal version in the first tab contains only the essential fields; the line carries a second tax on top of `VAT`: an `IRS` combo with `percent` set to `25%` and no `rate`,
+		- the document-level `tax.notes` entry with `cat: "IRS"` carries the legal basis for the withholding (here _Art. 101.º CIRS_); the SAF-T export surfaces it as the `WithholdingTaxType` (`IRS`) and `WithholdingTaxDescription` of the `WithholdingTax` block, and,
+		- in the built version the `IRS` tax becomes its own `retained` category in `totals.taxes`, separate from `VAT`, with `retained: "250.00"` (25% of the 1000,00 base).
+
+		<CodeGroup>
+			<WithholdingMin />
+			<Withholding />
+    </CodeGroup>
+	</Accordion>
+  
+	<Accordion title="AT Cash VAT invoice">
+
+		In this example, we're issuing a standard invoice from a Portuguese supplier that has adhered to the **Cash VAT scheme** (_regime de IVA de Caixa_), under which VAT becomes due only when the customer actually pays rather than when the invoice is issued.
+
+		Notice:
+
+		- the only difference from the standard AT B2B invoice above is the `cash-vat` tag (`$tags: ["cash-vat"]`), which flags the supplier's membership in the scheme,
+		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon reacts to that tag by setting the [`pt-saft-cash-vat`](https://docs.gobl.org/addons/pt-saft-v1#cash-vat-scheme-indicator) extension to `1` in the invoice's `tax` section, and,
+		- the document is otherwise a normal `standard` invoice: the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension is still set to `FT` (Fatura) and the standard VAT rate still maps to the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension `NOR`.
+
+		<CodeGroup>
+			<ATCashVATInvoiceMin />
+			<ATCashVATInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT simplified invoice">
+
+		In this example, we're issuing a simplified invoice (_Fatura Simplificada_) — the short-form invoice used for low-value retail sales where the customer doesn't need to be identified.
+
+		Notice:
+
+		- the document carries the `simplified` tag (`$tags: ["simplified"]`) and omits the `customer` entirely,
+		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon reacts to the tag by setting the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension to `FS` (Fatura Simplificada), and the `series` follows the matching `FS ` prefix convention,
+		- if the document also records full payment (for example, a 100% advance), the addon derives the type `FR` (Fatura-Recibo) instead, and the series must then use the `FR ` prefix, and,
+		- as with the other examples, totals and tax breakdowns are calculated automatically when running `gobl build` or uploading.
+
+		<CodeGroup>
+			<SimplifiedInvoiceMin />
+			<SimplifiedInvoice />
 		</CodeGroup>
 	</Accordion>
 
@@ -41,10 +98,10 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 
 		- the first tab shows the minimal version containing only the essential fields required to create the delivery document; there are no totals or calculations,
 		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](/guides/pt-at#series-management) for details),
-		- this is an `note` document type with the [`pt-saft-movement-type`](https://docs.gobl.org/addons/pt-saft-v1#movement-type) extension set to `GR` (Guia de Remessa),
+		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series management](/guides/pt-at-supplier#series-management) for details),
+		- this is a `note` document type with the [`pt-saft-movement-type`](https://docs.gobl.org/addons/pt-saft-v1#movement-type) extension set to `GR` (Guia de Remessa),
 		- when running `gobl build`, or uploading the document, the system automatically calculates totals, applies the standard VAT rate with the [`pt-saft-tax-rate`](https://docs.gobl.org/addons/pt-saft-v1#tax-rate-code) extension set to `NOR`, and normalizes all fields,
-		- the second tab shows the built version of the document with the calculated totals, line item sums, tax breakdowns, and automatically generated fields, and,delivery
+		- the second tab shows the built version of the document with the calculated totals, line item sums, tax breakdowns, and automatically generated fields, and,
 		- the [`pt-region`](https://docs.gobl.org/regimes/pt#region-code) extension is automatically set to `PT`.
 
 		<CodeGroup>
@@ -122,12 +179,12 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 
 		Notice:
 
-		- the minimal version (`payment.min.mdx`) contains only the essential fields required to create the payment document,
+		- the minimal version in the first tab contains only the essential fields required to create the payment document,
 		- the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon ensures the document will be validated and normalized using the SAF-T PT v1 rules built into the [GOBL](https://docs.gobl.org) library,
-		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series Management](/guides/pt-at#series-management) for details),
+		- the `supplier` and `series` fields are set to example values; you'll need to replace them with the details of supplier and series registered as per the previous sections. The series must be registered in the Supplier Portal and follow Portuguese naming conventions (see [Series management](/guides/pt-at-supplier#series-management) for details),
 		- this is a single `receipt` payment that bundles **multiple payment methods**: 30,00 EUR in cash plus 31,50 EUR by card, summing to the document total of 61,50 EUR. Each method gets its own [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension auto-assigned (`NU` for cash, `CC` for card),
 		- when running `gobl build`, the system automatically assigns the [`pt-saft-payment-type`](https://docs.gobl.org/addons/pt-saft-v1#payment-type) extension to `RG` and the [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension to `P`,
-		- the built version (`payment.mdx`) shows the normalized document with all automatically generated fields and extensions properly set,
+		- the built version in the second tab shows the normalized document with all automatically generated fields and extensions properly set,
 		- the payment lines reference the original invoice being paid, though a single receipt can reference multiple invoices if needed,
 		- this receipt could represent either a full or partial payment of the referenced invoice; it simply records the amounts and taxes being paid, so the total may or may not cover the full invoice amount, and,
 		- there are no calculations in the minimal version; all normalizations will be made automatically when uploading.
@@ -135,6 +192,24 @@ import Payment from '/snippets/payments/pt/payment.mdx';
 		<CodeGroup>
 			<PaymentMin />
 			<Payment />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT Cash VAT receipt">
+
+		In this example, we're issuing a payment receipt for a supplier under the **Cash VAT scheme** (_regime de IVA de Caixa_). For these suppliers, the receipt is the document that actually triggers the VAT becoming due, so the AT distinguishes it from an ordinary receipt.
+
+		Notice:
+
+		- the document carries the `cash-vat` tag (`$tags: ["cash-vat"]`), exactly as the Cash VAT invoice does,
+		- on a `receipt`, that tag drives the [`pt-saft-payment-type`](https://docs.gobl.org/addons/pt-saft-v1#payment-type) extension to `RC` (_Recibo no âmbito do regime de IVA de Caixa_) instead of the default `RG` (_Outro Recibo_) you'd get on the ordinary AT payment receipt above,
+		- the `series` follows the `RC ` prefix convention and must be registered through the Supplier Portal,
+		- the payment line references the original invoice being settled, carrying its VAT breakdown so the AT can match the now-due tax to the issued invoice, and,
+		- as with any receipt, the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension is auto-assigned per method (`TB` for the bank transfer) and the [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension is set to `P`.
+
+		<CodeGroup>
+			<CashVATReceiptMin />
+			<CashVATReceipt />
 		</CodeGroup>
 	</Accordion>
 </AccordionGroup>

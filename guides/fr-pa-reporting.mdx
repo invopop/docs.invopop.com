@@ -5,19 +5,14 @@ description: Periodic e-reporting (Flux 10) of B2C and non-regulated B2B transac
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
-import RegisterWorkflow from '/snippets/workflows/fr/fr-reporting-register.mdx';
-import RecordWorkflow from '/snippets/workflows/fr/fr-reporting-record.mdx';
-import SendWorkflow from '/snippets/workflows/fr/fr-reporting-send.mdx';
-import DisableWorkflow from '/snippets/workflows/fr/fr-reporting-disable.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import SendWorkflow, { frReportingSendWorkflow } from '/snippets/workflows/fr/fr-reporting-send.mdx';
+import RecordWorkflow, { frReportingRecordWorkflow } from '/snippets/workflows/fr/fr-reporting-record.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
-<Warning>
-  E-reporting is in active development. The action names and read endpoints may change before the September 2026 mandate. Track the [hub readiness matrix](/guides/fr-pa) for status.
-</Warning>
+E-reporting covers everything that is out of scope for regulated e-invoicing (B2C sales, cross-border B2B, and any flow where one party is not registered in the Annuaire). Instead of routing each invoice individually, you **record** each invoice and payment, Invopop generates a Flux 10 XML for each reporting window, and sends it to the PPF.
 
-E-reporting covers everything that is out of scope for regulated e-invoicing (B2C sales, cross-border B2B, and any flow where one party is not registered in the Annuaire). Instead of routing each invoice individually, you **record** each invoice and payment, Invopop **generates** a Flux 10 XML for each closed reporting window, and **sends** it to the PPF.
-
-Reports will use the `fr-ctc-flow10-v1` add-on (in active development), distinct from the `fr-ctc-flow2-v1` add-on used for [e-invoicing](/guides/fr-pa-invoicing).
+Invoices and payments must declare the [fr-ctc-flow10-v1](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on in `$addons`: GOBL applies the Flux 10 rules when the document is built, and the record step rejects documents that don't carry the add-on.
 
 ## Sub-flows
 
@@ -31,47 +26,113 @@ Each recorded document is classified into one of four sub-flows based on supplie
 | `10.4` | Domestic B2C payments         |
 
 
-## Registration
+## Recording workflow
 
-Reporting is enabled at the **SIREN level**, separately from the [Annuaire registration](/guides/fr-pa-registration). A party can be registered for e-invoicing, e-reporting, or both.
+Every invoice and payment that requires reporting goes through a single **Record** workflow. The action looks at the supplier and customer SIRENs and files the document into the right sub-flow (10.1 to 10.4) ready for the next report.
 
-The register workflow collects a signature (auto-approved in sandbox). Every invoice and payment recorded later is attached to and aggregated for this party.
 
-### How it works
-
-<Steps>
-  <Step title="Set state → processing">
-    Marks the silo entry as "Processing".
-  </Step>
-  <Step title="Sign PPF agreement">
-    Generates a signature link for the supplier to sign.
-  </Step>
-  <Step title="Wait for PPF agreement upload">
-    Pauses until the agreement is approved.
-  </Step>
-  <Step title="Register party for reporting">
-    Enables the party for reporting,
-  </Step>
-  <Step title="Set state → registered">
-    Marks the silo entry as "Registered".
-  </Step>
-</Steps>
-
+  <Card iconType="duotone" title="PPF record document for reporting" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-record" horizontal>
+    Add to my workspace →
+  </Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France register party for reporting workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-register" cta="Add to my workspace">
-      Registers a party for e-reporting and collects the e-mandate signature.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frReportingRecordWorkflow} />
   </Tab>
   <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
-    <RegisterWorkflow />
+    <RecordWorkflow />
   </Tab>
 </Tabs>
 
-### Picking a VAT regime
+### Payments
 
-If you have a single supplier, or all your suppliers have the same cadence, you can configure the **Register party for reporting** to a specific cadence.
+For `10.2` international B2B payments set `lines[i].document` on the payment to the invoice it settles. The minimum reference is the invoice number and issue date:
+
+```json
+{ "code": "INVOICE-NUMBER", "issue_date": "2026-05-15" }
+```
+
+This is what tells the record action to file the payment as `10.2` (international B2B payment) rather than `10.4` (domestic B2C payment), and allows GOBL to allocate the cashed amount across the invoice's VAT rates for you.
+
+For B2C payments (`10.4`), specify the tax breakdown directly on the payment line:
+
+```json
+"lines": [
+  {
+    "amount": "120.00",
+    "tax": {
+      "categories": [
+        {
+          "code": "VAT",
+          "rates": [{ "base": "100.00", "percent": "20%", "amount": "20.00"}]
+        }
+      ]
+    }
+  }
+]
+```
+
+### Exemption reasons
+
+Lines using `exempt`, `reverse-charge`, `intra-community`, `export`, or `outside-scope` rates must include a free-text reason. Add it to the invoice's tax block:
+
+```json
+{
+  "tax": {
+    "notes": [
+      {
+        "cat": "VAT", 
+        "key": "intra-community", 
+        "text": "Exonération article 262 ter I du CGI — livraison intracommunautaire"
+      }
+    ]
+  }
+}
+```
+
+The `key` must match the rate used on the line. Lines on `standard` or `zero` rates do not need a note.
+
+### Correcting a recorded document
+
+To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` action against its silo entry. It removes the document from the pending records so you can correct it and run the record workflow again.
+
+- You can unrecord at any time until the window's filing deadline, whatever state its report is in. The next generation rebuilds the report without the document: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
+- After the filing deadline a submitted or filed report stands, and its documents can no longer be unrecorded.
+- Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
+
+## Submitting reports
+
+A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it.
+
+<Card iconType="duotone" title="PPF generate and send reporting document" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-send" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frReportingSendWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <SendWorkflow />
+  </Tab>
+</Tabs>
+
+<Info>
+  Tell Invopop which workflow to run on the schedule: in the **Apps** view, open the **France** app, click **Configure** to open the configuration sidebar, and select this workflow under **Reporting Workflow**.
+</Info>
+
+<Frame caption="Selecting the reporting workflow in the France app configuration sidebar">
+  <img
+    src="/assets/guides/fr-configure.png"
+    width="550"
+    alt="France app configuration sidebar with the Reporting Workflow selector"
+  />
+</Frame>
+
+You can also trigger this workflow manually against any registered party — useful for testing, or to bring a party up to date after onboarding.
+
+
+### Picking a VAT regime at supplier registration
+
+If you have a single supplier, or all your suppliers have the same cadence, you can configure the **Register party for reporting** step in the [PPF register supplier workflow](/guides/fr-pa-registration#ppf-register-supplier-workflow) to a specific cadence.
 
 For multiple suppliers (whitelabel use cases) where different suppliers have different cadence, pass it as a job argument with key `vat-regime` when creating the job. When not stated, the default is `real_normal_monthly`.
 
@@ -84,146 +145,42 @@ For multiple suppliers (whitelabel use cases) where different suppliers have dif
 | Non-Established Taxpayer | `franchise` |
 
 
-The cadence must match the regime registered with the tax office, if in doubt check with your local accountant.
+The cadence must match the regime registered with the tax office. If in doubt, check with your local accountant.
 
+## Reading submitted transactions
 
-## Recording
+The France dashboard's **Transactions Flow 8 / 9** tab lists every document submitted for e-reporting. In the Console, open the **Apps** view, select the **France** app, and switch to the **Transactions Flow 8 / 9** tab.
 
-Every invoice and payment that needs reporting goes through a single **Record** workflow. The action looks at the supplier and customer SIRENs and files the document into the right sub-flow (10.1 to 10.4) ready for the next report.
+The tab shows one sub-flow at a time: the Flow type filter is always active, defaults to International B2B invoices (`10.1`), and switches between the four [sub-flows](#sub-flows). It can be changed but not cleared.
 
-Wire this workflow as the default for both `bill/invoice` and `bill/payment` in your workspace.
+Each row shows the Document code and Document date, when it was Recorded, whether a report already covers it (Generated report), the Supplier SIREN, the *low type, the Role (Seller or Buyer; domestic B2C rows carry no role), the Silo entry, and the amounts the report will carry: Currency, Taxable total, Tax total (EUR), Amount (EUR), and FX rate, plus the counterparty identification and, on B2C rows, the category code.
 
-### How it works
+<Note>
+Clicking on the Generated report column opens the [Reporting Flow 10 tab](#reading-generated-reports) filtered to that report. A dash means the row is still waiting for its reporting window to close.
+</Note>
 
-<Steps>
-  <Step title="Set state → processing">
-    Marks the silo entry as "Processing".
-  </Step>
-  <Step title="Record document for reporting">
-    Classifies the document (10.1 / 10.2 / 10.3 / 10.4) and stores it for the next report.
-  </Step>
-  <Step title="Set state → recorded">
-    Marks the silo entry as "Recorded".
-  </Step>
-</Steps>
+Filter the table by **Document code**, **Supplier SIREN**, **Flow type**, or the **Recorded** date range.
 
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France record document for reporting workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-record" cta="Add to my workspace">
-      Records an invoice or payment as a Flux 10 row, ready for the next periodic report.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste this workflow into your Invopop console.
-    <RecordWorkflow />
-  </Tab>
-</Tabs>
+## Reading generated reports
 
-### Payments and the underlying invoice
+The **Reporting Flow 10** tab lists the generated Flow 10 XML reports.
 
-For international B2B payments (10.2), set `lines[i].document` on the payment to the invoice it settles. The minimum reference is the invoice number and issue date:
+Each row shows the Reporting period the report covers, the SIREN, the Kind (Transactions for invoice data, Payments for payment data), the Role of the stream (Seller, Buyer), the submission Status, the report Sequence number, the PPF Ack ref, the Submitted at timestamp, and the Period ID.
 
-```json
-{ "code": "INVOICE-NUMBER", "issue_date": "2026-05-15" }
-```
+| Status | Meaning |
+|---|---|
+| <Badge color="gray">Generated</Badge> | The XML is built but not yet sent. |
+| <Badge color="blue">Submitted</Badge> | Sent to the PPF; awaiting acknowledgement. |
+| <Badge color="green">Filed</Badge> | Acknowledged by the PPF. |
+| <Badge color="red">Rejected</Badge> | The PPF rejected the report. |
 
-This is what tells the record action to file the payment as 10.2 rather than 10.4, and lets GOBL allocate the cashed amount across the invoice's VAT rates for you.
+Click options on this tab:
 
-For B2C payments (10.4), omit `document` entirely. Specify the tax breakdown directly on the payment line.
+<Note>
+Clicking Download fetches the exact XML submitted to the PPF, the same payload the [`/xml` endpoint](#reading-whats-filed) returns.
+</Note>
 
-### Exemption reasons
-
-Lines using `exempt`, `reverse-charge`, `intra-community`, `export`, or `outside-scope` rates must include a free-text reason. Add it to the invoice's tax block:
-
-```json
-{
-  "tax": {
-    "notes": [
-      {"cat": "VAT", "key": "intra-community", "text": "Exonération article 262 ter I du CGI — livraison intracommunautaire"}
-    ]
-  }
-}
-```
-
-The `key` must match the rate used on the line. Lines on `standard` or `zero` rates do not need a note.
-
-## Submitting reports
-
-A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it.
-
-### How it works
-
-<Steps>
-  <Step title="Set state → processing">
-    Marks the silo entry as "Processing".
-  </Step>
-  <Step title="Generate document for reporting">
-    Bundles the closed window's records into a single report.
-  </Step>
-  <Step title="Send document for reporting">
-    Submits the report to the PPF and waits for the acknowledgement.
-  </Step>
-  <Step title="Set state → filed">
-    Marks the silo entry as "Filed".
-  </Step>
-</Steps>
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France send document for reporting workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-send" cta="Add to my workspace">
-      Generates a periodic report and submits it to the PPF.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
-    <SendWorkflow />
-  </Tab>
-</Tabs>
-
-<Info>
-  Tell Invopop which workflow to run on the schedule: in the **Apps** view, open the **France** app, click **Configure** to open the configuration sidebar, and select this workflow under **Reporting Workflow**.
-</Info>
-
-<Frame caption="Selecting the reporting workflow in the France app configuration sidebar">
-  <img
-    src="/assets/guides/fr-configure.png"
-    alt="France app configuration sidebar with the Reporting Workflow selector"
-  />
-</Frame>
-
-You can also trigger this workflow manually against any registered party — useful for testing, or to bring a party up to date after onboarding.
-
-## Disabling reporting
-
-When a party should no longer be reported on, run the disable workflow. The party remains on file for audit purposes, but no new records are accepted and no new reports are generated. Previously filed reports are unaffected.
-
-### How it works
-
-<Steps>
-  <Step title="Set state → processing">
-    Marks the silo entry as "Processing".
-  </Step>
-  <Step title="Disable party for reporting">
-    Disables reporting for the party.
-  </Step>
-  <Step title="Set state → Void">
-    Marks the silo entry as "Void".
-  </Step>
-</Steps>
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France disable reporting workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-disable" cta="Add to my workspace">
-      Disables e-reporting for a registered party.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
-    <DisableWorkflow />
-  </Tab>
-</Tabs>
-
-To change a party's VAT regime, disable first and re-register with the new `vat-regime` argument.
+Filter the table by **SIREN**, **Period ID**, the **Reporting period** window, or **Kind**.
 
 ## Reading what's filed
 

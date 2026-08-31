@@ -1,22 +1,11 @@
   <Accordion title="Why is my invoice processing taking so long?">
-    The SDI system can take up to 24 hours to process invoices, especially during peak periods. While waiting, the "Send to SDI" step will remain in the `QUEUED` state. The system will automatically check for updates, and the status will change once SDI has processed the invoice.
+    The **Send invoice to SDI** step completes as soon as SDI accepts the file — it doesn't wait for SDI's verdict. What takes time is SDI's own processing: a rejection usually arrives within minutes, but delivery confirmations can take up to 5 days. Each verdict is recorded against the invoice as a status entry, so nothing is stuck while you wait. See the [status guide](/guides/it-sdi-status) for the full lifecycle.
   </Accordion>
   <Accordion title="How do I know if my invoice was delivered successfully?">
-    Once the SDI process is complete, the workflow will show one of several status codes:
-    - `delivered` - The invoice was successfully delivered to a B2B recipient
-    - `accepted-pa` - The invoice was accepted by a Public Administration
-    - `not-delivered` - The invoice couldn't be delivered, but was processed correctly by SDI
-
-    Check the workflow history to see the exact status.
+    SDI confirms delivery with an `RC` (*ricevuta di consegna*) notification, recorded on the invoice as a status entry with the GOBL status `acknowledged`. A rejection arrives as `NS` with status `error`. Every notification and what it means is covered in the [status guide](/guides/it-sdi-status).
   </Accordion>
-  <Accordion title="Can I use the same workflow for both sending and receiving invoices?">
-    No, sending and receiving invoices require different workflows:
-    - For sending invoices, a workflow with the Generate FatturaPA and Send to SDI steps is needed
-    - For receiving invoices, two workflows are required:
-      1. A Customer Registration workflow (run once for each company that needs to receive invoices)
-      2. An Import Invoices workflow (configured to run automatically)
-
-    For more information on receiving invoices, see our [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving) guide.
+  <Accordion title="How do I test different SDI outcomes in the sandbox?">
+    Set a reserved *codice destinatario* on the customer — for example `SIMNS00` to simulate a rejection. The sandbox simulates SDI end to end and feeds back the notifications a real exchange would produce; any ordinary code resolves to a successful delivery. The full list of reserved codes is in the [issuing guide](/guides/it-sdi-invoicing#testing-in-the-sandbox).
   </Accordion>
 
   <Accordion title="How do I add codice fiscale and Partita IVA?">
@@ -39,10 +28,8 @@
                     "key": "it-fiscal-code",
                     "code": "MRTMTT91D08F205J"
                 }
-            ],
+            ]
         }
     }
     ```
-
-    For more information on receiving invoices, see our [Italy - SDI: Receiving Invoices](/guides/it-sdi-receiving) guide.
   </Accordion>

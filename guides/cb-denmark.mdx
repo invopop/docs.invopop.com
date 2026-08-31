@@ -1,0 +1,87 @@
+---
+title: "Chargebee in Denmark"
+sidebarTitle: "Denmark"
+icon: "https://assets.invopop.com/flags/dk.svg"
+description: "Send compliant Peppol e-invoices from Chargebee to Danish customers"
+---
+
+import DKPeppolExample from '/snippets/workflows/chargebee/cb-dk-peppol.mdx'
+import FAQ from '/snippets/faqs/dk/composers/guide-peppol-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbDkPeppolWorkflow } from '/snippets/workflows/chargebee/cb-dk-peppol.mdx';
+
+Denmark uses the Peppol network and the Peppol BIS Billing UBL format. However, unlike Belgium, Danish Peppol participant IDs come in a wide variety of schemes — GLN numbers, CVR numbers, and others — and they don't all derive from the VAT number. This makes automatic lookup unreliable, so **this workflow does not include a Lookup Peppol participant step**. You will need to set the Peppol ID directly on each customer as a custom field.
+
+If you do want to use automatic lookup for some customers, you can add the lookup step from the [generic Peppol template](/guides/peppol).
+
+This guide assumes you have already connected the Chargebee app and completed the general setup — see the [Chargebee overview](/guides/chargebee) first if you haven't.
+
+**Required apps:** [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
+
+<Info>
+  Before processing any invoices, you must register your supplier on the Peppol network through Invopop. See the [Peppol guide](/guides/peppol) for full registration steps.
+</Info>
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/6Gsq8fPcpuo"
+  title="Chargebee + Invopop | Send e-invoices in Denmark"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  loading="lazy"
+></iframe>
+
+## Workflow
+
+<Card title="Chargebee DK E-invoicing" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-dk-peppol" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={chargebeeCbDkPeppolWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <Note>
+      Unlike other Peppol countries, this template does not include a **Lookup Peppol participant** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
+    </Note>
+
+    <Note>
+      The **Fixing bank-transfer details** step converts the generic `credit-transfer` payment key to `credit-transfer+sepa`. Denmark requires the more specific SEPA key for Peppol invoices, so this step ensures the payment instructions are valid before the document is sent.
+    </Note>
+    <DKPeppolExample />
+  </Tab>
+</Tabs>
+
+## Peppol participant ID
+
+Since there is no automatic lookup, the Peppol Participant ID must be set on each Danish customer before any invoices are processed. Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate this field across all your Danish customers before going live.
+
+| Field | Metadata key | Custom field key | Example |
+| ----- | ------------ | ---------------- | ------- |
+| Peppol Participant ID | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0088:5790000435968` (GLN) |
+
+<Note>
+  The metadata keys listed above follow the Chargebee metadata format (hyphens, no `cf_` prefix). If you prefer to use custom fields instead, replace hyphens with underscores and add the `cf_` prefix. See [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) for details.
+</Note>
+
+## SEPA payment key
+
+The workflow includes one Denmark-specific step: **Fixing bank-transfer details**. If Chargebee sends a `credit-transfer` payment instruction on the invoice, this step automatically converts it to `credit-transfer+sepa`. Plain `credit-transfer` is not accepted in Denmark — the more specific SEPA variant is required. If the invoice has no payment instructions, the step is skipped. That's the only difference from a standard Peppol workflow.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Denmark FAQ](/faq/denmark) section
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about your Chargebee integration →
+</Card>

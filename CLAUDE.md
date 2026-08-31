@@ -28,9 +28,9 @@ Supporting directories:
 - `openapi/` — OpenAPI 3 specs. Each YAML is registered in `docs.json` under `openapi`; Mintlify generates reference pages from operations the registry references.
 - `snippets/` — reusable MDX fragments imported by pages (see below).
 - `assets/` — images, logos, diagrams referenced from MDX.
-- `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`, `mark-generated.sh`).
+- `scripts/` — small shell scripts that maintain `snippets/faqs/` (`fill-empty-faqs.sh`).
 - `gobl-build.sh`, `gobl-unbuild.rb` — GOBL invoice example tooling (see below).
-- `skills/` — packaged authoring skills (currently `manage-faqs`). Read the skill's `SKILL.md` before doing the work it covers.
+- `skills/` — packaged authoring skills (currently `manage-faqs`, `mermaid-style`, `create-country-guide`, and `create-app-page`). Read the skill's `SKILL.md` before doing the work it covers. Use `mermaid-style` whenever you add or edit a `mermaid` diagram in an `.mdx` page so the brand palette stays consistent. Use `create-country-guide` when adding or restructuring guides for a country/regime, and `create-app-page` when adding or restructuring a page under `apps/`.
 
 ## Navigation (`docs.json`)
 
@@ -44,8 +44,9 @@ Tabs (in order): Get Started, Platform, Guides, Apps, API Reference. The country
 
 - `snippets/faqs/` — country FAQ leaves + composers. **Read `skills/manage-faqs/SKILL.md` before touching this tree.** Layout in brief: `<country>/leaves/<scope>/{compliance,invoicing,supplier,receiving,reporting}.mdx` hold bare `<Accordion>` blocks; `<country>/composers/<consumer>.mdx` wrap leaves in `<AccordionGroup>` for a specific consumer page (`page-faq`, `page-compliance`, `app-<regime>`, `guide-<regime>-<task>`). Consumer pages import exactly one composer.
 - `snippets/invoices/<country>/` — GOBL invoice example fragments. Files come in pairs: `<name>.min.mdx` (minimal hand-authored input) and `<name>.mdx` (built output produced by `gobl-build.sh`). Edit the `.min.mdx`; rebuild to refresh the `.mdx`.
-- `snippets/suppliers/`, `snippets/payments/`, `snippets/deliveries/`, `snippets/documents/`, `snippets/coverage/` — country-scoped GOBL examples for other document/flow types, same `.min.mdx`/`.mdx` pairing where applicable.
-- `snippets/workflows/<country|integration>/` — reusable workflow descriptions.
+- `snippets/parties/` — country-scoped `org/party` examples with at least one `supplier.mdx` and one `customer.mdx` per regime (plus variants like `es/supplier-autonomo.mdx`, `de/customer-government.mdx`). Single files, no `.min`/built pairing; validate with `gobl build` when editing.
+- `snippets/payments/`, `snippets/deliveries/`, `snippets/documents/`, `snippets/coverage/` — country-scoped GOBL examples for other document/flow types, same `.min.mdx`/`.mdx` pairing where applicable.
+- `snippets/workflows/<country|integration>/` — reusable workflow descriptions, one combined `<name>.mdx` per workflow. Each file holds `export const <unique>Workflow = {…}` followed by the fenced ` ```json ` block of the same JSON. Guides import both from the one file (`import WorkflowExample, { <unique>Workflow } from '…/<name>.mdx'`): the default renders the code view, and the named export feeds `<WorkflowDiagram workflow={…} />` from `snippets/components/workflow.jsx`, which renders a console-style step list (branches, notes, state chips via `<Badge>`, per-provider icons from its `providerIcons` map). Most of these files are **generated**: [invopop/console](https://github.com/invopop/console) syncs them from its `templates/workflows/*.json` via `scripts/generate-workflow-data.py`, so edit the console template and let the sync PR update the snippet (hand-edits get overwritten). Docs-only workflows (dk nemhandel, fi finvoice, stripe-france) are maintained by hand in the same combined format — keep the export and the fence in sync when editing. Constraints: export names must be globally unique (never `workflow`; convention: camelCase of `<dir>-<file>` + `Workflow`, collapsing a leading slug word that repeats the directory, e.g. `it/italy-send-invoice` → `itSendInvoiceWorkflow`); import without aliasing (`{ x as y }` double-declares in Mintlify's inlining). Mixing the const export with markdown content in one snippet used to compile to an `undefined` stub on fresh builds — fixed as of Mintlify CLI 4.2.x (verified on a cold build); if a workflow section ever renders empty on a fresh deploy, suspect this first. Mintlify's built-in components (`Badge`, etc.) are in scope inside custom snippet JSX without imports. Beware that Mintlify only compiles Tailwind classes written as static `className` literals; dynamically-assembled class strings silently don't style.
 - `snippets/tables/<country>-resources.mdx` — country resource tables embedded by compliance pages.
 
 When you import a snippet, prefer giving the import a country-prefixed component name to avoid collisions when a page composes snippets from multiple countries (e.g. `EsCompliance`, `VfInv`).
@@ -71,12 +72,9 @@ Each operation under `api-ref/<service>/...` is a small `.mdx` page that points 
 
 ## FAQ tooling
 
-Two helper scripts maintain `snippets/faqs/`:
+One helper script maintains `snippets/faqs/`:
 
 - `scripts/fill-empty-faqs.sh` — generates a single placeholder `<Accordion>` for every empty `leaves/*/(compliance|invoicing|supplier|receiving|reporting).mdx`, with a question tailored to the (country, scope, task, category). The placeholders carry a `*Placeholder — to be replaced with reviewed content.*` body and exist so composers don't import empty files.
-- `scripts/mark-generated.sh` — prepends `¿ ` to every `<Accordion title>` in leaves that weren't on the hand-curated allowlist inside the script. The marker means "auto-drafted, not human-reviewed". To find unreviewed questions: `grep -rl '<Accordion title="¿' snippets/faqs/`. Strip the prefix when a human signs off on the answer.
-
-If you add a country or regime to the FAQ system, update the allowlist in `scripts/mark-generated.sh` so future runs don't re-mark curated cells.
 
 ## Local development
 
@@ -96,7 +94,7 @@ There is no `package.json`, build step, or test suite at the repo root — Mintl
 
 - **Asterisks in MDX**: escape `*` inside body text where it would otherwise start emphasis (`VERI\*FACTU`). Inside `<Accordion title="…">` or other JSX prop strings, the literal `*` is fine.
 - **Imports**: snippets import paths are absolute and start `/snippets/...`. Page-to-page links are root-relative (`/guides/es-verifactu`), not file paths.
-- **Country folder slugs are ISO-2 lowercase** in `snippets/` (`ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `pl`, `pt`). Page filenames under `compliance/`, `faq/`, `timelines/` use the full country name (`compliance/spain.mdx`).
+- **Country folder slugs are ISO-2 lowercase** in `snippets/` (`ar`, `be`, `br`, `de`, `es`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`). Page filenames under `compliance/`, `faq/`, `timelines/` use the full country name (`compliance/spain.mdx`).
 - **Region pages** (`compliance/americas.mdx`, `compliance/europe.mdx`, etc.) are the parent pages of each regional group in the nav — they generally summarise their region.
 - **Redirects**: prefer adding to `docs.json` `redirects` over leaving stale slugs. Many existing redirects fold legacy `/guides/countries/...` and `/guides/features/...` paths into the flatter current structure.
 - **No README/doc creation by default**: only create new top-level `.md`/`.mdx` files when explicitly asked, or when adding a new documentation page that belongs in the nav.

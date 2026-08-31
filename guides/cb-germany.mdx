@@ -1,0 +1,131 @@
+---
+title: "Chargebee in Germany"
+sidebarTitle: "Germany"
+icon: "https://assets.invopop.com/flags/de.svg"
+description: "Generate ZUGFeRD and XRechnung e-invoices from Chargebee for German customers"
+---
+
+import ZUGFeRDExample from '/snippets/workflows/chargebee/cb-zugferd.mdx'
+import XRechnungExample from '/snippets/workflows/chargebee/cb-xrechnung.mdx'
+import FAQ from '/snippets/faqs/de/composers/guide-peppol-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbZugferdWorkflow } from '/snippets/workflows/chargebee/cb-zugferd.mdx';
+import { chargebeeCbXrechnungWorkflow } from '/snippets/workflows/chargebee/cb-xrechnung.mdx';
+
+Germany supports two structured e-invoicing formats: **ZUGFeRD** and **XRechnung**. Both are valid and supported by Invopop, but they serve different purposes and have different requirements.
+
+- **ZUGFeRD** is the most common choice for B2B invoicing. It has fewer validation constraints, which is why we always recommend embedding the XML inside a PDF — your customer receives a standard-looking PDF that also contains a machine-readable file. No per-customer setup is required.
+- **XRechnung** is primarily used for B2G invoicing (invoicing public authorities). It has stricter validations and more required fields, but if your customers require it, Invopop fully supports it.
+
+This guide assumes you have already connected the Chargebee app and completed the general setup — see the [Chargebee overview](/guides/chargebee) first if you haven't.
+
+**Required apps:** [UN/CEFACT CII](/apps/uncefact-cii)
+
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/WJcWJqBiA-Q"
+  title="Chargebee + Invopop | E-invoicing in Germany"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  loading="lazy"
+></iframe>
+
+## Using Chargebee's email delivery
+
+For Invopop to update the invoice in Chargebee and trigger Chargebee's own email delivery to your customer, you will need a **Full Access API key**. Beyond that, the following conditions must be met in Chargebee — if any of these are not in place, Chargebee will not forward the generated PDF (or XML, in the case of XRechnung) to your customer:
+
+1. The `SEND_EINVOICE_NOTIFICATION` feature flag must be enabled on your Chargebee site. Contact your Chargebee representative to enable this.
+2. The `cf_invopop_include` custom field must be present and set to `true` on each customer you want to process.
+3. Invoice and credit note email notifications must be enabled on your Chargebee site.
+
+## Workflows
+
+<Tabs>
+  <Tab title="ZUGFeRD (B2B)">
+    <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-zugferd" horizontal>
+      Add to my workspace →
+    </Card>
+    The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. No per-customer configuration is required beyond having a valid German supplier set up in Invopop.
+
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={chargebeeCbZugferdWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        <ZUGFeRDExample />
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="XRechnung (B2G)">
+    <Card title="Chargebee XRechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" horizontal>
+      Add to my workspace →
+    </Card>
+    XRechnung is used for invoicing German public authorities. The template includes a few additional steps compared to ZUGFeRD, each addressing a specific requirement:
+
+    **1. Bank details**
+
+    XRechnung requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN (and optionally your BIC/SWIFT code) directly into the **Adding bank details** workflow step. The IBAN alone is sufficient.
+
+    **2. Leitweg-ID as the buyer reference (ordering code)**
+
+    Some German public sector customers require a **Leitweg-ID** to be present on the invoice as the buyer reference. This is typically entered as the PO number on the subscription in Chargebee. However, XRechnung expects this value in the buyer reference field, which Invopop maps to the ordering code — not the purchase order code. The **Map PO to ordering code** step handles this automatically, moving the value from the PO field into the correct place.
+
+    If you prefer not to use the PO number for this, or if you need to set it independently, you can use the `cf_gobl_ordering` custom field instead, providing the value as JSON:
+
+    ```json
+    {"code": "991-12345678-06"}
+    ```
+
+    **3. Customer inbox (delivery routing)**
+
+    Each public authority customer must have either a Peppol inbox or an email address configured so the invoice can be routed correctly. You can set these via custom fields on the customer in Chargebee:
+
+    | Field | Metadata key | Custom field key | Example |
+    | ----- | ------------ | ---------------- | ------- |
+    | Leitweg-ID (Peppol inbox) | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0204:991-12345678-06` |
+    | E-invoice email | `gobl-customer-inbox-email` | `cf_gobl_customer_inbox_email` | `einvoice@behoerde.de` |
+    | Leitweg-ID (ordering code) | `gobl-ordering` | `cf_gobl_ordering` | `{"code": "991-12345678-06"}` |
+
+    <Tip>
+      Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate the inbox and ordering code fields across all your public sector customers before going live.
+    </Tip>
+
+    <Note>
+      The **Adding bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added manually to the workflow step. If you don't need to include payment instructions in your invoices, you can remove this step entirely.
+    </Note>
+
+    <Note>
+      The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that XRechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
+    </Note>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={chargebeeCbXrechnungWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        <XRechnungExample />
+      </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+<Note>
+  The metadata keys listed above follow the Chargebee metadata format (hyphens, no `cf_` prefix). If you prefer to use custom fields instead, replace hyphens with underscores and add the `cf_` prefix. See [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) for details.
+</Note>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Germany FAQ](/faq/germany) section
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about your Chargebee integration →
+</Card>

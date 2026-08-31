@@ -1,14 +1,21 @@
 ---
-title: "SDI Receiving Invoices Guide"
-sidebarTitle: "SDI Receiving"
+title: "SDI receiving invoices guide"
+sidebarTitle: "Receiving invoices"
 description: "Receive and process electronic invoices from Italy's SDI system"
 ---
 
-import CustomerRegistrationWorkflow from '/snippets/workflows/it/sdi-register-customer.mdx';
-import ImportInvoicesWorkflow from '/snippets/workflows/it/sdi-import-invoices.mdx';
+import CustomerRegistrationWorkflow, { itSdiRegisterCustomerWorkflow } from '/snippets/workflows/it/sdi-register-customer.mdx';
+import CustomerUnregistrationWorkflow, { itSdiUnregisterCustomerWorkflow } from '/snippets/workflows/it/sdi-unregister-customer.mdx';
+import ImportInvoicesWorkflow, { itSdiImportInvoicesWorkflow } from '/snippets/workflows/it/sdi-import-invoices.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import ItCustomer from '/snippets/parties/it/customer.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
+
+<Warning>
+**The SDI Italy app is being retired.** New integrations should use the [Italy app](/apps/italy), which reaches SDI through Invopop's own accredited channel. See the [receiving invoices](/guides/it-sdi-reception) guide.
+</Warning>
 
 ## Introduction
 
@@ -43,35 +50,22 @@ Unlike sending, receiving invoices requires additional configuration after the i
 </Step>
 
 <Step title="Set up the Customer Registration Workflow">
+<Accordion title="Italian customer example">
+  The `tax_id` contains the company's Partita IVA without the `IT` prefix.
+  <ItCustomer />
+</Accordion>
+
 Use this workflow to register a company to receive invoices through SDI.
+<Card iconType="duotone" title="SDI register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-register-customer" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="SDI register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-register-customer" cta="Add to my workspace">
-    This workflow registers a company to receive electronic invoices through Italy’s SDI.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSdiRegisterCustomerWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
     <CustomerRegistrationWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SDI Register Supplier".
-
-    The new workflow will need to perform these steps:
-
-      1. **Set state**: Select `Processing` to mark the start of the registration.
-      2. **Register supplier with SDI**: This step registers the company as an invoice receiver through SDI. Make sure to select the `Production` environment to go live.
-      3. **Set state**: Once the registration is complete, select `Registered`.
-
-      In the **Error Handling** section, add a **Set state** step and choose `Error` to capture any issues during registration.
-
-      This minimal workflow is required to onboard a customer for SDI e-invoicing in Italy. You can extend it with notification steps, such as sending confirmation emails or updating external systems when registration succeeds or fails.
-
-      <Frame><img src="/assets/guides/it-sdi-customer-registration.png" alt="Register SDI Customer (Italy) workflow" /></Frame>
-
   </Tab>
 </Tabs>
 
@@ -80,34 +74,16 @@ Use this workflow to register a company to receive invoices through SDI.
 
 <Step title="Import Invoices Workflow">
 Use this workflow to import and process invoices received through SDI. This workflow must be selected in the SDI Italy app configuration to automatically process incoming invoices.
+<Card iconType="duotone" title="SDI import invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-import-invoices"  horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="SDI register customer" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-import-invoices"  cta="Add to my workspace">
-      This workflow will convert received FatturaPA documents into our open source [GOBL](https://docs.gobl.org) format.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSdiImportInvoicesWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
     <ImportInvoicesWorkflow />
-  </Tab>
-  <Tab title="Build from scratch">
-
-      This workflow automates the import and processing of incoming invoices via Italy’s SDI.
-
-      Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-      In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then add the following steps:
-
-      1. **Import invoice from SDI**: Retrieves invoices in the FatturaPA format from SDI and converts them into GOBL. Set the environment to `Production` for real operations.
-      2. **Generate PDF**: Generates a visual representation of the invoice in Italian, using the specified locale (`it`), date format (`%Y-%m-%d`), and logo height (40px).
-      3. **Set state**: Marks the invoice as `Sent` once it's successfully processed.
-
-      In the **Error Handling** section, add a **Set state** step with the state set to `Error` to capture and flag failed imports.
-
-      This is the minimal workflow required to automate the reception and visualization of invoices received through SDI. You may expand it with additional steps such as storing a backup copy, notifying clients, or integrating the documents into an ERP system.
-
-      <Frame><img src="/assets/guides/it-sdi-customer-registration.png" alt="Register SDI Customer (Italy) workflow" /></Frame>
-
   </Tab>
 </Tabs>
 </Step>
@@ -142,7 +118,7 @@ For each company you want to receive invoices, register the Recipient Code (Codi
 </Step>
 
 <Step title="Run the Customer Registration workflow in Invopop">
-  In Invopop, execute the [SDI register customer](#template-2) workflow on the supplier's silo entry to complete the setup for that company.
+  In Invopop, execute the [customer registration](#set-up-the-customer-registration-workflow) workflow on the supplier's silo entry to complete the setup for that company.
 </Step>
 </Steps>
 
@@ -150,12 +126,43 @@ For each company you want to receive invoices, register the Recipient Code (Codi
  In live workspaces make sure you both register Codice Destinatario `JKKZDGR` and run the customer registration workflow. Registration is only needed for receiving invoices, not sending.
 </Warning>
 
-## Receiving Invoices
+## Receiving invoices
 
 
 Once registered, any invoices addressed to the registered companies with the Recipient Code will be automatically received and processed through the Import Invoices workflow configured in the app settings. Received invoices will appear in your **Expenses** folder.
 
 If errors occur during the import process, they will trigger the rescue steps in the workflow, allowing users to check what went wrong and take appropriate action.
+
+## Unregistering a company
+
+Registering a tax ID claims it for a single party record, and only one party per environment can hold a given tax ID at a time. Unregister a company when it is no longer your client, or when you need to register the same tax ID again from a different party record.
+
+Use this workflow to stop a company from receiving invoices through SDI:
+
+<Card iconType="duotone" title="SDI unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-sdi-unregister-customer" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSdiUnregisterCustomerWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <CustomerUnregistrationWorkflow />
+  </Tab>
+</Tabs>
+
+The `sdi-it.unregister` action turns off invoice receiving for the company and clears its SDI registration from the party record. Once it completes, the tax ID is free to register again, whether from another party record in the same workspace or from a different workspace. Running it on a party that is not registered skips the step rather than failing, so it is safe to re-run.
+
+<Warning>
+  Unregistering stops receiving only. Sending never required registration, so it is unaffected. Invoices addressed to the company after it is unregistered are no longer imported into your workspace.
+</Warning>
+
+<Note>
+  Unregistering does not affect legal archiving. Invoices already preserved under _conservazione a norma_ stay preserved, as the law requires.
+</Note>
+
+The Recipient Code registration at Agenzia delle Entrate is separate and stays in place. If the company should stop receiving through Invopop altogether, update its reception settings at the [Italian tax authority](https://ivaservizi.agenziaentrate.gov.it/portale/) as well.
 
 ## FAQ
 

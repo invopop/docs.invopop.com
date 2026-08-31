@@ -16,6 +16,8 @@ import OutsideScopeMin from '/snippets/invoices/de/peppol-outside-scope.min.mdx'
 import OutsideScope from '/snippets/invoices/de/peppol-outside-scope.mdx';
 import ExportMin from '/snippets/invoices/de/peppol-export.min.mdx';
 import Export from '/snippets/invoices/de/peppol-export.mdx';
+import CreditNoteMin from '/snippets/invoices/de/peppol-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/de/peppol-credit-note.mdx';
 
 <AccordionGroup>
   
@@ -23,13 +25,13 @@ import Export from '/snippets/invoices/de/peppol-export.mdx';
     Regular invoices are used for B2B transactions. Regular invoices must be issued when:
 
     - The customer is a registered business (has a tax identification number).
-    - The transaction amount is €400 VAT included or above, or the customer requires a full invoice.
+    - The customer requires a full invoice.
     - The customer needs a complete invoice with all tax details for accounting or tax purposes.
 
     To create a regular invoice, include the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon and ensure the `customer` field contains valid tax identification details. The addon will automatically set the document type to `380` when the silo entry is built (which happens automatically when saving a silo entry through the API or console).
 
     <Note>
-      The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid.
+      The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid.
     </Note>
 
     <CodeGroup>
@@ -86,7 +88,7 @@ import Export from '/snippets/invoices/de/peppol-export.mdx';
   <Accordion title="Peppol Germany - B2B exempt invoice">
     Exempt invoices are used for B2B transactions that are exempt from VAT, which also covers exemptions in internal operations.
 
-    To create an exempt invoice, use the tax key `exempt` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `E` when the silo entry is built. You must also state the reason for the exemption through the [CET VATEX](https://docs.gobl.org/catalogues/cef#cef-vatex) - VAT exemption reason codes.
+    To create an exempt invoice, use the tax key `exempt` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `E` when the silo entry is built. You must also state the reason for the exemption through the [CEF VATEX](https://docs.gobl.org/catalogues/cef#cef-vatex) - VAT exemption reason codes.
 
     <Note>
       Exempt operations are not subject to VAT but must still be reported. The `supplier` must be previously registered with the tax authority and the `customer` tax id must be valid.
@@ -127,7 +129,7 @@ import Export from '/snippets/invoices/de/peppol-export.mdx';
     To create an intra-community supply Peppol invoice, use the tax key `intra-community` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `K` (VAT exempt for EEA intra-community supply of goods and services) when the silo entry is built.
 
     <Note>
-      With intra-community supplies in the EU, the customer accounts for VAT in their destination country. The `supplier` must be [previously registered](https://docs.invopop.com/guides/es-verifactu-supplier#create-a-supplier-entry) with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
+      With intra-community supplies in the EU, the customer accounts for VAT in their destination country. The `supplier` must be previously registered with the tax authority and the `customer` VAT ID must be valid and registered in the EU VIES system.
     </Note>
 
     <CodeGroup>
@@ -139,7 +141,7 @@ import Export from '/snippets/invoices/de/peppol-export.mdx';
   <Accordion title="Peppol Germany - B2B services → international customer (Outside Scope)">
     Outside scope invoices are used for B2B services provided to customers outside the EU.
 
-    To create an outside scope Peppol invoice, use the tax key `outside-scope` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017)addon will automatically set the UNTDID 5305 tax category to `O` (Services outside scope of tax) when the silo entry is built.
+    To create an outside scope Peppol invoice, use the tax key `outside-scope` in your invoice lines. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID 5305 tax category to `O` (Services outside scope of tax) when the silo entry is built.
 
     <Note>
       Services provided to non-EU customers are generally outside the scope of EU VAT.
@@ -163,6 +165,21 @@ import Export from '/snippets/invoices/de/peppol-export.mdx';
     <CodeGroup>
       <ExportMin />
       <Export />
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Peppol Germany - B2B credit note">
+    Credit notes reverse all or part of a previously issued invoice — for returns, cancellations, or billing corrections.
+
+    To create a credit note, set the `type` to `credit-note` and reference the original invoice in the `preceding` array by `series`, `code`, and `issue_date`, optionally with a `reason`. The [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon will automatically set the UNTDID document type to `381` (credit note) when the silo entry is built.
+
+    <Note>
+      The lines describe the amounts being credited as positive values — the credit note document type is what reverses them. A credit note can cover the full original invoice or just part of it.
+    </Note>
+
+    <CodeGroup>
+      <CreditNoteMin />
+      <CreditNote />
     </CodeGroup>
   </Accordion>
 

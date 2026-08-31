@@ -1,5 +1,5 @@
 ---
-title: "Series Guide"
+title: "Series guide"
 sidebarTitle: "Series"
 icon: "arrow-down-wide-short"
 description: Learn how to create and use series to generate sequential codes for your documents.
@@ -11,7 +11,7 @@ description: Learn how to create and use series to generate sequential codes for
 
 Invopop's Sequence service provides a reliable, scalable solution for generating sequential codes. Behind the scenes, we use a global transaction database to ensure that even under high-volume, distributed workloads, your series will generate numbers without skips or duplications.
 
-## What is a Series?
+## What is a series?
 
 A series defines how sequential codes are formatted and generated. Each series includes:
 
@@ -29,12 +29,13 @@ For example, a series configured with:
 
 Will generate codes like:
 ```
-INV-ES-00001
-INV-ES-00002
-INV-ES-00003
+ES-00001
+ES-00002
+ES-00003
 ```
+The code (`INV`) is an internal identifier and does not appear in the generated sequential code.
 
-## Creating a Series
+## Creating a series
 
 You can create series through the Invopop Console or via the API. The Console provides a visual interface with a live preview of the generated codes.
 
@@ -53,7 +54,7 @@ You can create series through the Invopop Console or via the API. The Console pr
   />
 </Frame>
 
-### Series Properties
+### Series properties
 
 | **Field**                  | **Description**                                                                                                | **API Property**                        |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------| --------------------------------------- |
@@ -65,12 +66,12 @@ You can create series through the Invopop Console or via the API. The Console pr
 | **Suffix** (Optional)      | Text appended after the numeric part.                                                                          | `suffix`                                |
 | **Description** (Optional) | Free text for internal documentation or identification.                                                        | `description`                           |
 
-### Preview Panel
+### Preview panel
 
 The Console displays a **live preview** of the resulting code based on your current field values. Use this to verify the format before saving.
 
 ```
-INV-ES-00001
+ES-00001
 ```
 
 ### Using the API
@@ -109,18 +110,18 @@ Response:
 }
 ```
 
-## Using Series in Workflows
+## Using series in workflows
 
 The most common way to use series is through the **Add sequential code** step in your workflows. This step automatically generates the next number in the sequence and adds it to your document.
 
-### Dynamic vs. Static Series
+### Dynamic vs. static series
 
 When configuring the **Add sequential code** step, you can choose between:
 
 - **Dynamic Series**: Creates a new series automatically if one doesn't exist with the specified name. This is useful when you want the workflow to handle series creation automatically.
 - **Static Series**: Uses an existing series that you've already created. Select the series from a dropdown of available series.
 
-### Adding a Sequential Code Step
+### Adding a sequential code step
 
 1. In your workflow, click **+ Add step**.
 2. Search for or select **Add sequential code**.
@@ -133,13 +134,9 @@ When configuring the **Add sequential code** step, you can choose between:
 The **Add sequential code** step uses the `sequence.enumerate` provider. When using dynamic series, the step will create a new series with default settings (padding: 6, start: 1) if one doesn't exist.
 </Note>
 
-### Passing a Series ID via Job Arguments
+### Passing a series ID via job arguments
 
 If you need to specify which series to use at runtime — rather than hardcoding it in the workflow configuration — you can pass a `sequence-series-id` argument when creating a job. This is useful when different documents in the same workflow should use different pre-created series.
-
-<Note>
-Your workflow must still include an **Add sequential code** step for this argument to take effect. When `sequence-series-id` is provided, the series configuration defined in the step (whether dynamic or static) will be ignored — only the series referenced by the argument will be used.
-</Note>
 
 To use this feature, include the series UUID in the job's `args` map with the key `sequence-series-id` when calling the [Create a Job](/api-ref/transform/jobs/create-a-job-post) endpoint:
 
@@ -161,11 +158,11 @@ When `sequence-series-id` is provided:
 - If the series does not exist, the task will fail with a `"sequence not found"` error — no series will be auto-created.
 - If `sequence-series-id` is not provided or is empty, the workflow step falls back to its normal behavior (dynamic or static series from the configuration).
 
-## Using Series via API
+## Using series via API
 
 You can also generate sequential codes directly via the API by creating entries in a series.
 
-### Creating a Series Entry
+### Creating a series entry
 
 To generate the next code in a series, create an entry:
 
@@ -187,7 +184,7 @@ Response:
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "series_id": "835bb1ca-e7c4-41e6-9e88-464de54cc08e",
-  "code": "INV-ES-00001",
+  "code": "ES-00001",
   "meta": {
     "invoice_id": "abc123",
     "customer": "Customer Name"
@@ -201,7 +198,7 @@ Response:
 
 The `code` field in the response contains the generated sequential code. You can then use this code in your document's `series` field.
 
-### Fetching Series Information
+### Fetching series information
 
 Retrieve all series in your workspace:
 
@@ -217,32 +214,32 @@ curl -X GET "https://api.invopop.com/sequence/v1/series/{series_id}" \
   -H "Authorization: Bearer $INVOPOP_TOKEN"
 ```
 
-## Best Practices
+## Best practices
 
-### Naming Conventions
+### Naming conventions
 
 - Use descriptive names that indicate the purpose (e.g., "Spanish Invoices", "Credit Notes", "Orders").
 - Consider including country codes or business unit identifiers in the name for multi-country or multi-entity setups.
 
-### Prefixes and Suffixes
+### Prefixes and suffixes
 
 - Use **prefixes** for country codes (e.g., `ES-`, `FR-`, `US-`) or business unit identifiers.
 - Use **suffixes** for year codes (e.g., `-2024`) when you need to reset numbering annually.
 - Keep prefixes and suffixes short to maintain readable codes.
 
-### Padding Considerations
+### Padding considerations
 
 - Choose padding that accommodates your expected volume. For example:
   - Padding of `3` supports up to 999 documents (`001` to `999`).
   - Padding of `6` supports up to 999,999 documents (`000001` to `999999`).
 - Ensure padding is adequate for your invoicing volume to avoid running out of numbers.
 
-### Start Numbers
+### Start numbers
 
 - **Start Number** is typically `1` for new series.
 - If you're continuing an existing series (e.g., migrating from another system), set the start number to the next number in your sequence.
 
-### Multiple Series
+### Multiple series
 
 Create separate series for different document types or use cases:
 
@@ -253,14 +250,14 @@ Create separate series for different document types or use cases:
 
 Some countries require specific series formats. For example, Portugal requires series names to follow specific formats with document type prefixes (e.g., `FT` for invoices, `NC` for credit notes).
 
-### Code and Description Fields
+### Code and description fields
 
 - **Code**: Use for internal categorization or business logic. This field is optional and doesn't appear in the generated sequential code.
 - **Description**: Use for internal documentation or notes about the series purpose. This field is optional and doesn't affect code generation.
 
 ## Examples
 
-### Example 1: Simple Invoice Series
+### Example 1: simple invoice series
 
 A basic series for invoices with no prefix or suffix:
 
@@ -273,7 +270,7 @@ A basic series for invoices with no prefix or suffix:
 
 Generated codes: `000001`, `000002`, `000003`, ...
 
-### Example 2: Country-Specific Series
+### Example 2: country-specific series
 
 A series for Spanish invoices with country prefix:
 
@@ -284,9 +281,9 @@ A series for Spanish invoices with country prefix:
 - Start Number: `1`
 - Suffix: (empty)
 
-Generated codes: `INV-ES-00001`, `INV-ES-00002`, `INV-ES-00003`, ...
+Generated codes: `ES-00001`, `ES-00002`, `ES-00003`, ... (the `INV` code is internal and never appears in the output)
 
-### Example 3: Year-Based Series
+### Example 3: year-based series
 
 A series that resets each year with a year suffix:
 
@@ -323,7 +320,7 @@ When creating a new series, set the **Start Number** to the next number in your 
 </Accordion>
 
 <Accordion title="What's the difference between Code and the generated code?">
-The **Code** field is an optional internal identifier for the series (stored in the `code` property). The generated sequential code (returned in the `code` field of an entry) is the formatted string that includes prefix, padded number, and suffix (e.g., `INV-ES-00001`).
+The **Code** field is an optional internal identifier for the series (stored in the `code` property). The generated sequential code (returned in the `code` field of an entry) is the formatted string that includes prefix, padded number, and suffix (e.g., `ES-00001`).
 </Accordion>
 
 <Accordion title="Can I modify a series after creating it?">
@@ -331,7 +328,7 @@ You can update some series properties via the API, but be cautious as changes ma
 </Accordion>
 </AccordionGroup>
 
-## API Reference
+## API reference
 
 - [Sequences - Introduction](/api-ref/sequences/introduction)
 - [Series - Overview](/api-ref/sequences/series/overview)
@@ -343,7 +340,7 @@ You can update some series properties via the API, but be cautious as changes ma
 - [Entries - Create a series entry](/api-ref/sequences/entries/create-a-series-entry)
 - [Entries - Fetch a series entry](/api-ref/sequences/entries/fetch-a-series-entry)
 
-## Related Guides
+## Related guides
 
 - [Workflows Guide](/guides/workflows) - Learn how to use series in workflow steps
 - [PDF Invoice Guide](/guides/pdf-invoice) - See series in action with PDF invoice generation

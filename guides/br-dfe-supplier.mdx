@@ -1,0 +1,231 @@
+---
+title: "DF-e supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: Register suppliers to issue Documentos Fiscais Eletrônicos in Brazil.
+---
+
+import PostRegistrationFlow from '/snippets/workflows/br/dfe-postregistration.mdx'
+import RegisterSupplier from '/snippets/workflows/br/dfe-register-supplier.mdx'
+import UnregisterSupplier from '/snippets/workflows/br/dfe-unregister-supplier.mdx'
+import Supplier from '/snippets/parties/br/supplier.mdx'
+import BrazilResources from '/snippets/tables/brazil-resources.mdx';
+import FAQ from '/snippets/faqs/br/composers/guide-dfe-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { brDfePostregistrationWorkflow } from '/snippets/workflows/br/dfe-postregistration.mdx';
+import { brDfeRegisterSupplierWorkflow } from '/snippets/workflows/br/dfe-register-supplier.mdx';
+import { brDfeUnregisterSupplierWorkflow } from '/snippets/workflows/br/dfe-unregister-supplier.mdx';
+
+## Introduction
+
+Before a supplier can issue electronic fiscal documents in Brazil — service invoices (NFS-e), product invoices (NF-e), or consumer invoices (NFC-e) — they must be registered with Invopop's local partner, PlugNotas, who authenticates the supplier with the corresponding tax authority.
+
+In this guide you'll learn how to register a supplier using the [Documentos Fiscais Eletrônicos Brazil app](/apps/documentos-fiscais-electronicos-brazil), and how to unregister them when they should no longer issue documents from your workspace. Once a supplier is registered, continue with the companion guide: [Brazil: Issuing invoices](/guides/br-dfe).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Registration required, but details don't need to be real | Real company details required |
+| **Certificates** | Not required to be valid | Must be valid and real |
+| **Environment** | Always simulation mode — responses are mocked | Homologation or production, chosen during registration |
+
+## Prerequisites
+
+To register a supplier in Brazil, you will need:
+
+- Supplier details, including:
+  - name,
+  - CNPJ (_Cadastro Nacional da Pessoa Jurídica_),
+  - address,
+  - municipality code (IBGE),
+  - municipal registration number (for NFS-e),
+  - state registration number (for NF-e and NFC-e),
+  - whether the supplier opts into the _Simples Nacional_ tax regime,
+  - whether the supplier benefits from a fiscal incentive, and,
+  - optionally, any special tax regime (MEI, estimated, coop…) the supplier is subject to.
+- A certificate and password accepted by the municipality (for NFS-e) or the state (for NF-e and NFC-e) to send electronic fiscal documents in the name of the supplier.
+
+## Setup
+
+There are three key processes to prepare:
+
+- connect the **Documentos Fiscais Eletrônicos Brazil** app,
+- create the supplier registration workflow, and,
+- configure the supplier post-registration workflow.
+
+<Info>
+ These instructions apply to both the sandbox and live environments. Please note that the sandbox environment is simulated, and most responses are mocked. You'll still need to register suppliers in the sandbox, but the company details, certificates or passwords don't need to be valid or real.
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+
+<Step title="Connect the Documentos Fiscais Eletrônicos Brazil app">
+Enter the **Configuration** section, then tap **Apps**. Tap on the **Connect** button of the **Documentos Fiscais Eletrônicos Brazil** app.
+
+<Frame>
+  <img src="/assets/guides/br-dfe-app.png" alt="DF-e Brazil App" width="400" noZoom />
+</Frame>
+
+</Step>
+
+<Step title="Create the supplier registration workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+
+<Card iconType="duotone" title="DF-e register supplier" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-register-supplier" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={brDfeRegisterSupplierWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <RegisterSupplier />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the supplier post-registration workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+<Card iconType="duotone" title="DF-e process supplier post-registration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-postregistration" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={brDfePostregistrationWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <PostRegistrationFlow />
+  </Tab>
+</Tabs>
+
+<Info>
+  This workflow will automatically be executed once a supplier completes the registration process. You can customize it to suit your needs (_e.g._, adding a webhook, or an email notification after a supplier has been registered.)
+</Info>
+
+Now you need to go back to **Configuration** > **Apps**, tap the **Configure** button on the **Documentos Fiscais Eletrônicos Brazil** app, choose the "Post-registration workflow" we just created and **Save** the changes.
+
+</Step>
+
+</Steps>
+
+## Register a supplier
+
+All operations described in this section can be performed manually via the Invopop Console, or programmatically via the API. The process is essentially the same in both cases, so we'll demonstrate the manual method for this guide.
+
+Find the **Parties** section of the sidebar and click **Suppliers**. Tap the **+ New Supplier** button to be presented with a new editor. Copy and paste the example provided below (for testing purposes only, in production you'll need the details of an actual company). The example includes all the fields required to register a supplier for both NF-e/NFC-e and NFS-e issuance.
+
+<Supplier />
+
+<Info>
+  The `br-nfse-` identities and extensions configure service invoices (NFS-e), while the `br-nfe-` ones configure product and consumer invoices (NF-e/NFC-e) — omit the family the supplier won't issue.
+
+  See the [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) and [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addons for the possible values.
+</Info>
+
+Tap **Build**, ensure there are no errors, and click **Save**.
+
+We should now see the document. Find and click the **Select Workflow** button. Select the **Register Supplier** workflow created during setup, and click **Run workflow**.
+
+The execution should be successful, and the silo entry will now be in the `Processing` state. Tap the **Meta** tab to see the registration link:
+
+<Frame>
+  <img src="/assets/guides/br-dfe-reg-link.png" width="420" alt= "Supplier Registration Link" noZoom/>
+</Frame>
+
+<Info>
+ You can access the registration link via the API by [fetching the silo
+ entry](/api-ref/silo/entries/fetch-an-entry) and reading the `meta` row where
+ the `key` is set to `registration-link`.
+</Info>
+
+Tap the registration link. A new browser window will open with a form to upload the supplier's credentials. Note that this form can be shared directly with the supplier, if necessary.
+
+<Frame>
+  <img src="/assets/guides/br-dfe-reg-cer.png" width="500" alt="Supplier Registration Form"/>
+</Frame>
+
+In live workspaces, the form also includes an environment selector ("Ambiente da prefeitura") with two options:
+
+- **Homologação** (homologation): the tax authority's test environment. Documents are processed end to end but have no fiscal validity. Note that not all municipalities offer a homologation environment for NFS-e.
+- **Produção** (production): the real environment. Documents issued here are legally valid.
+
+The selected environment applies to every document type the supplier issues (NFS-e, NF-e, and NFC-e) and remains in effect until the supplier is registered again. See [Switch between environments](#switch-between-environments) below.
+
+In sandbox workspaces, the selector is not shown: the sandbox always operates in simulation mode, and responses are mocked regardless of any environment.
+
+The details from this form are sent securely to Invopop's local partner, PlugNotas, who will use them to authenticate the supplier in the corresponding tax authority.
+
+The supplier must ensure that the certificate and password are valid and accepted by the municipality or state where they operate.
+
+Once the form is submitted, the supplier will be registered, and the post-registration workflow will be executed, changing the supplier's state to `Registered`.
+
+From this point on, you can send invoices on behalf of the supplier. Head over to the [DF-e issuing invoices guide](/guides/br-dfe) to continue.
+
+## Switch between environments
+
+In live workspaces, a supplier is registered in either homologation or production — never both at the same time.
+
+A common scenario is registering a supplier in homologation first to test the integration end to end, and then moving them to production to start issuing real documents.
+
+To switch a supplier from one environment to the other, run the registration process again:
+
+1. Run the **Register Supplier** workflow over the supplier's silo entry to obtain a new registration link.
+2. Open the registration link and select the new environment.
+3. Leave the certificate field blank to keep the current certificate (or upload a new one), and submit the form.
+
+Once the form is submitted, the supplier is reconfigured in the selected environment.
+
+To check which environment a supplier is currently in, obtain a registration link the same way (step 1) and open it: the form shows the supplier's current environment pre-selected.
+
+<Warning>
+  The environment selected in the most recent registration applies to **all** documents issued for that supplier from that point on, across every document type (NFS-e, NF-e, and NFC-e). After switching to homologation, no legally valid documents can be issued for the supplier until you register them back in production. Always verify which environment a supplier is in before issuing.
+</Warning>
+
+<Info>
+  Sandbox workspaces are not affected: they always operate in simulation mode, and responses are mocked. To test against the tax authority's real homologation environment, register the supplier in a live workspace with the homologation environment selected.
+</Info>
+
+## Unregister a supplier
+
+Unregistering a supplier revokes their invoice issuing privileges from your workspace. You might need to unregister an entity because the supplier is no longer your client or because of a change in their Tax ID. To do so, use the following workflow template:
+
+  <Card title="DF-e unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-unregister-supplier" horizontal>
+    Add to my workspace →
+  </Card>
+  <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={brDfeUnregisterSupplierWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <UnregisterSupplier />
+      </Tab>
+  </Tabs>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Brazil FAQ](/faq/brazil) section
+
+---
+
+<BrazilResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Brazil →
+</Card>

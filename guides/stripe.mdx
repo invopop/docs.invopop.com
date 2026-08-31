@@ -1,12 +1,19 @@
 ---
-title: "Stripe Guide"
+title: "Stripe guide"
 sidebarTitle: "Stripe"
-icon: "plug"
+icon: "https://assets.invopop.com/apps/stripe/icon.svg"
 description: Import and process invoices and credit notes from Stripe
 ---
 
 import WorkflowExample from '/snippets/workflows/stripe/stripe-invoice.mdx'
 import VerifactuExample from '/snippets/workflows/stripe/stripe-verifactu.mdx'
+import PeppolExample from '/snippets/workflows/stripe/stripe-peppol.mdx'
+import FranceExample from '/snippets/workflows/stripe/stripe-france.mdx'
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { stripeInvoiceWorkflow } from '/snippets/workflows/stripe/stripe-invoice.mdx';
+import { stripeVerifactuWorkflow } from '/snippets/workflows/stripe/stripe-verifactu.mdx';
+import { stripePeppolWorkflow } from '/snippets/workflows/stripe/stripe-peppol.mdx';
+import { stripeFranceWorkflow } from '/snippets/workflows/stripe/stripe-france.mdx';
 
 ## Introduction
 
@@ -18,13 +25,13 @@ The Stripe integration consists of two components:
 
 When a Stripe invoice or credit note reaches the [finalized status](https://support.stripe.com/questions/invoice-states), our integration will automatically create a new job in your selected Invopop workflow.
 <Frame caption="Track invoice status directly in your Stripe dashboard">
-  ![stripe details](/assets/guides/stripe-details.png)
+  <img src="/assets/guides/stripe-details.png" alt="stripe details" />
 </Frame>
 
 The job will extract the invoice data from Stripe and execute the actions, such as converting it to any e-invoice format and submitting it to your local tax authority.
 
 <Frame caption="View the job information">
-  ![stripe job](/assets/guides/stripe-job-details.png)
+  <img src="/assets/guides/stripe-job-details.png" alt="stripe job" />
 </Frame>
 
 ## Setup
@@ -38,7 +45,7 @@ Navigate to the [Invopop app](https://marketplace.stripe.com/apps/invopop) in St
 Next, Stripe will prompt you to select the Stripe environment you'd like to connect to, you can start with test mode or sandbox and switch to live later.
 
 <Frame caption="Install Invopop in Stripe">
-  ![stripe install](/assets/guides/stripe-install.png)
+  <img src="/assets/guides/stripe-install.png" alt="stripe install" />
 </Frame>
 
 </Step>
@@ -53,7 +60,7 @@ When connecting a test or sandbox environment in Stripe, select a sandbox worksp
 </Note>
 
 <Frame caption="Connect your Invopop account">
-  ![stripe connect](/assets/guides/stripe-connect.png)
+  <img src="/assets/guides/stripe-connect.png" alt="stripe connect" />
 </Frame>
 
 </Step>
@@ -62,7 +69,7 @@ When connecting a test or sandbox environment in Stripe, select a sandbox worksp
 After connecting your Invopop account to Stripe, you'll be redirected back to Stripe to choose the workspace where you want to process your invoices.
 
 <Frame caption="Choose your workspace">
-  ![stripe select workspace](/assets/guides/stripe-select-workspace.png)
+  <img src="/assets/guides/stripe-select-workspace.png" width="350" alt="stripe select workspace" />
 </Frame>
 
 </Step>
@@ -74,41 +81,22 @@ To use an existing workflow select it from the Stripe's sidebar menu and click *
 
 To create a new workflow click on **Create New Workflow** in the sidebar menu. You'll be redirected to Invopop.
 
-<Tabs>
-<Tab title="Template">
-    Select one of the following workflow templates:
-    <CardGroup cols="1">
-      <Card iconType="duotone" title="Stripe - VERI*FACTU invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
-      This workflow will sync with Stripe to issue a VERI*\FACTU invoice on finalized sales.
-      </Card>
-      <Card iconType="duotone" title="Stripe - Basic PDF invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-verifactu-invoice" cta="Add to my workspace">
-      This workflow will sync with Stripe to generate a PDF invoice on finalized sales.
-      </Card>
-    </CardGroup>
-</Tab>
-<Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-    <AccordionGroup>
-        <Accordion title="Example Workflow - Stripe VERI*FACTU">
-          This workflow demonstrates the Stripe integration with a basic PDF workflow.
-          <VerifactuExample />
-        </Accordion>
-        <Accordion title="Example Workflow - Basic PDF">
-          This workflow demonstrates the Stripe integration with country-specific functionality.
-          <WorkflowExample />
-        </Accordion>
-    </AccordionGroup>
-</Tab>
-<Tab title="Build from scratch">
-  In [Console](https://console.invopop.com) create a new workflow and select [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) in the template selector, then add the following steps:
-  <Frame>
-    ![stripe import](/assets/guides/stripe-import.png)
-  </Frame>
-  1. Add the **Import invoice from Stripe** step as the first step of the workflow.
-  2. Configure the workflow according to your local regulations. You can copy _the Basic PDF workflow_ example below and modify it later for your local needs.
+Start from the basic template below, then add the steps your country requires — see [Country workflows](#country-workflows).
 
-  Finally, in the Error Handling area, add the **Set state** action and select "Error" in the State dropdown.
-</Tab>
+This workflow syncs with Stripe, signs the invoice and generates a PDF.
+
+<Card iconType="duotone" title="Stripe - Basic PDF invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=stripe-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={stripeInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <WorkflowExample />
+  </Tab>
 </Tabs>
 </Step>
 
@@ -116,7 +104,7 @@ To create a new workflow click on **Create New Workflow** in the sidebar menu. Y
 By default, Stripe does not display your tax ID on invoices. To enable it, go to Settings > Billing > Invoices. In the `Invoice Tax Information` section, enter your tax ID, set it as the default, and click **Save**.
 
 <Frame caption="Show your tax ID on invoices">
-  ![stripe tax id](/assets/guides/stripe-tax-id.png)
+  <img src="/assets/guides/stripe-tax-id.png" alt="stripe tax id" />
 </Frame>
 
 </Step>
@@ -126,12 +114,74 @@ By default, Stripe does not display your tax ID on invoices. To enable it, go to
 2. Confirm your workflow configuration is correct
 
 <Frame caption="Review your configuration">
-  ![stripe settings](/assets/guides/stripe-settings.png)
+  <img src="/assets/guides/stripe-settings.png" alt="stripe settings" />
 </Frame>
 
 </Step>
 
 </Steps>
+
+## Country workflows
+
+Each country needs its own steps between the Stripe import and the send. Two things are worth knowing before you pick one:
+
+- **Your tax ID must reach the invoice.** Stripe only attaches your account tax ID when you set it as the default (see [Show your tax ID on invoices](#setup)). Without it, country steps fail with errors such as `supplier SIREN is required for B2B local invoices`.
+- **The regime comes from the supplier's tax ID country.** A workflow step for one country rejects invoices from another — see the [FAQ](#faq) on unexpected tax regime errors.
+
+<AccordionGroup>
+  <Accordion title="Europe (Peppol)" icon="https://assets.invopop.com/flags/eu.svg">
+    This workflow sends each invoice over the Peppol network, the route Belgian, Dutch and Nordic customers receive invoices on. It looks the customer's participant ID up on the network at run time, and reshapes the parts of a Stripe invoice that Peppol validation rejects: negative line items become discounts, a missing purchase order code becomes `NA`, and card payment instructions get payment terms. Your supplier must be registered on Peppol first — see the [Peppol guide](/guides/peppol).
+
+    <Card iconType="duotone" title="Stripe - Peppol invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=stripe-peppol" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={stripePeppolWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <PeppolExample />
+      </Tab>
+    </Tabs>
+  </Accordion>
+  <Accordion title="France (Plateforme Agréée)" icon="https://assets.invopop.com/flags/fr.svg">
+    France routes each invoice on whether the customer is registered in the PPF directory. This workflow imports the Stripe invoice, adds the billing mode and VAT exemption codes France requires, then looks the customer up: registered customers get a Peppol France CIUS document recorded and forwarded to the PPF, and everyone else is recorded for e-reporting instead, then sent over Peppol if they have an inbox.
+
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={stripeFranceWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        There is no one-click template for this workflow yet. Copy and paste it into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <FranceExample />
+      </Tab>
+    </Tabs>
+
+    Registering your suppliers and reading the statuses France returns are covered in the [Plateforme Agréée guides](/guides/fr-pa): [registration](/guides/fr-pa-registration), [invoicing](/guides/fr-pa-invoicing), [reporting](/guides/fr-pa-reporting) and [statuses](/guides/fr-pa-status).
+  </Accordion>
+  <Accordion title="Spain (VERI*FACTU)" icon="https://assets.invopop.com/flags/es.svg">
+    This workflow issues a VERI\*FACTU invoice for each finalized Stripe sale: it adds the `es-verifactu-v1` addon, signs the invoice, submits it to the AEAT and generates the PDF.
+
+    <Card iconType="duotone" title="Stripe - VERI*FACTU invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=stripe-verifactu" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={stripeVerifactuWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <VerifactuExample />
+      </Tab>
+    </Tabs>
+
+    Onboarding your suppliers is covered in the [VERI\*FACTU supplier registration guide](/guides/es-verifactu-supplier), and the wider flow in the [VERI\*FACTU guide](/guides/es-verifactu).
+  </Accordion>
+</AccordionGroup>
 
 ## Monitor invoice processing
 
@@ -143,7 +193,7 @@ After setup, finalized Stripe invoices are imported into Invopop automatically a
 Open the invoice in Stripe and check the Invopop panel in the right sidebar to confirm whether processing succeeded.
 
 <Frame caption="Invoice processed successfully in Stripe">
-  ![stripe invoice status](/assets/guides/stripe-invoice-success.png)
+  <img src="/assets/guides/stripe-invoice-success.png" alt="stripe invoice status" />
 </Frame>
 
 </Step>
@@ -152,7 +202,7 @@ Open the invoice in Stripe and check the Invopop panel in the right sidebar to c
 In the Invopop console, go to `Sales` and open the invoice to view its status. To review the underlying processing job, go to `Workflows` > `History` and open the job details.
 
 <Frame caption="Job details in Invopop">
-  ![stripe job details](/assets/guides/stripe-invopop-job.png)
+  <img src="/assets/guides/stripe-invopop-job.png" alt="stripe job details" />
 </Frame>
 
 </Step>
@@ -163,13 +213,13 @@ If an invoice fails, it is usually one of two cases:
 1. The invoice was not imported into Invopop because converting from Stripe to Invopop failed. Update the data in Stripe and click **Retry** in the Invopop panel.
 
 <Frame caption="Retry invoice">
-  ![stripe retry invoice](/assets/guides/stripe-retry-import.png)
+  <img src="/assets/guides/stripe-retry-import.png" alt="stripe retry invoice" />
 </Frame>
 
 2. The invoice was imported into Invopop but submission to the tax authority failed. Correct the invoice in Invopop and re-run a workflow that omits the **Import invoice from Stripe** step to avoid reimporting the original data. Typical causes include missing required fields or invalid field formats.
 
 <Frame caption="Incorrect invoice details">
-  ![stripe retry invoice](/assets/guides/stripe-invoice-wrong-details.png)
+  <img src="/assets/guides/stripe-invoice-wrong-details.png" alt="stripe retry invoice" />
 </Frame>
 </Step>
 
@@ -194,7 +244,7 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   3. Click **Save changes**
 
   <Frame caption="Select a different workflow in Stripe">
-    ![stripe change workflow](/assets/guides/stripe-settings.png)
+    <img src="/assets/guides/stripe-settings.png" alt="stripe change workflow" />
   </Frame>
 
   Option 2: Through Invopop
@@ -203,13 +253,13 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   3. Select your new workflow
 
   <Frame caption="Select a different workflow in Invopop">
-    ![stripe change workflow](/assets/guides/stripe-invopop-settings.png)
+    <img src="/assets/guides/stripe-invopop-settings.png" alt="stripe change workflow" />
   </Frame>
 
   </Accordion>
 
   <Accordion title="How can I switch to a different Invopop workspace?">
-  You can switch to the Stripe connection to a different workspace by disconnecting and reconnecting the app.
+  You can switch the Stripe connection to a different workspace by disconnecting and reconnecting the app.
   1. Go to [Stripe app settings](https://dashboard.stripe.com/settings/apps/com.invoicing.invopop)
   2. Click the **Disconnect** button
   3. Reconnect the app and select your new workspace
@@ -232,7 +282,7 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   Note: The invoice issue date will be set to the sync date (today), as required by tax agencies. The operation date remains the original date of the transaction.
 
   <Frame caption="Import historic invoices">
-    ![stripe import historic invoices](/assets/guides/stripe-import-historic-invoices.png)
+    <img src="/assets/guides/stripe-import-historic-invoices.png" alt="stripe import historic invoices" />
   </Frame>
 
   </Accordion>
@@ -245,7 +295,7 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   3. Click **Save Changes**.
 
   <Frame caption="Update invoice import trigger in Stripe">
-    ![stripe import trigger](/assets/guides/stripe-import-trigger.png)
+    <img src="/assets/guides/stripe-import-trigger.png" alt="stripe import trigger" />
   </Frame>
 
   Option 2: In Invopop
@@ -255,7 +305,7 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   4. Click **Save**.
 
   <Frame caption="Update invoice import trigger">
-    ![stripe import trigger](/assets/guides/stripe-when-paid.png)
+    <img src="/assets/guides/stripe-when-paid.png" alt="stripe import trigger" />
   </Frame>
 
   Note: This applies to invoices from now on; it does not change past imports.
@@ -263,7 +313,7 @@ If you need help tailoring a workflow to your use case, contact us at support@in
   </Accordion>
 
   <Accordion title='I get an "access denied: unexpected tax regime" error when processing invoices'>
-  This error means the invoice's tax regime does not match the one expected by the workflow step. For example, Verifactu requires a Spanish regime and KSeF requires a Polish regime. The regime is automatically determined by the supplier's tax ID country.
+  This error means the invoice's tax regime does not match the one expected by the workflow step. For example, VERI\*FACTU requires a Spanish regime and KSeF requires a Polish regime. The regime is automatically determined by the supplier's tax ID country.
 
   The most common cause is that the supplier's tax ID is missing from the invoice. To fix this, make sure you have completed Step 5 of the [setup](#setup): go to **Settings** > **Billing** > **Invoices**, enter your tax ID, and set it as the default. Stripe does not automatically include your account tax ID on invoices.
 

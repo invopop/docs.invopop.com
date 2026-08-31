@@ -10,20 +10,20 @@ import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
 import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
+import PaymentMin from '/snippets/payments/mx/sat-payment.min.mdx';
+import Payment from '/snippets/payments/mx/sat-payment.mdx';
 
 <AccordionGroup>
 	<Accordion title="B2B invoice (Personas Morales)">
 
-		In this example, we're issuing a standard B2B invoice from a Mexican supplier (Persona Moral) to another Mexican business customer (Persona Moral).
+		This main type of invoice is a standard B2B invoice from a Mexican supplier to another Mexican customer.
 
 		Notice:
 
-		- the minimal version (`sat-b2b.min.mdx`) contains only the essential fields required to create the invoice,
-		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon ensures the document will be validated using the SAT CFDI 4.0 rules built into the [GOBL](https://docs.gobl.org) library,
-		- both supplier and customer have their RFC (tax identification) and fiscal regime properly specified,
-		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
-		- the built version (`sat-b2b.mdx`) shows the normalized document with calculated totals, line item sums, tax breakdowns (IVA), and automatically generated fields, and,
-		- make sure to process it with the appropriate SAT workflow to generate the CFDI XML and obtain the fiscal stamp.
+		- we've added the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon, this ensures the document will be validated using the CFDI v4 rules built into the [GOBL](https://docs.gobl.org) library,
+		- extensions (`ext`) fields have been used in multiple locations for fields whose values cannot be determined any other way,
+		- VAT will be applied at the standard rate, the percentage will be set automatically, and,
+		- there are no totals nor calculations, all of these will be made automatically when uploading.
 
 		<CodeGroup>
 			<B2BInvoiceMin />
@@ -31,18 +31,17 @@ import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 		</CodeGroup>
 	</Accordion>
 
-	<Accordion title="B2B Invoice on behalf of a third party (a cuenta de terceros)">
+	<Accordion title="B2B invoice on behalf of a third party (a cuenta de terceros)">
 
-		In this example, the **supplier** issues the CFDI to the customer, but the **goods or services belong to another taxpayer**. SAT expects the **third-party seller** to be declared on the line via the `seller` object (for example consignment or commission sales).
+		This invoice is used when the **issuer (supplier)** bills the customer **on behalf of another taxpayer** who is the real seller — for example **consignment** sales. The **third party** is identified on each line in the `seller` object (RFC, fiscal regime, address), while `supplier` remains the party issuing the CFDI.
 
 		Notice:
 
-		- the minimal version (`sat-third-party.min.mdx`) includes a `seller` on the line with RFC, fiscal regime, and postal code for the party actually selling,
-		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates the document for CFDI 4.0, including third-party line data,
-		- the minimal `tax.ext` only needs the place of issue (`mx-cfdi-issue-place`); `gobl build` fills in other CFDI extensions such as [`mx-cfdi-doc-type`](https://docs.gobl.org/addons/mx-cfdi-v4) and [`mx-cfdi-payment-method`](https://docs.gobl.org/addons/mx-cfdi-v4) (`PPD` in the built example), like other B2B invoices,
-		- there are no totals in the minimal version; running `gobl build` calculates IVA, line sums, and totals,
-		- the built version (`sat-third-party.mdx`) shows the normalized invoice with the third-party seller preserved on the line and full tax breakdown, and,
-		- process it through the SAT workflow so the PAC can stamp the CFDI with the correct third-party relationship.
+		- the line `seller` carries the third party's tax identity and regime so SAT can relate the CFDI to **cuenta de terceros** rules,
+		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates extensions on supplier, customer, and line seller,
+		- the minimal `tax.ext` only needs the place of issue; `gobl build` adds document type and payment method (`PPD` in the built example) like other B2B invoices,
+		- there are no totals in the minimal version; upload or `gobl build` will compute IVA and totals, and,
+		- the built example shows a consignment-style line (`Venta en consignación`) with full tax breakdown.
 
 		<CodeGroup>
 			<ThirdPartyInvoiceMin />
@@ -52,16 +51,14 @@ import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 
 	<Accordion title="B2C invoice (Personas Físicas)">
 
-		In this example, we're issuing a B2C invoice from a Mexican supplier to an individual customer (Persona Física).
+		This is a standard B2C invoice from a Mexican supplier to a Mexican physical person with tax details, but no specific tax declaration requirements. This would be for a larger sale when the "Simplified" and "Global invoice" do not apply.
 
-		Notice:
+		In addition to the observations for regular B2B invoices, note in the customer:
 
-		- the customer is identified as a Persona Física with their RFC and fiscal regime,
-		- the minimal version contains only essential fields; calculations are handled by GOBL,
-		- when running `gobl build`, the system automatically calculates totals, applies IVA (VAT), and normalizes the document according to SAT requirements,
-		- the built version shows all calculated fields including tax breakdowns, line totals, and final amounts,
-		- the [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) addon validates the document structure for Personas Físicas transactions, and,
-		- the CFDI will be stamped by the PAC (Proveedor Autorizado de Certificación) after processing through the workflow.
+		- the presence of an RFC in the same format as for companies, and,
+		- the [`mx-cfdi-fiscal-regime`](https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code) and [`mx-cfdi-use`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-use-code) extensions have been set to `616` and `S01` respectively reflecting that the customer is not subject to tax.
+
+		It is important in Mexico to ensure the correct Fiscal Regime and CFDI Use codes are set correctly as the SAT will check these details and reject documents with unexpected combinations.
 
 		<CodeGroup>
 			<B2CInvoiceMin />
@@ -71,16 +68,17 @@ import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 
 	<Accordion title="Simplified invoice (Factura al público en general)">
 
-		In this example, we're issuing a simplified invoice to the general public without specific customer details.
+		In Mexico, a General Public Invoice (Factura al Público en General) is a type of tax document issued to record sales made to customers who do not request an invoice with a specific Federal Taxpayer Registry (RFC) number. Instead, a generic RFC is used to identify the recipient:
 
-		Notice:
+		- XAXX010101000 for domestic transactions
+		- XEXX010101000 for foreign transactions
 
-		- the customer is set to "Público en General" (RFC: XAXX010101000) as per SAT requirements for general public invoices,
-		- the minimal version omits calculations; `gobl build` will handle all totals and tax computations,
-		- when running `gobl build`, the system automatically calculates IVA, line totals, and applies the simplified invoice rules,
-		- the built version shows the normalized document with all calculated fields and validations applied,
-		- simplified invoices have specific requirements in CFDI 4.0, which are automatically validated by the addon, and,
-		- these invoices are commonly used for retail transactions where customer identification is not required.
+		This type of invoice is mandatory for businesses that sell to the general public and do not issue individual invoices for each transaction.
+
+		To create this type of invoice in Invopop:
+
+		- the `customer` field is not required,
+		- the `$tags` field is used to identify this as a simplified invoice.
 
 		<CodeGroup>
 			<SimplifiedInvoiceMin />
@@ -90,16 +88,13 @@ import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 
 	<Accordion title="Global invoice">
 
-		In this example, we're issuing a global invoice that summarizes multiple transactions from a specific period (daily, weekly, or monthly).
+		The Global Invoice is used to group a set of invoices into a single CFDI document.
 
 		Notice:
 
-		- global invoices consolidate multiple sales to the general public into a single CFDI document,
-		- the minimal version includes only essential fields; totals for all consolidated transactions are calculated by GOBL,
-		- when running `gobl build`, the system aggregates line items, calculates total IVA, and applies global invoice-specific validations,
-		- the built version shows the complete document with all calculated totals, tax summaries, and period information,
-		- global invoices must be issued within specific timeframes as defined by SAT regulations, and,
-		- these are commonly used by businesses with high volumes of small transactions to the general public.
+		- the `$tags` field has been used to identify this as a global invoice,
+		- each `line` has a `ref` which is used to identify the invoice that it belongs to,
+		- the [`tax.ext.mx-cfdi-global-month`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-month), [`mx-cfdi-global-period`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-period), and [`mx-cfdi-global-year`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-year) fields have been used to identify the global invoice period.
 
 		<CodeGroup>
 			<GlobalInvoiceMin />
@@ -109,21 +104,43 @@ import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
 
 	<Accordion title="Credit note">
 
-		In this example, we're issuing a credit note (nota de crédito) to correct, cancel, or refund a previously issued invoice.
+		The credit note (_nota de crédito_) is used to correct, cancel, or refund a previously issued invoice.
 
 		Notice:
 
-		- the `type` field is set to `credit-note` to indicate this is a corrective document,
-		- the `preceding` field contains references to the original invoice(s) being corrected with the relationship type,
-		- the minimal version includes only essential correction details; `gobl build` calculates the negative amounts,
-		- when running `gobl build`, the system automatically calculates negative totals, tax refunds, validates the relationship with the original invoice, and applies CFDI credit note rules,
-		- the built version shows all calculated fields including negative amounts for the refund and proper tax adjustments,
-		- credit notes must be properly linked to the original CFDI using the UUID and relationship type, and,
-		- the PAC will validate the credit note against the original invoice before stamping.
+		- the `type` field has been set to `credit-note`,
+		- the `preceding` field has been used to identify the invoice that is being corrected.
 
 		<CodeGroup>
 			<CreditNoteMin />
 			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Payment receipt (Comprobante de Pago)">
+
+		This is a payment receipt (_comprobante de pago_, or REP) issued when collecting a payment against one or more invoices that were issued with the PPD (_Pago en Parcialidades o Diferido_) payment method. It is modelled as a GOBL [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) document rather than an invoice, and must be processed through the SAT issue payment workflow.
+
+		Notice:
+
+		- the `$schema` is set to `bill/payment` and the `type` to `receipt`,
+		- each `lines[].document` references an invoice being settled by this payment, identified by its `series`, `code`, and the SAT UUID (`sat-uuid`) stamp of the original CFDI,
+		- the amounts on each line follow a strict convention:
+			- **`payable`** is always the **total** amount payable on the referenced invoice across **all** installments,
+			- **`advances`** is the **total** already paid in **previous** installments (omit it, or set `0`, on the first installment),
+			- **`amount`** is the portion of the invoice settled by **this** payment,
+			- **`installment`** is the ordinal of this payment against the invoice,
+			- **`due`** is calculated **automatically** from the other fields; you don't need to set it yourself,
+		- the third line (invoice `LMC` `0023`) illustrates a later installment that doesn't fully settle the invoice: `payable` `1000.00`, `advances` `500.00` already paid, `amount` `250.00` paid now, leaving a positive `due` of `250.00` for a future receipt,
+		- lines carry the tax breakdown of the invoice being paid, including retained taxes,
+		- the single `methods` entry describes how the payment was received; `gobl build` maps the `credit-transfer` key to the [`mx-cfdi-payment-means`](https://docs.gobl.org/addons/mx-cfdi-v4#payment-means) extension `03`,
+		- other extensions that are set automatically on running `gobl build`: the document [`mx-cfdi-doc-type`](https://docs.gobl.org/addons/mx-cfdi-v4#document-type) is set to `P` and the customer's [`mx-cfdi-use`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-use-code) to `CP01`,
+		- this particular example also carries a `preceding` block, which implies that this receipt **substitutes** one previously issued — `gobl build` fills in the [`mx-cfdi-rel-type`](https://docs.gobl.org/addons/mx-cfdi-v4#relation-type) extension `04` (_Sustitución de los CFDI previos_) (omit the `preceding` block when the receipt is not a replacement), and,
+		- there are no totals in the minimal version; running `gobl build` calculates the line taxes, the payment total, and all balances.
+
+		<CodeGroup>
+			<PaymentMin />
+			<Payment />
 		</CodeGroup>
 	</Accordion>
 

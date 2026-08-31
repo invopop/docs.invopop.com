@@ -1,14 +1,6 @@
----
-title: "ZATCA register supplier"
-description: "Registers a supplier with ZATCA and provisions its production CSID"
-countryCode: "sa"
-appId: "gov-sa"
-schema: "org/party"
----
-```json Register supplier in ZATCA
-{
+export const saRegisterWorkflow = {
     "name": "ZATCA register supplier",
-    "description": "",
+    "description": "Registers a supplier with ZATCA and provisions its production CSID",
     "schema": "org/party",
     "steps": [
         {
@@ -24,14 +16,64 @@ schema: "org/party"
             "id": "fd448bb0-6fce-11f1-b09d-79f60b032746",
             "name": "Register supplier with ZATCA",
             "provider": "gov-sa.party.register",
-            "summary": "Developer Portal",
             "config": {
-                "mode": "developer"
+                "mode": "simulation"
             }
         },
         {
             "id": "0064b770-6fcf-11f1-b09d-79f60b032746",
-            "name": "Wait for ZATCA OTP authorization",
+            "name": "Wait for OTP submission",
+            "provider": "gov-sa.wait.authorization"
+        },
+        {
+            "id": "0236df60-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "04aa0240-6fcf-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json ZATCA register supplier workflow
+{
+    "name": "ZATCA register supplier",
+    "description": "Registers a supplier with ZATCA and provisions its production CSID",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "f60b2e30-6fce-11f1-b09d-79f60b032746",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "fd448bb0-6fce-11f1-b09d-79f60b032746",
+            "name": "Register supplier with ZATCA",
+            "provider": "gov-sa.party.register",
+            "config": {
+                "mode": "simulation"
+            }
+        },
+        {
+            "id": "0064b770-6fcf-11f1-b09d-79f60b032746",
+            "name": "Wait for OTP submission",
             "provider": "gov-sa.wait.authorization"
         },
         {

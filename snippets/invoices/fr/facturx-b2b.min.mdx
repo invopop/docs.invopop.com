@@ -1,9 +1,9 @@
-```json FacturX B2B Invoice
+```json Factur-X B2B invoice
 {
     "$schema": "https://gobl.org/draft-0/bill/invoice",
     "$regime": "FR",
     "$addons": [
-        "eu-en16931-v2017",
+        "fr-ctc-flow2-v1",
         "fr-facturx-v1"
     ],
     "type": "standard",
@@ -11,8 +11,13 @@
     "code": "2345",
     "issue_date": "2025-06-18",
     "currency": "EUR",
+    "tax": {
+        "ext": {
+            "fr-ctc-billing-mode": "S2"
+        }
+    },
     "supplier": {
-        "name": "Provide One Inc.",
+        "name": "Provide One SARL",
         "tax_id": {
             "country": "FR",
             "code": "43498927917"
@@ -23,14 +28,20 @@
                 "code": "49892791768734"
             }
         ],
+        "inboxes": [
+            {
+                "key": "peppol",
+                "scheme": "0225",
+                "code": "498927917"
+            }
+        ],
         "addresses": [
             {
                 "num": "42",
-                "street": "Calle Pradillo",
-                "locality": "Madrid",
-                "region": "Madrid",
-                "code": "28002",
-                "country": "ES"
+                "street": "Avenue des Ternes",
+                "locality": "Paris",
+                "code": "75017",
+                "country": "FR"
             }
         ],
         "emails": [
@@ -40,7 +51,7 @@
         ]
     },
     "customer": {
-        "name": "Sample Consumer",
+        "name": "Sample Consumer SAS",
         "tax_id": {
             "country": "FR",
             "code": "39356000000"
@@ -49,6 +60,13 @@
             {
                 "type": "SIRET",
                 "code": "35600000012345"
+            }
+        ],
+        "inboxes": [
+            {
+                "key": "peppol",
+                "scheme": "0225",
+                "code": "356000000"
             }
         ],
         "addresses": [
@@ -68,39 +86,42 @@
     },
     "lines": [
         {
-            "i": 1,
             "quantity": "20",
             "item": {
                 "name": "Development services",
                 "price": "90.00",
                 "unit": "h"
             },
-            "sum": "1800.00",
             "discounts": [
                 {
                     "reason": "Special discount",
-                    "percent": "10%",
-                    "amount": "180.00"
+                    "percent": "10%"
                 }
             ],
             "taxes": [
                 {
                     "cat": "VAT",
-                    "key": "standard",
-                    "rate": "general"
+                    "rate": "standard"
                 }
-            ],
-            "total": "1620.00"
+            ]
         }
     ],
     "payment": {
         "advances": [
             {
                 "description": "Paid in full",
-                "percent": "100%",
-                "amount": "1944.00"
+                "percent": "100%"
             }
         ],
+        "terms": {
+            "key": "due-date",
+            "due_dates": [
+                {
+                    "date": "2025-06-18",
+                    "amount": "1944.00"
+                }
+            ]
+        },
         "instructions": {
             "key": "card",
             "card": {}

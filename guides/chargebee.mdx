@@ -1,16 +1,12 @@
 ---
-title: "Chargebee Guide"
-sidebarTitle: "Chargebee"
-icon: "plug"
+title: "Chargebee guide"
+sidebarTitle: "Overview"
 description: "Import and process invoices and credit notes from Chargebee"
 ---
 
 import WorkflowExample from '/snippets/workflows/chargebee/cb-invoice.mdx'
-import ZUGFeRDExample from '/snippets/workflows/chargebee/cb-zugferd.mdx'
-import XRechnungExample from '/snippets/workflows/chargebee/cb-xrechnung.mdx'
-import PeppolExample from '/snippets/workflows/chargebee/cb-peppol.mdx'
-import DKPeppolExample from '/snippets/workflows/chargebee/cb-dk-peppol.mdx'
-import FRExample from '/snippets/workflows/chargebee/cb-france.mdx'
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbInvoiceWorkflow } from '/snippets/workflows/chargebee/cb-invoice.mdx';
 
 ## Introduction
 
@@ -37,7 +33,7 @@ Once an invoice or credit note is stored, the app will create a job on the confi
 Any updates and, importantly, error messages will be posted to Chargebee automatically, in the comment section of the invoice or credit note. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
 
 <Frame caption="Invopop's output in Chargebee">
-  ![chargebee invoice](/assets/guides/chargebee-invoice.png)
+  <img src="/assets/guides/chargebee-invoice.png" alt="chargebee invoice" />
 </Frame>
 
 ## Setup
@@ -57,46 +53,20 @@ This guide assumes that you already have a Chargebee site configured and using P
 
   </Step>
   <Step title="Prepare a Workflow">
+    <Card title="Chargebee Basic PDF workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-invoice" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
-      <Tab title="Template">
-        <Card title="Chargebee Basic PDF workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-invoice" cta="Add to my workspace">
-          This workflow syncs with Chargebee and generates a basic PDF.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={chargebeeCbInvoiceWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste the following JSON into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view. This example adds support for setting states on silo entries, which we strongly recommend.
 
         <WorkflowExample />
       </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with Chargebee".
-
-        It's essential to add the **Import document from Chargebee** step at the very beginning of the workflow to import the document. Also, be sure to add an **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
-      </Tab>
     </Tabs>
-    <Tabs>
-      <Tab title="Template">
-        <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" cta="Add to my workspace">
-          This workflow syncs with Chargebee, and generates a ZUGFeRD XML and PDF.
-        </Card>
-      </Tab>
-      <Tab title="Code">
-        This is an example that combines the Chargebee app with a country-specific functionality (in this case, the ZUGFeRD conversion step). You can replace the X-Rechnung step with any other country-specific functionality. See the country guides for more information.
-
-        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-
-        <ZUGFeRDExample />
-      </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "Sync with Chargebee".
-
-        It's essential to add the **Import document from Chargebee** step at the very beginning of the workflow to import the document. Also, be sure to add an **Update Chargebee** step at the end of the workflow to report back to Chargebee once the document has been processed.
-      </Tab>
-    </Tabs>
+    For workflows that generate country-specific formats such as German ZUGFeRD or XRechnung documents, see the [country guides](#country-guides) below.
   </Step>
   <Step title="Connect the Chargebee app">
     You are now ready to connect and configure the Chargebee app itself. Go to **Configuration** → **Apps** in the Invopop console. Find the **Chargebee** app, then click on **Connect**. The app will be added to the list of active apps. Click on the app's **Configure** button. You'll see a form with the following fields:
@@ -106,6 +76,7 @@ This guide assumes that you already have a Chargebee site configured and using P
     - **Supplier:** The supplier that will issue the invoices. You can select the one you created earlier.
     - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
     - **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
+    - **Exclude customers by default:** If enabled, Invopop will not process a customer's invoices unless the `cf_invopop_include` custom field is present and set to `true` on that customer. This is the recommended way to allowlist a subset of customers — see [Controlling which customers are processed](#controlling-which-customers-are-processed) below.
 
     Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
 
@@ -113,7 +84,7 @@ This guide assumes that you already have a Chargebee site configured and using P
     - **Exemption Code (Exports):** The local code to be used by default on tax-exempt invoices for exports.
     - **Exemption Code (Reverse Charge):** The local code to be used by default on tax-exempt invoices for reverse charge.
 
-    Please note that those are the default exemption codes that will be set depending on the Chargebe exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions, or customers, you can assign them as extensions (see next step).
+    Please note that those are the default exemption codes that will be set depending on the Chargebee exemption reason. If you need specific codes used for specific tax-exempt items, item prices, subscriptions, or customers, you can assign them as extensions (see next step).
 
     After saving the configuration, the page will provide a URL to set up a webhook in Chargebee. Save the URL, we'll complete the setup in a later step.
   </Step>
@@ -122,7 +93,7 @@ This guide assumes that you already have a Chargebee site configured and using P
 
     To enter this data in Chargebee, you can either configure custom fields or attach metadata to any of these entities: Customer, Plan Item, Plan Item Price, Action Item, Action Item Price, Charge Item, Charge Item Price, and Subscription.
 
-    The keys of these metadata or custom fields need to have a specific prefix and include the extension, identity, or inbox key to be properly mapped to GOBL. Refer to the [Custom Data](#custom-data) section below for the full list of prefixes.
+    The keys of these metadata or custom fields need to have a specific prefix and include the extension, identity, or inbox key to be properly mapped to GOBL. Refer to the [Custom fields & metadata](#custom-fields-metadata) section below for the full list of prefixes.
 
     For example, to set the customer's [`mx-cfdi-fiscal-regime`](https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code) extension, you must add a custom field to the Customer entity with the API name: `cf_gobl_mx_cfdi_fiscal_regime` (note that, being a custom field, dashes in the original extension key are replaced by underscores). You can create it in **Settings** → **Configure Chargebee** → **Custom Fields**:
 
@@ -142,7 +113,7 @@ This guide assumes that you already have a Chargebee site configured and using P
     ```
   </Step>
   <Step title="Set up a webhook">
-    After saving the configuration in Step, the page provided a URL to set up a webhook in Chargebee and trigger the import process. To do this, go to **Settings** → **Configure Chargebee** → **Webhooks** and create a new webhook with the provided URL.
+    After saving the configuration in step 3, the page provides a URL to set up a webhook in Chargebee and trigger the import process. To do this, go to **Settings** → **Configure Chargebee** → **Webhooks** and create a new webhook with the provided URL.
 
     <Frame>
       <img
@@ -159,300 +130,37 @@ This guide assumes that you already have a Chargebee site configured and using P
 
 You are now ready to start importing invoices and credit notes from Chargebee. The app will automatically create GOBL invoices and add them to your Invopop account. The invoices will then be processed using the workflow you set up.
 
-## Country-specific workflows
+## Country guides
 
-Depending on where your customers are located, you'll need a different workflow to comply with local e-invoicing requirements. Below you'll find the recommended workflow template, video walkthrough, and key custom fields for each supported country.
+Depending on where your customers are located, you'll need a different workflow to comply with local e-invoicing requirements. Each country guide covers the recommended workflow template, video walkthrough, and key custom fields:
 
-<Note>
-  The metadata keys listed in the tables below follow the Chargebee metadata format (hyphens, no `cf_` prefix). If you prefer to use custom fields instead, replace hyphens with underscores and add the `cf_` prefix. For example, `gobl-customer-inbox-peppol` becomes `cf_gobl_customer_inbox_peppol`.
-</Note>
+<CardGroup cols={2}>
+  <Card title="Belgium" icon="https://assets.invopop.com/flags/be.svg" href="/guides/cb-belgium">
+    Send Peppol BIS invoices with the Chargebee PDF attached, with automatic participant ID lookup.
+  </Card>
+  <Card title="Denmark" icon="https://assets.invopop.com/flags/dk.svg" href="/guides/cb-denmark">
+    Send Peppol invoices to Danish customers with SEPA payment key handling.
+  </Card>
+  <Card title="France" icon="https://assets.invopop.com/flags/fr.svg" href="/guides/cb-france">
+    Route invoices automatically between the e-invoicing and e-reporting flows.
+  </Card>
+  <Card title="Germany" icon="https://assets.invopop.com/flags/de.svg" href="/guides/cb-germany">
+    Generate ZUGFeRD hybrid PDFs for B2B or XRechnung documents for B2G.
+  </Card>
+</CardGroup>
 
-#### Controlling which customers are processed
+### Controlling which customers are processed
 
 By default, Invopop will process invoices for all your customers. If you only need to send e-invoices to a subset of them, you have two options — pick one, not both:
 
-- **Allowlist**: Create the `cf_invopop_include` custom field and set it to `true` for the customers you want to process and `false` for everyone else.
+- **Allowlist**: Enable the **Exclude customers by default** checkbox in the app's configuration form, then set the `cf_invopop_include` custom field to `true` on each customer you want to process. Everyone else is excluded automatically — no back-populating required.
 - **Denylist**: Create the `cf_invopop_exclude` custom field and set it to `true` for customers you want to exclude. Everyone else will be processed by default.
 
-### 🇧🇪 Belgium
-
-Belgium uses the Peppol network for e-invoicing, which became mandatory in January 2026. The format used is Peppol BIS Billing UBL — the standard Peppol format — with one important Belgian-specific requirement: **customers always expect to receive a PDF alongside the XML**. To handle this, the workflow first downloads the existing Chargebee PDF and attaches it to the UBL document before sending it through Peppol.
-
-**Required apps:** [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
-
-<Info>
-  Before processing any invoices, you must register your supplier on the Peppol network through Invopop. See the [Peppol guide](/guides/peppol) for registration steps, and the [Belgium Peppol guide](/guides/be-peppol) for Belgium-specific details.
-</Info>
-
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/Iyqmgw0cvFY"
-  title="Chargebee + Invopop | Setting up e-invoicing with Peppol"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  loading="lazy"
-></iframe>
-
-<Tabs>
-  <Tab title="Template">
-    <Card title="Chargebee Peppol" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-peppol" cta="Add to my workspace">
-      Syncs with Chargebee, downloads the PDF, looks up the customer's Peppol participant ID, and sends via the Peppol network.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    <Note>
-      For a full walkthrough including required apps, custom fields, and participant ID setup, see the [Belgium section of the Chargebee guide](/guides/chargebee#belgium).
-    </Note>
-
-    <Note>
-      The **Lookup Peppol participant** step automatically looks up your customer's Peppol participant ID from the Peppol network at the time the invoice is processed. If you have already set the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) on your customers in Chargebee, Invopop will use that value directly and you can remove this step.
-    </Note>
-    <PeppolExample />
-  </Tab>
-</Tabs>
-
-#### Participant ID lookup
-
-Belgium enforces a standard set of Peppol participant ID schemes, all derived from the customer's **BCE number** (Belgian company registration number). Since this number is typically available in Chargebee, the **Lookup Peppol participant** step can automatically resolve the correct Peppol ID for each customer — no manual setup required in most cases.
-
-If you want to specify a Peppol ID manually for a particular customer (or override the lookup result), you can do so with the following custom field:
-
-| Field | Metadata key | Custom field key | Example |
-| ----- | ------------ | ---------------- | ------- |
-| Peppol Participant ID | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0208:0123456789` |
-
----
-
-### 🇩🇰 Denmark
-
-Denmark also uses the Peppol network and the same Peppol BIS Billing UBL format. However, unlike Belgium, Danish Peppol participant IDs come in a wide variety of schemes — GLN numbers, CVR numbers, and others — and they don't all derive from the VAT number. This makes automatic lookup unreliable, so **this workflow does not include a Lookup Peppol participant step**. You will need to set the Peppol ID directly on each customer as a custom field.
-
-If you do want to use automatic lookup for some customers, you can add the lookup step from the [generic Peppol template](/guides/peppol).
-
-**Required apps:** [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
-
-<Info>
-  Before processing any invoices, you must register your supplier on the Peppol network through Invopop. See the [Peppol guide](/guides/peppol) for full registration steps.
-</Info>
-
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/6Gsq8fPcpuo"
-  title="Chargebee + Invopop | Send e-invoices in Denmark"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  loading="lazy"
-></iframe>
-
-<Tabs>
-  <Tab title="Template">
-    <Card title="Chargebee DK E-invoicing" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-dk-peppol" cta="Add to my workspace">
-      Syncs with Chargebee and sends via Peppol to Danish customers, with automatic SEPA payment key handling.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    <Note>
-  For a full walkthrough including required apps, custom fields, and participant ID setup, see the [Denmark section of the Chargebee guide](/guides/chargebee#denmark).
-    </Note>
-
-    <Note>
-      Unlike other Peppol countries, this template does not include a **Lookup Peppol participant** step. Danish Peppol participant IDs can take a variety of formats — such as GLN numbers — that are difficult to resolve automatically from a VAT number alone. We recommend setting the `cf_gobl_customer_inbox_peppol` [custom field](/guides/chargebee#custom-fields-metadata) directly on each customer in Chargebee so that Invopop can use it without needing to perform a lookup.
-    </Note>
-
-    <Note>
-      The **Fixing bank-transfer details** step converts the generic `credit-transfer` payment key to `credit-transfer+sepa`. Denmark requires the more specific SEPA key for Peppol invoices, so this step ensures the payment instructions are valid before the document is sent.
-    </Note>
-    <DKPeppolExample />
-  </Tab>
-</Tabs>
-
-#### Peppol Participant ID
-
-Since there is no automatic lookup, the Peppol Participant ID must be set on each Danish customer before any invoices are processed. Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate this field across all your Danish customers before going live.
-
-| Field | Metadata key | Custom field key | Example |
-| ----- | ------------ | ---------------- | ------- |
-| Peppol Participant ID | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0088:5790000435968` (GLN) |
-
-#### SEPA payment key
-
-The workflow includes one Denmark-specific step: **Fixing bank-transfer details**. If Chargebee sends a `credit-transfer` payment instruction on the invoice, this step automatically converts it to `credit-transfer+sepa`. Plain `credit-transfer` is not accepted in Denmark — the more specific SEPA variant is required. If the invoice has no payment instructions, the step is skipped. That's the only difference from a standard Peppol workflow.
-
----
-
-### 🇩🇪 Germany
-
-Germany supports two structured e-invoicing formats: **ZUGFeRD** and **X-Rechnung**. Both are valid and supported by Invopop, but they serve different purposes and have different requirements.
-
-- **ZUGFeRD** is the most common choice for B2B invoicing. It has fewer validation constraints, which is why we always recommend embedding the XML inside a PDF — your customer receives a standard-looking PDF that also contains a machine-readable file. No per-customer setup is required.
-- **X-Rechnung** is primarily used for B2G invoicing (invoicing public authorities). It has stricter validations and more required fields, but if your customers require it, Invopop fully supports it.
-
-**Required apps:** [UN/CEFACT CII](/apps/uncefact-cii)
-
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/WJcWJqBiA-Q"
-  title="Chargebee + Invopop | E-invoicing in Germany"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  loading="lazy"
-></iframe>
-
-#### Using Chargebee's email delivery
-
-For Invopop to update the invoice in Chargebee and trigger Chargebee's own email delivery to your customer, you will need a **Full Access API key**. Beyond that, the following conditions must be met in Chargebee — if any of these are not in place, Chargebee will not forward the generated PDF (or XML, in the case of X-Rechnung) to your customer:
-
-1. The `SEND_EINVOICE_NOTIFICATION` feature flag must be enabled on your Chargebee site. Contact your Chargebee representative to enable this.
-2. The `cf_invopop_include` custom field must be present and set to `true` on each customer you want to process.
-3. Invoice and credit note email notifications must be enabled on your Chargebee site.
-
-<Tabs>
-  <Tab title="ZUGFeRD (B2B)">
-    <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-zugferd" cta="Add to my workspace">
-      Syncs with Chargebee, downloads the Chargebee PDF, generates a ZUGFeRD XML, and embeds both into a single hybrid PDF.
-    </Card>
-
-    The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. No per-customer configuration is required beyond having a valid German supplier set up in Invopop.
-
-    <ZUGFeRDExample />
-  </Tab>
-  <Tab title="X-Rechnung (B2G)">
-    <Card title="Chargebee X-Rechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" cta="Add to my workspace">
-      Syncs with Chargebee and generates a validated X-Rechnung CII XML for invoicing German public authorities.
-    </Card>
-
-    X-Rechnung is used for invoicing German public authorities. The template includes a few additional steps compared to ZUGFeRD, each addressing a specific requirement:
-
-    **1. Bank details**
-
-    X-Rechnung requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN (and optionally your BIC/SWIFT code) directly into the **Adding bank details** workflow step. The IBAN alone is sufficient.
-
-    **2. Leitweg-ID as the buyer reference (ordering code)**
-
-    Some German public sector customers require a **Leitweg-ID** to be present on the invoice as the buyer reference. This is typically entered as the PO number on the subscription in Chargebee. However, X-Rechnung expects this value in the buyer reference field, which Invopop maps to the ordering code — not the purchase order code. The **Map PO to ordering code** step handles this automatically, moving the value from the PO field into the correct place.
-
-    If you prefer not to use the PO number for this, or if you need to set it independently, you can use the `cf_gobl_ordering` custom field instead, providing the value as JSON:
-
-    ```json
-    {"code": "991-12345678-06"}
-    ```
-
-    **3. Customer inbox (delivery routing)**
-
-    Each public authority customer must have either a Peppol inbox or an email address configured so the invoice can be routed correctly. You can set these via custom fields on the customer in Chargebee:
-
-    | Field | Metadata key | Custom field key | Example |
-    | ----- | ------------ | ---------------- | ------- |
-    | Leitweg-ID (Peppol inbox) | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0204:991-12345678-06` |
-    | E-invoice email | `gobl-customer-inbox-email` | `cf_gobl_customer_inbox_email` | `einvoice@behoerde.de` |
-    | Leitweg-ID (ordering code) | `gobl-ordering` | `cf_gobl_ordering` | `{"code": "991-12345678-06"}` |
-
-    <Tip>
-      Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate the inbox and ordering code fields across all your public sector customers before going live.
-    </Tip>
-    <Note>
-      For a full walkthrough including required apps, bank details, Leitweg-ID setup, and custom fields, see the [Germany section of the Chargebee guide](/guides/chargebee#germany).
-    </Note>
-
-    <Note>
-      The **Adding bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added on a per-customer basis. If you don't need to include payment instructions in your invoices, you can remove this step entirely.
-    </Note>
-
-    <Note>
-      The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that X-Rechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
-    </Note>
-    <XRechnungExample />
-  </Tab>
-</Tabs>
-
----
-
-### 🇫🇷 France
-
-France runs two parallel flows, and which one an invoice takes depends on whether the customer is registered in the **Annuaire** (the French directory).
-
-- Customers subject to VAT in France are handled through the [e-invoicing flow](/guides/fr-pa-invoicing#sending) for domestic B2B transactions, with [status updates](/guides/fr-pa-status) reported back throughout.
-- Customers not subject to VAT in France — international or B2C transactions, and territories excluded from the mandate such as Guyane, Mayotte, New Caledonia and French Polynesia — go through [e-reporting](/guides/fr-pa-reporting) instead.
-
-**Required apps:** [France](/apps/france), [Peppol](/apps/peppol), [OASIS UBL](/apps/oasis-ubl)
-
-<Info>
-  Before processing any invoices, you must register your supplier in the Annuaire through Invopop. See the [registration guide](/guides/fr-pa-registration) for the e-invoicing flow and the [e-reporting registration steps](/guides/fr-pa-reporting#registration) for the reporting flow.
-</Info>
-
-{/* TODO: Add the walkthrough video once recorded, matching the other countries.
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/TODO_VIDEO_ID"
-  title="Chargebee + Invopop | E-invoicing in France"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-  loading="lazy"
-></iframe>
-*/}
-
-A single template covers both French flows and picks between them automatically from the result of the **Lookup in Directory** step.
-- **found** result means the customer is subject to e-invoicing, so Invopop records the document in the Annuaire, forwards it to the PPF, and sends it over Peppol.
-- **not found** result means the transaction falls outside domestic e-invoicing — international B2B, B2C, or a customer in a territory excluded from the mandate — so it is recorded for e-reporting. For those, the **Can Send** action checks whether the customer is reachable on the Peppol network: if it is (a Belgian party, for example), the workflow sends the invoice over Peppol as well.
-
-<Tabs>
-  <Tab title="Template">
-    <Card title="Chargebee France" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-france" cta="Add to my workspace">
-      Syncs with Chargebee, looks the customer up in the French Annuaire, and branches automatically: registered parties are e-invoiced via Peppol France CIUS and forwarded to the PPF, while unregistered parties are recorded for e-reporting.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    <Note>
-      For a full walkthrough including required apps, directory registration, and customer routing, see the [France section of the Chargebee guide](/guides/chargebee#france).
-    </Note>
-
-    <Note>
-      The two paths differ in the addon and format they apply: the e-invoicing path applies the `fr-ctc-flow2-v1` addon and generates a Peppol France CIUS UBL, while the e-reporting path applies `fr-ctc-flow10-v1` and, when the customer is reachable on Peppol, generates a Peppol BIS Billing v3 document.
-    </Note>
-
-    <Note>
-      The **Add bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. It only applies when the invoice carries payment due dates and the payment key is a plain `credit-transfer`, normalizing it to the SEPA format France expects. If you don't need to include payment instructions, you can remove this step.
-    </Note>
-
-    <Note>
-      The **Add Billing Mode** step sets the French CTC billing mode: `S2` when the invoice is fully paid (an advance equal to the total), otherwise `S1`. The subsequent **Add VATEX** step maps UNTDID tax categories onto the GOBL tax keys and adds the `VATEX` exemption codes required by the French format.
-    </Note>
-    <FRExample />
-  </Tab>
-</Tabs>
-
-#### Customer routing &amp; identifiers
-
-A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has a unique identifier — mapped to the Peppol inbox — in one of the `SIREN`, `SIREN_SIRET`, `SIREN_SIRET_suffix` or `SIREN_suffix` forms. When no Peppol inbox is set on the customer, Invopop defaults to `0225:SIREN`, ignoring any SIRET present in the customer's identities.
-
-Use the custom fields below to control this. Set the **Peppol inbox** to target a specific directory entry, or provide the customer's **SIREN** and **SIRET** so the directory lookup can resolve them. All three are configured as **Single line text** custom fields (or as metadata, using the hyphenated key):
-
-| Field | Metadata key | Custom field key | Example |
-| ----- | ------------ | ---------------- | ------- |
-| Peppol inbox | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0225:123456789_test` |
-| SIREN | `gobl-customer-identity-SIREN` | `cf_gobl_customer_identity_SIREN` | `123456789` |
-| SIRET | `gobl-customer-identity-SIRET` | `cf_gobl_customer_identity_SIRET` | `12345678900011` |
-
-#### E-reporting transaction fields
-
-The e-reporting path applies the `fr-ctc-flow10-v1` addon, which defines two invoice tax extensions. By default, the addon sets the billing mode to `M1` — or `M2` when the invoice is fully paid — and the B2C transaction category to `TNT1`. Use the custom fields below to override these defaults:
-
-| Field | Metadata key | Custom field key | Example |
-| ----- | ------------ | ---------------- | ------- |
-| Billing mode | `gobl-tax-fr-ctc-billing-mode` | `cf_gobl_tax_fr_ctc_billing_mode` | `S1` |
-| B2C transaction category | `gobl-tax-fr-ctc-flow10-b2c-category` | `cf_gobl_tax_fr_ctc_flow10_b2c_category` | `TPS1` |
-
----
-
-## Retriggering Invoices
+## Retriggering invoices
 
 There may be situations where you need to reprocess an invoice. The method depends on whether Invopop has already created a silo entry (invoice) for it.
 
-### No Silo Entry Created (Invoice Not Imported)
+### No silo entry created (invoice not imported)
 
 If no job was created and no silo entry exists in Invopop, you can retrigger the webhook directly from Chargebee:
 
@@ -465,7 +173,7 @@ If no job was created and no silo entry exists in Invopop, you can retrigger the
 
 This will send the invoice to Invopop again, creating a new job and silo entry.
 
-### Silo Entry Already Exists
+### Silo entry already exists
 
 Once a silo entry (invoice) has been created in Invopop, retriggering from Chargebee will not work. Use the **Run Again** option on the last job instead. How you proceed depends on whether anything in Chargebee has changed.
 
@@ -493,7 +201,7 @@ The **Import document from Chargebee** step updates the invoice with fresh data 
 
 The import step will now pull the latest data from Chargebee before continuing with the rest of the workflow.
 
-## Custom Fields & Metadata
+## Custom fields & metadata
 
 The following prefixes are used to map custom fields from Chargebee to GOBL (all of type **Single line text**):
 
@@ -542,11 +250,15 @@ Finally, you can use the following custom fields to choose which customer's invo
 ></iframe>
 
 <Tip>
-  You would typically use either `cf_invopop_include` to allowlist the customers to be imported, or `cf_invopop_exclude` to denylist them, but not both of them. They are optional, though, and if not set, all customers' invoices will be imported.
+  You would typically use either `cf_invopop_include` to allowlist the customers to be imported, or `cf_invopop_exclude` to denylist them, but not both of them. They are optional, though, and if not set, all customers' invoices will be imported — unless the **Exclude customers by default** checkbox is enabled, which flips that default (see below).
 </Tip>
 
+By default, a customer's invoices are imported unless `cf_invopop_exclude` is set to `true`, or the **Exclude customers by default** checkbox in the app's configuration form is enabled and `cf_invopop_include` isn't set to `true` for that customer.
+
 <Warning>
-  When you configure a new custom field in Chargebee, it is not immediately added to any preexisting entities. The custom field is only attached to an entity after you edit and save it. This is particularly relevant to the `cf_invopop_include` field. The importer will always import a Customer unless the field is present and set to "False". To ensure the expected behavior, you should probably [back-populate the field in bulk](https://www.chargebee.com/docs/2.0/bulk-operations.html) for all your Customers to "False" right after configuring the field.
+  Enabling the **Exclude customers by default** checkbox is the recommended way to allowlist a subset of customers with `cf_invopop_include` — the app skips any customer where the field isn't set to `true`, so there's no need to back-populate anything across your existing customers.
+
+  If you use `cf_invopop_include` **without** enabling that checkbox, keep in mind that a new custom field is not immediately attached to preexisting Chargebee entities — it's only attached once you edit and save that customer. In that mode, the importer will always import a customer unless the field is present and set to `false`, so you'd need to [back-populate the field in bulk](https://www.chargebee.com/docs/2.0/bulk-operations.html) to `false` for all your customers to get the expected allowlist behavior.
 </Warning>
 
 ---
@@ -555,11 +267,11 @@ Finally, you can use the following custom fields to choose which customer's invo
 
 The [Custom Fields & Metadata](#custom-fields-metadata) section above covers data flowing _into_ GOBL. The **Update invoice details** step does the reverse: it writes values produced during your workflow back onto the originating Chargebee document. A typical use case is recording the official reference number returned by a tax authority — for example, the Polish KSeF number — into a Chargebee custom field so it stays visible and searchable in Chargebee.
 
-For invoices, the resolved values are written through Chargebee's [`update_details`](https://apidocs.chargebee.com/docs/api/invoices?lang=curl#update_invoice_details) endpoint. Credit notes can't be updated in Chargebee, so for them the same values are recorded as a comment on the credit note instead.
+The values are stored as **custom fields** (keys starting with `cf_`) on the document: invoices are written through Chargebee's [`update_details`](https://apidocs.chargebee.com/docs/api/invoices?lang=curl#update_invoice_details) endpoint, and credit notes through the [`update`](https://apidocs.chargebee.com/docs/api/credit_notes/update-credit-note-details?lang=curl) endpoint.
 
-<Note>
-  Today this step is geared towards **custom fields** (keys starting with `cf_`), but field keys are sent to Chargebee verbatim, so other `update_details` parameters can be targeted as well.
-</Note>
+<Warning>
+  Custom fields must be defined on the corresponding entity (Invoices and/or Credit Notes) in your Chargebee site under **Settings** → **Configure Chargebee** → **Custom Fields** before the step runs. Chargebee silently ignores fields that are not defined on the entity: the step will report success, but nothing will be written.
+</Warning>
 
 ### Configuration
 
@@ -569,7 +281,7 @@ Add the **Update invoice details** step to your workflow (its provider is `charg
 - **Value** — an [expr](https://expr-lang.org/) expression, evaluated against the full GOBL envelope (both `head` and `doc`). Document extensions are available under `doc.ext[...]`, while values added by earlier steps — such as the confirmation numbers returned by a tax authority — are stored as stamps under `head.stamps` and can be looked up with expr's `find()` function. To set a static value, use a literal string such as `"invopop"`.
 
 <Frame caption="Configuring the Update invoice details step">
-  ![Update invoice details step configuration](/assets/guides/cb_update_invoice_details.png)
+  <img src="/assets/guides/cb_update_invoice_details.png" alt="Update invoice details step configuration" />
 </Frame>
 
 For example, to write the Polish KSeF number into the `cf_ksef_number` custom field, set the value to:
@@ -610,7 +322,7 @@ The value you want to write must already exist in the envelope by the time this 
 Once the workflow runs, the resolved value appears on the invoice's custom fields in Chargebee:
 
 <Frame caption="The KSeF number written back to the Chargebee invoice">
-  ![Custom field populated on a Chargebee invoice](/assets/guides/cb_updated_custom_field.png)
+  <img src="/assets/guides/cb_updated_custom_field.png" alt="Custom field populated on a Chargebee invoice" />
 </Frame>
 
 ---

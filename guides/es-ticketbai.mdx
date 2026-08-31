@@ -1,5 +1,5 @@
 ---
-title: "TicketBAI Invoicing Guide"
+title: "TicketBAI invoicing guide"
 sidebarTitle: "Invoicing"
 description: Issue invoices in the Basque Country with TicketBAI.
 ---
@@ -9,6 +9,9 @@ import CancelInvoice from '/snippets/workflows/es/ticketbai-cancel.mdx'
 import InvoiceAccordion from '/snippets/invoices/es/ticketbai-accordion.mdx'
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 import FAQ from '/snippets/faqs/es/composers/guide-ticketbai-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { esTicketbaiInvoiceWorkflow } from '/snippets/workflows/es/ticketbai-invoice.mdx';
+import { esTicketbaiCancelWorkflow } from '/snippets/workflows/es/ticketbai-cancel.mdx';
 
 ## Introduction
 
@@ -39,9 +42,9 @@ In order to register a supplier and issue invoices, you will need:
 - Supplier details, including:
   - company name,
   - a tax ID (NIF) from a company in one of the three Tax Agencies, and,
-  - an address which includes the Region name; "Alaba", "Bizkaia", or "Gipuzkoa".
+  - an address which includes the region name: "Araba", "Bizkaia", or "Gipuzkoa".
 - Customer details for B2B sales, including the tax ID if selling to a Spanish or EU entity.
-- Quantity, name, price, and VAT rates of items being sold, including differenciating between physical goods and services.
+- Quantity, name, price, and VAT rates of items being sold, including differentiating between physical goods and services.
 - An invoicing series.
 
 <Info>
@@ -66,40 +69,17 @@ No further configuration is required.
 <Step title="Create invoice workflow">
 
 
-    <Tabs>
-      <Tab title="Template">
 
-        <Card iconType="duotone" title="TicketBAI issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-invoice" cta="Add to my workspace">
-        This workflow will issue an invoice through TicketBAI.
-        </Card>
+    <Card iconType="duotone" title="TicketBAI issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-invoice" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esTicketbaiInvoiceWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view. This example adds support for setting states on silo entries which we strongly recommend.
         <WorkflowExample />
-      </Tab>
-      <Tab title="Build from scratch">
-          Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-          In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "TicketBAI issue invoice".
-
-        The new workflow will need to perform these steps:
-
-        - **Add sequential code** - choose the "dynamic" sequence option and set a name.
-        - **Set state** - to "Processing".
-        - **Sign envelope** - this step signs the TicketBAI document, preventing further modifications.
-        - **Generate TicketBAI XML** - this step generates the TicketBAI XML document.
-        - **Send invoice to TicketBAI** - will take the previously generated XML document, and send to the appropriate gateway.
-        - **Generate PDF** - configure as required, the PDF will use the QR code generated in the previous step. After this step, you may want to add a webhook or similar.
-        - **Set state** - to "Sent".
-
-
-        Finally, in the Error Handling area, add the **Set state** action and select `Error`.
-
-        Add any additional steps you may need, and save the new workflow.
-        <Tip>
-          Invoices must be signed before processing with TicketBAI, be sure to add the _Sign envelope_ step.
-        </Tip>
-
       </Tab>
     </Tabs>
 
@@ -215,7 +195,7 @@ For other identity documents, set the identity `key` and GOBL fills in the exten
 
 After normalization the identity carries `"ext": { "es-tbai-identity-type": "03" }`.
 
-## Cancel an Invoice
+## Cancel an invoice
 
 TicketBAI also allows you to cancel an invoice. In general, you should only cancel an invoice if it hasn't been handed to the customer nor accepted by the tax authority.
 
@@ -225,34 +205,22 @@ Different from a credit note or a corrective, canceling an invoice doesn't produ
   <Step title="Add a cancel invoice workflow (only once)">
     To cancel an invoice, you need a workflow with the _Cancel invoice_ step. You can start with the template below.
 
+    <Card title="TicketBAI cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-cancel" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
-      <Tab title="Template">
-        <Card title="VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-ticketbai-cancel" cta="Add to my workspace">
-          This workflow will cancel a TicketBAI document.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esTicketbaiCancelWorkflow} />
       </Tab>
       <Tab title="Code">
-        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
         <CancelInvoice />
-      </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) as the base. Then name the workflow with a descriptive label such as "VERI\*FACTU Cancel Invoice".
-
-        We recommend adding the following steps:
-
-        1. **Cancel invoice** - Cancels the TicketBAI document.
-        2. **Set state** - select _Void_ in the step configuration. This will set the state of the invoice to `Void`.
-        3. In the Error Handling area, **Set state** - select `Error` in the step configuration.
-
-        Add any additional steps you may need, and save the new workflow.
       </Tab>
     </Tabs>
   </Step>
   <Step title="Send to cancellation workflow">
-    To cancel an invoice, simply send it to the VERI\*FACTU cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
+    To cancel an invoice, simply send it to the TicketBAI cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
 
     The invoice's status will change to `Void` when the workflow completes successfully.
   </Step>
@@ -273,7 +241,7 @@ The Invopop API will automatically prepare the uploaded documents from the minim
 
 [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to TicketBAI require the following properties in order to perform the correct normalization and validation steps:
 
-- `$region` to be set to [`ES`](https://docs.gobl.org/regimes/es)
+- `$regime` to be set to [`ES`](https://docs.gobl.org/regimes/es)
 - `$addons` to include [`es-tbai-v1`](https://docs.gobl.org/addons/es-tbai-v1)
 
 Invopop will try to assign these automatically if not explicitly provided.

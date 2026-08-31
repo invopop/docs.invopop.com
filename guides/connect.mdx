@@ -1,0 +1,103 @@
+---
+title: "Connect guide"
+sidebarTitle: "Connect"
+description: "Receive documents from external systems at public endpoints that trigger your workflows."
+icon: "https://assets.invopop.com/apps/connect/icon.svg"
+---
+
+Invopop's [Connect app](/apps/connect) gives your workspace public endpoints where external systems can deliver documents over HTTP. Every file posted to an endpoint such a GOBL invoice or an XML document is validated, stored, and handed to the workflow of your choice, allowing you to ingest documents into your workflows without any polling or custom integration code.
+
+Each endpoint pairs a URL of the form `https://connect.invopop.app/{workspace-id}/{slug}` with a workflow. When a document arrives, Connect logs it and starts a workflow job that receives a link to the stored file.
+
+
+To get started you simply need at least one [workflow](/guides/workflows) to process incoming documents.
+
+## How to use
+
+<Steps>
+  <Step title="Enable the Connect app">
+    In the Console, open the apps directory by clicking the icon next to **Apps** in the sidebar. Find **Connect** in the list of available apps and click `Connect` to enable it in your workspace.
+
+    <Frame caption="The Connect app in the apps directory"><img src="/assets/guides/connect-app-card.png" width="450" alt="Connect app card in the apps directory" /></Frame>
+  </Step>
+
+  <Step title="Launch the app">
+    Once enabled, **Connect** appears in the sidebar under **Apps**. Click it to open the app, which has two tabs:
+
+    - **Endpoints**: the URLs your workspace listens on.
+    - **Documents**: a log of everything received.
+  </Step>
+
+  <Step title="Create an endpoint">
+    Click `New endpoint` and fill in the form:
+
+    - **Slug**: the last segment of the endpoint's URL, unique within your workspace (lowercase letters, numbers, and hyphens). For example, `invoices`.
+    - **Workflow**: the workflow to run for each document received at this endpoint.
+    - **Security**: how senders must authenticate: `None`, `Bearer token`, `Basic auth`, or `HMAC signature`. Anything other than `None` is strongly recommended for endpoints that receive real data.
+    - **Accepted content types**: optionally restrict the endpoint to specific formats (for example, only JSON). Leave empty to accept any content type.
+
+    <Frame caption="Creating an endpoint"><img src="/assets/guides/connect-new-endpoint.png" width="500" alt="New endpoint form with the slug, workflow, security and accepted content types fields" /></Frame>
+
+    Click `Save endpoint` to finish.
+  </Step>
+
+  <Step title="Copy the endpoint URL">
+    The new endpoint appears in the list with an `Active` status. Use the copy button in the **URL** column to grab its address, or open the endpoint to see the full **Ingest URL** and update its settings at any time.
+
+    <Frame caption="The endpoint, live and ready to receive documents"><img src="/assets/guides/connect-endpoint-created.png" alt="Endpoints tab listing the new invoices endpoint with an Active status and its URL" /></Frame>
+
+  </Step>
+
+  <Step title="Send a document">
+    Any system that can make an HTTP request can now deliver documents to your workspace. Send a `POST` request to the endpoint URL with the file as the request body — for example, with a GOBL invoice saved as `invoice.json`:
+
+    ```bash
+    curl -X POST "https://connect.invopop.app/{workspace-id}/invoices" \
+      -H "Authorization: Bearer example-secret-token" \
+      -H "Content-Type: application/json" \
+      --data-binary @invoice.json
+    ```
+
+    On success, Connect stores the document, triggers the endpoint's workflow, and replies with the IDs of both the stored document and the workflow job:
+
+    ```json
+    {
+      "id": "019fcd4a-77c3-7bb7-a307-63e8850d9fc9",
+      "job_id": "019fcd4a-77ee-7759-af4a-0481110625e0"
+    }
+    ```
+
+    If something is wrong with the request, the response says so: `401` when authentication fails, `415` when the content type isn't accepted, `413` when the file is too large, and `422` when the payload is malformed.
+
+    <Tip>
+      Sending a binary file, like a PDF? Encode the body in base64 and add `?encoding=base64` to the URL. You can also add `?filename=` to give the stored file a download name.
+    </Tip>
+  </Step>
+
+  <Step title="Track received documents">
+    Every delivery shows up in the **Documents** tab, with its status, endpoint, content type, size, and the workflow job it triggered:
+
+    - <Badge color="green">Done</Badge> — the document was stored and its workflow job created.
+    - <Badge color="orange">Pending</Badge> — the document was stored and is about to trigger its workflow.
+    - <Badge color="red">Fault</Badge> — the workflow could not be triggered; open the document to see the error.
+
+    <Frame caption="The document log after the first delivery"><img src="/assets/guides/connect-documents.png" alt="Documents tab listing a received JSON document with a Done status, its endpoint, size and job" /></Frame>
+
+    Click a document to inspect it: the details panel shows the request headers (credentials are redacted), a preview of the payload, and a `Download` button to retrieve the original file.
+
+    <Frame caption="Document details with the payload preview"><img src="/assets/guides/connect-document-detail.png" width="550" alt="Document details panel showing the delivery metadata and a preview of the payload body" /></Frame>
+  </Step>
+</Steps>
+
+## Managing endpoints
+
+Use the `⋯` menu at the end of each endpoint row to disable, re-enable, or delete an endpoint. A disabled endpoint rejects new deliveries, but its document history remains available in the log.
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Connect app →
+</Card>

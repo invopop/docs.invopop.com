@@ -1,0 +1,60 @@
+---
+title: "Connect"
+description: "Create incoming and outgoing connections via multiple channels."
+keywords: ['connect', 'endpoints', 'http', 'webhook', 'ingest', 'channels', 'incoming']
+mode: wide
+---
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Receive documents" icon="https://assets.invopop.com/apps/connect/icon.svg"
+				  href="/guides/connect" horizontal>
+				  View implementation guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Automation                             |
+		</Columns>
+
+	The Connect app links your workspace to external document exchange channels, so other systems can deliver documents to Invopop without polling or custom integration code. Connect currently supports incoming HTTP connections, with further channels and directions on the way.
+
+	Each **endpoint** pairs a public URL of the form `https://connect.invopop.app/{workspace-id}/{slug}` with a workflow of your choice. Any file posted to the endpoint — a GOBL invoice from your billing tool, an XML document from a partner, or any other payload — is validated, stored, and handed to that workflow, which receives a link to the stored file.
+
+	Every delivery is recorded in a document log inside the app, where you can check its status, inspect the request, preview the payload, and download the original file.
+
+	#### Key features
+
+	* **Workflow automation:** Every document delivered to an endpoint automatically starts the workflow you choose for it.
+	* **Public endpoints:** Create one URL per document flow, with a slug you control, unique within your workspace.
+	* **Sender authentication:** Protect each endpoint with a bearer token, basic credentials, or an HMAC-SHA256 signature.
+	* **Content validation:** Restrict the content types an endpoint accepts; malformed or oversized payloads are rejected before they reach your workflows.
+	* **Binary support:** Receive PDFs and other binary files as base64-encoded bodies, with an optional filename for download.
+	* **Document log:** Review every delivery with its status, request headers, payload preview, and original file download.
+
+	Check out the [Connect guide](/guides/connect) to create your first endpoint and deliver a document to it.
+
+	</Tab>
+	<Tab title="Actions">
+		Connect works in the opposite direction to most apps: rather than adding steps to your workflows, it starts them. The app adds no actions to the workflow step picker.
+
+		Each endpoint is bound to one of your workflows. When a document arrives, Connect validates and stores it, then creates a job for that workflow with a `url` argument pointing at the stored file. The sender receives the IDs of both the stored document and the workflow job in the response, so external systems can track processing end to end.
+
+		The workflow itself is built like any other — see the [Connect guide](/guides/connect) for a walkthrough of creating an endpoint and sending the first document.
+	</Tab>
+</Tabs>
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Connect app →
+</Card>

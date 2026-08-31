@@ -1,14 +1,15 @@
 ---
-title: "SII Onboarding guide"
+title: "SII onboarding guide"
 sidebarTitle: "Supplier registration"
 description: "Create and register suppliers in Spain with SII."
 ---
 
-import UnregisterExample from '/snippets/workflows/es/sii-unregister.mdx';
-import SupplierRegistration from '/snippets/workflows/es/sii-register.mdx';
-import Supplier from '/snippets/suppliers/es/company.mdx';
+import UnregisterExample, { esSiiUnregisterWorkflow } from '/snippets/workflows/es/sii-unregister.mdx';
+import SupplierRegistration, { esSiiRegisterWorkflow } from '/snippets/workflows/es/sii-register.mdx';
+import Supplier from '/snippets/parties/es/supplier.mdx';
 import SpainResources from '/snippets/tables/spain-resources.mdx';
 import FAQ from '/snippets/faqs/es/composers/guide-sii-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 ## Introduction
 
@@ -18,9 +19,9 @@ For this process, the supplier can sign the agreement PDF with a valid [digital 
 
 This guide will...
 
-1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](https://docs.invopop.com/guides/use-cases/white-label))
-2. The process of completing the supplier onboarding wizard,
-3. Explaining the approval process and what to do in case of rejection.
+1. Walk you through the process of creating the workflows necessary to onboard yourself and/or your suppliers (in a [white-label setup](/guides/white-label)),
+2. Explain how to complete the supplier onboarding wizard, and
+3. Explain the approval process and what to do in case of rejection.
 
 
 
@@ -29,7 +30,7 @@ This guide will...
 | **Supplier registration** | Required (automated acceptance/rejection) | Required (documents reviewed in less than 72 hours) |
 | **Environment** | Entorno de preproducción AEAT | Live environment |
 
-## Set-up
+## Setup
 
 <Steps>
  <Step title="Connect the Spain app">
@@ -50,37 +51,17 @@ This guide will...
   <Step title="Create a supplier registration workflow">
     Create a new workflow in your workspace for registering suppliers. Start with the template below:
 
+    <Card title="SII supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-register" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
-      <Tab title="Template">
-        <Card title="SII supplier registration workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-register" cta="Add to my workspace">
-          This workflow will issue a registration request for a supplier to complete.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esSiiRegisterWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
         <SupplierRegistration />
-      </Tab>
-      <Tab title="Build from scratch">
-        Before starting, review the [workflows guide](/guides/features/workflows) to understand the general setup process.
-
-        In [Console](https://console.invopop.com), create a new workflow and choose [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) as the base. Then name the workflow with a descriptive label such as "SII Supplier Registration".
-
-        The new workflow will need to perform the following steps:
-
-        1. **Register supplier** - will generate a unique URL and add it into a `url` key value within the `meta` property. You would add a webhook after this step to notify the supplier.
-        2. **Set state** — select "Processing".
-        3. **Wait for supplier registration** - waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through SII immediately after the documents are uploaded.
-        4. **Set state** — select "Registered".
-        5. **Wait for supplier approval** - In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
-        6. **Set state** — select "Registered"
-
-        Finally, in the Error Handling area, add the following steps:
-
-        1. **Set state** — select `Rejected`.
-        2. **Unregister supplier** - will clear the registration attempt allowing you to re-register them later.
-
-        Add any additional steps you may need, and save the new workflow.
       </Tab>
     </Tabs>
   </Step>
@@ -88,7 +69,7 @@ This guide will...
 
 ### Create a supplier entry
 
-Whether you issue invoices on behalf of third parties ([white label](/guides/use-cases/white-label)) or under your own name, the process is essentially the same.
+Whether you issue invoices on behalf of third parties ([white label](/guides/white-label)) or under your own name, the process is essentially the same.
 
   <Steps>
     <Step title="Upload a supplier">
@@ -178,7 +159,7 @@ Whether you issue invoices on behalf of third parties ([white label](/guides/use
       </Step>
     </Steps>
 
-  <Warning>If a supplier's agreement documentation is rejected and you need to onboard them again, follow the instructions in [what happens if a supplier validation is rejected](#what-happens-if-a-supplier-validation-is-rejected)</Warning>
+  <Warning>If a supplier's agreement documentation is rejected and you need to onboard them again, unregister the supplier and run the registration workflow again (see [Unregister a supplier](#unregister-a-supplier)).</Warning>
 
 ## How SII supplier registration works
 
@@ -196,7 +177,7 @@ The process is best explained looking at the workflow steps:
     2. **Set state to Processing** labels the silo entry so you know it's in process of registration.
     3. **Wait for supplier registration** waits for the supplier to upload the required documents (signed agreement and ID). The supplier will be entitled to issue invoices through SII immediately after the documents are uploaded.
     4. **Set state to Registered** labels the silo entry so you know registration is complete.
-    5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Open rejection the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
+    5. **Wait for supplier approval** In live environments, Invopop will review the documents provided by the supplier in less than 72 hours. In sandbox, you can configure the workflow step to accept or reject providers. Upon rejection, the workflow will error with a `KO` and the reason for rejection can be reviewed in the Supplier or in the executed job. The supplier's invoice issuing entitlement will be revoked immediately.
 
     <Note>In sandbox "Wait for supplier approval" can be configured to accept or reject suppliers.</Note>
 
@@ -206,14 +187,14 @@ The process is best explained looking at the workflow steps:
     2. **Set state to Rejected** labels the silo entry so you know the registration was rejected (due to timeout or incorrect documentation).
 
 
-## Register a Supplier
+## Register a supplier
 
 Suppliers need to provide the following documents for Invopop to issue invoices on their behalf:
 
 1. A signed [direct representation agreement](https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/ZC01/Mod/Anexo_I_mod_otorg_prof_trib.pdf).
 2. A copy of signatory's fiscal ID (DNI/NIE or passport in the case of non-residents) if the agreement is not signed with a valid [digital certificate](https://www.sede.fnmt.gob.es/certificados/persona-fisica) such as one from the FNMT.
 
-These documents can be collected through a multi-step web form (_wizard_) which enabled through the _Supplier registration workflow_ created during [setup](#set-up) or [sent via the API](https://docs.invopop.com/api-ref/apps/sii/agreement-upload) if you wish to have control over the process.
+These documents can be collected through a multi-step web form (_wizard_) which is enabled through the _Supplier registration workflow_ created during [setup](#setup) or [sent via the API](/api-ref/apps/gov-es/agreement-upload) if you wish to have control over the process.
 
 ### Onboard suppliers through the supplier registration wizard
 
@@ -309,7 +290,7 @@ This wizard can be embedded as an `iframe` to onboard your customers without lea
         alt="Supplier registration wizard"
       />
     </Frame>
-    The legal representative or _autónomo_ upload a scan or clear photo of their ID in a valid image format (JPG or PNG). The ID should ideally be a DNI/NIE, as passports are only used when the person is not entitled to have one.
+    The legal representative or _autónomo_ uploads a scan or clear photo of their ID in a valid image format (JPG or PNG). The ID should ideally be a DNI/NIE, as passports are only used when the person is not entitled to have one.
 
     Both the front and reverse of the ID should be submitted here. If the ID is a passport (only valid for non-Spanish residents who are representatives of a company), they can upload the main page of their passport both times.
   </Step>
@@ -342,7 +323,7 @@ This wizard can be embedded as an `iframe` to onboard your customers without lea
 
 If you have special needs regarding the onboarding of suppliers for SII (such as using third party identity verification services), it's possible to implement your own onboarding process through the API. The process would be the following:
 
-  1. [Create a supplier entry](https://docs.invopop.com/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
+  1. [Create a supplier entry](/api-ref/silo/entries/create-an-entry-put) `/silo/v1/entries/{id}`<br />
     Besides the supplier's basic information, the entry should contain a `people` object containing a [person](https://docs.gobl.org/draft-0/org/person) who will act as the legal representative of the supplier.
 
   2. [Create a job](/api-ref/transform/jobs/create-a-job-put)`/transform/v1/jobs/{id}`<br />
@@ -364,27 +345,19 @@ If you have special needs regarding the onboarding of suppliers for SII (such as
 
 Unregistering a supplier is essentially revoking their invoice issuing privileges. You might need to unregister an entity because the supplier is no longer your client, because their agreement documentation was rejected, or because of a change in their Tax ID. To do so, use the following workflow template:
 
+  <Card title="SII unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-unregister" horizontal>
+    Add to my workspace →
+  </Card>
   <Tabs>
-      <Tab title="Template">
-        <Card title="SII unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-sii-unregister" cta="Add to my workspace">
-          This workflow will revoke invoice issuing privileges for a SII supplier.
-        </Card>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esSiiUnregisterWorkflow} />
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
 
         <UnregisterExample />
       </Tab>
-      <Tab title="Build from scratch">
-        In [Console](https://console.invopop.com) create a new workflow and select [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) in the template selector, then add the following steps:
-
-        1. **Unregister supplier** - Revokes invoice issuing authorization by the AEAT.
-        2. **Set state** - Select `void` to label the supplier accordingly.
-
-        In the Error Handling section, add the **Set state** action and select `Error`.
-
-      </Tab>
-    </Tabs>
+  </Tabs>
 
 ## Legal information
 

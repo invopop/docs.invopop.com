@@ -7,10 +7,17 @@ mode: wide
 
 import SDISendWorkflow from '/snippets/workflows/it/sdi-send.mdx';
 import SDIRegisterCustomerWorkflow from '/snippets/workflows/it/sdi-register-customer.mdx';
+import SDIUnregisterCustomerWorkflow from '/snippets/workflows/it/sdi-unregister-customer.mdx';
 import SDIImportInvoicesWorkflow from '/snippets/workflows/it/sdi-import-invoices.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
+import Supplier from '/snippets/parties/it/supplier.mdx';
+import Customer from '/snippets/parties/it/customer.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/app-sdi.mdx';
+
+<Warning>
+**This app is being retired.** New integrations should use the [Italy app](/apps/italy), which reaches SDI through Invopop's own accredited channel.
+</Warning>
 
 <Tabs>
 	<Tab title="Description">
@@ -40,14 +47,14 @@ import FAQ from '/snippets/faqs/it/composers/app-sdi.mdx';
 
 		Invopop simplifies SDI integration by allowing you to work with GOBL format instead of XML, providing synchronous validation before submission, and offering a simple API integration with automatic handling of SDI notifications and status updates. Invopop has partnered with [A-Cube](https://www.acubeapi.com) to provide SDI integration services.
 
-	**Key Features**
+	**Key features**
 
-	* **Workflow Automation:** This app provides automated workflows for sending and receiving invoices through the SDI system.
-	* **FatturaPA XML Generation:** Automatically converts GOBL documents into compliant FatturaPA XML format.
-	* **Real-Time Status Updates:** Automatically handles SDI notifications and status updates, including delivery confirmations and acceptance/rejection notifications.
-	* **Bidirectional Support:** Send invoices to SDI and receive invoices from suppliers through the same app.
-	* **Customer Registration:** Register companies to receive invoices through SDI with a simple workflow step.
-	* **GOBL FatturaPA Integration:** Uses the open-source [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library for conversions.
+	* **Workflow automation:** This app provides automated workflows for sending and receiving invoices through the SDI system.
+	* **FatturaPA XML generation:** Automatically converts GOBL documents into compliant FatturaPA XML format.
+	* **Real-time status updates:** Automatically handles SDI notifications and status updates, including delivery confirmations and acceptance/rejection notifications.
+	* **Bidirectional support:** Send invoices to SDI and receive invoices from suppliers through the same app.
+	* **Customer registration:** Register companies to receive invoices through SDI with a simple workflow step.
+	* **GOBL FatturaPA integration:** Uses the open-source [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library for conversions.
 
 	Make sure to check out our [SDI Italy Sending Guide](/guides/it-sdi-sending) and [SDI Italy Receiving Guide](/guides/it-sdi-receiving) for instructions on how to issue and receive invoices.
 
@@ -67,7 +74,11 @@ import FAQ from '/snippets/faqs/it/composers/app-sdi.mdx';
 		</Card>
 
 		<Card title="Register supplier with SDI" icon="https://assets.invopop.com/apps/sdi-italy/icon.svg" horizontal>
-		 Register a GOBL party to receive invoices to the Italian SDI.
+		 Register a GOBL party (customer) to receive invoices from the Italian SDI.
+		</Card>
+
+		<Card title="Unregister party from SDI" icon="https://assets.invopop.com/apps/sdi-italy/icon.svg" horizontal>
+		 Stop a registered party from receiving invoices from the Italian SDI, freeing its tax ID to be registered again.
 		</Card>
 
 		<Card title="Import invoice from SDI" icon="https://assets.invopop.com/apps/sdi-italy/icon.svg" horizontal>
@@ -89,6 +100,11 @@ import FAQ from '/snippets/faqs/it/composers/app-sdi.mdx';
 				<SDIRegisterCustomerWorkflow />
 				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=it-sdi-register-customer)
 			</Accordion>
+			<Accordion title="SDI Italy unregister customer workflow">
+			This workflow stops a company from receiving invoices through SDI.
+				<SDIUnregisterCustomerWorkflow />
+				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=it-sdi-unregister-customer)
+			</Accordion>
 			<Accordion title="SDI Italy import invoices workflow">
 			This workflow imports and processes invoices received through SDI.
 				<SDIImportInvoicesWorkflow />
@@ -97,6 +113,18 @@ import FAQ from '/snippets/faqs/it/composers/app-sdi.mdx';
 		</AccordionGroup>
 	</Tab>
 	<Tab title="Documents">
+		Parties
+		<AccordionGroup>
+			<Accordion title="Supplier">
+				An Italian company with its partita IVA and the mandatory `it-sdi-fiscal-regime` extension (here `RF01`, ordinary regime).
+				<Supplier />
+			</Accordion>
+			<Accordion title="Customer">
+				An Italian business customer with partita IVA and the `it-sdi-code` inbox (Codice Destinatario) used by SDI to route the invoice.
+				<Customer />
+			</Accordion>
+		</AccordionGroup>
+
 		<InvoiceAccordion />
 
 		See also the [stamp duty (Marca da Bollo) regulation](/compliance/italy#regulation) for details on when the €2 *imposta di bollo* applies.

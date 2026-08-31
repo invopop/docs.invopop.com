@@ -1,0 +1,131 @@
+export const dkNemhandelSendInvoiceWorkflow = {
+    "name": "Send NemHandel invoice",
+    "description": "Convert an invoice to OIOUBL and send it over the NemHandel network",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "e3ad87b2-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "e3add26c-88d1-11f1-8000-920007eb4d91",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NemHandel · 000001",
+            "config": {
+                "name": "NemHandel",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "e3ae403a-88d1-11f1-8000-920007eb4d91",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "e3afc3a6-88d1-11f1-8000-920007eb4d91",
+            "name": "Generate OIOUBL",
+            "provider": "gov-dk.convert",
+            "summary": "OIOUBL 2.1 Invoice/CreditNote"
+        },
+        {
+            "id": "e3aea606-88d1-11f1-8000-920007eb4d91",
+            "name": "Send to NemHandel",
+            "provider": "gov-dk.send",
+            "summary": "Submits and queues until eCourier confirms delivery"
+        },
+        {
+            "id": "e3af29be-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e3af4e58-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json Example Send NemHandel invoice workflow
+{
+    "name": "Send NemHandel invoice",
+    "description": "Convert an invoice to OIOUBL and send it over the NemHandel network",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "e3ad87b2-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "e3add26c-88d1-11f1-8000-920007eb4d91",
+            "name": "Add Sequential Code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · NemHandel · 000001",
+            "config": {
+                "name": "NemHandel",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "e3ae403a-88d1-11f1-8000-920007eb4d91",
+            "name": "Sign Envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "e3afc3a6-88d1-11f1-8000-920007eb4d91",
+            "name": "Generate OIOUBL",
+            "provider": "gov-dk.convert",
+            "summary": "OIOUBL 2.1 Invoice/CreditNote"
+        },
+        {
+            "id": "e3aea606-88d1-11f1-8000-920007eb4d91",
+            "name": "Send to NemHandel",
+            "provider": "gov-dk.send",
+            "summary": "Submits and queues until eCourier confirms delivery"
+        },
+        {
+            "id": "e3af29be-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "e3af4e58-88d1-11f1-8000-920007eb4d91",
+            "name": "Set State",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

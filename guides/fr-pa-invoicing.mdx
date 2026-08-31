@@ -1,125 +1,116 @@
 ---
-title: "France PA — invoicing"
+title: "Invoicing in France"
 sidebarTitle: "Invoicing"
 description: Send and receive B2B invoices over Peppol with automatic PPF reporting.
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
-import SendInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
-import ReceiveInvoiceWorkflow from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
-import PaAccordion from '/snippets/invoices/fr/pa-accordion.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import SendInvoiceWorkflow, { frPaSendInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
+import ReceiveInvoiceWorkflow, { frPaReceiveInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
+import Flow2Accordion from '/snippets/invoices/fr/flow-2-accordion.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
 
-<Note>
-  E-invoicing in France applies domestic B2B invoicing where both parties are registered in the Annuaire. For B2C, cross-border, or any flow where one party is not in the Annuaire, use the [reporting flow](/guides/fr-pa-reporting) instead.
-</Note>
+The France PA invoicing flow covers regulated B2B exchanges where both parties are registered in the French Directory. All other scenarios are handled by the [e-reporting](/guides/fr-pa-reporting) (flux 10) flow.
 
-The France PA invoicing flow covers **regulated B2B exchanges** — both parties registered in the Annuaire. The same GOBL document drives both sides: a single invoice with the `fr-ctc-flow2-v1` add-on, generated as the format negotiated with the receiver. On receipt, any of the accepted formats is converted back to that same representation.
+This guide walks through how to implement e-invoicing obligations in France: 
 
-## Formats
+* [Workflows](#workflows): sending and receiving workflows for French documents (payments, statuses and invoices).
+* [Sending](#sending): recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
+* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
+* [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
+* [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
+* [Reading submitted invoices](#reading-submitted-invoices): follow every sent and received invoice, and its PPF state, from the France dashboard.
+* [Example invoices](#example-invoices): minimal GOBL documents and their built versions, ready to paste into the GOBL builder.
+
+## Workflows
+
+These workflows are shared between invoice and [status documents](/guides/fr-pa-status). The same workflow processes the different schemas and will perform different actions depending on the document type.  
+
+### Sending
+
+The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is transmitted automatically alongside the F1. 
+
+The **PPF record document** step validates SIRENs and checks both parties against the Annuaire. Documents where either side is missing are rejected and should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
+
+The **Forward document to PPF** step generates and transmits to the PPF the F1 copy of the invoice and its `200` Déposée status. When the step's **Deposited and not transmitted** toggle is enabled, the status carries the `NON_TRANSMISE` reason and reports a *déposée – non transmise* instead of the standard *déposée*. This should be used when the recipient has no active receiving address. Gate that branch on the Peppol [Validate endpoint](/guides/peppol#validating-the-customer-endpoint) action: when it returns `false`, the invoice can't be delivered over Peppol and the workflow should route into a forward step configured as not transmitted.
+
+<Card iconType="duotone" title="PPF send invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaSendInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+### Receiving
+
+The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
+
+    <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
+      Add to my workspace →
+    </Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaReceiveInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ReceiveInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+### Invoice formats
 
 The PA specification accepts five formats. In practice the three base formats below cover essentially all real-world traffic, and Invopop supports both sending and receiving on all three.
 
 | Format | Notes |
 |---|---|
-| **UBL** | Peppol France CIUS — recommended default. Native Peppol format with the widest receiver support. |
-| **CII** | UN/CEFACT XML, semantically equivalent to UBL. Common in cross-border and industrial contexts. |
-| **Factur-X** | Hybrid PDF/A-3 with embedded CII. Identical to [ZUGFeRD](/guides/de-ubl) and aligned with EN 16931. |
+| [UBL](/apps/oasis-ubl) | Peppol France CIUS — recommended default. Native Peppol format with the widest receiver support. |
+| [CII](/apps/uncefact-cii) | UN/CEFACT XML, semantically equivalent to UBL. Common in cross-border and industrial contexts. |
+| [Factur-X](/apps/uncefact-cii) | Hybrid PDF/A-3 with embedded CII. Identical to [ZUGFeRD](/guides/de-ubl) and aligned with EN 16931. |
 
-Switching format is a workflow-config change rather than a data-model change — you author and validate one GOBL invoice, and the workflow's generation step produces whichever format the counterparty expects.
+Switching formats is a workflow configuration away rather than a data-model change. You author and validate one GOBL invoice, and the workflow's generation step produces whichever format the counterparty expects.
 
-## Sending
+### Billing mode
 
-The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver's PA over Peppol, and forwards the F1 copy to the PPF as the fifth corner.
+Mandatory on every flux 2 and flux 10 B2B invoice and set in GOBL under `tax.ext.fr-ctc-billing-mode`. The prefix carries the nature of the operation: `B` goods (*biens*), `S` services, `M` mixed, plus a suffix for the payment context.
 
-The **Record Invoice** step validates SIRENs and checks both parties against the Annuaire. Invoices where either side is missing are rejected — branch non-regulated traffic into the [reporting flow](/guides/fr-pa-reporting) upstream of this workflow.
+| Goods | Services | Mixed | Payment context |
+|---|---|---|---|
+| `B1`  | `S1`     | `M1`  | Standard submission (*dépôt d'une facture*) |
+| `B2`  | `S2`     | `M2`  | Already-paid invoice |
+| —     | `S3`     | —     | Subcontracting with direct payment (B2G only) |
+| `B4`  | `S4`     | `M4`  | Final invoice after a down payment |
+| —     | `S5`     | —     | Subcontractor invoice |
+| —     | `S6`     | —     | Co-contractor invoice |
+| `B7`  | `S7`     | —     | VAT already collected via e-reporting |
+| `B8`  | `S8`     | `M8`  | Multi-vendor invoice |
 
-<Frame>
-<img src="/assets/guides/fr-invoice.png" />
-</Frame>
+The full list of billing-mode codes is documented in the [`fr-ctc-flow2-v1` addon reference](https://docs.gobl.org/addons/fr-ctc-flow2-v1).
 
-### How it works
+Suffix `1` is the ordinary case — a plain invoice submitted for payment. Left unset, the add-on defaults the mode to `M1` (`M2` when fully paid) — pin the prefix that matches the nature of the operation, as the [example invoices](/guides/fr-pa-invoicing#example-invoices) do.
 
-<Steps>
-  <Step title="Set state → processing">
-    Moves the invoice into a visible "in progress" state for operator dashboards.
-  </Step>
-  <Step title="Sign envelope">
-    Locks the GOBL envelope so downstream steps work against an immutable document.
-  </Step>
-  <Step title="Record Invoice">
-    Validates SIRENs, checks both parties against the Annuaire, and stores the invoice in the local PA database.
-  </Step>
-  <Step title="Generate UBL document">
-    Produces a Peppol France CIUS UBL invoice or credit note. Swap for **Generate CII document** if the receiver requires CII, or **Generate PDF (Factur-X)** for hybrid PDF.
-  </Step>
-  <Step title="Send Peppol document">
-    Transmits the generated document to the receiver's PA over the Peppol network.
-  </Step>
-  <Step title="Set state → sent">
-    Marks Peppol delivery as successful.
-  </Step>
-  <Step title="Forward Invoice to PPF">
-    Generates the simplified F1 invoice and forwards it, along with the mandatory `200` _déposée_ status, to the PPF.
-  </Step>
-  <Step title="Set state → completed">
-    Marks the full e-invoicing flow — Peppol delivery and PPF reporting — as complete.
-  </Step>
-</Steps>
+### VAT tax keys → UNTDID 5305
+
+GOBL sets the `untdid-tax-category` (and `cef-vatex` exemption reason where one applies) from the tax key on each line — you pick the key, the add-on derives the codes:
+
+| GOBL tax key | Category | Exemption reason | Use for |
+|---|---|---|---|
+| `standard` | `S` | — | Domestic VAT at 20% / 10% / 5.5% / 2.1% |
+| `zero` | `Z` | — | Zero-rated supplies |
+| `exempt` | `E` | per note | Exempt operations (Art. 261 CGI — cite the article in a note) |
+| `reverse-charge` | `AE` | `VATEX-EU-AE` | Autoliquidation, e.g. building subcontracting |
+| `intra-community` | `K` | `VATEX-EU-IC` | Intra-EU B2B supplies |
+| `export` | `G` | `VATEX-EU-G` | Exports outside the EU |
+| `outside-scope` | `O` | `VATEX-EU-O` | Operations outside the scope of VAT |
+
+The full field-level rules (permitted document types, VAT percents, and party identifier schemes) are maintained in the add-on.
 
 
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" cta="Add to my workspace">
-      Records and sends a France-compliant invoice via Peppol and the PPF.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
-    <SendInvoiceWorkflow />
-  </Tab>
-</Tabs>
-
-## Receiving
-
-The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
-
-<Frame>
-<img src="/assets/guides/fr-receive.png" />
-</Frame>
-
-### How it works
-
-<Steps>
-  <Step title="Import Peppol document">
-    Pulls the inbound payload from Peppol and branches on the detected format:
-    - `UBL` → **Import UBL document** converts the UBL XML to GOBL.
-    - `CII` → **Import CII document** converts the CII XML to GOBL.
-    - `PDF` → **Import Factur-X PDF** extracts the embedded CII and converts it to GOBL.
-  </Step>
-  <Step title="Set folder → expenses">
-    Files the invoice under the `Invoices · Expenses` folder so it lands in the right place for accounting workflows.
-  </Step>
-  <Step title="Record Invoice">
-    Validates SIRENs, resolves your registered party as the customer (or supplier in self-billing flows), and guards against duplicate processing.
-  </Step>
-  <Step title="Set state → registered">
-    Marks the incoming invoice as successfully received.
-  </Step>
-</Steps>
-
-
-<Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="France PA receive invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" cta="Add to my workspace">
-      Imports an incoming Peppol invoice (UBL, CII, or Factur-X) and records it.
-    </Card>
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice).
-    <ReceiveInvoiceWorkflow />
-  </Tab>
-</Tabs>
 
 ## Self-billing
 
@@ -151,17 +142,38 @@ How each step of the self-billing use case maps to an action in Invopop, on both
 | 4 | Seller | Upon reception of payment, the seller builds a `bill.Payment` referencing the invoice, sends it to the customer and forwards it to the PPF. |
 | 5 | Buyer | The buyer's receive workflow imports the inbound CDAR and records it against the invoice. |
 
+## Reading submitted invoices
+
+The France dashboard's **E-Invoicing Flow 2** tab lists every invoice the workspace has sent or received, newest first. In the Console, open the **Apps** view, select the **France** app, and switch to the **E-Invoicing Flow 2** tab.
+
+Each row shows the Invoice code, the Supplier and Customer SIREN, the PPF status of the mandatory F1 copy, the Role (Sender when you issued the invoice, Receiver when it arrived from a counterparty), the Silo entry that holds the invoice document, the Issue date, the Owner SIREN (the registered party the invoice belongs to), the document Type (standard, self-billed, corrected, credit note, …), and the Invoice ID.
+
+The PPF status column tracks the copy forwarded to the tax authority:
+
+| PPF status | Meaning |
+|---|---|
+| <Badge color="gray">Ready</Badge> | Recorded on the platform; nothing sent to the PPF yet. |
+| <Badge color="orange">Pending</Badge> | Sent; awaiting the PPF business acknowledgement. |
+| <Badge color="green">Accepted</Badge> | The PPF accepted the document. |
+| <Badge color="red">Rejected</Badge> | The PPF rejected the document. |
+
+<Note>
+Clicking the Invoice code looks up all associated statuses on the **E-Invoicing Flow 6** tab, filtered by the Invoice ID.
+</Note>
+
+Filter the table by **Supplier SIREN**, **Customer SIREN**, **Invoice code**, or **Invoice ID**.
+
 ## Example invoices
 
 Each example below pairs a hand-authored minimal GOBL invoice with the built version produced by `gobl build`. Paste either into the [GOBL builder](https://build.gobl.org) to preview the document, or use the minimal version as a starting point for your own integration.
 
-<PaAccordion />
+<Flow2Accordion />
 
 ## FAQ
 
 <FAQ />
 
-More available in our [France FAQ](/faq/france) section
+More Q&amp;A available in our [France FAQ](/faq/france) section
 
 ---
 

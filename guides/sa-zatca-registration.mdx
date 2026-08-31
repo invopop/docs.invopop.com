@@ -5,9 +5,10 @@ description: Onboard a Saudi VAT-registered party with ZATCA and provision its p
 ---
 
 import SaResources from '/snippets/tables/saudi-arabia-resources.mdx';
-import RegisterWorkflow from '/snippets/workflows/sa/sa-register.mdx';
-import UnregisterWorkflow from '/snippets/workflows/sa/sa-unregister.mdx';
+import RegisterWorkflow, { saRegisterWorkflow } from '/snippets/workflows/sa/sa-register.mdx';
+import UnregisterWorkflow, { saUnregisterWorkflow } from '/snippets/workflows/sa/sa-unregister.mdx';
 import FAQ from '/snippets/faqs/sa/composers/guide-zatca-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 <Note>
   Registration is required for any Saudi VAT number that will clear or report invoices through Invopop. It is a prerequisite for the [clearance and reporting](/guides/sa-zatca-clearance-reporting) flow.
@@ -56,11 +57,12 @@ Registration spans two parts: a workflow you run against the party document, and
   </Step>
 </Steps>
 
+<Card iconType="duotone" title="ZATCA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-register" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="ZATCA register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-register" cta="Add to my workspace">
-      Publishes the ZATCA onboarding link and provisions the party's production CSID.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={saRegisterWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).
@@ -101,7 +103,7 @@ The link published by **Register Party** provides an onboarding wizard for the s
     <Frame caption="Submission screen">
       <img src="/assets/guides/sa-wizard-5.png" width="640" />
     </Frame>
-    Upon submit, Invopop requests the **Compliance CSID**, and stores the credentials. This unblocks the **Wait for Authorization** step in the workflow.
+    Upon submit, Invopop requests the **Compliance CSID**, and stores the credentials. This unblocks the **Wait for ZATCA certificate upload** step in the workflow.
   </Step>
 </Steps>
 
@@ -109,21 +111,32 @@ The link published by **Register Party** provides an onboarding wizard for the s
   The invoice type chosen here determines which compliance samples Invopop submits: `1000` runs standard tax invoices, credit notes, and debit notes; `0100` runs the simplified equivalents; `1100` runs both sets.
 </Info>
 
+## Reading registrations
+
+The ZATCA registrations dashboard lists every party the workspace has onboarded, ordered alphabetically by name, so you can confirm what a supplier is registered for without leaving the console.
+
+Each row carries the registration's details: Name, Branch Name, Identity Code, Identity Scheme, Business Category, Registered Address, Tax Code, Simplified Invoices and Standard Invoices, showing which document types the party can submit, Status — *Registered*, or *Unregistered* and the Silo Entry the registration was started from. In sandbox, an extra Environment column precedes the tax code, separating Simulation from Developer registrations.
+
+<Note>
+  The **Name** in each row is a quick filter: selecting it opens the invoices tab filtered to that party's [cleared and reported chain](/guides/sa-zatca-clearance-reporting). The **Supplier Tax Code** column on that tab filters back the other way, to the registered party.
+</Note>
+
 ## Unregistration (sandbox only)
 
-Unregistering a party from ZATCA in production environment is handled by the **tax payers**, directly in the **FATOORA portal**, signing in with their own credentials.
+Unregistering a party from ZATCA in production environment is handled by the **taxpayers**, directly in the **FATOORA portal**, signing in with their own credentials.
 
 Invopop also provides an unregister action that removes the party and its stored credentials from **Invopop's internal systems only**. It does not touch the party's registration with ZATCA. It targets a single registration, the one that matches the party's VAT number and [supplier identity](#multi-branch-entities), so unregistering one branch leaves the other registrations under the same VAT number untouched.
 
 <Warning>
-  This action is intended for **testing in sandbox**, for example to re-onboard the same VAT number and identity during development. It is **not** for live environments; unregistering at ZATCA is always done by the tax payer in the FATOORA portal.
+  This action is intended for **testing in sandbox** — for example, to re-onboard the same VAT number and identity during development. It is **not** for live environments; unregistering at ZATCA is always done by the taxpayer in the FATOORA portal.
 </Warning>
 
+<Card iconType="duotone" title="ZATCA unregister supplier workflow (sandbox only)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-unregister" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
-  <Tab title="Template">
-    <Card iconType="duotone" title="ZATCA unregister supplier workflow (sandbox only)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=sa-sa-unregister" cta="Add to my workspace">
-      Removes the party's registration and stored credentials from Invopop's internal systems.
-    </Card>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={saUnregisterWorkflow} />
   </Tab>
   <Tab title="Code">
     Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party).

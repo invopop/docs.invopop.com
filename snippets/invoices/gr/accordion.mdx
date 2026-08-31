@@ -6,6 +6,8 @@ import B2CAccommodationClimateInvoiceMin from '/snippets/invoices/gr/iapr-b2c-ac
 import B2CAccommodationClimateInvoice from '/snippets/invoices/gr/iapr-b2c-accommodation-climate.mdx';
 import B2BClimateFeeInvoiceMin from '/snippets/invoices/gr/iapr-b2b-climate-fee.min.mdx';
 import B2BClimateFeeInvoice from '/snippets/invoices/gr/iapr-b2b-climate-fee.mdx';
+import CreditNoteMin from '/snippets/invoices/gr/iapr-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/gr/iapr-credit-note.mdx';
 
 <AccordionGroup>
 	<Accordion title="Example service invoice (B2B)">
@@ -17,7 +19,7 @@ import B2BClimateFeeInvoice from '/snippets/invoices/gr/iapr-b2b-climate-fee.mdx
 		- we've added the [`gr-mydata-v1`](https://docs.gobl.org/addons/gr-mydata-v1) addon; this ensures the document will be validated and normalized using the myDATA v1 rules built into the [GOBL](https://docs.gobl.org) library,
 		- we've set the `services` tag; this makes the addon set the [`gr-mydata-invoice-type`](https://docs.gobl.org/addons/gr-mydata-v1#invoice-type) extension automatically to `2.1` (service invoice),
 		- similarly, the `credit-transfer` payment method will cause the addon to set the [`gr-mydata-payment-means`](https://docs.gobl.org/addons/gr-mydata-v1#payment-means) extension to `1` (credit transfer),
-		- we added a charge for a special fee (tourist accomodation fee), using the [`gr-mydata-fee`](https://docs.gobl.org/addons/gr-mydata-v1#fee-category) extension,
+		- we added a charge for a special fee (tourist accommodation fee), using the [`gr-mydata-fee`](https://docs.gobl.org/addons/gr-mydata-v1#fee-category) extension,
 		- the specific income category and type are set using the [`gr-mydata-income-cat`](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-category) extension and the [`gr-mydata-income-type`](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-type) extension respectively,
 		- only [VAT rates](https://docs.gobl.org/regimes/el#vat-rates) (`standard`) have been specified; percentages and values for the [`gr-mydata-vat-rate`](https://docs.gobl.org/addons/gr-mydata-v1#vat-rate) extension will be set automatically, and,
 		- there are no totals or calculations; all these will be made automatically when uploading.
@@ -77,6 +79,23 @@ import B2BClimateFeeInvoice from '/snippets/invoices/gr/iapr-b2b-climate-fee.mdx
 		<CodeGroup>
 			<B2BClimateFeeInvoiceMin />
 			<B2BClimateFeeInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example credit note (B2B)">
+
+		In this example, we're issuing a credit note that corrects a previously reported invoice.
+
+		Notice:
+
+		- the `type` is set to `credit-note`, which the [`gr-mydata-v1`](https://docs.gobl.org/addons/gr-mydata-v1) addon maps to myDATA invoice type `5.1` (associated credit invoice),
+		- the `preceding` array references the original invoice by `series`, `code`, and `issue_date`, and **must** include the `iapr-mark` stamp — the MARK (unique registration number) the IAPR assigned to the original invoice when it was reported,
+		- the line items carry the same [`gr-mydata-income-cat`](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-category) and [`gr-mydata-income-type`](https://docs.gobl.org/addons/gr-mydata-v1#income-classification-type) extensions as the original, describing the amounts being credited, and,
+		- there are no totals or calculations; all these will be made automatically when uploading.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
 		</CodeGroup>
 	</Accordion>
 

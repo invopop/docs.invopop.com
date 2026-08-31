@@ -18,7 +18,7 @@ security:
 paths:
   /silo/v1/entries:
     get:
-      description: Fetch all the silo entries in the current company.
+      description: Fetch all the silo entries in the current workspace.
       parameters:
       - description: The folder in which to search for entries.
         in: query
@@ -97,7 +97,7 @@ paths:
         placeholder. When data is not provided, you must provide sha256, size, and
         mime fields, and the response will include a `url` field that can be used
         to stream/upload the file contents directly via a PUT request to that URL.
-        For non enrolled users, only the `format` and `attachment` categories are
+        For non-enrolled users, only the `format` and `attachment` categories are
         allowed.
       parameters:
       - description: UUID of the silo entry.
@@ -214,7 +214,7 @@ paths:
         can be provided inline as base64 encoded data, or omitted to create a placeholder.
         When data is not provided, you must provide sha256, size, and mime fields,
         and the response will include a `url` field that can be used to stream/upload
-        the file contents directly via a PUT request to that URL. For non enrolled
+        the file contents directly via a PUT request to that URL. For non-enrolled
         users, only the `format` and `attachment` categories are allowed.
       parameters:
       - description: UUID of file to create
@@ -587,6 +587,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntryCollection'
           description: OK
+  /silo/v1/entries/{id}/versions/{version}:
+    get:
+      description: Fetch a specific version of a silo entry's envelope data.
+      parameters:
+      - description: UUID of the silo entry to fetch.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the silo entry to fetch.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: Version of the envelope data to fetch.
+        in: path
+        name: version
+        required: true
+        schema:
+          description: Version of the envelope data to fetch.
+          example: 76f845c125
+          title: Version
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntryData'
+          description: OK
   /silo/v1/entries/key/{key}:
     get:
       description: Fetch an existing silo entry by its key.
@@ -715,7 +744,7 @@ paths:
           description: OK
   /silo/v1/search:
     get:
-      description: Perform a free-text search on all documents in the current company.
+      description: Perform a free-text search on all documents in the current workspace.
       parameters:
       - description: Search query string.
         in: query
@@ -922,6 +951,36 @@ components:
       required:
       - key
       type: object
+    SiloDataVersion:
+      properties:
+        at:
+          description: Timestamp when this version was created.
+          example: "2018-01-01T00:00:00.000Z"
+          title: At
+          type: string
+        invalid:
+          description: When true, this version's envelope is invalid.
+          title: Invalid
+          type: boolean
+        signed:
+          description: When true, this version's envelope is signed.
+          title: Signed
+          type: boolean
+        src:
+          description: Service or source that created this version.
+          example: api
+          title: Source
+          type: string
+        src_id:
+          description: Identifier of the source object that created this version.
+          title: Source ID
+          type: string
+        version:
+          description: Content-derived identifier for this envelope version.
+          example: 76f845c125
+          title: Version
+          type: string
+      type: object
     SiloEntry:
       properties:
         attachments:
@@ -1023,6 +1082,17 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Updated At
           type: string
+        version:
+          description: Version of the latest envelope data.
+          example: 76f845c125
+          title: Version
+          type: string
+        versions:
+          description: Available envelope data versions, newest first.
+          items:
+            $ref: '#/components/schemas/SiloDataVersion'
+          title: Versions
+          type: array
       type: object
     SiloEntryCollection:
       properties:
@@ -1058,6 +1128,19 @@ components:
         next_cursor:
           description: Cursor used to identify the next page of results.
           title: Next Cursor
+          type: string
+      type: object
+    SiloEntryData:
+      properties:
+        data:
+          description: JSON envelope contents for the requested version.
+          nullable: true
+          title: Data
+          type: object
+        version:
+          description: Version of the returned envelope data.
+          example: 76f845c125
+          title: Version
           type: string
       type: object
     SiloEntrySearchCollection:
@@ -1294,7 +1377,7 @@ components:
           title: Shared
           type: boolean
         src:
-          description: The service or source that create this meta entry.
+          description: The service or source that created this meta entry.
           example: source
           title: Source
           type: string

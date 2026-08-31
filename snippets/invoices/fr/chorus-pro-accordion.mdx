@@ -2,6 +2,8 @@ import B2GInvoice from '/snippets/invoices/fr/chorus-pro-b2g.min.mdx';
 import B2GInvoiceBuilt from '/snippets/invoices/fr/chorus-pro-b2g.mdx';
 import CrossBorderMin from '/snippets/invoices/fr/chorus-pro-cross-border.min.mdx';
 import CrossBorder from '/snippets/invoices/fr/chorus-pro-cross-border.mdx';
+import CreditNoteMin from '/snippets/invoices/fr/chorus-pro-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/fr/chorus-pro-credit-note.mdx';
 
 <AccordionGroup>
 	<Accordion title="Chorus Pro B2G Invoice">
@@ -10,14 +12,14 @@ import CrossBorder from '/snippets/invoices/fr/chorus-pro-cross-border.mdx';
 
 		Notice:
 
-		- the minimal version (`chorus-pro-b2g.min.mdx`) contains only the essential fields required to create the B2G invoice,
-		- the [`fr-chorus-pro-v1`](https://docs.gobl.org/addons/fr-chorus-pro-v1) addon ensures the document will be validated using the Chorus Pro rules built into the [GOBL](https://docs.gobl.org) library,
+		- the minimal version in the first tab contains only the essential fields required to create the B2G invoice,
+		- the [`fr-choruspro-v1`](https://docs.gobl.org/addons/fr-choruspro-v1) addon ensures the document will be validated using the Chorus Pro rules built into the [GOBL](https://docs.gobl.org) library,
 		- the customer must be a French public sector entity with a valid SIRET number,
 		- specific Chorus Pro extensions and identifiers are required for public procurement (such as service codes and commitment numbers),
 		- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
-		- the built version (`chorus-pro-b2g.mdx`) shows the normalized document with calculated totals, line item sums, TVA breakdowns, and automatically generated fields,
+		- the built version in the second tab shows the normalized document with calculated totals, line item sums, TVA breakdowns, and automatically generated fields,
 		- the invoice will be formatted according to Chorus Pro requirements and submitted through the platform, and,
-		- all invoices to French public entities above €25,000 must be submitted through Chorus Pro.
+		- all invoices to French public entities must be submitted through Chorus Pro.
 
 		<CodeGroup>
 			<B2GInvoice />
@@ -38,6 +40,23 @@ import CrossBorder from '/snippets/invoices/fr/chorus-pro-cross-border.mdx';
 		<CodeGroup>
 			<CrossBorderMin />
 			<CrossBorder />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Chorus Pro Credit Note">
+
+		A credit note (avoir) reversing part of a previously submitted Chorus Pro invoice.
+
+		Notice:
+
+		- the `type` is set to `credit-note`, so the document is rendered with the UNTDID document type `381`,
+		- the `preceding` array references the original invoice by `series`, `code`, and `issue_date`, with a `reason` for the correction — Chorus Pro links the avoir to the original submission through this reference,
+		- both parties keep their `SIRET` identities, exactly as on the original invoice, and,
+		- the lines describe only the amounts being credited; totals are calculated automatically when running `gobl build`.
+
+		<CodeGroup>
+			<CreditNoteMin />
+			<CreditNote />
 		</CodeGroup>
 	</Accordion>
 </AccordionGroup>

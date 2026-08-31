@@ -1,0 +1,303 @@
+---
+title: "KSeF supplier registration guide"
+sidebarTitle: "Supplier registration"
+description: "Register parties (suppliers) with Poland's KSeF 2.0 system so you can issue invoices on their behalf."
+---
+
+import PolandResources from '/snippets/tables/poland-resources.mdx';
+import PartyRegistrationSendWorkflow, { plRegisterWorkflow } from '/snippets/workflows/pl/pl-register.mdx';
+import FAQ from '/snippets/faqs/pl/composers/guide-ksef-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing system operated by the [Ministry of Finance](https://www.gov.pl/web/finanse). Before you can issue invoices through KSeF on behalf of a party (supplier), the party must be registered with the KSeF system.
+
+In this guide you'll learn how to register a party using the [Poland app](/apps/poland). Once a party is registered, continue with the companion guides: [Poland: Issuing invoices](/guides/pl-ksef) and [Poland: Receiving invoices](/guides/pl-ksef-receiving).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Fake NIP allowed (test mode); real NIP needed for demo mode | Valid NIP and KSeF portal credentials required |
+| **Mode** | Defaults to test; demo available via config | Automatically targets KSeF production |
+
+## Prerequisites
+
+To register a party with KSeF, you will need:
+
+| Environment | Requirements |
+|-------------|--------------|
+| <Badge color="green">Invopop Sandbox</Badge><br />Test mode | **Test Polish Tax ID (NIP)** <br /> You can generate fake NIPs for testing at [http://generatory.it/](http://generatory.it/). In test mode, a self-signed certificate will be generated automatically, and you can start sending invoices immediately. <br />
+| <Badge color="green">Invopop Sandbox</Badge><br />Demo mode | **Real Polish Tax ID (NIP) and credentials to access the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/)** <br /> Demo mode follows the same registration process as production but operates in the demo environment. |
+| <Badge color="green">Invopop Live</Badge> | **Valid company NIP and credentials to access the [KSeF Portal](https://ap.ksef.mf.gov.pl/)** <br /> You will need to generate a certificate through the KSeF portal. Registration will automatically target the KSeF production environment. |
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Connect the Poland app">
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Poland** in the app discovery list
+  3. Click **Connect** to activate
+
+<Frame>
+<img width="354" src="/assets/guides/gov-pl-connect.png" alt="Connect KSeF app" />
+</Frame>
+
+The initial connection requires no configuration.
+</Step>
+
+<Step title="Configure the party registration workflow">
+
+This workflow registers a party in KSeF so you can issue invoices on their behalf.
+
+<Info>
+  There is also a **send & receive** variant of this workflow that additionally subscribes the party to periodic invoice imports via the [Cron app](/apps/cron). It is covered in the [receiving invoices guide](/guides/pl-ksef-receiving).
+</Info>
+
+<Frame>
+  <img
+    width="400"
+    src="/assets/guides/pl-register-config.png"
+    alt="Choose KSeF environment (Test or Demo)"
+  />
+</Frame>
+
+In **Sandbox** the **Register supplier with KSeF** step allows you to configure the environment:
+
+- **Test**: Self-signed certificate generated automatically, no manual steps required.
+- **Demo**: Requires manual certificate generation from the demo portal.
+
+<Info>Test is more convenient while Demo more accurately simulates the production environment. It is convenient to create two workflows configured differently to easily switch between the Demo and Test options.</Info>
+
+In **live workspaces** no configuration is available, all suppliers are registered in the KSeF production environment.
+
+<Card iconType="duotone" title="KSeF party registration workflow (send)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plRegisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <Note>
+      The template uses test mode by default (for sandbox). To use demo mode in sandbox, add `"config": {"environment": "demo"}` to the **Register supplier with KSeF** step. In Invopop production, the workflow automatically targets the KSeF production environment.
+    </Note>
+
+    <PartyRegistrationSendWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Running
+
+In this section, we'll provide details on how to register parties (suppliers) in the test, demo, and production environments.
+
+### Register a party for test environment
+
+<Note>
+  Choose test mode when you want to quickly test the KSeF integration without dealing with real certificates or authentication. Certificates are generated automatically, allowing you to start sending invoices immediately without any manual certificate generation.
+</Note>
+
+<Steps>
+
+<Step title="Create the party">
+
+In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click <kbd>+ New Supplier</kbd>.
+
+Use fake Polish Tax IDs (NIP) generated from [http://generatory.it/](http://generatory.it/):
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/org/party",
+  "name": "Test Supplier Sp. z o.o.",
+  "tax_id": {
+    "country": "PL",
+    "code": "9876543210"
+  }
+}
+```
+
+Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
+
+</Step>
+
+<Step title="Run the workflow">
+
+In the party entry, click on <kbd>Select Workflow</kbd>, choose your **KSeF Register Party (Test)** workflow, and click <kbd>Run Workflow</kbd>.
+
+**That's it!** ✓ Registration completes automatically. The party is now in <Badge color="purple">Registered</Badge> state and ready to issue invoices.
+
+</Step>
+
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the party. Head over to the [KSeF issuing invoices guide](/guides/pl-ksef) to continue.
+
+---
+
+### Register a party for demo/production environment
+
+<Note>
+  In sandbox workspaces, choose Demo mode when you want to simulate the real production flow with KSeF authentication in a safe demo environment.
+</Note>
+
+<Steps>
+
+<Step title="Create the party">
+
+    Use real Polish Tax IDs (NIP) with access to the [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/) or [KSeF Portal](https://ap.ksef.mf.gov.pl/):
+
+    ```json
+    {
+      "$schema": "https://gobl.org/draft-0/org/party",
+      "name": "Real Company Sp. z o.o.",
+      "tax_id": {
+        "country": "PL",
+        "code": "1234567890"
+      }
+    }
+    ```
+
+
+Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
+
+</Step>
+
+<Step title="Run the workflow">
+
+On the party details page, click **Select Workflow**:
+- **For Demo**: Choose your **KSeF Register Party (Demo)** workflow
+- **For Production**: Choose your **KSeF Register Party (Production)** workflow
+
+Click <kbd>Run Workflow</kbd>. The party will be in <Badge color="yellow">Processing</Badge> state until certificate upload is complete.
+
+</Step>
+
+<Step title="Access the registration link">
+
+Get the registration link to begin certificate generation:
+
+
+<Badge color="green">Your own company</Badge><br />
+In Console, go to the supplier entry → **Meta** tab → click the **gov-pl.invopop.com** link to launch the registration wizard.
+
+<Frame>
+  <img
+    width="398"
+    src="/assets/guides/pl-meta-link.png"
+    alt="Supplier entry meta with KSeF registration link"
+  />
+</Frame>
+
+<Badge color="green">Third-party companies</Badge> (white label)<br />
+Add a webhook after the **Register supplier with KSeF** step to receive the `siloEntryId`.
+
+    Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get the registration link from the `meta` object:
+
+    ```json
+    {
+      "data": {
+        "meta": [
+          {
+            "src": "gov-pl",
+            "key": "link",
+            "link_url": "https://gov-pl.invopop.com/reg/AbC123XyZ"
+          }
+        ]
+      }
+    }
+    ```
+
+    Send the `link_url` to your customer.
+
+</Step>
+
+<Step title="Generate a certificate in KSeF portal">
+
+The registration wizard will guide you through these steps:
+
+1. Visit the KSeF portal
+   - Demo: [KSeF Demo Portal](https://ap-demo.ksef.mf.gov.pl/web/)
+   - Production: [KSeF Portal](https://ap.ksef.mf.gov.pl/)
+
+2. Log in with Trusted Profile (Profil Zaufany)
+   - [Video tutorial: Setting up Trusted Profile](https://www.youtube.com/watch?v=V6E1fGUFPw4)
+
+3. Generate the certificate
+   - Navigate to certificate generation section
+   - Enter certificate name and password (save the password!)
+   - Download the private key (automatically generated)
+   - Select "Authentication in the KSeF system"
+   - Set start date to today or earlier (future dates will fail)
+   - Download the certificate file
+   - [Video tutorial: Certificate generation](https://www.youtube.com/watch?v=SE0IHuPHtRE)
+
+<Warning>
+  Save the certificate and private key files, as well as the password. You'll need them in the next step.
+</Warning>
+
+</Step>
+
+<Step title="Upload certificate to Invopop">
+
+There are two ways to upload the certificate:
+
+
+<Badge color="green">Web Upload</Badge> (Wizard)<br />
+    Return to the registration wizard and upload:
+    - Certificate file
+    - Private key file
+    - Password
+
+    <Frame>
+      <img
+        width="600"
+        src="/assets/guides/pl-upload-certificate.png"
+        alt="KSeF certificate upload form"
+      />
+    </Frame>
+
+    Click <kbd>Upload and verify certificate</kbd>. The system validates and securely stores your credentials.
+
+  <Badge color="green">API Upload</Badge><br />
+    Upload the certificate programmatically using the [Upload KSeF certificate endpoint](/api-ref/apps/gov-pl/certificate-upload).
+
+    <Note>
+      This approach is ideal for automated integrations where you want to handle certificate generation and upload programmatically without user interaction with the web wizard.
+    </Note>
+
+✓ **Success**: The supplier transitions to <Badge color="purple">Registered</Badge> state and can begin issuing invoices.
+× **Failure**: See [Why did my supplier registration fail?](/faq/poland#why-did-my-supplier-registration-fail) in Poland's FAQ.
+
+
+</Step>
+
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the party. Head over to the [KSeF issuing invoices guide](/guides/pl-ksef) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Poland FAQ](/faq/poland) section
+
+---
+
+<PolandResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Poland →
+</Card>
