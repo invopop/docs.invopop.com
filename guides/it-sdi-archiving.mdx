@@ -44,7 +44,7 @@ Before any of its invoices can be preserved, a company must be registered with t
   </Tab>
 </Tabs>
 
-The step reads the company's Italian tax ID from the party, so the party must carry one. Re-running it on an already-enabled company completes without doing anything.
+The step reads the company's Italian tax ID from the party, so the party must carry one. Re-running it on an already-enabled company is skipped: the step reports `Skipped` without contacting the preservation service again.
 
 </Step>
 
@@ -76,17 +76,18 @@ The step needs no configuration. It works out whether the document is issued or 
 When it runs, it:
 
 1. Uploads the exact FatturaPA bytes exchanged with SDI.
-2. Sends the preservation metadata built from the GOBL invoice.
-3. Records the preservation service's identifier for the document as an indexed `archive-uuid` field on the entry, so it can be traced later.
+2. Records the preservation service's identifier for the document as an indexed `archive-uuid` field on the entry, so it can be traced later and so a retry can pick up where this run left off.
+3. Sends the preservation metadata built from the GOBL invoice.
 4. Waits for the service to confirm the document is preserved and its receipt is ready.
 5. Attaches the receipt to the entry in both formats the service provides.
 
-Preservation is asynchronous, so the step stays `Queued` while it waits, then completes with `OK`. The document itself is usually preserved within seconds, though the receipt can take a few minutes to become available. It is safe to retry: re-running it on an already-archived invoice completes without uploading again or duplicating attachments.
+Preservation is asynchronous, so the step stays `Queued` while it waits, then completes with `OK`. The document itself is usually preserved within seconds. The receipt normally follows within minutes, but it can take hours; the step keeps checking, spacing its checks further apart each time, and only gives up after several hours. If the preservation service fails partway through, the step retries from where it stopped, so the document is never uploaded twice. Re-running it on an already-archived invoice is skipped, so nothing is fetched or attached again.
 
 The step returns:
 
 - `OK` when the invoice was preserved and its receipt stored
-- `KO` when there is no FatturaPA file on the entry — the invoice was never exchanged with SDI, or the step ran before the send or import step
+- `Skipped` when the entry already carries the receipt — an earlier run archived the invoice
+- `KO` when there is no FatturaPA file on the entry (the invoice was never exchanged with SDI, or the step ran before the send or import step), when the preservation service rejects the invoice's metadata, or when the account is not authorised for preservation
 
 ## What ends up on the entry
 
@@ -105,7 +106,8 @@ The step returns:
 |---|---|
 | The step fails saying no FatturaPA file was found | It ran before the send or import step, or on an invoice never exchanged with SDI. Archiving preserves the transmitted file, so the exchange has to happen first. |
 | Registering the company fails on its tax ID | The party has no Italian tax ID. Preservation is only available for Italian companies. |
-| The step stays `Queued` longer than expected | The receipt is not ready yet. The step keeps checking and completes on its own once it is. |
+| The step stays `Queued` longer than expected | The receipt is not ready yet. The step keeps checking, less often as time goes on, and completes on its own once the receipt exists. On a slow day at the preservation service this can take hours. |
+| The step shows an error, then succeeds on a later attempt | The preservation service was briefly unavailable. The step resumed from where it stopped, without uploading the document again. |
 
 ## FAQ
 
