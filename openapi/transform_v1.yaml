@@ -21,14 +21,16 @@ paths:
       description: Create a new job without an explicit ID.
       parameters:
       - description: Only for testing. Maximum number of seconds to block the http
-          request waiting for the job to complete and provide a response, do not use
-          this in production.
+          request waiting for the job to complete. When the job finishes within this
+          time the response is 200 OK with the complete job; otherwise 202 Accepted
+          is returned with the job's initial state. Do not use this in production.
         in: query
         name: wait
         schema:
           description: Only for testing. Maximum number of seconds to block the http
-            request waiting for the job to complete and provide a response, do not
-            use this in production.
+            request waiting for the job to complete. When the job finishes within this
+            time the response is 200 OK with the complete job; otherwise 202 Accepted
+            is returned with the job's initial state. Do not use this in production.
           example: 60
           title: Wait
           type: integer
@@ -71,12 +73,21 @@ paths:
               - workflow_id
               type: object
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK. Returned only when the wait parameter was provided and the
+            job completed in time; the body is the finished job with its intents, faults
+            and attachments.
         "202":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransformJob'
-          description: Accepted
+          description: Accepted. The job has been queued; the body holds its initial
+            state with status "NA" and no intents yet.
     get:
       description: Fetch all jobs in the current workspace.
       parameters:
@@ -140,14 +151,16 @@ paths:
       description: Create a new job with the given ID.
       parameters:
       - description: Only for testing. Maximum number of seconds to block the http
-          request waiting for the job to complete and provide a response, do not use
-          this in production.
+          request waiting for the job to complete. When the job finishes within this
+          time the response is 200 OK with the complete job; otherwise 202 Accepted
+          is returned with the job's initial state. Do not use this in production.
         in: query
         name: wait
         schema:
           description: Only for testing. Maximum number of seconds to block the http
-            request waiting for the job to complete and provide a response, do not
-            use this in production.
+            request waiting for the job to complete. When the job finishes within this
+            time the response is 200 OK with the complete job; otherwise 202 Accepted
+            is returned with the job's initial state. Do not use this in production.
           example: 60
           title: Wait
           type: integer
@@ -200,12 +213,21 @@ paths:
               - workflow_id
               type: object
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformJob'
+          description: OK. Returned only when the wait parameter was provided and the
+            job completed in time; the body is the finished job with its intents, faults
+            and attachments.
         "202":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransformJob'
-          description: Accepted
+          description: Accepted. The job has been queued; the body holds its initial
+            state with status "NA" and no intents yet.
   /transform/v1/jobs/key/{key}:
     get:
       description: Fetch an existing job by a recent key.
