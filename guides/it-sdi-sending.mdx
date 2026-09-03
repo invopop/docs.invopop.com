@@ -83,7 +83,7 @@ Example invoices are provided below, or you can use the [GOBL Builder](https://b
 
 ### How the Send step works
 
-This step generates the FatturaPA XML and sends it to SDI through our integration partner. Upon successful completion, the XML file is attached to the invoice entry. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
+This step generates the FatturaPA XML and sends it to SDI through our integration partner. Upon successful completion, the XML file is attached to the invoice entry. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `QUEUED` state.
 
 When the Send step completes, it returns one of three results:
 - `OK` if successful
@@ -96,11 +96,11 @@ Italian law requires issued electronic invoices to be preserved long-term throug
 
 Archiving is built into the standard Italy templates, so no extra setup is needed:
 
-- The party registration workflow includes a step that enables archiving for the supplier. It requires the party to have a valid Italian tax ID. Re-running it on an already-enabled supplier reports `Skipped`.
+- The party registration workflow includes a step that enables archiving for the supplier. It requires the party to have a valid Italian tax ID. Re-running it on an already-enabled supplier reports `SKIP`.
 - The send invoice workflow includes an archive step after the Send step. It preserves the exact FatturaPA file transmitted to SDI and attaches the preservation receipt to the invoice entry as `archive-receipt.pdf` and `archive-receipt.xml`, along with an indexed `archive-uuid` metadata field identifying the archived document.
 - The import invoice workflow includes the same archive step after the Import step, so the invoices you receive are preserved too, recorded as received.
 
-Preservation is asynchronous: the archive step stays `Queued` until the receipt is ready, then completes with `OK`. The receipt normally arrives within minutes but can take hours; the step keeps checking, less often as time goes on, and gives up only after several hours. If the preservation service fails partway through, the step retries from where it stopped without uploading the document again. Re-running it on an already-archived invoice reports `Skipped`, with nothing fetched or attached again.
+Preservation is asynchronous: the archive step stays `QUEUED` until the receipt is ready, then completes with `OK`. The receipt normally arrives within minutes but can take hours; the step keeps checking, less often as time goes on, and gives up only after several hours. If the preservation service fails partway through, the step retries from where it stopped without uploading the document again. Re-running it on an already-archived invoice reports `SKIP`, with nothing fetched or attached again.
 
 ## Example invoices
 
