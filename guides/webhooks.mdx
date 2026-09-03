@@ -75,6 +75,10 @@ These are the faults of the job identified by `transform_job_id`, and together w
 
 <Info> The webhook will expect a `200` or `204` response code. Any other response will be treated as an error and will be automatically retried after a delay. </Info>
 
+<Prompt description="Have your agent build a webhook receiver for job results." icon="webhook" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/webhooks.md and https://docs.invopop.com/llms.md. Implement an HTTPS endpoint in this project that receives Invopop's Send Webhook POST requests. Verify the bearer token or custom header I configure in the workflow step. Parse the JSON body fields id, event, transform_job_id, silo_entry_id, key, args and faults, and treat deliveries as idempotent using id and key. Respond 200 quickly and process asynchronously. On success events fetch the silo entry from the Invopop API and store its state and attachment URLs. On error events store the faults from the payload and fetch the job for the per-step trace. Return a non-200 status only when Invopop should retry, and document the retry schedule from the guide in a code comment.
+</Prompt>
+
 ## Retries
 
 When a webhook is triggered, Invopop will wait for a response. The behavior is as follows:

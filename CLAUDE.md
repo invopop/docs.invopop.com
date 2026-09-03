@@ -90,6 +90,18 @@ mint update              # update the CLI if local preview drifts from prod
 
 There is no `package.json`, build step, or test suite at the repo root — Mintlify owns the build, and PRs are previewed by the Mintlify GitHub app. The only repo-local scripts are the GOBL and FAQ tooling above.
 
+## Agent-facing files
+
+Mintlify publishes every root-level `.md` file verbatim (this file is live at `docs.invopop.com/CLAUDE.md`), so never put secrets or internal-only notes in a root `.md`. Three files exist specifically for AI agents that *consume* the docs; keep them consistent with each other when the product or GOBL changes:
+
+- `llms.mdx` → `/llms` (nav: Get Started, after Quickstart; `/api-ref/llms` redirects here). The long-form primer: mental model, "GOBL in ten rules", "Invopop in ten rules", the seven-call curl loop, copyable prompts, and URL routing tables. Every JSON example on it must build with the current `gobl` CLI.
+- `AGENTS.md` → `docs.invopop.com/AGENTS.md`. The condensed version integrators paste into their own agent instructions. It is **not** instructions for working in this repo — that is this file.
+- `skill.md` → `/skill.md`, installed by `npx skills add https://docs.invopop.com`. Overrides Mintlify's auto-generated skill; follows the agentskills.io frontmatter (`name`, `description`, `metadata`). Keep it under ~6k tokens.
+
+`<Prompt>` idiom (Mintlify component): `<Prompt description="…" icon="…" actions={["copy", "cursor"]}>` with the prompt text as children. Children are copied literally, so write prose only — no `{}` braces, no `<…>` placeholders (use `UPPER_CASE` words), and escape `*` as in body text. A good prompt is self-contained: it names the `.md` URLs to read first, says which env var holds the token (`INVOPOP_TOKEN`), states the task, and repeats the relevant constraints (no hand-computed totals, sandbox only, don't invent codes). Place at most one per page, after the intro or setup and before the hands-on section. Reference examples: `get-started/quickstart.mdx`, `guides/es-verifactu.mdx`, `guides/peppol.mdx`.
+
+The `gobl` CLI now ships from `github.com/invopop/gobl.dev` (`go install github.com/invopop/gobl.dev/cmd/gobl@latest`); the old `invopop/gobl/cmd/gobl` path no longer exists. `gobl.dev` also exposes a public build API (`POST https://gobl.dev/v0/build`, body `{"data": …}`) that is handy for checking examples without a workspace.
+
 ## Conventions and gotchas
 
 - **Asterisks in MDX**: escape `*` inside body text where it would otherwise start emphasis (`VERI\*FACTU`). Inside `<Accordion title="…">` or other JSX prop strings, the literal `*` is fine.

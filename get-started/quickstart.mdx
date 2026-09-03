@@ -11,6 +11,10 @@ In this tutorial, you will:
 3. Create a simple workflow to issue an invoice.
 4. Upload the invoice to the workflow and process it.
 
+<Prompt description="Let your coding agent run the API half of this quickstart against your sandbox." icon="rocket" actions={["copy", "cursor"]}>
+I have an Invopop sandbox workspace, an API key in the INVOPOP_TOKEN environment variable, and I have published the "PDF invoice" workflow template in the Console. Read https://docs.invopop.com/get-started/quickstart.md and https://docs.invopop.com/llms.md. Then, using curl or this project's HTTP client: ping the API, create a silo entry with PUT and a UUID from GET /utils/v1/uuid?v=7 using the example invoice from the quickstart, create a job with PUT for the workflow ID I give you with wait=30, and fetch the entry afterwards. Show me the entry state, whether it is signed, the code assigned by the series and the URL of the generated PDF. Do not invent tax IDs or totals; use the example document as it is.
+</Prompt>
+
 ## Signing up
 
 <Steps>
@@ -473,7 +477,7 @@ Next, we'll process the invoice by sending it to the 'PDF invoice' workflow we s
     * `silo_entry_id` should reference the Silo Entry ID of the uploaded invoice.
     * `workflow_id` should reference the ID of the workflow you created.
 
-    If everything goes smoothly, you'll receive a `202 Accepted` response confirming the invoice has been processed.
+    If everything goes smoothly, you'll receive a `202 Accepted` response confirming the job was accepted. The workflow runs asynchronously: fetch the [job](/api-ref/transform/jobs/fetch-a-job) to follow its steps, or the entry to see the resulting state and files. Add `?wait=30` to the request to block until the job completes, in which case the response is `200 OK` with the finished job.
 
   </Tab>
 
