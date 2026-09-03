@@ -163,7 +163,7 @@ curl -s "${H[@]}" "$API/silo/v1/entries/$ENTRY_ID" | jq '{state, signed, attachm
 | Create entry (server ID) | `POST /silo/v1/entries` |
 | Fetch entry | `GET /silo/v1/entries/{id}`, by key `GET /silo/v1/entries/key/{key}` |
 | Update unsigned entry | `PATCH /silo/v1/entries/{id}` (`content_type` may be a JSON patch type) |
-| List, search entries | `GET /silo/v1/entries?folder=invoices&limit=10` (`limit` 10 to 100), `GET /silo/v1/search?q=...` |
+| List, search entries | `GET /silo/v1/entries?folder=invoices&limit=10` (`limit` 10 to 100), `GET /silo/v1/search?q=...` (indexes series, codes, party names and tax IDs, not line items; new entries appear after roughly 45 minutes, so never use it to confirm a fresh write) |
 | Related documents | `GET /silo/v1/entries/{id}/related` |
 | Entry files | `GET /silo/v1/entries/{id}/files/{file_id}`, `POST .../files` |
 | Set state directly | `POST /silo/v1/entries/{id}/states` |
