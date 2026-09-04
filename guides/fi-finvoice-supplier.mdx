@@ -25,13 +25,13 @@ A party must be registered before it can send or receive documents. A workspace 
 
 ## Prerequisites
 
-- **The party's details**: legal name, Business ID (*y-tunnus*, e.g. `2617416-4`), and a Finnish address. The Business ID is uploaded without its hyphen as the GOBL `tax_id.code`.
+- **The party's details**: legal name, Business ID (*y-tunnus*, e.g. `2617416-4`), and a Finnish address. The Business ID is uploaded without its hyphen as the GOBL `tax_id.code`. A supplier established outside Finland carries its own country's tax ID instead — see [suppliers outside Finland](#suppliers-outside-finland).
 - **A representative on the party**: the first entry in the party's `people` list, with a name and a role in the company. The signing wizard prefills this person as the signer.
 - **The representative's availability**: someone authorized to sign on the supplier's behalf has to complete the signing step, with their identity document at hand, before registration can finish.
-- **Reception workflows configured**: registration checks that the Finland app has a sync and an import workflow configured, and fails with "reception not configured" otherwise. 
+- **Reception workflows configured**: registration checks that the Finland app has a sync and an import workflow configured, and fails with "reception not configured" otherwise. Suppliers outside Finland don't receive here, so they are not held to this. 
 
 <Warning>
-  Registration will fail if a sync and import workflow is not configured.<br /> Follow the [receiving guide's setup](/guides/fi-finvoice-receiving#setup) first.
+  Registering a Finnish party will fail if a sync and import workflow is not configured.<br /> Follow the [receiving guide's setup](/guides/fi-finvoice-receiving#setup) first.
 </Warning>
 
 ## E-invoice addresses
@@ -41,6 +41,18 @@ A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business 
 Registration allocates the party's address on the operator's side, so you don't need to provide one. Counterparties will ask for it, though, and you'll need your customers' addresses to send. Look any Finnish organisation up in the national registry at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi): since 2024 it mirrors the Peppol address list too, so one lookup covers both networks.
 
 You may also meet other address forms that circulate on the Finnish network: IBAN-style addresses from the older bank channel, and operator-prefixed ones such as `TE0037…`. On party records, always use the OVT code under scheme `0216`.
+
+## Suppliers outside Finland
+
+A company established in **Sweden, Denmark, Norway or Estonia** can be registered here to invoice Finnish receivers. It is registered with its own country's tax ID, and the operator files it under its national business number. State that number as a GOBL identity on the party — type `ON` for a Swedish Org.nr or a Norwegian organisasjonsnummer, `CVR` for a Danish CVR, and a legal-scope identity for an Estonian registry code. Where the party carries none, it is read off the VAT number: that works for Sweden, Denmark and Norway, whose VAT numbers contain the business number, but not for Estonia, where the VAT number stands in unless the registry code is stated. Nothing else about sending changes — the same workflow, the same delivery check before each invoice, the same formats on the wire.
+
+These parties are registered for **sending only**. A Finnish e-invoice address is derived from a Business ID, so a company without one is given no address, is not listed in the Finnish registry, and cannot receive over the Finnish network. Its registration completes without an address, no inbox is polled for it, and the authorization agreement its representative signs covers sending alone.
+
+To receive as well, register the party in the [Peppol app](/apps/peppol): any Finnish sender able to invoice abroad reaches it there.
+
+<Note>
+  Suppliers from other countries can't be registered in this app. To invoice Finnish receivers from elsewhere, use the [Peppol app](/apps/peppol) — it reaches the Finnish organisations registered on Peppol, though not the ones that only receive on the domestic network.
+</Note>
 
 ## Setup
 
@@ -102,11 +114,11 @@ When the identity check passes, the authorization is approved on the spot. Other
 </Step>
 
 <Step title="Wait for the registration to complete">
-As soon as the authorization is approved, the workflow resumes on its own. Registration finds or creates the party's company under Invopop's partner account at the operator, activates its services, and waits until the operator reports every service in force and the party's e-invoice address allocated. Until then the job stays queued rather than reporting success on an account that can't yet receive.
+As soon as the authorization is approved, the workflow resumes on its own. Registration finds or creates the party's company under Invopop's partner account at the operator, activates its services, and waits until the operator reports every service in force and the party's e-invoice address allocated. Until then the job stays queued rather than reporting success on an account that can't yet receive. A supplier outside Finland gets no address, so its registration completes as soon as it can send.
 </Step>
 </Steps>
 
-Once registration completes, the party can send and receive e-invoices, and its inbox at the operator starts being polled automatically.
+Once registration completes, a Finnish party can send and receive e-invoices, and its inbox at the operator starts being polled automatically. A supplier outside Finland can send.
 
 <Note>
   The party's e-invoice address works from the moment registration completes, but the [national registry](https://verkkolaskuosoite.fi) counterparties look addresses up in is refreshed once a night. Expect the party to become findable there the following day.
