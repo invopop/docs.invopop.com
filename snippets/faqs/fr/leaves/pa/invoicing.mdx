@@ -27,3 +27,45 @@
 
     Sandbox invoices skip the Annuaire check entirely.
   </Accordion>
+
+  <Accordion title="What should I do if the customer isn't registered in the Annuaire?">
+    Don't block the sale. An exchange where only one party has an
+    effective Annuaire entry is a
+    [non-regulated flow](/guides/fr-pa#key-concepts): it leaves
+    e-invoicing (flux 2) and is covered by
+    [e-reporting](/guides/fr-pa-reporting) (flux 10) instead.
+
+    In practice:
+
+    * Run a [Directory lookup](/guides/fr-lookup) against the
+      customer's SIREN before you generate the invoice — ideally in a
+      separate validation workflow run against customer data, so you
+      can prompt them to fix their registration ahead of time.
+    * If the SIREN has no effective entry, route the invoice through
+      your reporting workflow rather than the PA send workflow.
+    * If it slips through, the send workflow degrades rather than
+      failing: the **Verify document can be sent** step branches and
+      forwards the invoice to the PPF as *déposée – non transmise*.
+
+    A missing entry is common and not necessarily an error. A SIREN
+    visible in the public
+    [annuaire-entreprises](https://annuaire-entreprises.data.gouv.fr)
+    registry is not the same as an effective entry in the DGFiP
+    Annuaire, which only covers entities in scope of the mandate. It
+    can also be absent because the buyer hasn't yet appointed a PA, or
+    because their tax records don't match.
+  </Accordion>
+
+  <Accordion title="Should I check the Annuaire at order time or at invoice time?">
+    Both, for different reasons. A lookup at order or onboarding time
+    is a data-quality check: it lets you warn the customer and get
+    their SIREN or PA sorted before invoicing. A lookup at invoice
+    time is the one that decides the flow, because registrations are
+    added and withdrawn continuously and a party found at checkout may
+    no longer be routable days later (and vice versa).
+
+    Treat the early result as advisory, resolve again at generation,
+    and store the resolved electronic address on the transaction —
+    the routing address isn't always the bare SIREN. See
+    [Directory lookup](/guides/fr-lookup).
+  </Accordion>
