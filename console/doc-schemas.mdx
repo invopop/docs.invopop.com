@@ -1,0 +1,64 @@
+---
+title: "Document schemas"
+description: "The GOBL schemas Invopop supports and the properties they share."
+sidebarTitle: Overview
+---
+
+Invopop stores every business document as a [GOBL](https://docs.gobl.org) envelope. The envelope wraps the document payload with headers and digital signatures, and the payload's `$schema` property declares which document type it is.
+
+A document's schema determines which properties are valid, which workflow templates can process it, and which apps and tax regimes will accept it.
+
+## Supported schemas
+
+| Schema | Console section | Purpose |
+| ------ | --------------- | ------- |
+| `bill/invoice` | [Invoices](/console/schema-invoice) | A payment claim for goods or services supplied under agreed conditions. The most widely used schema and the basis of most workflows. |
+| `bill/order` | [Orders](/console/schema-order) | The opening step of an order-to-invoice process, where a buyer requests goods or services from a seller. |
+| `bill/delivery` | [Deliveries](/console/schema-delivery) | The movement of goods, or occasionally services, between parties. |
+| `bill/payment` | [Payments](/console/schema-payment) | Links one or more invoices to a payment transaction. |
+| `bill/status` | [Statuses](/console/schema-status) | A lifecycle event reported against a document, such as an acknowledgement, approval or refusal. |
+| `org/party` | [Parties](/console/schema-party) | A legal entity or individual involved in a transaction, stored independently so it can be registered with a tax authority or network. |
+| `org/item` | [Items](/console/schema-item) | A product or service offered for sale, stored independently to keep a consistent catalogue across documents. |
+
+Every document is wrapped in a signed [envelope](https://docs.gobl.org/draft-0/envelope) whose `doc` property carries the business document. The envelope and its header hold metadata about the document rather than business data, and are covered in [Document contents](/console/doc-content).
+
+## Shared properties
+
+The four billing schemas — invoice, order, delivery and payment — share a common set of properties.
+
+| Property | Notes |
+| -------- | ----- |
+| `$regime` | The tax regime the document belongs to, as an ISO country code. Determines default currency, tax categories and which correction types are available. |
+| `$addons` | Regime or format extensions applied to the document, such as `es-verifactu-v1` or `pt-saft-v1`. Addons add their own normalisation, validation and extension keys. |
+| `$tags` | Modifiers that change how the document is interpreted. See [invoice tags](/console/schema-invoice#tags). |
+| `type` | The subtype within the schema. Each schema has its own set of values, listed on its own page. |
+| `series`, `code` | The document's identifier. `code` is required before a document can be signed, and is usually generated from a [series](/console/series). |
+| `issue_date`, `issue_time` | When the document was issued. Defaults to today, and to the current time where the regime requires it. |
+| `supplier`, `customer` | The parties to the transaction, as [party](/console/schema-party) objects. `customer` may be omitted on simplified invoices. |
+| `preceding` | References to documents this one replaces or extends. See [document references](/console/doc-references). |
+| `lines` | The items, charges or referenced documents that make up the document body. |
+| `meta` | Semi-structured data that has no home in the document body. |
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Can I change a document's schema or type after it has been signed?">
+
+No. Signing fixes the document's digest, and both the schema and the type form part of the signed payload. Issue a correction against the original instead, or [replicate](/console/doc-replicate) it into a new document if it was never issued.
+
+</Accordion>
+
+<Accordion title="Can one workflow process more than one schema?">
+
+Yes. A workflow can branch on the schema of the incoming entry, which is how regimes with overlapping flows are handled — France's invoicing workflows accept both invoices and status documents. See [workflows and document schemas](/console/workflow-intro#workflows-and-document-schemas).
+
+</Accordion>
+</AccordionGroup>
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  Console | <Icon icon="book" /> [Document references](/console/doc-references)<br /><Icon icon="book" /> [Document contents](/console/doc-content)<br /><Icon icon="book" /> [Document states](/console/doc-states)<br /><Icon icon="book" /> [Create documents](/console/doc-create)<br /><Icon icon="book" /> [Series](/console/series) |
+|  API Reference | <Icon icon="code" /> [Create an entry (POST)](/api-ref/silo/entries/create-an-entry-post)<br /><Icon icon="code" /> [Create an entry (PUT)](/api-ref/silo/entries/create-an-entry-put)<br /><Icon icon="code" /> [Fetch all entries](/api-ref/silo/entries/fetch-all-entries) |
+|  GOBL | <Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Envelope schema](https://docs.gobl.org/draft-0/envelope)<br /><Icon icon="https://assets.invopop.com/icons/gobl.svg" /> [Invoicing use cases](https://docs.gobl.org/use-cases/invoicing) |

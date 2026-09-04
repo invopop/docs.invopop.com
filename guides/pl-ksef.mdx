@@ -1,19 +1,14 @@
 ---
 title: "KSeF issuing invoices guide"
 sidebarTitle: "Issuing invoices"
-description: "Issue FA(3) invoices and import received invoices through Poland's KSeF 2.0 system."
+description: "Issue FA(3) invoices through Poland's KSeF 2.0 system."
 ---
 
 import PolandResources from '/snippets/tables/poland-resources.mdx';
-import SendInvoiceWorkflow from '/snippets/workflows/pl/pl-send.mdx';
+import SendInvoiceWorkflow, { plSendWorkflow } from '/snippets/workflows/pl/pl-send.mdx';
 import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
-import ImportInvoiceWorkflow from '/snippets/workflows/pl/pl-import.mdx';
-import SyncInvoicesWorkflow from '/snippets/workflows/pl/pl-sync.mdx';
 import FAQ from '/snippets/faqs/pl/composers/guide-ksef-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { plSendWorkflow } from '/snippets/workflows/pl/pl-send-data.mdx';
-import { plImportWorkflow } from '/snippets/workflows/pl/pl-import-data.mdx';
-import { plSyncWorkflow } from '/snippets/workflows/pl/pl-sync-data.mdx';
 
 ## Introduction
 
@@ -83,82 +78,11 @@ This workflow signs the GOBL document, converts it to FA(3) XML, and submits it 
 
 </Step>
 
-<Step title="Connect the Cron app">
-
-<Info>
-  You can skip this and the following steps if you only need to send invoices (**send only** use case).
-</Info>
-
-  1. Navigate to **Configuration** → **Apps**
-  2. Find **Cron** in the app discovery list
-  3. Click **Connect** to activate
-
-  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
-</Step>
-
-<Step title="Configure the invoice import workflow">
-
-This workflow imports an individual invoice from KSeF when it is received. It is automatically triggered by the sync workflow (configured in the next step) for each invoice found.
-
-<Card iconType="duotone" title="KSeF import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-import" horizontal>
-  Add to my workspace →
-</Card>
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={plImportWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-
-    <Note>
-      This workflow receives KSeF number and NIP as input arguments, not a silo entry. It's designed to be triggered automatically by the sync workflow.
-    </Note>
-
-    <ImportInvoiceWorkflow />
-  </Tab>
-</Tabs>
-
-</Step>
-
-<Step title="Configure the invoice sync workflow">
-
-This workflow syncs all received invoices for a party within a specific time range. It creates an import job for each invoice found, using the import workflow you configured in the previous step.
-
-Configure the **Sync received invoices from KSeF** step to reference the import workflow created in the previous step.
-
-<Frame>
-  <img
-    width="400"
-    src="/assets/guides/pl-sync-config.png"
-    alt="Configure the workflow that all invoices will be sent to"
-  />
-</Frame>
-
-<Card iconType="duotone" title="KSeF sync received invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-sync" horizontal>
-  Add to my workspace →
-</Card>
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={plSyncWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-
-    <SyncInvoicesWorkflow />
-  </Tab>
-</Tabs>
-
-<Info>
-  For the **send & receive** use case, parties must be registered with the **send & receive** variant of the registration workflow, which subscribes them to periodic invoice imports via the [Cron app](/apps/cron). See the [supplier registration guide](/guides/pl-ksef-supplier) for details.
-</Info>
-
-</Step>
-
 </Steps>
 
 ## Running
 
-In this section, we'll provide details on how to issue invoices on behalf of a registered party and how to import received invoices.
+In this section, we'll provide details on how to issue invoices on behalf of a registered party.
 
 ### Send an invoice
 

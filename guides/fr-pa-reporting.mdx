@@ -6,15 +6,13 @@ description: Periodic e-reporting (Flux 10) of B2C and non-regulated B2B transac
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import SendWorkflow from '/snippets/workflows/fr/fr-reporting-send.mdx';
-import RecordWorkflow from '/snippets/workflows/fr/fr-reporting-record.mdx';
-import { frReportingSendWorkflow } from '/snippets/workflows/fr/fr-reporting-send-data.mdx';
-import { frReportingRecordWorkflow } from '/snippets/workflows/fr/fr-reporting-record-data.mdx';
+import SendWorkflow, { frReportingSendWorkflow } from '/snippets/workflows/fr/fr-reporting-send.mdx';
+import RecordWorkflow, { frReportingRecordWorkflow } from '/snippets/workflows/fr/fr-reporting-record.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
 E-reporting covers everything that is out of scope for regulated e-invoicing (B2C sales, cross-border B2B, and any flow where one party is not registered in the Annuaire). Instead of routing each invoice individually, you **record** each invoice and payment, Invopop generates a Flux 10 XML for each reporting window, and sends it to the PPF.
 
-Reports use the [fr-ctc-flow10-v1](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on.
+Invoices and payments must declare the [fr-ctc-flow10-v1](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on in `$addons`: GOBL applies the Flux 10 rules when the document is built, and the record step rejects documents that don't carry the add-on.
 
 ## Sub-flows
 
@@ -92,6 +90,14 @@ Lines using `exempt`, `reverse-charge`, `intra-community`, `export`, or `outside
 ```
 
 The `key` must match the rate used on the line. Lines on `standard` or `zero` rates do not need a note.
+
+### Correcting a recorded document
+
+To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` action against its silo entry. It removes the document from the pending records so you can correct it and run the record workflow again.
+
+- You can unrecord at any time until the window's filing deadline, whatever state its report is in. The next generation rebuilds the report without the document: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
+- After the filing deadline a submitted or filed report stands, and its documents can no longer be unrecorded.
+- Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
 
 ## Submitting reports
 

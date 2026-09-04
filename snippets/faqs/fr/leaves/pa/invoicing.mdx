@@ -13,3 +13,17 @@
   <Accordion title="How many pops does a B2B e-invoice through France PA cost?">
     Each invoice or lifecycle status sent through France PA costs **5 pops**: 1 pop for the conversion to UBL/CII, 2 pops to send it over Peppol, 1 pop to forward it to the PPF, and 1 pop for the silo entry. See [Pops & pricing](/get-started/pricing) for how pops work.
   </Accordion>
+
+  <Accordion title="What does the record document step check against the Annuaire?">
+    Before an invoice is recorded, the **PPF record document** step looks up both the supplier and the customer SIREN in the Annuaire. What each party must satisfy depends on the workflow's role:
+
+    | Role | Annuaire state | Outcome |
+    |---|---|---|
+    | Both | The SIREN has no effective entry | **Rejected** |
+    | Receiving | The SIREN has at least one effective entry | **Accepted** |
+    | Sending | The SIREN's only entry is the PPF's default line (matricule `9998`) | **Accepted** |
+    | Sending | The party's `0225` peppol endpoint matches one of the SIREN's entries | **Accepted** |
+    | Sending | The party's `0225` peppol endpoint matches none of the SIREN's entries | **Rejected** |
+
+    Sandbox invoices skip the Annuaire check entirely.
+  </Accordion>

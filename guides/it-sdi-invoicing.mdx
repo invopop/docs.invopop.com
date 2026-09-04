@@ -1,0 +1,186 @@
+---
+title: "Italy issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: "Issue electronic invoices through Italy's SDI system over Invopop's accredited channel."
+---
+
+import SendInvoiceWorkflow, { itSendInvoiceWorkflow } from '/snippets/workflows/it/italy-send-invoice.mdx';
+import ImportStatusWorkflow, { itImportStatusWorkflow } from '/snippets/workflows/it/italy-import-status.mdx';
+import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+Electronic invoicing is mandatory for essentially every VAT-registered business in Italy. The *Sistema di Interscambio* (SDI) is the tax authority's central hub: it validates every invoice and delivers it to the buyer. The legal invoice is the cleared FatturaPA XML file.
+
+Invopop converts your [GOBL](https://docs.gobl.org) invoice into FatturaPA and transmits it over **its own accredited SDICoop channel**, registered with the tax authority in Invopop's name. Nothing sits between your workspace and SDI.
+
+Companion guides: [Status](/guides/it-sdi-status) for what SDI reports back about an invoice, [Receiving invoices](/guides/it-sdi-reception), and [Archiving](/guides/it-sdi-archiving).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **SDI exchange** | Simulated end to end, nothing leaves the platform | Real SDI over Invopop's accredited channel |
+| **Outcome** | You choose it, using a reserved recipient code | Decided by SDI and the recipient |
+| **Archiving** | Test preservation, no legal validity | Certified preservation |
+| **Legal validity** | None | The invoice is legally filed with SDI |
+
+<Info>
+The Italy app sends your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
+</Info>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Connect the Italy app">
+1. Navigate to **Configuration** → **Apps**
+2. Find **Italy** in the app discovery list
+3. Click **Connect** to activate
+
+The initial connection requires no configuration for sending invoices.
+</Step>
+
+<Step title="Configure the sending workflow">
+
+This workflow numbers the invoice, seals the envelope, and submits it to SDI.
+
+<Card iconType="duotone" title="Italy send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-send-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSendInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the status workflow">
+
+This workflow runs on each notification SDI sends about an invoice you issued, and records it as a status entry. Select it in the Italy app's configuration so incoming notifications run it automatically.
+
+<Card iconType="duotone" title="Italy import invoice status workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-import-status" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itImportStatusWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ImportStatusWorkflow />
+  </Tab>
+</Tabs>
+
+Add whatever your integration needs after the import step — calling a webhook, notifying your systems, or moving the invoice itself.
+
+</Step>
+
+</Steps>
+
+## Sending invoices
+
+Invopop uses the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library to process conversions. When creating invoices for SDI, you need to:
+
+1. Set the `regime` field to `IT` in your GOBL invoice
+2. Add the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon to enable Italian-specific validations and extensions
+
+Detailed information about the SDI-specific extensions and validations can be found in:
+- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
+- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
+
+Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
+
+### How the send step works
+
+The step generates the FatturaPA XML, submits it to SDI, and attaches the transmitted file to the invoice entry. It completes as soon as SDI accepts the file for processing — it does **not** wait for SDI to decide what happens next, so a verdict that takes days never holds your workflow open.
+
+The step returns:
+
+- `OK` when SDI accepted the file. The result carries SDI's identifier for the submission (`sdi_id`), which every later notification about this invoice shares.
+- `KO` when the invoice couldn't be converted or SDI refused the submission outright.
+
+Acceptance is not delivery. An accepted file can still be rejected minutes later, and that arrives as a status.
+
+<Warning>
+Invoices addressed to a public administration (`FPA12`) are not yet supported: they require a qualified electronic signature. Sending one raises a clear error rather than being rejected by SDI later.
+</Warning>
+
+## Invoice statuses
+
+SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
+
+Each notification and what it means for the invoice is covered in the [Status](/guides/it-sdi-status) guide.
+
+## Archiving (conservazione a norma)
+
+Italian law requires issued electronic invoices to be preserved long-term through a certified process. Add the **Archive document** step after the send step to preserve each invoice as you issue it. See the [Archiving](/guides/it-sdi-archiving) guide for the full setup.
+
+## Testing in the sandbox
+
+There is no public SDI test environment you can point a workflow at. In sandbox, the app plays SDI's part itself: it accepts the file, then feeds the status notifications a real exchange would produce back through the same intake the live channel uses. Your workflow cannot tell the difference, and nothing leaves the platform.
+
+### Choosing the outcome
+
+You choose which outcome to rehearse by setting a reserved *codice destinatario* on the customer. In GOBL that is an inbox with the key `it-sdi-code`:
+
+```json
+{
+  "customer": {
+    "name": "Test Customer SRL",
+    "tax_id": { "country": "IT", "code": "12345678903" },
+    "inboxes": [
+      { "key": "it-sdi-code", "code": "SIMNS00" }
+    ]
+  }
+}
+```
+
+| Recipient code | Simulated outcome |
+|---|---|
+| *(any ordinary code)* | `RC` — delivered to the recipient |
+| `SIMNS00` | `NS` — SDI rejected the invoice |
+| `SIMMC00` | `MC` — accepted, but undeliverable |
+| `SIMAT00` | `AT` — delivery impossible, attestation issued |
+| `SIMDT00` | `RC`, then `DT` — delivered, then the response window expired |
+| `SIMEC1` | `RC`, then `NE`/`EC01` — delivered, then accepted |
+| `SIMEC2` | `RC`, then `NE`/`EC02` — delivered, then rejected |
+
+The codes are sized to real FatturaPA recipient-code lengths, so they pass validation. Any code not in this list — including a real customer's — resolves to a successful delivery.
+
+<Note>
+The sandbox simulates SDI's *responses*, not its validation. In practice this distinction rarely matters: the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon validates invoices against the same rules SDI applies, so an invoice that builds cleanly should only rarely be rejected live — though edge cases can still slip through.
+</Note>
+
+### Receiving your own invoices
+
+Send a sandbox invoice to a company you have [registered for reception](/guides/it-sdi-reception) and the app also loops it back to you as an inbound delivery, running your import workflow exactly as a live delivery would. This is the only way to receive an invoice in sandbox, and a convenient way to exercise sending and receiving in a single run.
+
+## Example invoices
+
+<InvoiceAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Italy FAQ](/faq/italy) section
+
+---
+
+<ItalyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Italy →
+</Card>
