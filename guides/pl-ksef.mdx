@@ -21,9 +21,10 @@ KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing sy
 
 Invoices are encoded in FA(3), a strict XML format that enforces standardized fields for domestic and cross-border transactions. The KSeF system validates all submitted invoices in real-time and assigns a unique KSeF ID upon successful clearance.
 
-This guide covers two key processes:
+This guide covers three key processes:
 
 - [Invoice issuance](#send-an-invoice): Creating and sending FA(3) invoices through KSeF
+- [Credit notes](#issue-a-credit-note): Correcting cleared invoices with a _faktura korygująca_
 - [Invoice import](#import-received-invoices): Importing received invoices from KSeF
 
 For registering parties (suppliers) in the KSeF system, see the companion guide: [Poland: Supplier registration](/guides/pl-ksef-supplier).
@@ -180,6 +181,25 @@ The invoice will be validated, converted to FA(3) XML format, and sent to KSeF. 
 <Note>
   For international transactions, the invoice is created and cleared in KSeF just like domestic invoices. Because the foreign recipient cannot log into KSeF, delivery happens outside the platform (via email, EDI, etc.) with the KSeF QR code included for verification.
 </Note>
+
+### Issue a credit note
+
+Polish VAT law does not recognise credit or debit notes as separate document types: every correction to a cleared invoice is issued as a _faktura korygująca_ (corrective invoice), as set out in art. 106j of the VAT act. In GOBL, you create one as an invoice with the type `credit-note` — the [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) addon automatically classifies it as the FA(3) `KOR` document type (setting the `pl-favat-invoice-type` tax extension) and applies the KSeF correction rules.
+
+To generate a credit note:
+
+- Set `type` to `credit-note`, and use the same supplier details as in the original invoice.
+- Reference the original invoice in the `preceding` array, including its `issue_date`, `series` and `code`, plus the KSeF number it was assigned on clearance as a `favat-ksef-number` stamp.
+- Optionally, add the `pl-favat-effective-date` extension to the preceding reference to state when the correction takes effect for VAT purposes: `1` (date of the original invoice), `2` (date of the credit note itself), or `3` (another date).
+- Add the line items for the amounts being credited. As with every GOBL credit note, quantities and amounts are expressed as positive values; Invopop inverts them wherever negative values are expected, such as in the FA(3) XML.
+
+Process the credit note with the same [send invoice workflow](#send-an-invoice) used for regular invoices: KSeF clears the correction and assigns it its own KSeF number. You can copy the **B2B Credit Note** example from the accordion above as a starting point.
+
+Corrections of prepayment and settlement invoices work the same way, keeping the matching tag on the credit note: `partial` produces a `KOR_ZAL` (correction of a _faktura zaliczkowa_) and `settlement` produces a `KOR_ROZ` (correction of a _faktura rozliczeniowa_).
+
+<Tip>
+  PDFs of Polish credit notes are titled "Faktura korygująca", following the official KSeF terminology. To also display the amounts as negative differences from the original invoice — the presentation Polish customers expect — enable the **Adjustment invoices** option in the Generate PDF step, or pass the `pdf-adjustment-mode` arg. See [Why would I want to use adjustment invoices?](/guides/pdf-invoice#why-would-i-want-to-use-adjustment-invoices) for details.
+</Tip>
 
 ### Import received invoices
 

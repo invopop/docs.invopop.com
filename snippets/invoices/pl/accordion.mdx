@@ -22,7 +22,7 @@ import SelfBilled from '/snippets/invoices/pl/self-billed.mdx';
 	Notice:
 
 	- the minimal version in the first tab contains only the essential fields required to create the invoice,
-	- the [`pl-ksef-v1`](https://docs.gobl.org/addons/pl-ksef-v1) addon ensures the document will be validated using the KSeF rules built into the [GOBL](https://docs.gobl.org) library,
+	- the [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) addon ensures the document will be validated using the KSeF rules built into the [GOBL](https://docs.gobl.org) library,
 	- there are no totals or calculations in the minimal version; all these will be calculated automatically when running `gobl build`,
 	- the built version in the second tab shows the normalized document with calculated totals, line item sums, tax breakdowns, and automatically generated fields like `i` (line index), `sum`, and `total`, and,
 	- make sure to process it with the "KSeF issue invoice" workflow created during setup.
@@ -53,16 +53,16 @@ import SelfBilled from '/snippets/invoices/pl/self-billed.mdx';
 
 <Accordion title="B2B Credit Note">
 
-	In this example, we're issuing a credit note to correct or refund a previous invoice.
+	In this example, we're issuing a credit note to correct or refund a previous invoice. In Poland, every correction is a _faktura korygująca_ (corrective invoice) — there is no separate credit note document type.
 
 	Notice:
 
 	- the `type` field is set to `credit-note` to indicate this is a corrective document,
-	- the `preceding` field references the original invoice being corrected,
+	- the `preceding` field references the original invoice being corrected, including its KSeF number as a `favat-ksef-number` stamp,
 	- the minimal version contains only the essential fields; calculations are handled by GOBL,
-	- when running `gobl build`, the system automatically calculates negative totals, tax refunds, and validates the credit note structure,
-	- the built version shows all calculated fields including negative amounts for the refund, and,
-	- the document is validated using the KSeF rules to ensure compliance with Polish credit note requirements.
+	- the built version shows `"pl-favat-invoice-type": "KOR"` automatically set in the tax extensions, mapping to the FA(3) corrective invoice type,
+	- quantities and amounts are expressed as positive values, as in every GOBL credit note; they are inverted wherever negative values are expected, such as in the FA(3) XML, and,
+	- the document is validated using the KSeF correction rules to ensure compliance with Polish requirements.
 
 	<CodeGroup>
 		<B2BCreditNoteMin />
