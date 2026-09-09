@@ -50,11 +50,5 @@ import { FrTaxId } from '/snippets/components/fr-tax-id.jsx';
 
     Pairing a test SIRET with the real tax ID causes two problems. The two identifiers then carry different SIRENs, so the party contradicts itself. And the real tax ID is what registration is keyed on, so if it is already claimed in the sandbox — often by an earlier, abandoned registration attempt of your own — you get a conflict that swapping the SIRET does nothing to resolve. Contact support if a sandbox registration you no longer need is holding a tax ID.
 
-    GOBL only checks the mod-97 key over the SIREN, so a code derived this way validates even though the SIREN is fictitious.
-  </Accordion>
-
-  <Accordion title="Can I send just the nine-digit SIREN as the French tax ID?">
-    Only for real companies. GOBL normalization prepends the check key to a bare SIREN, but only when the SIREN passes the INSEE Luhn check. Real SIRENs do; Chorus Pro QAS test SIRENs do not — `347244496` would have to end in `3` rather than `6`. When the check fails the code is left at nine characters and the document is rejected with a `checksum mismatch` error, which reads like a bad number rather than a missing key.
-
-    Always send the full eleven-character code (`60347244496`) when working against QAS.
+    GOBL only checks the mod-97 key over the SIREN, so a code derived this way validates even though the SIREN is fictitious. Send the full eleven-character code rather than the bare SIREN: normalization only prepends the key when the SIREN passes the INSEE check digit, which QAS test SIRENs do not, and a nine-digit code is rejected with a `checksum mismatch`.
   </Accordion>
