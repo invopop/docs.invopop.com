@@ -1,3 +1,5 @@
+import { FrTaxId } from '/snippets/components/fr-tax-id.jsx';
+
   <Accordion title="What happens if my supplier registration fails?">
     Ensure the supplier has a valid Chorus Pro account and provided correct credentials. Contact support if registration workflow issues persist.
   </Accordion>
@@ -9,9 +11,26 @@
   <Accordion title="What tax ID do I use with a Chorus Pro QAS test SIRET?">
     Derive it from the test SIRET — never keep the company's real tax ID alongside a test SIRET.
 
-    The first nine digits of a SIRET are the SIREN, and a French VAT code is a two-digit key followed by that SIREN, where the key is `(SIREN × 100 + 12) mod 97`. For the QAS test SIRET `34724449635741` the SIREN is `347244496` and the key is `60`:
+    The first nine digits of a SIRET are the SIREN, and a French VAT code is a two-digit key followed by that SIREN, where the key is `(SIREN × 100 + 12) mod 97`. Paste a SIRET or SIREN to derive the code:
 
-    ```json
+    <FrTaxId />
+
+    The same rule in code:
+
+    <CodeGroup>
+
+    ```js JavaScript
+    const siren = siret.slice(0, 9);
+    const key = String((Number(siren) * 100 + 12) % 97).padStart(2, "0");
+    const taxID = key + siren; // 34724449635741 -> "60347244496"
+    ```
+
+    ```python Python
+    siren = siret[:9]
+    tax_id = f"{(int(siren) * 100 + 12) % 97:02d}{siren}"  # -> "60347244496"
+    ```
+
+    ```json GOBL party
     "supplier": {
       "name": "Example Company",
       "tax_id": {
@@ -26,6 +45,8 @@
       ]
     }
     ```
+
+    </CodeGroup>
 
     Pairing a test SIRET with the real tax ID causes two problems. The two identifiers then carry different SIRENs, so the party contradicts itself. And the real tax ID is what registration is keyed on, so if it is already claimed in the sandbox — often by an earlier, abandoned registration attempt of your own — you get a conflict that swapping the SIRET does nothing to resolve. Contact support if a sandbox registration you no longer need is holding a tax ID.
 
