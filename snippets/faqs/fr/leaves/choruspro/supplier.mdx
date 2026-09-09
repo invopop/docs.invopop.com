@@ -5,3 +5,35 @@
   <Accordion title="What credentials does Chorus Pro require to authenticate a supplier?">
     OAuth 2.0 client credentials issued by Chorus Pro after registration. Invopop stores the token encrypted; suppliers can revoke access at any time through Chorus Pro's portal.
   </Accordion>
+
+  <Accordion title="What tax ID do I use with a Chorus Pro QAS test SIRET?">
+    Derive it from the test SIRET — never keep the company's real tax ID alongside a test SIRET.
+
+    The first nine digits of a SIRET are the SIREN, and a French VAT code is a two-digit key followed by that SIREN, where the key is `(SIREN × 100 + 12) mod 97`. For the QAS test SIRET `34724449635741` the SIREN is `347244496` and the key is `60`:
+
+    ```json
+    "supplier": {
+      "name": "Example Company",
+      "tax_id": {
+        "country": "FR",
+        "code": "60347244496"
+      },
+      "identities": [
+        {
+          "type": "SIRET",
+          "code": "34724449635741"
+        }
+      ]
+    }
+    ```
+
+    Pairing a test SIRET with the real tax ID causes two problems. The two identifiers then carry different SIRENs, so the party contradicts itself. And the real tax ID is what registration is keyed on, so if it is already claimed in the sandbox — often by an earlier, abandoned registration attempt of your own — you get a conflict that swapping the SIRET does nothing to resolve. Contact support if a sandbox registration you no longer need is holding a tax ID.
+
+    GOBL only checks the mod-97 key over the SIREN, so a code derived this way validates even though the SIREN is fictitious.
+  </Accordion>
+
+  <Accordion title="Can I send just the nine-digit SIREN as the French tax ID?">
+    Only for real companies. GOBL normalization prepends the check key to a bare SIREN, but only when the SIREN passes the INSEE Luhn check. Real SIRENs do; Chorus Pro QAS test SIRENs do not — `347244496` would have to end in `3` rather than `6`. When the check fails the code is left at nine characters and the document is rejected with a `checksum mismatch` error, which reads like a bad number rather than a missing key.
+
+    Always send the full eleven-character code (`60347244496`) when working against QAS.
+  </Accordion>
