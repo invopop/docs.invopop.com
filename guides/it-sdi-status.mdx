@@ -27,7 +27,7 @@ flowchart TD
 
     RT -->|"Business"| BDEL{"Delivery"}
     BDEL -->|"Delivered"| BRC["RC<br/>Delivered"]
-    BDEL -->|"Undeliverable"| BMC["MC<br/>Parked in cassetto fiscale"]
+    BDEL -->|"Undeliverable"| BMC["MC<br/>Available on the AdE portal"]
 
     RT -->|"Public administration"| GDEL{"Delivery"}
     GDEL -->|"Delivered"| GRC["RC<br/>Delivered to the PA"]
@@ -74,11 +74,21 @@ For invoices to businesses and consumers, the lifecycle is short: SDI validates,
 |---|---|---|---|
 | `NS` — *notifica di scarto* | `error` | Minutes | SDI's validators rejected the file |
 | `RC` — *ricevuta di consegna* | `acknowledged` | 5 days | Delivered to the recipient |
-| `MC` — *mancata consegna* | `acknowledged` | 5 days | SDI could not deliver, so the invoice is parked in the recipient's tax drawer (*cassetto fiscale*) |
+| `MC` — *mancata consegna* | `acknowledged` | 5 days | SDI could not deliver. The invoice is available to the recipient on the AdE portal, and you must tell them. See below |
 
 A rejected invoice has no legal existence. Correct it and send a fresh one — this is not a case for a credit note.
 
-`MC` is not a failure. The invoice is filed and the recipient can collect it from their *cassetto fiscale*, which is why it counts as acknowledged rather than an error.
+<Accordion title="MC — the invoice is issued, but you must tell the buyer where to find it">
+SDI could not reach the buyer. Either the invoice gave no address (recipient code `0000000` and no PEC) and the buyer has none registered with AdE, or the address exists and was unreachable at the time, a full PEC mailbox for instance. The notification text says which.
+
+The invoice is not lost and it is not a failure. The receipt attests that the invoice is issued, and SDI files it in the buyer's reserved area of the *Fatture e Corrispettivi* portal (Consultazione → Fatture elettroniche e altri dati IVA → *fatture messe a disposizione*), from the date given in the notification. That is why it counts as `acknowledged`.
+
+What the rules ask of you as the seller: tell the buyer promptly, by any means outside SDI, that the invoice is waiting for them there. Sending them a PDF or paper copy counts as that notice. For the buyer, the invoice counts as received on the day they view it on the portal, and their VAT deduction starts from that date.
+
+Do not send the invoice again. It is already issued, and a second submission is a duplicate. To avoid `MC` in the first place, ask business customers for a recipient code or a PEC address and put it on the invoice.
+
+*Source: [Provvedimento AdE 89757/2018](https://www.agenziaentrate.gov.it/portale/documents/20143/296703/Provvedimento+30042018+fatturazione+elettronica_Provvedimento_30042018+.pdf/48cb2b5f-ea0a-c6dd-ab3d-025b9fd2b3a2), points 3.4, 4.3, 4.4 and 4.6.*
+</Accordion>
 
 ## Public administration invoices
 
