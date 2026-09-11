@@ -73,3 +73,83 @@
     | `antiques` | Régimen especial de las antigüedades y objetos de colección. |
     | `cash-basis` | Régimen especial del criterio de caja. |
   </Accordion>
+  <Accordion title="How do I invoice a line with no VAT in Spain (exempt, not subject, reverse charge or 0%)?">
+    In Spanish VAT there are several legally distinct reasons why a line carries no tax, and VERI\*FACTU requires you to state which one applies. In GOBL you do this with the `key` field of the line's tax combo. The [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon derives everything else from it.
+
+    Pick the key that matches the reason there is no VAT:
+
+    | Situation | `key` | Default extension set by the addon | When to use it |
+    |---|---|---|---|
+    | Exempt under art. 20 LIVA | `exempt` | `es-verifactu-exempt: E1` | Healthcare, education, financial and insurance services, residential rental, second-hand property, games of chance subject to the gaming tax, and the other domestic exemptions in art. 20. |
+    | Exempt for another legal reason | `exempt` + `es-verifactu-exempt: E6` | — | Exemptions whose legal basis is outside arts. 20–25. Rare. |
+    | Export of goods | `export` | `es-verifactu-exempt: E2`, `es-verifactu-regime: 02` | Goods leaving the EU, including shipments to the Canary Islands, Ceuta and Melilla. Set `E3` for supplies assimilated to exports (ships, aircraft, diplomatic missions) or `E4` for goods in free zones and customs warehouses. |
+    | Intra-community supply of goods | `intra-community` | `es-verifactu-exempt: E5` | Goods transported to another EU member state for a customer with a valid VAT number in that state. |
+    | Not subject – place of supply | `outside-scope` | `es-verifactu-op-class: N2` | Services to business customers established outside Spain, services localised in the Canary Islands, Ceuta or Melilla, goods that never enter Spain. |
+    | Not subject – art. 7, 14 and others | `outside-scope` + `es-verifactu-op-class: N1` | — | Transfer of a going concern, free samples and low-value promotional items, compensation and penalties, refundable deposits, pass-through amounts collected for third parties. |
+    | Domestic reverse charge | `reverse-charge` | `es-verifactu-op-class: S2` | Construction and rehabilitation works between businesses, scrap and waste metals, property transfers where the exemption is waived, B2B sales of phones, consoles and laptops to resellers. The invoice must state *Inversión del sujeto pasivo*. |
+
+    Do not include `rate` or `percent` on any of these lines. None of these keys admits a rate, so a combo such as `key: exempt` with `rate: general` fails validation (`GOBL-TAX-COMBO-03`) before the invoice is sent. The addon also rejects a combo that carries both an operation class and an exemption code, and requires an operation class on any combo with a percent.
+
+    **Examples**
+
+    An exempt healthcare service:
+
+    ```json
+    {
+      "cat": "VAT",
+      "key": "exempt"
+    }
+    ```
+
+    An exempt operation with a legal basis outside art. 20:
+
+    ```json
+    {
+      "cat": "VAT",
+      "key": "exempt",
+      "ext": { "es-verifactu-exempt": "E6" }
+    }
+    ```
+
+    Consulting for a business customer in Germany:
+
+    ```json
+    {
+      "cat": "VAT",
+      "key": "outside-scope"
+    }
+    ```
+
+    Late-payment interest charged to a Spanish customer:
+
+    ```json
+    {
+      "cat": "VAT",
+      "key": "outside-scope",
+      "ext": { "es-verifactu-op-class": "N1" }
+    }
+    ```
+
+    Construction work for a Spanish business, with the customer self-assessing:
+
+    ```json
+    {
+      "cat": "VAT",
+      "key": "reverse-charge"
+    }
+    ```
+
+    The customer's tax ID does not change the classification: a line with `rate: standard` is taxed at 21% and marked `S1` even when the customer is German. The only automatic case is a tax combo whose `country` field is not `ES`, meaning you are charging another country's VAT on the line. The addon then marks it `N2` for VERI\*FACTU and drops any exemption code, because the operation is not subject to Spanish VAT.
+
+    **Is there a 0% rate?**
+
+    Not one you can use today. GOBL accepts `key: zero`, which classifies the line as subject and not exempt (`S1`) at 0%, but Spain has no 0% VAT rate in force: the temporary 0% on basic foodstuffs ended on 30 September 2024, and the AEAT validates the rate against the operation date and rejects 0% on later invoices. If your system has a product configured at 0%, it is almost certainly modelling one of the cases in the table above and should be mapped to that key instead.
+
+    **Prepaid credit, gift cards and advances**
+
+    These are not exempt and should not use any of the keys above. Credit that can only be spent on one kind of supply at a known rate is taxed when sold, as a normal `rate: standard` line. Credit that can be spent on goods or services at different rates is outside the scope of VAT when sold and is taxed on redemption instead; no invoice for a supply is issued at the time of the top-up. Advance payments for a specific future supply are taxed when received, at the rate of that supply.
+
+    **Who decides which key applies?**
+
+    The classification is a tax determination for the issuer and their advisor. GOBL validates that what you send is internally consistent and will be accepted by the AEAT, but it cannot tell you whether a given product is exempt, not subject or taxed. The same reason must also appear on the printed invoice: an exempt line needs a reference to its legal basis, and a reverse-charge line needs the *Inversión del sujeto pasivo* mention.
+  </Accordion>
