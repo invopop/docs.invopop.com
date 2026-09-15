@@ -6,5 +6,5 @@ openapi: "POST /apps/gov-sa/v1/entry/{silo_entry_id}/otp"
 The request carries the party’s registration details plus the OTP generated in the ZATCA Fatoora portal. The company name and registered address are not part of the body — both are taken from the `org.Party` silo entry, which **Register Party** validates before publishing the onboarding link. The resulting credentials are stored securely and the queued registration task is poked so the workflow can continue.
 
 <Note>
-  Use this endpoint only after running the party registration workflow. The silo entry must be waiting for OTP submission. The OTP is short-lived, so generate it in the portal immediately before calling this endpoint.
+  Use this endpoint only after running the party registration workflow: it returns `404` when the silo entry has no registration and `409` when the party already holds a Compliance CSID, rather than issuing a second set of certificates. The OTP is short-lived, so generate it in the portal immediately before calling this endpoint.
 </Note>
