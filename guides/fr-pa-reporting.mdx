@@ -101,7 +101,7 @@ To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` act
 
 ## Submitting reports
 
-A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it.
+A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
 
 <Card iconType="duotone" title="PPF generate and send reporting document" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-send" horizontal>
   Add to my workspace →
@@ -127,7 +127,45 @@ A separate workflow bundles the records for a closed reporting window into a sin
   />
 </Frame>
 
-You can also trigger this workflow manually against any registered party — useful for testing, or to bring a party up to date after onboarding.
+### Triggering a report manually
+
+You can also run the workflow yourself: useful for testing, or to bring a party up to date after onboarding. There are two ways to tell the workflow which declarant to report:
+
+- **Job arguments** — create the job with no silo entry and pass the SIREN in `args`. This is what the scheduler does.
+- **A silo entry** — run the job against the registered party's silo entry, as any other workflow.
+
+Whichever you choose, the stream being reported is selected the same way:
+
+| Argument | Required | Values |
+|---|---|---|
+| `siren` | Only without a silo entry | The declarant's 9-digit SIREN. Takes precedence over the silo entry when both are given. |
+| `flux-kind` | No | `tx` for transactions, `py` for payments. Falls back to the step configuration. |
+| `role` | No | `seller` or `buyer`. Falls back to the step configuration. |
+
+<CodeGroup>
+
+```bash Job arguments
+curl -X POST "https://api.invopop.com/transform/v1/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_id": "<REPORTING_WORKFLOW_ID>",
+    "args": { "siren": "<SIREN>", "flux-kind": "tx", "role": "seller" }
+  }'
+```
+
+```bash Silo entry
+curl -X POST "https://api.invopop.com/transform/v1/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_id": "<REPORTING_WORKFLOW_ID>",
+    "silo_entry_id": "<PARTY_SILO_ENTRY_ID>",
+    "args": { "flux-kind": "tx", "role": "seller" }
+  }'
+```
+
+</CodeGroup>
 
 
 ### Picking a VAT regime at supplier registration
