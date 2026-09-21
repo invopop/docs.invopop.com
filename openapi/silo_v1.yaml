@@ -658,6 +658,21 @@ paths:
         a single field, which is how a set membership test is written. For
         free-text searching across documents, use the search endpoint instead.
 
+        "AND" and "OR" are keywords and must be written in capitals; "and", "&&"
+        and "||" are not accepted. The whole filter must be URL-encoded, because
+        an unencoded "&" ends the parameter and the rest of the filter would be
+        silently dropped — a request carrying the leftovers is rejected rather
+        than answered with a wider result set than was asked for.
+
+        For example, invoices for one customer in the sales folder. Note that
+        curl's -G with --data-urlencode does the encoding for you:
+
+            curl -G https://api.invopop.com/silo/v1/entries/query -H "Authorization: Bearer $TOKEN" --data-urlencode 'schema=bill/invoice' --data-urlencode 'filter=customer_tax_code = "X3157928M" AND folder = "sales"'
+
+        A tax code is stored without its country prefix, which is held separately
+        as supplier_country or customer_country. Filter on "X3157928M", not on
+        "ESX3157928M".
+
         Page through results by passing the previous response's "next_cursor" as
         "cursor". A cursor is only valid for the same schema, filter and
         order_by, and only in the workspace that produced it.
