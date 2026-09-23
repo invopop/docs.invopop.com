@@ -38,7 +38,9 @@ A party must be registered before it can send documents. A workspace can hold se
 
 A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, sometimes with a five-character suffix for routing inside large organisations. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
 
-Registration allocates a Finnish party's address on the operator's side: it is the party's own OVT code, the same one you set as the `0216` inbox on the supplier party. Counterparties will ask for it, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
+Registration allocates a Finnish party's address on the operator's side: it is the party's own OVT code. Once registration completes, you'll find it on the party entry as an endpoint, `iso6523-actorid-upis::0216:` followed by the code, so you don't need to add it yourself. A party that has the address as an inbox with scheme `0216` instead still sends as before.
+
+Counterparties will ask for this address, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
 
 You'll also need your customers' addresses to send. Look any Finnish organisation up in the national registry at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi): since 2024 it mirrors the Peppol address list too, so one lookup covers both networks.
 
@@ -50,7 +52,7 @@ Companies from **any other country** can register here to invoice Finnish receiv
 
 Use the company's own tax ID on the party. The operator registers the company under that tax ID. For most countries this is the full VAT number. For Sweden and Norway it is the Org.nr on its own, because their VAT numbers are built from it.
 
-Sending works as it does for a Finnish supplier, with the same workflow, checks and formats. Give the party an inbox with the company's own electronic address, such as a Swedish Org.nr under scheme `0007`.
+Sending works as it does for a Finnish supplier, with the same workflow, checks and formats. Give the party an endpoint with the company's own electronic address, such as `iso6523-actorid-upis::0007:` followed by a Swedish Org.nr.
 
 Suppliers outside Finland are registered to **send only**. A Finnish e-invoice address is built from a Finnish Business ID, so they don't get one. They aren't listed in the [national registry](https://verkkolaskuosoite.fi), and Finnish senders can't reach them on the domestic network. The app doesn't poll an inbox for them, and the authorization agreement their representative signs covers sending only.
 
@@ -92,7 +94,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
 <Step title="Upload the party">
-Create a silo entry with the party's details. Registration uses the name, the tax ID and the representative under `people`. The example below shows a Finnish party, with its y-tunnus as the tax ID:
+Create a silo entry with the party's details. Registration uses the name, the tax ID and the representative under `people`. The example below shows a Finnish party, with its y-tunnus as the tax ID. You can leave out the endpoint: registration adds it.
 
 <Supplier />
 </Step>
