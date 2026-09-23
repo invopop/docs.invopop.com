@@ -6,6 +6,7 @@ description: "Issue electronic invoices through Italy's SDI system over Invopop'
 
 import SendInvoiceWorkflow, { itSendInvoiceWorkflow } from '/snippets/workflows/it/italy-send-invoice.mdx';
 import ImportStatusWorkflow, { itImportStatusWorkflow } from '/snippets/workflows/it/italy-import-status.mdx';
+import ItCustomerAccordion from '/snippets/parties/it/accordion.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
@@ -29,6 +30,10 @@ Companion guides: [Status](/guides/it-sdi-status) for what SDI reports back abou
 <Info>
 The Italy app sends your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
 </Info>
+
+<Prompt description="Have your agent issue an invoice through SDI in your sandbox." icon="file-invoice" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/it-sdi-invoicing.md, https://docs.invopop.com/llms.md and https://docs.gobl.org/addons/it-sdi-v1.md. In my sandbox workspace, using the token in INVOPOP_TOKEN and the workflow ID I give you, create a bill/invoice entry with $regime IT, $addons containing it-sdi-v1, the supplier I describe, and a customer of the kind I describe. Start from one of the example invoices in the guide, and do not invent tax codes, recipient codes or extension codes. Run the workflow with wait=30, then fetch the entry and report its state, the job's per-step statuses and faults, and the files attached. Then open the FatturaPA XML and tell me what is in CodiceDestinatario, PECDestinatario and the CessionarioCommittente identifiers, and why each value is what it is.
+</Prompt>
 
 ## Setup
 
@@ -96,6 +101,22 @@ Detailed information about the SDI-specific extensions and validations can be fo
 - [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
 
 Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
+
+### Identifying the customer
+
+Italy has two fiscal identifiers — the *partita IVA* (VAT number) and the *codice fiscale* — and which one you put on the customer depends on who they are.
+
+| Your customer is | What to put on the party |
+|---|---|
+| An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario*, an `it-sdi-pec` inbox holding their PEC address, or both |
+| An Italian private individual | `tax_id` with `country: "IT"` and no code, plus an `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
+| Anyone outside Italy | `tax_id` with their country, and their VAT number if they have one. No inbox |
+
+Codes never carry a country prefix, because the country has its own field: write a *partita IVA* as `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters, and a *codice fiscale* is 16 for a person or 11 digits for a company. If you don't have a code for a party, leave it out rather than inventing a placeholder.
+
+Here is each case as a customer [party](https://docs.gobl.org/draft-0/org/party):
+
+<ItCustomerAccordion />
 
 ### How the send step works
 
