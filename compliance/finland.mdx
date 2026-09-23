@@ -36,7 +36,7 @@ Finland's e-invoicing framework is administered by the Finnish Tax Administratio
 * [Right to request e-invoicing](#right-to-request-e-invoicing-b2b) lets B2B buyers above the EUR 10,000 turnover threshold compel suppliers to issue e-invoices, without a blanket mandate.
 * [Finvoice and TEAPPSXML](#domestic-channels-finvoice-and-teappsxml) remain the dominant domestic formats for recipients outside the Peppol network.
 
-The diagram below shows how an outbound invoice reaches the buyer through the operator, on whichever network the buyer lives:
+To invoice a buyer that is only on Peppol, use the [Peppol app](/apps/peppol). The diagram below shows how an outbound invoice reaches a buyer on the domestic operator network:
 
 ```mermaid actions={false}
 %%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
@@ -50,9 +50,10 @@ sequenceDiagram
     IV->>IV: Generate the e-invoice
     IV->>AX: Submit to the operator
     alt Buyer on the domestic network
-        AX->>B: Deliver as Finvoice or TEAPPSXMLXML
-    else Buyer on Peppol
-        AX->>B: Deliver over Peppol
+        AX->>B: Deliver as Finvoice or TEAPPSXML
+    else Buyer on Peppol only
+        AX-->>IV: Not reachable on this network
+        Note over IV,B: Invoice through the Peppol app instead
     end
 ```
 
@@ -69,8 +70,8 @@ sequenceDiagram
   <Step title="Deliver on the domestic network">
     If the buyer receives through the domestic operator network, the invoice is delivered there as Finvoice, or TEAPPSXML where the buyer's operator uses it.
   </Step>
-  <Step title="Deliver over Peppol">
-    If the buyer is registered on Peppol, the invoice is delivered over Peppol instead.
+  <Step title="Buyers reachable only on Peppol">
+    If the operator can't reach the buyer on the domestic network, it refuses the invoice, and the error names the channel it would have used. Invoice those buyers through the [Peppol app](/apps/peppol).
   </Step>
 </Steps>
 
@@ -87,9 +88,9 @@ sequenceDiagram
     | **Model**           | Decentralized (access point network)                                                               |
     | **Effective date**  | Mandatory since **April 2019** (central government); **April 2020** (all contracting authorities); EN 16931-only since **April 2021** |
     | **Agency**          | Valtiokonttori (Finnish State Treasury), national Peppol Authority                                 |
-    | **Invopop support** | [Finland App](/apps/finland)                                                                       |
+    | **Invopop support** | [Peppol App](/apps/peppol); the [Finland App](/apps/finland) for an authority that also receives on the domestic network |
 
-    <Card title="Finland" size="20" icon="https://assets.invopop.com/flags/fi.svg" href="/apps/finland" horizontal>
+    <Card title="Peppol" size="20" icon="https://assets.invopop.com/apps/peppol/icon.svg" href="/apps/peppol" horizontal>
       Connect the app to send invoices to Finnish public authorities →
     </Card>
   </Accordion>
@@ -105,7 +106,7 @@ sequenceDiagram
     | **Format**          | Peppol BIS Billing 3.0, Finvoice 3.0                                                        |
     | **Trigger**         | Buyer turnover above EUR 10,000                                                             |
     | **Mandate status**  | No transmission mandate; ViDA harmonized B2B reporting expected **1 July 2030**             |
-    | **Invopop support** | [Finland App](/apps/finland)                                                                |
+    | **Invopop support** | [Finland App](/apps/finland) for the domestic network; [Peppol App](/apps/peppol) for buyers only on Peppol |
   </Accordion>
 
   <Accordion title="Domestic channels: Finvoice and TEAPPSXML">
