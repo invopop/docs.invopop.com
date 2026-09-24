@@ -60,6 +60,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     stripe: "https://assets.invopop.com/apps/stripe/icon.svg",
     email: "https://assets.invopop.com/apps/email/icon.svg",
     cron: "https://assets.invopop.com/apps/cron/icon.svg",
+    tables: "https://assets.invopop.com/apps/tables/icon.svg",
     ilyda: "https://assets.invopop.com/apps/ilyda/icon.svg",
     invoicexpress: "https://assets.invopop.com/apps/invoicexpress/icon.svg",
     plemsi: "https://assets.invopop.com/flags/co.svg",
