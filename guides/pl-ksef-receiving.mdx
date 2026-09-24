@@ -143,6 +143,10 @@ After adding the send & receive workflow (regardless of how you created it), ope
 1. **Workflow** — select the **KSeF Sync Received Invoices** workflow you created earlier in this setup. The Cron app will trigger this workflow on each tick.
 2. **Interval** — choose how often KSeF should be checked for new invoices (for example, every hour or every day). Pick a frequency that matches how quickly you need received invoices to appear in Invopop.
 
+<Note>
+  Invoices are downloaded from KSeF one by one, and KSeF allows 64 downloads per hour for each NIP in production (ten times more in test mode). Each sync can therefore import up to 64 invoices for every hour of its interval. If a sync finds more, it fails without importing them and asks you to sync more often. If you expect to receive more than 64 invoices an hour, [contact support](mailto:support@invopop.com).
+</Note>
+
 Once configured, the step should look like this:
 
 <Frame>
@@ -260,7 +264,7 @@ To import all invoices received within a specific time period, you need:
   </Tab>
 </Tabs>
 
-The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
+The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found. The same download limit applies: a date range may hold up to 64 invoices per hour it covers, so split large backfills into shorter ranges.
 
 <Tip>
   Use single invoice import to bring in a specific invoice immediately after receiving notification from a supplier. Use date range sync to backfill invoices or to import historical invoices from before the cron subscription was active.
@@ -276,7 +280,7 @@ We strongly recommend adding notification steps to your workflows to alert you o
 This ensures you're immediately aware if invoices fail to import, allowing you to take corrective action.
 
 <Tip>
-  Common import issues include certificate expired or invalid, KSeF API temporarily unavailable, invoice format not supported by GOBL conversion, and network connectivity issues. Check your workflow error logs in the Console for detailed error messages.
+  Common import issues include certificate expired or invalid, KSeF API temporarily unavailable, more invoices in a sync window than KSeF allows us to download, invoice format not supported by GOBL conversion, and network connectivity issues. Check your workflow error logs in the Console for detailed error messages.
 </Tip>
 
 ## FAQ
