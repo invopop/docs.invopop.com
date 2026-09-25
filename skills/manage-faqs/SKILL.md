@@ -76,6 +76,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Finland | fi | `finvoice` (also uses `peppol`) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
 | Romania | ro | (country scope only; own RO e-Factura regime) |
+| Slovakia | sk | (country scope only; Peppol with eFaktúra tax data reporting) |
 | UAE | ae | (country scope only; own EIS / PINT AE regime) |
 | Spain | es | `verifactu`, `ticketbai`, `sii`, `noverifactu`, `facturae` |
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
@@ -409,6 +410,8 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/pt-at-supplier.mdx` | `pt/composers/guide-at-supplier.mdx` |
 | `faq/romania.mdx` | `ro/composers/page-faq.mdx` |
 | `compliance/romania.mdx` | `ro/composers/page-compliance.mdx` |
+| `faq/slovakia.mdx` | `sk/composers/page-faq.mdx` |
+| `compliance/slovakia.mdx` | `sk/composers/page-compliance.mdx` |
 | `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
 | `apps/saudi-arabia.mdx` | `sa/composers/app-zatca.mdx` |
 | `guides/sa-zatca-clearance-reporting.mdx` | `sa/composers/guide-zatca-invoicing.mdx` |
