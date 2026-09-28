@@ -82,7 +82,7 @@ paths:
   /access/v1/workspace:
     get:
       description: Fetch the workspace details associated with the current authentication
-        token.
+        token, including the capability flags it is entitled to.
       responses:
         "200":
           content:
@@ -104,6 +104,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessWorkspace'
+          description: OK
+  /access/v1/workspace/{id}/token:
+    post:
+      description: |-
+        Exchange the caller's user OAuth access token for a short-lived
+        token scoped to the given workspace, so a client that has logged a
+        user in (a CLI, or an agent driving one) can act in that workspace
+        with no more than the user may do there. The caller must hold a
+        position in the workspace's org, and the returned token carries the
+        scopes the user consented to, narrowed to their permissions in the
+        workspace. It carries the user's identity too, so audit trails keep
+        per-user attribution.
+
+        Name the application the OAuth token was issued to with client_id.
+        The client secret is optional, as public clients have none.
+
+        Requires an account-wide user OAuth token: API keys, app
+        credentials and workspace tokens are not accepted. Workspace tokens
+        last at most 30 minutes and never outlive the token they were
+        exchanged for; mint another when one expires.
+      parameters:
+      - description: UUID of the workspace to scope the token to.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the workspace to scope the token to.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Workspace ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessMintWorkspaceToken'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessWorkspaceToken'
           description: OK
 components:
   schemas:
@@ -186,6 +227,22 @@ components:
           title: Updated At
           type: string
       type: object
+    AccessMintWorkspaceToken:
+      properties:
+        client_id:
+          description: Client ID of the application the user's OAuth token was issued
+            to.
+          example: hSmVQwN4a1bBZn
+          title: Client ID
+          type: string
+        client_secret:
+          description: 'Client secret of the application. Optional: public clients
+            such as CLIs, which authenticate their user with PKCE, have none.'
+          title: Client Secret
+          type: string
+      required:
+      - client_id
+      type: object
     AccessOrg:
       properties:
         created_at:
@@ -250,6 +307,17 @@ components:
           example: "2018-01-01T00:00:00.000Z"
           title: Created At
           type: string
+        features:
+          description: Capability flags the workspace is entitled to, sorted. Use
+            these to decide what to offer for this workspace. Only present when fetching
+            a workspace.
+          example:
+          - multiuser
+          - sso
+          items:
+            type: string
+          title: Features
+          type: array
         id:
           description: UUID of the workspace.
           example: 347c5b04-cde2-11ed-afa1-0242ac120002
@@ -274,6 +342,35 @@ components:
           description: The date and time the workspace was last updated.
           example: "2018-01-01T00:00:00.000Z"
           title: Updated At
+          type: string
+      type: object
+    AccessWorkspaceToken:
+      properties:
+        access_token:
+          description: Bearer token to be used for subsequent API requests.
+          example: eyJhbGciOi...
+          title: Access Token
+          type: string
+        expires_at:
+          description: Unix timestamp at which the token ceases to be valid.
+          example: 1714200000
+          title: Expires At
+          type: integer
+        scope:
+          description: 'Space separated scopes the token carries: those the user consented
+            to, narrowed to what they may do in the workspace.'
+          example: admin:silo read:transform
+          title: Scope
+          type: string
+        token_type:
+          description: Always "Bearer".
+          example: Bearer
+          title: Token Type
+          type: string
+        workspace_id:
+          description: UUID of the workspace the token is scoped to.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Workspace ID
           type: string
       type: object
   securitySchemes:
