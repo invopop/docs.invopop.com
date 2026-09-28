@@ -9,12 +9,11 @@
   </Accordion>
 
   <Accordion title="How do I add codice fiscale and Partita IVA?">
-    Invopop handles both Italian tax identification numbers in the supplier and customer sections of invoices:
+    Both Italian tax identifiers have their own place on a party. The *partita IVA* (VAT number) goes in `tax_id`, and the *codice fiscale* goes in `identities` under the key `it-fiscal-code`. A party may carry both.
 
-    - **Partita IVA** (VAT number): Automatically extracted from the `tax_id/code` field.
-    - **Codice Fiscale** (fiscal code): Must be specified as an identity with the key `it-fiscal-code`.
+    An Italian supplier always needs a *partita IVA*. An Italian customer needs at least one of the two — which one depends on who they are, covered in the [issuing guide](/guides/it-sdi-invoicing#identifying-the-customer).
 
-    Here's an example showing both identifiers in a supplier object:
+    Here's an example showing both identifiers on a supplier:
     ```json Supplier with Partita IVA and Codice Fiscale
     {
         "supplier": {
@@ -32,4 +31,12 @@
         }
     }
     ```
+  </Accordion>
+
+  <Accordion title="How do I invoice a customer outside Italy?">
+    Send it through SDI as usual — an Italian supplier reports the invoice there whoever the customer is. SDI has no way to deliver outside Italy, though, so it won't reach the customer that way: send them their copy yourself, normally as a PDF. It's the same invoice travelling by two routes, and only the FatturaPA file is the legal one.
+  </Accordion>
+
+  <Accordion title="What if the customer has no tax ID at all?">
+    An Italian customer needs either a *partita IVA* or a *codice fiscale*. A customer outside Italy needs neither — their country is enough, so leave the code out rather than inventing a placeholder. See [identifying the customer](/guides/it-sdi-invoicing#identifying-the-customer).
   </Accordion>
