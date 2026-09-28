@@ -20,6 +20,7 @@ This guide walks through how to implement e-invoicing obligations in France:
 * [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
 * [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
 * [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
+* [VAT-exempt invoices](#vat-exempt-invoices): why an invoice exempt under articles 261 to 261 E is recorded but never sent to the PPF.
 * [Reading submitted invoices](#reading-submitted-invoices): follow every sent and received invoice, and its PPF state, from the France dashboard.
 * [Example invoices](#example-invoices): minimal GOBL documents and their built versions, ready to paste into the GOBL builder.
 
@@ -32,6 +33,8 @@ These workflows are shared between invoice and [status documents](/guides/fr-pa-
 The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is transmitted automatically alongside the F1. 
 
 The **PPF record document** step validates SIRENs and checks both parties against the Annuaire. Documents where either side is missing are rejected and should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
+
+It also sets aside invoices that fall outside the mandate — see [VAT-exempt invoices](#vat-exempt-invoices) below.
 
 The **Forward document to PPF** step generates and transmits to the PPF the F1 copy of the invoice and its `200` Déposée status. When the step's **Deposited and not transmitted** toggle is enabled, the status carries the `NON_TRANSMISE` reason and reports a *déposée – non transmise* instead of the standard *déposée*. This should be used when the recipient has no active receiving address. Gate that branch on the Peppol [Validate endpoint](/guides/peppol#validating-the-customer-endpoint) action: when it returns `false`, the invoice can't be delivered over Peppol and the workflow should route into a forward step configured as not transmitted.
 
@@ -142,6 +145,30 @@ How each step of the self-billing use case maps to an action in Invopop, on both
 | 4 | Seller | Upon reception of payment, the seller builds a `bill.Payment` referencing the invoice, sends it to the customer and forwards it to the PPF. |
 | 5 | Buyer | The buyer's receive workflow imports the inbound CDAR and records it against the invoice. |
 
+## VAT-exempt invoices
+
+The e-invoicing obligation in article 289 bis of the CGI does not cover transactions exempt from VAT under articles 261 to 261 E — insurance, medical care, education and the other exemptions in that range. Those invoices are outside the mandate and must not be deposited at the PPF, which rejects them outright.
+
+Invopop recognises them and stops before sending. An invoice is treated as exempt when **both** of the following hold:
+
+* every VAT category on the invoice is `E` (exempt) or `O` (outside scope), **and**
+* the breakdown carries one of the `VATEX-FR-CGI261*` exemption codes in the `cef-vatex` extension.
+
+When that happens:
+
+* the invoice is **recorded** in your workspace as usual, so it stays on the France dashboard and in the silo;
+* **no F1 copy** is sent to the PPF, and **no lifecycle status** is forwarded for it — neither the automatic *déposée* nor any status you record later, such as *Encaissée*. With no deposit, the PPF has nothing to record a status against;
+* the PPF status column shows <Badge color="blue">Exempt</Badge>;
+* the workflow completes successfully rather than failing.
+
+<Note>
+Issue the invoice to your customer exactly as before. Being outside the e-invoicing mandate changes nothing about your ordinary invoicing obligations, including the mandatory mention of the legal basis for the exemption required by article 242 nonies A of Annex II to the CGI. In GOBL that text comes from a `tax.note` with category `VAT`; the `cef-vatex` extension alone only produces the code.
+</Note>
+
+An invoice that mixes exempt and taxable lines stays **inside** the mandate and is deposited normally — the rule only applies when the whole VAT breakdown is exempt. Exemptions under other articles are unaffected too: `VATEX-FR-FRANCHISE` (*franchise en base*, article 293 B) is deposited as usual.
+
+E-reporting is a separate obligation and is not affected by this rule. If the transaction falls under [e-reporting](/guides/fr-pa-reporting) — a non-taxable customer, or a counterparty outside France — report it there as you normally would.
+
 ## Reading submitted invoices
 
 The France dashboard's **E-Invoicing Flow 2** tab lists every invoice the workspace has sent or received, newest first. In the Console, open the **Apps** view, select the **France** app, and switch to the **E-Invoicing Flow 2** tab.
@@ -156,6 +183,7 @@ The PPF status column tracks the copy forwarded to the tax authority:
 | <Badge color="orange">Pending</Badge> | Sent; awaiting the PPF business acknowledgement. |
 | <Badge color="green">Accepted</Badge> | The PPF accepted the document. |
 | <Badge color="red">Rejected</Badge> | The PPF rejected the document. |
+| <Badge color="blue">Exempt</Badge> | Outside the mandate; nothing was sent, and nothing will be. |
 
 <Note>
 Clicking the Invoice code looks up all associated statuses on the **E-Invoicing Flow 6** tab, filtered by the Invoice ID.
