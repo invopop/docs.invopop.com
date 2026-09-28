@@ -191,6 +191,23 @@ curl -X POST "https://api.invopop.com/transform/v1/jobs" \
 </CodeGroup>
 
 
+### Previewing a report
+
+To see what a report will contain before it is generated, for example to check how your payments come out, call the preview endpoint. It builds the Flux 10 XML exactly as the workflow would at that moment and returns it. Nothing is stored or sent, so you can call it as often as you like.
+
+| Parameter | Required | Values |
+|---|---|---|
+| `kind` | Yes | `tx` for transactions, `py` for payments. |
+| `role` | No | `seller` (default) or `buyer`. |
+| `window` | No | `current` (default) or `previous`. |
+
+```bash
+curl "https://api.invopop.com/apps/gov-fr/v1/reports/<PARTY_SILO_ENTRY_ID>/preview?kind=py" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+The report is checked against the PPF rules just as it is before sending: if it would be rejected, the endpoint answers `422` with the issues found. A window with nothing recorded answers `404`.
+
 ### Picking a VAT regime at supplier registration
 
 If you have a single supplier, or all your suppliers have the same cadence, you can configure the **Register party for reporting** step in the [PPF register supplier workflow](/guides/fr-pa-registration#ppf-register-supplier-workflow) to a specific cadence.
@@ -259,6 +276,9 @@ A single period's metadata
 
 <Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods/:period_id/xml` <br />
 The raw report XML sent to the PPF
+
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/preview` <br />
+The report as it would be generated now, never stored or sent (see [Previewing a report](#previewing-a-report))
 
 ## FAQ
 
