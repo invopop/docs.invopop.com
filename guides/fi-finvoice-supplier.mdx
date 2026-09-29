@@ -36,13 +36,34 @@ A party must be registered before it can send documents. A workspace can hold se
 
 ## E-invoice addresses
 
-A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, sometimes with a five-character suffix for routing inside large organisations. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
+A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, optionally followed by a suffix of up to five letters or digits that the company chooses. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
 
-Registration allocates a Finnish party's address on the operator's side: it is the party's own OVT code, the same one you set as the `0216` inbox on the supplier party. Counterparties will ask for it, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
+Registration allocates a Finnish party's address on the operator's side, its own OVT code, and adds it to the party as an endpoint in scheme `0216`. Counterparties will ask for it, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
 
 You'll also need your customers' addresses to send. Look any Finnish organisation up in the national registry at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi): since 2024 it mirrors the Peppol address list too, so one lookup covers both networks.
 
 You may also meet other address forms that circulate on the Finnish network: IBAN-style addresses from the older bank channel, and operator-prefixed ones such as `TE0037…`. On a Finnish party, always use the OVT code under scheme `0216`.
+
+### Moving from another operator
+
+If your company is moving to Invopop from another operator, its e-invoice address may still be active there, for example while your old system is being phased out. The address is then registered at two operators, and where an invoice to it arrives depends on the sender's operator. Until you can deactivate it, register the party under an **extended address**: your OVT code followed by a suffix you choose, which exists only at Invopop's operator.
+
+1. Choose a suffix of one to five capital letters A–Z or digits 0–9. For example, `003726174164` becomes `003726174164001`.
+2. Set the extended address as the party's `0216` endpoint, replacing the base address if the party already has it:
+
+   ```json
+   "endpoints": [
+       {
+           "uri": "iso6523-actorid-upis::0216:003726174164001"
+       }
+   ]
+   ```
+3. Run the registration workflow. If the party is already registered, run it again: it switches to the new address, and the representative doesn't need to sign again.
+4. Give your counterparties the extended address, together with Invopop's operator ID.
+
+Registration refuses an address that doesn't start with the party's own OVT code, or whose suffix isn't one to five letters A–Z or digits 0–9. A lowercase suffix is accepted and uppercased.
+
+Your base address stays registered with Invopop's operator too. Until you deactivate it at your previous operator, invoices sent to it may still arrive there. Other operators find the extended address after the national registry's nightly refresh, so expect senders on other operators to reach it from the following day.
 
 ## Suppliers outside Finland
 
