@@ -36,7 +36,7 @@ The [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) enforc
 ## Prerequisites
 
 - **A registered supplier**: follow the [Finvoice supplier registration guide](/guides/fi-finvoice-supplier) to connect the Finland app and register the party before issuing.
-- **The receiver's e-invoice address** on the customer record, as an inbox with scheme `0216` and the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
+- **The receiver's e-invoice address** on the customer record, as an endpoint: `iso6523-actorid-upis::0216:` followed by the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
 - **The `fi-finvoice-v3` addon** declared in `$addons` on every invoice, so the payment data above is validated before signing.
 - **Complete payment data** on every invoice, as described above.
 
@@ -71,7 +71,7 @@ The send step checks the receiver is reachable, generates the e-invoice, and sub
 
 Three checks run before anything leaves the platform, each failing the job with its own code:
 
-- **`supplier-address-missing`**: the supplier has no electronic address. Add one as an inbox on the supplier party. For a Finnish supplier, that is its OVT code under scheme `0216`. A supplier outside Finland uses its own identifier and scheme, such as a Swedish company's Org.nr under scheme `0007`.
+- **`supplier-address-missing`**: the supplier has no electronic address. Add one as an endpoint on the supplier party. For a Finnish supplier, that is the endpoint registration records on its party entry: `iso6523-actorid-upis::0216:` followed by its OVT code. A supplier outside Finland uses its own identifier and scheme, such as `iso6523-actorid-upis::0007:` followed by a Swedish company's Org.nr.
 - **`payment-account-missing`**: the invoice carries no payment bank account. Add the `payment` block described above.
 - **`receiver-not-einvoice`**: the receiver is not set up to receive e-invoices. The error names the channel that would have been used instead: paper, email, or one of the consumer bank channels (e-lasku, suoramaksu, Netposti). Receivers like these are refused up front rather than quietly delivered another way; check the address, or agree on another delivery method with the receiver.
 
