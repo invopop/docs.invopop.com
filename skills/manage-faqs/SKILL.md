@@ -82,6 +82,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
 | Greece | gr | `mydata` |
 | Italy | it | `sdi`, `ticket` |
+| Malaysia | my | (country scope only; MyInvois clearance) |
 | Mexico | mx | `sat` |
 | Norway | no | (uses `peppol` only) |
 | Poland | pl | `ksef` |
@@ -389,6 +390,8 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/it-sdi-receiving.mdx` | `it/composers/guide-sdi-receiving.mdx` |
 | `guides/it-ticket.mdx` | `it/composers/guide-ticket-invoicing.mdx` |
 | `guides/it-ticket-supplier.mdx` | `it/composers/guide-ticket-supplier.mdx` |
+| `faq/malaysia.mdx` | `my/composers/page-faq.mdx` |
+| `compliance/malaysia.mdx` | `my/composers/page-compliance.mdx` |
 | `faq/mexico.mdx` | `mx/composers/page-faq.mdx` |
 | `compliance/mexico.mdx` | `mx/composers/page-compliance.mdx` |
 | `apps/sat-mexico.mdx` | `mx/composers/app-sat.mdx` |
