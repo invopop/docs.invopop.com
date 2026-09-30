@@ -20,6 +20,8 @@ import CashVATReceiptMin from '/snippets/payments/pt/cash-vat.min.mdx';
 import CashVATReceipt from '/snippets/payments/pt/cash-vat.mdx';
 import SimplifiedInvoiceMin from '/snippets/invoices/pt/at-simplified.min.mdx';
 import SimplifiedInvoice from '/snippets/invoices/pt/at-simplified.mdx';
+import WorkDocumentMin from '/snippets/invoices/pt/at-work-document.min.mdx';
+import WorkDocument from '/snippets/invoices/pt/at-work-document.mdx';
 
 <AccordionGroup>
 	<Accordion title="AT B2B invoice">
@@ -87,6 +89,26 @@ import SimplifiedInvoice from '/snippets/invoices/pt/at-simplified.mdx';
 		<CodeGroup>
 			<SimplifiedInvoiceMin />
 			<SimplifiedInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT work document">
+
+		In this example, we're issuing a work document (_documento de conferência_) — a non-fiscal document presented to a customer for checking goods or services before the final invoice. A hotel's preliminary folio is the typical case: the guest reviews the charges accumulated during their stay, and the `FT` is issued at checkout.
+
+		Notice:
+
+		- work documents use the [`bill/order`](https://docs.gobl.org/draft-0/bill/order) schema rather than `bill/invoice`, and are reported to the AT under SAF-T's `WorkingDocuments` table,
+		- the [`pt-saft-work-type`](https://docs.gobl.org/addons/pt-saft-v1#document-type) extension is set explicitly to `OU` (_Outros_); unlike `NE` and `OR`, which the addon derives from the `purchase` and `quote` order types, `OU` has no order type of its own and must be declared,
+		- the `series` follows the `OU ` prefix convention and must be registered through the Supplier Portal, exactly as an invoice series is,
+		- when running `gobl build`, or uploading the document, the [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension defaults to `P` (_produced_), totals and tax breakdowns are calculated, and the [`pt-saft-product-type`](https://docs.gobl.org/addons/pt-saft-v1#product-type) extension is derived per line, and,
+		- to close the loop once the document is invoiced, set the invoice line's `order` field to the work document's number (for example `OU SERIES-A/1`); Invopop then marks it as billed in the SAF-T record.
+
+		A proforma (`PF`) works the same way but uses the `bill/invoice` schema with `type: proforma`, which the addon maps to [`pt-saft-work-type`](https://docs.gobl.org/addons/pt-saft-v1#document-type) `PF` automatically.
+
+		<CodeGroup>
+			<WorkDocumentMin />
+			<WorkDocument />
 		</CodeGroup>
 	</Accordion>
 
