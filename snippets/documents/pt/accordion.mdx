@@ -22,6 +22,8 @@ import SimplifiedInvoiceMin from '/snippets/invoices/pt/at-simplified.min.mdx';
 import SimplifiedInvoice from '/snippets/invoices/pt/at-simplified.mdx';
 import WorkDocumentMin from '/snippets/invoices/pt/at-work-document.min.mdx';
 import WorkDocument from '/snippets/invoices/pt/at-work-document.mdx';
+import ProformaMin from '/snippets/invoices/pt/at-proforma.min.mdx';
+import Proforma from '/snippets/invoices/pt/at-proforma.mdx';
 
 <AccordionGroup>
 	<Accordion title="AT B2B invoice">
@@ -104,11 +106,29 @@ import WorkDocument from '/snippets/invoices/pt/at-work-document.mdx';
 		- when running `gobl build`, or uploading the document, the [`pt-saft-source`](https://docs.gobl.org/addons/pt-saft-v1#document-source) extension defaults to `P` (_produced_), totals and tax breakdowns are calculated, and the [`pt-saft-product-type`](https://docs.gobl.org/addons/pt-saft-v1#product-type) extension is derived per line, and,
 		- to close the loop once the document is invoiced, set the invoice line's `order` field to the work document's number (for example `OU SERIES-A/1`); Invopop then marks it as billed in the SAF-T record.
 
-		A proforma (`PF`) works the same way but uses the `bill/invoice` schema with `type: proforma`, which the addon maps to [`pt-saft-work-type`](https://docs.gobl.org/addons/pt-saft-v1#document-type) `PF` automatically.
+		Proformas (`PF`) are also work documents, but are built on `bill/invoice` rather than `bill/order`. See the next example.
 
 		<CodeGroup>
 			<WorkDocumentMin />
 			<WorkDocument />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="AT proforma invoice">
+
+		In this example, we're issuing a proforma (_pró-forma_): a non-fiscal document sent to a customer to request payment in advance of the final invoice.
+
+		Notice:
+
+		- proformas are built on the [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice) schema rather than `bill/order`, since they mirror the invoice they anticipate; they are still reported to the AT under SAF-T's `WorkingDocuments` table and not `SalesInvoices`,
+		- the [`pt-saft-work-type`](https://docs.gobl.org/addons/pt-saft-v1#document-type) extension is derived from the addon from `type: proforma`, 
+		- `type: proforma` is the only thing separating this from an ordinary invoice; drop it and the addon normalises the document to a standard invoice with [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) `FT` instead,
+		- the `series` follows the `PF ` prefix convention and must be registered through the Supplier Portal, exactly as an invoice series is, and,
+		- a proforma settles no VAT: issue the corresponding `FT` invoice when the customer pays.
+
+		<CodeGroup>
+			<ProformaMin />
+			<Proforma />
 		</CodeGroup>
 	</Accordion>
 
