@@ -33,7 +33,7 @@ All invoices on the network use **PINT A-NZ**, the Peppol International (PINT) s
 
 ## Invoicing in Australia
 
-Australia uses the standard 4-corner Peppol model. The supplier's accredited service provider looks up the buyer in the Peppol directory (SMP) and sends the invoice to the buyer's service provider. The same flow applies to businesses and to government buyers.
+Australia uses the standard 4-corner Peppol model. The supplier's accredited service provider finds the buyer's SMP through the SML. The SMP tells it which document types the buyer accepts and where to deliver them. Then it sends the invoice to the buyer's service provider. The same flow applies to businesses and to government buyers.
 
 ```mermaid actions={false}
 %%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
@@ -41,11 +41,14 @@ sequenceDiagram
     autonumber
     participant IS as Supplier
     participant SP as Supplier's service provider
-    participant SMP as Peppol directory (SMP)
+    participant SML as SML
+    participant SMP as Buyer's SMP
     participant BP as Buyer's service provider
     participant BY as Buyer
     IS->>SP: Invoice data
-    SP->>SMP: Look up the buyer's ABN
+    SP->>SML: Find the SMP for the buyer's Peppol ID
+    SML-->>SP: Buyer's SMP
+    SP->>SMP: Check that the buyer accepts PINT A-NZ
     SMP-->>SP: Buyer's access point
     SP->>BP: Send the invoice (PINT A-NZ)
     BP-->>SP: Delivery receipt
@@ -57,10 +60,10 @@ sequenceDiagram
     The supplier's system sends the invoice data to its service provider. The service provider builds the invoice in PINT A-NZ and validates it.
   </Step>
   <Step title="Look up the buyer">
-    The service provider looks up the buyer's Peppol ID, usually `0151:<ABN>`, in the Peppol directory.
+    The service provider uses the SML to find the SMP of the buyer's Peppol ID, usually `0151:<ABN>`.
   </Step>
   <Step title="Buyer's access point">
-    The directory returns the address of the buyer's access point.
+    The SMP confirms that the buyer accepts PINT A-NZ and returns the address of the buyer's access point.
   </Step>
   <Step title="Send the invoice">
     The service provider sends the invoice over Peppol to the buyer's service provider.
@@ -119,15 +122,15 @@ These scenarios show what the Australian rules allow. Invopop support for Austra
 
 <AccordionGroup>
   <Accordion title="Invoice a federal government entity (B2G)">
-    Send a PINT A-NZ Billing invoice over Peppol to the entity's Peppol ID, usually `0151:<ABN>`. The invoice must have a buyer reference or a purchase order reference. The entity pays an e-invoice within 5 calendar days. Other invoices get a 20-day term.
+    Send a PINT A-NZ Billing invoice over Peppol to the entity's Peppol ID, usually `0151:<ABN>`. The invoice must have a buyer reference or a purchase order reference. An NCE pays a correctly rendered e-invoice within 5 calendar days, when both parties use Peppol and agree to use it. Other invoices get a 20-day term.
   </Accordion>
 
   <Accordion title="Invoice another Australian business (B2B)">
-    E-invoicing is voluntary. If both businesses are on the Peppol network, the supplier's service provider sends the invoice to the buyer's service provider. The invoice is a GST tax invoice, with the supplier's ABN and the GST amount. From a total price of $1,000, it must also show the buyer's identity or ABN.
+    E-invoicing is voluntary. If both businesses are on the Peppol network, the supplier's service provider sends the invoice to the buyer's service provider. If the supplier is registered for GST and issues a tax invoice, the invoice shows the supplier's ABN and the GST amount. From a total price of $1,000, it must also show the buyer's identity or ABN.
   </Accordion>
 
   <Accordion title="Sell to a foreign buyer (export)">
-    Any Peppol participant can receive a PINT A-NZ invoice. A foreign buyer can use a Peppol ID scheme from its own country. A GST-free export uses the tax category `G`.
+    A foreign buyer on Peppol can receive a PINT A-NZ invoice only if its SMP accepts that document type. Check this before you send. A foreign buyer can use a Peppol ID scheme from its own country. A GST-free export uses the tax category `G`.
   </Accordion>
 
   <Accordion title="Foreign supplier that invoices an Australian buyer">
@@ -178,7 +181,7 @@ These scenarios show what the Australian rules allow. Invopop support for Austra
 
   <Accordion title="Who must comply">
     * **Non-corporate Commonwealth entities (NCEs)**: must receive e-invoices, and move to eInvoicing as the default by December 2026.
-    * **Suppliers to NCEs**: no legal obligation. E-invoicing gives them the 5-day payment term.
+    * **Suppliers to NCEs**: no legal obligation. A correctly rendered e-invoice gets the 5-day payment term, when both parties use Peppol and agree to use it.
     * **Other businesses**: voluntary.
     * **Consumers (B2C)**: out of scope.
   </Accordion>
