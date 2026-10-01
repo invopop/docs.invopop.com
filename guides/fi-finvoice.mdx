@@ -37,8 +37,31 @@ The [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) enforc
 
 - **A registered supplier**: follow the [Finvoice supplier registration guide](/guides/fi-finvoice-supplier) to connect the Finland app and register the party before issuing.
 - **The receiver's e-invoice address** on the customer record, as an endpoint: `iso6523-actorid-upis::0216:` followed by the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
+- **The receiver's operator ID** in the customer's `ext.fi-finvoice-operator`, whenever you know it. See [the receiver's operator](#the-receivers-operator) below.
 - **The `fi-finvoice-v3` addon** declared in `$addons` on every invoice, so the payment data above is validated before signing.
 - **Complete payment data** on every invoice, as described above.
+
+## The receiver's operator
+
+In Finland an e-invoice address is quoted as a pair: the address and the operator that serves it, for example `003711223349` at Apix Messaging, `003723327487`. An address can be registered with more than one operator at once, which happens whenever a company changes operator and keeps the old registration alive for a while. The invoice then goes to whichever operator the sender's operator prefers, and that may not be the one your receiver reads.
+
+Set the operator ID your receiver gave you on the customer party, in the `fi-finvoice-operator` extension, and the invoice is routed to that operator:
+
+```json
+"customer": {
+    "name": "Pohjola Rakennus Oy",
+    "endpoints": [
+        { "uri": "iso6523-actorid-upis::0216:003711223349" }
+    ],
+    "ext": {
+        "fi-finvoice-operator": "003723327487"
+    }
+}
+```
+
+The value is the operator's own OVT code, or a bank's BIC for addresses served by a bank, as listed beside the address at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Without the extension, the operator chooses the route itself, which is fine for an address registered with one operator only. An operator ID the address is not registered with is not rejected: the operator accepts the invoice and routes it by its own tables, so check the pair you were given rather than relying on an error.
+
+Received invoices carry the sender's operator in the same extension on the supplier party, so you can route a reply back the same way.
 
 ## Setup
 
@@ -65,14 +88,13 @@ Upload the invoice as a silo entry and run the send workflow on it.
 
 <Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
 
-The send step checks the receiver is reachable, generates the e-invoice, and submits it. The operator's synchronous accept or reject is reflected in the job result, along with the channel the invoice was actually delivered on.
+The send step converts the invoice to Finvoice 3.0, checks the receiver is reachable, and submits it. The operator's synchronous accept or reject is reflected in the job result, along with the channel the invoice was actually delivered on.
 
 ### Refused before sending
 
-Three checks run before anything leaves the platform, each failing the job with its own code:
+Two checks run before anything leaves the platform:
 
-- **`supplier-address-missing`**: the supplier has no electronic address. Add one as an endpoint on the supplier party. For a Finnish supplier, that is the endpoint that registration adds to its party entry: `iso6523-actorid-upis::0216:` followed by its OVT code. A supplier outside Finland uses its own identifier and scheme, such as `iso6523-actorid-upis::0007:` followed by a Swedish company's Org.nr.
-- **`payment-account-missing`**: the invoice carries no payment bank account. Add the `payment` block described above.
+- **Conversion to Finvoice.** The invoice is validated under the [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) and written as Finvoice first, so an invoice the format cannot carry fails the job with the rule it broke: missing payment data, a customer without a `0216` endpoint, an identifier too long for its element. Fix the invoice and run the workflow again.
 - **`receiver-not-einvoice`**: the receiver is not set up to receive e-invoices. The error names the channel that would have been used instead: paper, email, or one of the consumer bank channels (e-lasku, suoramaksu, Netposti). Receivers like these are refused up front rather than quietly delivered another way; check the address, or agree on another delivery method with the receiver.
 
 ### After submission
