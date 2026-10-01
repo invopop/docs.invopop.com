@@ -36,7 +36,7 @@ The [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) enforc
 ## Prerequisites
 
 - **A registered supplier**: follow the [Finvoice supplier registration guide](/guides/fi-finvoice-supplier) to connect the Finland app and register the party before issuing.
-- **The receiver's e-invoice address** on the customer record, as an endpoint: `iso6523-actorid-upis::0216:` followed by the OVT code (`0037` plus the Business ID without its hyphen). Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
+- **The receiver's e-invoice address** on the customer record, as an endpoint: `iso6523-actorid-upis::0216:` followed by the OVT code (`0037` plus the Business ID without its hyphen). A customer record from before endpoints may still carry it as a `0216` inbox, which is read when there is no endpoint. Look receivers up at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). Other forms circulate (IBAN-style addresses, operator-prefixed ones such as `TE0037…`), but the OVT code is the one to use.
 - **The receiver's operator ID** in the customer's `ext.fi-finvoice-operator`, whenever you know it. See [the receiver's operator](#the-receivers-operator) below.
 - **The `fi-finvoice-v3` addon** declared in `$addons` on every invoice, so the payment data above is validated before signing.
 - **Complete payment data** on every invoice, as described above.
@@ -94,7 +94,7 @@ The send step converts the invoice to Finvoice 3.0, checks the receiver is reach
 
 Two checks run before anything leaves the platform:
 
-- **Conversion to Finvoice.** The invoice is validated under the [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) and written as Finvoice first, so an invoice the format cannot carry fails the job with the rule it broke: missing payment data, a customer without a `0216` endpoint, an identifier too long for its element. Fix the invoice and run the workflow again.
+- **Conversion to Finvoice.** The invoice is validated under the [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) and written as Finvoice first, so an invoice the format cannot carry fails the job with the rule it broke: missing payment data, a party without an e-invoice address, an identifier too long for its element. Fix the invoice and run the workflow again.
 - **`receiver-not-einvoice`**: the receiver is not set up to receive e-invoices. The error names the channel that would have been used instead: paper, email, or one of the consumer bank channels (e-lasku, suoramaksu, Netposti). Receivers like these are refused up front rather than quietly delivered another way; check the address, or agree on another delivery method with the receiver.
 
 ### After submission
