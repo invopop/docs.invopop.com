@@ -10,6 +10,8 @@ import CreditnoteMin from '/snippets/invoices/it/sdi-creditnote.min.mdx';
 import Creditnote from '/snippets/invoices/it/sdi-creditnote.mdx';
 import ExemptInvoiceMin from '/snippets/invoices/it/sdi-exempt.min.mdx';
 import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
+import AfterReceiptMin from '/snippets/invoices/it/sdi-after-receipt.min.mdx';
+import AfterReceipt from '/snippets/invoices/it/sdi-after-receipt.mdx';
 
 <AccordionGroup>
 
@@ -126,6 +128,25 @@ import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
 		<CodeGroup>
 			<CreditnoteMin />
 			<Creditnote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Invoice after a documento commerciale">
+
+		In this example, a retail sale was first recorded with a [Smart Receipt](/guides/it-ticket) (*documento commerciale*) and the customer later asked for an invoice. The invoice is an ordinary SDI invoice that references the receipt it replaces.
+
+		Notice:
+
+		- the line item carries an `attributes` entry with `type` `N.DOC.COMM`, the receipt's AdE document number in `text`, its progressive number in `amount`, and the receipt date in `date`,
+		- the `it-sdi-v1` addon converts each item attribute into an `AltriDatiGestionali` block: `type` becomes `TipoDato`, `text` becomes `RiferimentoTesto`, `amount` becomes `RiferimentoNumero`, and `date` becomes `RiferimentoData`, which is the layout the AdE describes for invoices preceded by a receipt,
+		- `type` is limited to 10 ASCII characters and `text` to 60 characters, and `amount` is rendered with at least two decimals, so `7816` arrives at SDI as `7816.00`,
+		- the receipt's document number is the `ade-ref` stamp the Smart Receipts app adds to the receipt's header after the AdE accepts it,
+		- `op_date` records the day of the sale while `issue_date` is the day the invoice is issued, and without further tags `gobl build` sets the document type to `TD01`,
+		- the Smart Receipt itself is not changed by this invoice, and your own VAT records must remove the invoiced amount from that day's *corrispettivi*. See [Invoice requested after a receipt](/guides/it-ticket#invoice-requested-after-a-receipt) for the full sequence.
+
+		<CodeGroup>
+			<AfterReceiptMin />
+			<AfterReceipt />
 		</CodeGroup>
 	</Accordion>
 
