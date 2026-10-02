@@ -146,6 +146,31 @@ You can void an invoice if it was issued in error, such as when a receipt is acc
 Voiding produces a new document, dated the day it is emitted rather than the original sale date, and it reduces the daily totals reported to the AdE for that day. Keep this in mind when voiding receipts from previous days, as it may have fiscal implications for the supplier.
 </Warning>
 
+### Invoice requested after a receipt
+
+A customer sometimes asks for an invoice after their receipt has already been issued and transmitted to the AdE. The receipt stays as it is: issue a regular SDI invoice for the same sale and reference the receipt in it.
+
+The AdE's [FAQ n. 45 on electronic invoicing](https://www.agenziaentrate.gov.it/portale/web/guest/schede/comunicazioni/fatture-e-corrispettivi/faq-fe) describes how the invoice should reference the receipt. The sequence with Invopop is:
+
+1. **Leave the receipt in place.** Only void it if your tax advisor tells you the receipt cannot stand next to the invoice. Voiding is not tied to issuing the invoice, and there is no technical age limit on voids (see [Void an invoice](#void-an-invoice) for how a void affects daily totals).
+2. **Issue the invoice through the Italy app** using your normal [SDI sending workflow](/guides/it-sdi-invoicing). It needs no extra configuration: the receipt reference is ordinary line data.
+3. **Reference the receipt on each invoice line** with an item attribute. The `it-sdi-v1` addon maps it to the `AltriDatiGestionali` block the AdE expects:
+
+   | GOBL attribute field | FatturaPA field | Value |
+   |---|---|---|
+   | `type` | `TipoDato` | `N.DOC.COMM` |
+   | `text` | `RiferimentoTesto` | the receipt's AdE document number, which is the `ade-ref` stamp on the receipt |
+   | `amount` | `RiferimentoNumero` | the receipt's progressive number |
+   | `date` | `RiferimentoData` | the receipt's issue date |
+
+   `type` accepts up to 10 ASCII characters, `text` up to 60 characters, and `amount` is rendered with at least two decimals (`7816` becomes `7816.00`). Which identifier you place in `RiferimentoTesto` and `RiferimentoNumero` is your reading of the AdE guidance; Invopop passes the values through without validating them.
+
+4. **Adjust your own records.** The AdE FAQ requires the invoiced amount to be removed from that day's *corrispettivi* totals. Nothing links the invoice to the receipt on Invopop's side, so neither Invopop nor the Smart Receipts provider changes the totals already transmitted, and the invoice does not affect the receipt's *corrispettivo non riscosso* reporting.
+
+The invoice is dated the day it is issued, with `op_date` set to the day of the sale. Without further tags `gobl build` sets the document type to `TD01`. If your advisor concludes the receipt serves as the delivery document for a deferred invoice (`TD24`), add the `deferred` tag to `$tags`; the addon then requires `ordering.despatch` entries, which it maps to `DatiDDT`. Whether a sale qualifies for either document type, and whether a receipt carrying a lottery code must be voided first, are compliance determinations for you and your tax advisor.
+
+See the "Invoice after a documento commerciale" example in the [SDI issuing guide](/guides/it-sdi-invoicing#example-invoices) for a complete GOBL document.
+
 ## FAQ
 
 <FAQ />
