@@ -31,7 +31,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     "sequence.enumerate": "https://sequence.invopop.com/images/enumerate.svg",
     "transform.job.create": "https://transform.invopop.com/images/jobs.svg",
     webhook: "https://webhook.invopop.com/icon.svg",
-    lookup: "https://lookup.invopop.com/icon.png",
+    lookup: "https://assets.invopop.com/apps/lookup/icon.svg",
     dropbox: "https://dropbox.invopop.com/icon.png",
     pdf: "https://pdf.invopop.com/file-pdf.svg",
     // Apps

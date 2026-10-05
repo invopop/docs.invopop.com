@@ -1,0 +1,97 @@
+---
+title: "Lookup"
+description: "Validate tax IDs against official registers and correct parties with the registered data."
+keywords: ['lookup', 'tax id', 'vat', 'vies', 'validation', 'tin', 'register', 'eu']
+mode: wide
+---
+
+import InvoiceValidateCustomer from '/snippets/workflows/lookup/invoice-validate-customer.mdx';
+import InvoiceStopNotFound from '/snippets/workflows/lookup/invoice-stop-not-found.mdx';
+import PartyValidate from '/snippets/workflows/lookup/party-validate.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Lookup" icon="https://assets.invopop.com/apps/lookup/icon.svg"
+				  href="/guides/lookup" horizontal>
+				  View implementation guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Validation                             |
+		</Columns>
+
+	The **Lookup app** checks the tax ID of a party against the official register that issues it, as a step in your workflows. For an invoice, it checks the customer or the supplier; for a party document, it checks the party itself. The first register is [VIES](https://ec.europa.eu/taxation_customs/vies/), the European Commission's VAT Information Exchange System, which covers VAT numbers in every EU member state and in Northern Ireland.
+
+	When the register confirms the tax ID, the app can also correct the party with the registered data: the legal name, and the address when the register gives it in a structured form. Answers are kept in a shared cache, so a batch of invoices for the same customer costs one register call, and each step decides how old a cached answer may be.
+
+	#### Key features
+
+	* **Workflow automation:** Validate the customer or supplier of every invoice, or a party document, before you sign, send or register it.
+	* **Correction from the register:** Write the registered name into the document, so invoices carry the legal name of the party.
+	* **Name mismatch detection:** Report when the document's name differs from the registered name, with a result code that a workflow can branch on.
+	* **Shared cache:** Reuse an earlier answer for the same tax ID, up to the age that the step allows, or always ask the register live.
+	* **Rate limits that queue:** When the register or your workspace is at its limit, the task waits and runs again by itself, so large batches complete without errors.
+	* **Result codes:** Every outcome carries a code such as `found`, `not-found` or `not-supported`, so you can handle each case in your workflow.
+
+	Make sure to check out our [Lookup guide](/guides/lookup) for instructions on how to configure the step, read its results and handle them in your workflows.
+	</Tab>
+	<Tab title="Limitations">
+		| Register | Status | Notes |
+		|---|---|---|
+		| VIES (EU VAT numbers) | <Badge color="green">Available</Badge> | All EU member states, `EL` for Greece and `XI` for Northern Ireland |
+		| AEAT (Spain) | <Badge color="yellow">In development</Badge> | Use the [Spain app](/apps/spain) to verify Spanish tax IDs today |
+		| HMRC (United Kingdom) | <Badge color="yellow">In development</Badge> | |
+
+		- Only the party's `tax_id` is checked. Entries in `identities` are not checked.
+		- Some member states, such as Spain and Germany, do not disclose the trader's name or address through VIES. The tax ID is validated, but there is no name to compare or write.
+		- VIES gives the address as free text, so the app never writes it. Only structured addresses are written.
+		- A signed document is validated, but never corrected.
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		<Card title="Validate Tax IDs" icon="https://assets.invopop.com/apps/lookup/icon.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Validate the tax ID of the customer, the supplier or a party against its official register, and optionally correct the party with the registered data.
+		</Card>
+	</Tab>
+	<Tab title="Workflows">
+		Use these sample workflows as a starting point for your own.
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="Lookup validate invoice customer">
+				Validate the customer's tax ID, write the registered name into the invoice, and sign it.
+				<InvoiceValidateCustomer />
+			</Accordion>
+			<Accordion title="Lookup stop on unregistered customer">
+				Set the state to `rejected` and stop when the customer's tax ID is not on the register. Other invoices are signed as usual.
+				<InvoiceStopNotFound />
+			</Accordion>
+		</AccordionGroup>
+
+		Party workflows
+		<AccordionGroup>
+			<Accordion title="Lookup validate party">
+				Validate a party's tax ID and write the registered name into the party.
+				<PartyValidate />
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
+</Tabs>
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Lookup app →
+</Card>

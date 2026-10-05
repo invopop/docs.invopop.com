@@ -1,0 +1,162 @@
+---
+title: "Lookup guide"
+sidebarTitle: "Lookup"
+description: "Validate tax IDs against official registers in your workflows, and correct parties with the registered data."
+icon: "https://assets.invopop.com/apps/lookup/icon.svg"
+---
+
+import InvoiceValidateCustomer, { lookupInvoiceValidateCustomerWorkflow } from '/snippets/workflows/lookup/invoice-validate-customer.mdx';
+import InvoiceStopNotFound, { lookupInvoiceStopNotFoundWorkflow } from '/snippets/workflows/lookup/invoice-stop-not-found.mdx';
+import PartyValidate, { lookupPartyValidateWorkflow } from '/snippets/workflows/lookup/party-validate.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+Invopop's [Lookup app](/apps/lookup) checks the tax ID of a party against the official register that issues it. Add its **Validate Tax IDs** step to an invoice or party workflow to make sure that the tax ID exists before you sign, send or register a document, and to write the party's legal name into the document.
+
+The first register is [VIES](https://ec.europa.eu/taxation_customs/vies/), the European Commission's VAT Information Exchange System. It covers VAT numbers in every EU member state, with `EL` for Greece and `XI` for Northern Ireland.
+
+## How it works
+
+Each **Validate Tax IDs** step checks one party:
+
+- In an `invoice` workflow, the step checks the customer or the supplier, as configured.
+- In a `party` workflow, the step checks the party document itself.
+
+The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers, such as a UK VAT number, is skipped and costs nothing.
+
+Answers come from a shared cache when they are recent enough for the step, and from the register otherwise. Every answer is kept for later steps and later jobs: valid answers for 90 days, and invalid answers for 15 minutes, so that a corrected typo is checked again soon.
+
+## Set up the step
+
+<Steps>
+  <Step title="Enable the Lookup app">
+    In the Console, open the apps directory by clicking the icon next to **Apps** in the sidebar. Find **Lookup** in the list of available apps and enable it in your workspace.
+  </Step>
+
+  <Step title="Add the step to a workflow">
+    Open an `invoice` or `party` [workflow](/guides/workflows) and add the **Validate Tax IDs** step. Place it before the steps that need a valid tax ID, such as **Sign envelope**, or a step that sends the invoice to a tax authority or network.
+  </Step>
+
+  <Step title="Configure the step">
+    Choose the party to check, how old a cached answer may be, and whether the step corrects the party. See [Step configuration](#step-configuration) below. A new step uses the defaults until you change them.
+  </Step>
+</Steps>
+
+<Prompt description="Ask your agent to add tax ID validation to one of your workflows." icon="badge-check" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/lookup.md and https://docs.invopop.com/guides/workflows.md. In my sandbox workspace, using the token in INVOPOP_TOKEN, check that the Lookup app is enabled. Then take the invoice workflow named WORKFLOW_NAME and propose where to add the Validate Tax IDs step, which party it should check, the max_age and correct settings it should use, and how the workflow should handle the not-found, not-supported and found-name-mismatch codes. Show me the workflow JSON before you change anything, and do not invent result codes that the guide does not list.
+</Prompt>
+
+## Step configuration
+
+| Field | Values | Default | What it does |
+|---|---|---|---|
+| **Invoice party to check** | Customer, Supplier | Customer | The invoice party to check. A `party` workflow always checks the party document. |
+| **Reuse a previous check for (days)** | 0 to 3650 | 30 | The oldest cached answer that the step accepts. `0` asks the register every time. |
+| **Correct the party** | On, Off | On | Write the register's data into the document when the check passes. |
+
+In the workflow JSON, these fields are `party`, `max_age` and `correct`:
+
+```json
+{
+  "party": "customer",
+  "max_age": 30,
+  "correct": true
+}
+```
+
+## Results
+
+The step returns a status and a code. The code tells you why, so that you can handle each case with a [condition or an exception](/guides/workflows#creating-conditions-and-exceptions).
+
+| Status | Code | When |
+|---|---|---|
+| `OK` | `found` | The register confirms the tax ID. |
+| `OK` | `found-name-mismatch` | The register confirms the tax ID, and its name differs from the document's. The message names the registered name. |
+| `KO` | `not-found` | The register does not hold the tax ID. |
+| `KO` | `input` | The register rejects the tax ID as malformed. |
+| `SKIP` | `not-supported` | No register covers the tax ID, for example a non-EU VAT number. |
+| `SKIP` | `missing-party` | The invoice has no party in the selected place, such as a simplified invoice without a customer. |
+| `SKIP` | `no-identifiers` | The party has no tax ID, as is common for a consumer. |
+| `QUEUED` | `rate-limited` | The register or your workspace is at its rate limit. The task runs again by itself. |
+| `ERR` | `upstream` | The register did not answer. The task is retried. |
+
+The step can also return `KO` when the task itself cannot run: `not-enrolled` when the workspace has not installed the app, `bad-config` when the step configuration cannot be read, `invalid-party` for an unknown party selection, and `unsupported-schema` for a document that is not an invoice or a party.
+
+The name comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
+
+<Note>
+  A register that cannot answer never falls back to an older cached answer: the step returns `ERR` or `QUEUED` instead. If an older answer is good enough for your process, say so explicitly with a second step that has a larger **Reuse a previous check for (days)** value.
+</Note>
+
+## Correction
+
+With **Correct the party** on, a check that passes writes the register's data into the document:
+
+- **Name:** the registered name replaces the document's name whenever the two differ, including a difference in case only. The registered spelling is the legal one.
+- **Address:** a structured address from the register becomes the party's first address, and the other addresses stay. VIES gives the address as free text, so it is never written.
+- **Tax ID:** never changed.
+
+Nothing is written when the check does not pass, when the register gives no name (some member states, such as Spain and Germany, do not disclose names through VIES), or when the document is already signed. To correct a document and then sign it, place **Validate Tax IDs** before **Sign envelope**.
+
+The correction never changes the result code or the message. A corrected document still returns `found` or `found-name-mismatch`.
+
+## Large batches
+
+Registers limit how fast they can be called, so the app limits register calls per workspace and in total. Only cache misses count: a batch of invoices for the same customer costs one register call.
+
+When a limit is reached, the task is queued with the exact time until it can run, and passes on its next attempt. For example, a batch of 30 invoices for 30 new customers completes in about 40 seconds, with no errors. When VIES itself is busy for one member state, the task waits a minute and tries again.
+
+## Workflow examples
+
+### Validate the invoice customer
+
+Validate the customer's tax ID, write the registered name into the invoice, and sign it.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={lookupInvoiceValidateCustomerWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <InvoiceValidateCustomer />
+  </Tab>
+</Tabs>
+
+### Stop on an unregistered customer
+
+An exception on the `not-found` code sets the state to `rejected` and stops the job, so the invoice is never signed. Every other invoice is signed as usual.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={lookupInvoiceStopNotFoundWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <InvoiceStopNotFound />
+  </Tab>
+</Tabs>
+
+### Validate a party
+
+Validate a party's tax ID and write the registered name into the party, for example before you register it with a tax authority.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={lookupPartyValidateWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <PartyValidate />
+  </Tab>
+</Tabs>
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Lookup app →
+</Card>

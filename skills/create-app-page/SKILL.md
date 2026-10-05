@@ -85,7 +85,7 @@ Two-column header: guide cards left, metadata table right.
 ```
 
 - The **empty header row is deliberate** — `styles.css` hides it. Don't drop it.
-- `Category` must match the app's `docs.json` group name (Network / Government / Notify / Format / Document / Storage / Automation / Integrations).
+- `Category` must match the app's `docs.json` group name (Network / Government / Notify / Format / Document / Validation / Storage / Automation / Integrations).
 - `Scope` = `B2B` / `B2C` / `B2G` comma-joined; format and integration apps drop `Scope` and `Country`. Optional `System` row for the authority platform (`| System | FATOORA (ZATCA) |`).
 - Card body text uses `›` (not `→`): `Supplier registration guide ›`, `View guide ›`.
 - Country umbrella apps use the flag as icon: `https://assets.invopop.com/flags/<cc>.svg`.
@@ -234,7 +234,7 @@ No `assets/` references — every icon is an absolute CDN URL:
 
 ## Registration (three places, keep in sync)
 
-1. **`docs.json`** — Apps tab, add the slug to the matching group's `pages`, alphabetical within the group. Groups and icons: Network `chart-network`, Government `building-columns`, Notify `bullhorn`, Format `code-compare`, Document `file`, Storage `garage-car`, Automation `clock`, Integrations `plug`.
+1. **`docs.json`** — Apps tab, add the slug to the matching group's `pages`, alphabetical within the group. Groups and icons: Network `chart-network`, Government `building-columns`, Notify `bullhorn`, Format `code-compare`, Document `file`, Validation `badge-check`, Storage `garage-car`, Automation `clock`, Integrations `plug`.
 2. **`apps/index.mdx`** — add a horizontal `<Card>` in the same category block, alphabetical: `title` = page title, body = page `description` verbatim, `icon` = app SVG or flag, `href` = `/apps/<slug>`.
 3. **Country resources table** — `Apps` row entry (country apps only).
 
