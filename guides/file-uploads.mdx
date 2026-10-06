@@ -203,6 +203,45 @@ curl -X GET 'https://api.invopop.com/silo/v1/entries/{entry_id}/files/{id}' \
 
 The response will contain the file data with the appropriate `Content-Type` and `Content-Disposition` headers set according to the file's source.
 
+## Embed attachments in UBL and CII documents
+
+The [OASIS UBL](/apps/oasis-ubl) and [UN/CEFACT CII](/apps/uncefact-cii) generate actions can embed supporting documents, such as delivery notes, timesheets, or purchase orders, directly inside the XML they produce. Each file is included as a base64 binary object, so the recipient gets the attachments with the invoice and doesn't have to download them separately.
+
+To embed attachments:
+
+<Steps>
+<Step title="Upload the files to the silo entry">
+Upload each file with `"category": "attachment"`, using either of the [upload options](#upload-options) above. Use `desc` to give the file a description, which becomes the attachment description in the XML.
+
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/{entry_id}/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "delivery-note.pdf",
+    "category": "attachment",
+    "mime": "application/pdf",
+    "desc": "Delivery note",
+    "data": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9MZW5ndGg..."
+  }'
+```
+</Step>
+
+<Step title="Enable the option in the workflow">
+In the **Generate UBL document** or **Generate CII document** step, enable **Embed Attachments**. In the workflow JSON this is `"embed_attachments": true` in the step's `config`.
+</Step>
+</Steps>
+
+When the step runs, every file in the `attachment` category that has finished uploading (`stored` is `true`) is embedded. Keep the following in mind:
+
+- **Linked attachments are replaced, not repeated.** If the invoice's `attachments` already links to the file, using the silo file ID as the attachment `code`, the link is replaced by the embedded content. The description from the invoice is kept.
+- **Supported file types.** EN 16931 (rule BR-CL-24) only accepts PDF, PNG, JPEG, CSV, XLSX and ODS attachments. Other types fail validation.
+- **French CTC descriptions.** For the Peppol France formats, the description must be one of the codes allowed by BR-FR-17, such as `BON_COMMANDE`, `BON_LIVRAISON` or `RIB`. Any other description is replaced with `PJA` (additional supporting document). `LISIBLE` is reserved for the invoice PDF.
+- **Chorus Pro.** Each attachment is ZIP-compressed and identified by its file name, as Chorus Pro requires. Files over 100 MB are rejected.
+- **Failed downloads stop the step.** If a file cannot be downloaded, the step fails rather than sending the invoice without it.
+
+The invoice PDF is handled by the separate **Attach Invoice PDF** option, which embeds the file with key `pdf` in the `format` category. Both options can be enabled together.
+
 ## Best practices
 
 1. **Use placeholders for large files** — For files larger than a few megabytes, create a placeholder first and upload via the streaming URL to avoid timeouts.
