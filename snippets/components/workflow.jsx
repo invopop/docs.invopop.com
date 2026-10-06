@@ -84,7 +84,7 @@ export const WorkflowDiagram = ({ workflow }) => {
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-gray-950/10 bg-white dark:border-white/10 dark:bg-white/5"
       >
         {url && url.startsWith("http") ? <img src={url} alt="" className="h-4 w-4" /> : null}
-        {url && !url.startsWith("http") ? <Icon icon={url} size={16} /> : null}
+        {url && !url.startsWith("http") ? <Icon icon={url} iconType="solid" size={14} /> : null}
       </span>
     );
   };
