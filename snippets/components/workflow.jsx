@@ -14,8 +14,9 @@ export const WorkflowDiagram = ({ workflow }) => {
     </Badge>
   );
 
-  // Icon URL per provider. Keys can be a full provider ("silo.state") or any
-  // prefix ("silo", "gov-fr.directory") — the most specific match wins, so a
+  // Icon URL per provider, or a Font Awesome icon name for an app without
+  // its own icon. Keys can be a full provider ("silo.state") or any prefix
+  // ("silo", "gov-fr.directory") — the most specific match wins, so a
   // per-action entry overrides its app-wide one. Providers that resolve to no
   // entry (or null) render an empty square.
   const providerIcons = {
@@ -31,7 +32,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     "sequence.enumerate": "https://sequence.invopop.com/images/enumerate.svg",
     "transform.job.create": "https://transform.invopop.com/images/jobs.svg",
     webhook: "https://webhook.invopop.com/icon.svg",
-    lookup: "https://lookup.invopop.com/icon.png",
+    lookup: "magnifying-glass",
     dropbox: "https://dropbox.invopop.com/icon.png",
     pdf: "https://pdf.invopop.com/file-pdf.svg",
     // Apps
@@ -82,7 +83,8 @@ export const WorkflowDiagram = ({ workflow }) => {
         title={provider}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-gray-950/10 bg-white dark:border-white/10 dark:bg-white/5"
       >
-        {url ? <img src={url} alt="" className="h-4 w-4" /> : null}
+        {url && url.startsWith("http") ? <img src={url} alt="" className="h-4 w-4" /> : null}
+        {url && !url.startsWith("http") ? <Icon icon={url} iconType="solid" size={14} /> : null}
       </span>
     );
   };
