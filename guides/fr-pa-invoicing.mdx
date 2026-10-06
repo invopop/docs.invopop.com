@@ -54,21 +54,7 @@ The **Forward document to PPF** step generates and transmits to the PPF the F1 c
 
 The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
 
-Before an invoice arriving from another platform is recorded, it goes through a series of controls. These controls are run in the following order:
-
-| Control | Checks | Motif on failure |
-|---|---|---|
-| Syntax | The invoice XML against the Flux 2 schematron for its syntax | `REJ_SEMAN` |
-| Addressing | Both parties carry a SIREN registered in the Annuaire, the transport addresses belong to the parties the invoice names, and the invoice is addressed to a party registered in this workspace | `ADR_ERR` |
-| Unicity | The invoice is not already recorded for this party, number and year | `REJ_UNI` |
-
-Only invoices are automatically validated and rejected. Incoming lifecycle statuses are simply recorded.
-
-If an invoice passes every control, it is recorded on the receiving side. If any control fails, the invoice is not recorded. Instead, the workflow creates a silo entry with a new <Badge color="gray">213</Badge> [*Rejetée*](/guides/fr-pa-status#issued-by-the-platform) status, under the motif of the control that turned the invoice down, and runs it through the rejection workflow configured in the app.
-
-<Note>
-Selecting a workflow directly on the receiving step overrides the rejection workflow configured in the app.
-</Note>
+Before an invoice arriving from another platform is recorded, it goes through a series of controls and is rejected if invalid. Only invoices are automatically validated and rejected; incoming lifecycle statuses are simply recorded.
 
 <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
   Add to my workspace →
