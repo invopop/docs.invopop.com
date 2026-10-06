@@ -64,34 +64,45 @@ In the workflow JSON, these fields are `party`, `max_age` and `correct`:
 
 ## Results
 
-The step returns a status and a code. The code tells you why, so that you can handle each case with a [condition or an exception](/guides/workflows#creating-conditions-and-exceptions).
+The step returns a status and a code. After `OK` or `SKIP`, the workflow continues with the next step. After `KO`, the workflow stops and runs its rescue steps, unless an [exception](/guides/workflows#creating-conditions-and-exceptions) handles that code. Add conditions and exceptions only for the codes that your process must handle in a special way.
 
-| Status | Code | When |
-|---|---|---|
-| `OK` | `found` | The register confirms the tax ID. |
-| `OK` | `found-name-mismatch` | The register confirms the tax ID, and its name differs from the document's. The message names the registered name. |
-| `KO` | `not-found` | The register does not hold the tax ID. |
-| `KO` | `input` | The register rejects the tax ID as malformed. |
-| `SKIP` | `not-supported` | No register covers the tax ID. |
-| `SKIP` | `missing-party` | The invoice has no party in the selected place, such as a simplified invoice without a customer. |
-| `SKIP` | `no-identifiers` | The party has no tax ID, as is common for a consumer. |
-| `ERR` | `upstream` | The register did not answer. The task is retried. |
+### The tax ID is valid
 
-The step can also return `KO` when the task itself cannot run:
+The step returns `OK`:
 
-- `not-enrolled`: the workspace has not installed the app.
-- `not-configured`: the app has no client credentials.
-- `silo-entry`: the document cannot be found.
-- `bad-document`: the document cannot be read.
-- `bad-config`: the step configuration cannot be read.
-- `invalid-party`: the party selection is unknown.
-- `unsupported-schema`: the document is not an invoice or a party.
+- **`found`**: the register confirms the tax ID, and the names match. The comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
+- **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different. The message gives the registered name. With **Correct the party** on, the step writes that name into the document. To review these documents instead, turn the correction off and add a condition on this code.
 
-The name comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
+### The tax ID is not valid
 
-<Note>
-  A register that cannot answer never falls back to an older cached answer: the step returns `ERR` or `QUEUED` instead. If an older answer is good enough for your process, say so explicitly with a second step that has a larger **Reuse a previous check for (days)** value.
-</Note>
+The step returns `KO`:
+
+- **`not-found`**: the register does not hold the tax ID. Check the tax ID with your customer. To reject these invoices automatically, see [Stop on an unregistered customer](#stop-on-an-unregistered-customer).
+- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again.
+
+### The step is skipped
+
+The step returns `SKIP`, and the workflow continues:
+
+- **`no-identifiers`**: the party has no tax ID, as is common for a consumer. To handle these documents differently, add a condition with the status **Any** on this code.
+- **`missing-party`**: the invoice has no party to check, such as a simplified invoice without a customer.
+- **`not-supported`**: no register covers the tax ID.
+
+### The register does not answer
+
+The step returns `ERR` with the code **`upstream`**, and Invopop retries it automatically. You do not need to do anything. The step never uses an older cached answer in place of the register's answer.
+
+### The step cannot run
+
+The step returns `KO` when its setup is wrong:
+
+- **`not-enrolled`**: the Lookup app is not enabled in the workspace. Enable it in the Console.
+- **`not-configured`**: the app is not set up correctly. Contact [support](mailto:support@invopop.com).
+- **`silo-entry`**: the document of the job cannot be found.
+- **`bad-document`**: the document cannot be read.
+- **`bad-config`**: the step configuration cannot be read. Open the step and save its configuration again.
+- **`invalid-party`**: the step selects an unknown party. Select the customer or the supplier.
+- **`unsupported-schema`**: the document is not an invoice or a party. Use the step in an `invoice` or `party` workflow.
 
 ## Correction
 
