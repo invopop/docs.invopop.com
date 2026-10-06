@@ -17,7 +17,7 @@ This guide walks through how to implement e-invoicing obligations in France:
 
 * [Workflows](#workflows): sending and receiving workflows for French documents (payments, statuses and invoices).
 * [Sending](#sending): recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
-* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
+* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party — or rejecting it with a `213`.
 * [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
 * [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
 * [VAT-exempt invoices](#vat-exempt-invoices): why an invoice exempt under articles 261 to 261 E is recorded but never sent to the PPF.
@@ -54,9 +54,15 @@ The **Forward document to PPF** step generates and transmits to the PPF the F1 c
 
 The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
 
-    <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
-      Add to my workspace →
-    </Card>
+Before an invoice arriving from another platform is recorded, it goes through a series of controls and is rejected if invalid. Only invoices are automatically validated and rejected; incoming lifecycle statuses are simply recorded.
+
+An invoice that fails a control is not recorded. The workflow creates a silo entry holding a new <Badge color="gray">213</Badge> [*Rejetée*](/guides/fr-pa-status#issued-by-the-platform) under the motif of the control that turned the invoice down, and runs it through the rejection workflow.
+
+Set that workflow once for the whole workspace in **Incoming Document Rejection Workflow**, under the France app's configuration. Selecting a **Rejection Workflow** directly on the receiving step overrides it, so a flow that needs its own can have one.
+
+<Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
+  Add to my workspace →
+</Card>
 <Tabs>
   <Tab title="Workflow">
     <WorkflowDiagram workflow={frPaReceiveInvoiceWorkflow} />
