@@ -8,7 +8,6 @@ import FranceResources from '/snippets/tables/france-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import SendInvoiceWorkflow, { frPaSendInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
 import ReceiveInvoiceWorkflow, { frPaReceiveInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
-import ReceiveValidateInvoiceWorkflow, { frPaReceiveValidateInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-validate-invoice.mdx';
 import Flow2Accordion from '/snippets/invoices/fr/flow-2-accordion.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
 
@@ -55,20 +54,6 @@ The **Forward document to PPF** step generates and transmits to the PPF the F1 c
 
 The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
 
-    <Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
-      Add to my workspace →
-    </Card>
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={frPaReceiveInvoiceWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    <ReceiveInvoiceWorkflow />
-  </Tab>
-</Tabs>
-
-#### Rejecting an invoice you cannot accept
-
 Before an invoice arriving from another platform is recorded, it goes through a series of controls. These controls are run in the following order:
 
 | Control | Checks | Motif on failure |
@@ -79,21 +64,21 @@ Before an invoice arriving from another platform is recorded, it goes through a 
 
 Only invoices are automatically validated and rejected. Incoming lifecycle statuses are simply recorded.
 
-If an invoice passes every control, it is recorded on the receiving side. If any control fails, the invoice is not recorded. Instead, the workflow creates a silo entry with a new <Badge color="gray">213</Badge> Rejetée status and runs it through the rejection workflow configured in the app.
+If an invoice passes every control, it is recorded on the receiving side. If any control fails, the invoice is not recorded. Instead, the workflow creates a silo entry with a new <Badge color="gray">213</Badge> [*Rejetée*](/guides/fr-pa-status#issued-by-the-platform) status, under the motif of the control that turned the invoice down, and runs it through the rejection workflow configured in the app.
 
 <Note>
 Selecting a workflow directly on the receiving step overrides the rejection workflow configured in the app.
 </Note>
 
-<Card iconType="duotone" title="PPF receive and validate invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-validate-invoice" horizontal>
+<Card iconType="duotone" title="PPF receive invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-invoice" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
   <Tab title="Workflow">
-    <WorkflowDiagram workflow={frPaReceiveValidateInvoiceWorkflow} />
+    <WorkflowDiagram workflow={frPaReceiveInvoiceWorkflow} />
   </Tab>
   <Tab title="Code">
-    <ReceiveValidateInvoiceWorkflow />
+    <ReceiveInvoiceWorkflow />
   </Tab>
 </Tabs>
 

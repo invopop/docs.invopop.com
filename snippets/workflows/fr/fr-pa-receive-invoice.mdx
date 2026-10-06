@@ -1,6 +1,6 @@
 export const frPaReceiveInvoiceWorkflow = {
     "name": "PPF receive document",
-    "description": "Receive an invoice, status or payment via Peppol and register it with PPF",
+    "description": "Receive an invoice, status or payment via Peppol, run the PPF recording controls over invoices, and raise a 213 for the ones that fail",
     "steps": [
         {
             "id": "db61c3c0-0fb5-11f0-b078-9fc456829eca",
@@ -44,13 +44,11 @@ export const frPaReceiveInvoiceWorkflow = {
             "notes": "Receives the Peppol document and returns the format in a code (UBL/CII/PDF)"
         },
         {
-            "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
-            "name": "Record document for e-invoicing",
-            "provider": "gov-fr.directory.record",
-            "summary": "Record Receiver invoice",
-            "config": {
-                "role": "receiver"
-            }
+            "id": "300f8fe6-c186-11f1-8514-9200076c507e",
+            "name": "Record incoming document",
+            "provider": "gov-fr.directory.record.incoming",
+            "summary": "Validate and record incoming document",
+            "notes": "Runs the syntax, addressing and unicity controls over an invoice. One that passes is recorded as receiver; one that fails is rejected with a 213 handled by the configured rejection workflow. Statuses and payments are recorded without the invoice controls."
         },
         {
             "id": "9c15ac60-7b8c-11f1-bf7f-e1e339678581",
@@ -106,7 +104,7 @@ export const frPaReceiveInvoiceWorkflow = {
 ```json PPF receive document workflow
 {
     "name": "PPF receive document",
-    "description": "Receive an invoice, status or payment via Peppol and register it with PPF",
+    "description": "Receive an invoice, status or payment via Peppol, run the PPF recording controls over invoices, and raise a 213 for the ones that fail",
     "steps": [
         {
             "id": "db61c3c0-0fb5-11f0-b078-9fc456829eca",
@@ -150,13 +148,11 @@ export const frPaReceiveInvoiceWorkflow = {
             "notes": "Receives the Peppol document and returns the format in a code (UBL/CII/PDF)"
         },
         {
-            "id": "2f4ad890-1e2a-11f1-8bfb-2beaa1df60f0",
-            "name": "Record document for e-invoicing",
-            "provider": "gov-fr.directory.record",
-            "summary": "Record Receiver invoice",
-            "config": {
-                "role": "receiver"
-            }
+            "id": "300f8fe6-c186-11f1-8514-9200076c507e",
+            "name": "Record incoming document",
+            "provider": "gov-fr.directory.record.incoming",
+            "summary": "Validate and record incoming document",
+            "notes": "Runs the syntax, addressing and unicity controls over an invoice. One that passes is recorded as receiver; one that fails is rejected with a 213 handled by the configured rejection workflow. Statuses and payments are recorded without the invoice controls."
         },
         {
             "id": "9c15ac60-7b8c-11f1-bf7f-e1e339678581",
