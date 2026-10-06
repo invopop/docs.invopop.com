@@ -8,6 +8,7 @@ import FranceResources from '/snippets/tables/france-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import SendInvoiceWorkflow, { frPaSendInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
 import ReceiveInvoiceWorkflow, { frPaReceiveInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
+import ReceiveValidateInvoiceWorkflow, { frPaReceiveValidateInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-validate-invoice.mdx';
 import Flow2Accordion from '/snippets/invoices/fr/flow-2-accordion.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
 
@@ -17,7 +18,7 @@ This guide walks through how to implement e-invoicing obligations in France:
 
 * [Workflows](#workflows): sending and receiving workflows for French documents (payments, statuses and invoices).
 * [Sending](#sending): recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
-* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party.
+* [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party — or rejecting it with a `213`.
 * [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
 * [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
 * [VAT-exempt invoices](#vat-exempt-invoices): why an invoice exempt under articles 261 to 261 E is recorded but never sent to the PPF.
@@ -63,6 +64,44 @@ The receive workflow detects the inbound format, imports it into a GOBL document
   </Tab>
   <Tab title="Code">
     <ReceiveInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+#### Rejecting an invoice you cannot accept
+
+An invoice arriving from another platform is checked before it is recorded. The
+controls are run in this order:
+
+| Control | Checks | Motif on failure |
+|---|---|---|
+| Syntax | The invoice XML against the Flux 2 schematron for its syntax | `REJ_SEMAN` |
+| Addressing | Both parties carry a SIREN registered in the Annuaire, the transport addresses belong to the parties the invoice names, and the invoice is addressed to a party registered in this workspace | `ADR_ERR` |
+| Unicity | The invoice is not already recorded for this party, number and year | `REJ_UNI` |
+
+Only invoices are checked. A status or payment arriving on the same workflow is
+recorded as it stands — none of these controls read anything it carries — and is
+validated as a status when it is recorded.
+
+An invoice that passes every control is recorded on the receiving side. One that fails 
+is **not** recorded. Instead a <Badge color="gray">213</Badge> [*Rejetée*](/guides/fr-pa-status#issued-by-the-platform)
+is raised against it, carrying the motif of the control that turned it down, and
+the workflow you select for rejections runs against that status: recording it,
+forwarding it to the PPF, and returning it to the platform that sent the
+invoice.
+
+Pick that workflow on the receiving step. Leaving it empty falls back to the
+one set for the whole workspace in the France app configuration, so a single
+rejection workflow can serve every receiving flow.
+
+<Card iconType="duotone" title="PPF receive and validate invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-receive-validate-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaReceiveValidateInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ReceiveValidateInvoiceWorkflow />
   </Tab>
 </Tabs>
 
