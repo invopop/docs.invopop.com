@@ -112,6 +112,37 @@ Acceptance is not delivery. An accepted file can still be rejected minutes later
 Invoices addressed to a public administration (`FPA12`) need a qualified electronic signature. The send step signs them with Invopop's qualified electronic seal, so the file attached to the entry is the signed `.xml.p7m`.
 </Note>
 
+### Simplified invoices
+
+Italian law lets you issue a simplified invoice (*fattura semplificata*) for a sale of up to €400 including VAT, and for credit and debit notes whatever their amount. It asks less about your customer: their partita IVA or codice fiscale is enough. You can keep issuing ordinary invoices for these sales; the simplified one is an option.
+
+To issue one, add the `simplified` tag to your invoice:
+
+```json
+"$tags": ["simplified"]
+```
+
+The [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon then sets the format to `FSM10` and the document type to `TD07` (`TD08` for a credit note, `TD09` for a debit note), and the send step delivers a simplified FatturaPA file to SDI. The invoice still needs a customer, identified in one of two ways:
+
+| Your customer is | What to put on the customer |
+|---|---|
+| A business or professional with a partita IVA | `tax_id` with `country` set to `IT` and the partita IVA as `code` |
+| A private individual | `tax_id` with only `country` set to `IT`, and the codice fiscale as an identity with key `it-fiscal-code` |
+
+Name and address are optional. The simplified file only carries the customer's name together with an address, so a name on its own is left out.
+
+The addon rejects a simplified invoice that the format or the law doesn't allow, before it reaches SDI:
+
+- A total over €400 including VAT, converted to euros with the invoice's exchange rate. The limit doesn't apply to credit and debit notes, or to suppliers in the flat-rate regime (`RF19`) or the cross-border VAT franchise (`RF20`).
+- A customer that is a public administration.
+- Intra-EU supplies of goods (`N3.2`), services taxed on a business in another EU country (`N2.1`), reverse charge (`N6`) and VAT due in another EU country (`N7`).
+- A sale to a habitual exporter (`N3.5`) or a stamp duty exemption (`NB1`, `NB2`, `NB3`). Only the ordinary format carries the declaration of intent and these exemptions.
+- Withholding taxes, fund contributions, a rounding amount, and charges or discounts without VAT.
+
+Payment terms, bank details, ordering references and notes are not part of the simplified format, so the file leaves them out.
+
+To correct a simplified invoice, issue a credit or debit note with the `simplified` tag. It must refer to the invoice it corrects, with that invoice's code and issue date and the reason for the correction. If you create the note from the original with `previous_id` and `correct`, set `reason` in the `correct` object. The [Simplified Invoice](#example-invoices) example below shows a complete document.
+
 ## Invoice statuses
 
 SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
