@@ -12,8 +12,6 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 Invopop's [Lookup app](/apps/lookup) checks the tax ID of a party against the official register that issues it. Add its **Validate Tax IDs** step to an invoice or party workflow to make sure that the tax ID exists before you sign, send or register a document, and to write the party's legal name into the document.
 
-The first register is [VIES](https://ec.europa.eu/taxation_customs/vies/), the European Commission's VAT Information Exchange System. It covers VAT numbers in every EU member state, with `EL` for Greece and `XI` for Northern Ireland.
-
 ## How it works
 
 Each **Validate Tax IDs** step checks one party:
@@ -21,9 +19,7 @@ Each **Validate Tax IDs** step checks one party:
 - In an `invoice` workflow, the step checks the customer or the supplier, as configured.
 - In a `party` workflow, the step checks the party document itself.
 
-The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers, such as a UK VAT number, is skipped and costs nothing.
-
-Answers come from a shared cache when they are recent enough for the step, and from the register otherwise. Every answer is kept for later steps and later jobs: valid answers for 90 days, and invalid answers for 15 minutes, so that a corrected typo is checked again soon.
+The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers is skipped and costs nothing.
 
 ## Set up the step
 
@@ -37,7 +33,7 @@ Answers come from a shared cache when they are recent enough for the step, and f
   </Step>
 
   <Step title="Configure the step">
-    Choose the party to check, how old a cached answer may be, and whether the step corrects the party. See [Step configuration](#step-configuration) below. A new step uses the defaults until you change them.
+    Choose the party to check, how old a cached answer may be, and whether the step corrects the party. See [Step configuration](#step-configuration) below.
   </Step>
 </Steps>
 
@@ -79,7 +75,15 @@ The step returns a status and a code. The code tells you why, so that you can ha
 | `QUEUED` | `rate-limited` | The register or your workspace is at its rate limit. The task runs again by itself. |
 | `ERR` | `upstream` | The register did not answer. The task is retried. |
 
-The step can also return `KO` when the task itself cannot run: `not-enrolled` when the workspace has not installed the app, `bad-config` when the step configuration cannot be read, `invalid-party` for an unknown party selection, and `unsupported-schema` for a document that is not an invoice or a party.
+The step can also return `KO` when the task itself cannot run:
+
+- `not-enrolled`: the workspace has not installed the app.
+- `not-configured`: the app has no client credentials.
+- `silo-entry`: the document cannot be found.
+- `bad-document`: the document cannot be read.
+- `bad-config`: the step configuration cannot be read.
+- `invalid-party`: the party selection is unknown.
+- `unsupported-schema`: the document is not an invoice or a party.
 
 The name comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
 
@@ -92,18 +96,12 @@ The name comparison ignores case, punctuation and extra spaces, so `Acme Trading
 With **Correct the party** on, a check that passes writes the register's data into the document:
 
 - **Name:** the registered name replaces the document's name whenever the two differ, including a difference in case only. The registered spelling is the legal one.
-- **Address:** a structured address from the register becomes the party's first address, and the other addresses stay. VIES gives the address as free text, so it is never written.
+- **Address:** a structured address from the register becomes the party's first address, and the other addresses stay.
 - **Tax ID:** never changed.
 
-Nothing is written when the check does not pass, when the register gives no name (some member states, such as Spain and Germany, do not disclose names through VIES), or when the document is already signed. To correct a document and then sign it, place **Validate Tax IDs** before **Sign envelope**.
+Nothing is written when the check does not pass, when the register gives no name, or when the document is already signed. To correct a document and then sign it, place **Validate Tax IDs** before **Sign envelope**.
 
 The correction never changes the result code or the message. A corrected document still returns `found` or `found-name-mismatch`.
-
-## Large batches
-
-Registers limit how fast they can be called, so the app limits register calls per workspace and in total. Only cache misses count: a batch of invoices for the same customer costs one register call.
-
-When a limit is reached, the task is queued with the exact time until it can run, and passes on its next attempt. For example, a batch of 30 invoices for 30 new customers completes in about 40 seconds, with no errors. When VIES itself is busy for one member state, the task waits a minute and tries again.
 
 ## Workflow examples
 
