@@ -118,6 +118,45 @@ From there it behaves like any other received invoice: it appears in the France 
 
 Two things are worth knowing. The lifecycle statuses you send back follow the AFNOR norm rather than Chorus Pro's own vocabulary — Chorus Pro translates its internal codes before they reach you, so `Rejetée` arrives as `210` and its own rejection motifs arrive as their AFNOR equivalents. And the workspace an invoice lands in is decided entirely by the Annuaire line it is addressed to, which is why registration is a prerequisite rather than a convenience.
 
+#### Testing against Chorus Pro
+
+A sandbox invoice is delivered to Chorus Pro's qualification service rather than production, and its buyer is looked up in the qualification Annuaire. So testing needs parties that exist *there* — your production SIREN will not do, and neither will an invented one.
+
+**You need a matelas de données.** That is Chorus Pro's qualification dataset: the structures and services registered in their test environment. AIFE issues one per platform on request, and it lists, for each structure, a SIREN, a SIRET, and the services declared under it. You need at least two entries:
+
+| Role | What it must be |
+|---|---|
+| Supplier | a private structure (`GEST_PRIVE`), registered to you |
+| Buyer | a public structure (`GEST_PUBLIQUE`), which is what makes the invoice B2G |
+
+Register the supplier in Invopop exactly as you would a live party. The buyer needs no registration — it already exists in the qualification Annuaire, and that is what the **Is B2G?** step reads.
+
+**Building the invoice.** Three things decide whether Chorus Pro accepts it, and all three are easy to get subtly wrong:
+
+- The **supplier and buyer each need a SIRET** under scheme `0009`, alongside the SIREN under `0002`. A SIREN on its own is refused — Chorus Pro identifies structures by SIRET.
+- The buyer's **`0225` inbox** is the structure's addressing identifier, `SIREN_SIRET`, optionally followed by a service code.
+- If you put a service code in the inbox, the buyer's identifier must name **the same service**. Chorus Pro checks the two agree and rejects with `REJ_COH` (`BR-FR-CPRO-65`) when they do not. Since a buyer may carry only one identifier (`UBL-SR-16`), you are choosing: address a service in both places, or neither.
+
+```yaml
+customer:
+  tax_id: { country: "FR", code: "84572013583" }
+  identities:
+    - type: "SIREN"
+      code: "572013583"
+      ext: { iso-scheme-id: "0002" }
+    - type: "SIRET"
+      code: "57201358347049"
+      ext: { iso-scheme-id: "0009" }
+  inboxes:
+    - key: peppol
+      scheme: "0225"
+      code: "572013583_57201358347049"
+```
+
+A registration will also be refused if the inbox carries more than two parts — `SIREN_SIRET` is the whole of it, and a routing code in there needs support to register the line.
+
+**What to expect.** The invoice records, **Is B2G?** answers `true`, and **Send to Chorus Pro** deposits it and then waits. Chorus Pro answers with a lifecycle CDV, usually within a few minutes; the status appears on the invoice and the workflow resumes. A `213` is a business rejection — the motif on the CDV says why.
+
 ### Invoice formats
 
 The PA specification accepts five formats. In practice the three base formats below cover essentially all real-world traffic, and Invopop supports both sending and receiving on all three.
