@@ -8,6 +8,7 @@ import FranceResources from '/snippets/tables/france-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import SendInvoiceWorkflow, { frPaSendInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice.mdx';
 import ReceiveInvoiceWorkflow, { frPaReceiveInvoiceWorkflow } from '/snippets/workflows/fr/fr-pa-receive-invoice.mdx';
+import SendInvoiceB2GWorkflow, { frPaSendInvoiceB2GWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice-b2g.mdx';
 import Flow2Accordion from '/snippets/invoices/fr/flow-2-accordion.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-invoicing.mdx';
 
@@ -19,6 +20,7 @@ This guide walks through how to implement e-invoicing obligations in France:
 * [Sending](#sending): recording the invoice, generating the format, transmitting over Peppol, and forwarding the F1 copy to the PPF.
 * [Receiving](#receiving): detecting the inbound format, importing it into GOBL, and recording it against your registered party — or rejecting it with a `213`.
 * [Invoice formats](#invoice-formats): UBL, CII, and Factur-X and how to choose between them.
+* [Public sector](#public-sector-b2g-and-g2b): invoices to public entities travel over Chorus Pro instead of Peppol, and public entities can now invoice you the same way.
 * [Self-billing](#self-billing): how *autofacturation* maps onto the same send and receive workflows using the `self-billed` tag.
 * [VAT-exempt invoices](#vat-exempt-invoices): why an invoice exempt under articles 261 to 261 E is recorded but never sent to the PPF.
 * [Reading submitted invoices](#reading-submitted-invoices): follow every sent and received invoice, and its PPF state, from the France dashboard.
@@ -71,6 +73,50 @@ Set that workflow once for the whole workspace in **Incoming Document Rejection 
     <ReceiveInvoiceWorkflow />
   </Tab>
 </Tabs>
+
+### Public sector (B2G and G2B)
+
+An invoice to a French public entity follows the same path as any other: it is recorded the same way, and its F1 copy and `200` Déposée status reach the PPF unchanged. Only delivery differs — it goes to **Chorus Pro** instead of Peppol.
+
+You do not decide this yourself. The **Is B2G?** step answers it, reading what the record step already worked out — or, for an invoice that has not been recorded, looking the counterparty up in the Annuaire itself:
+
+| Result | Meaning | Deliver with |
+|---|---|---|
+| `true` | the buyer is routed to Chorus Pro's public sphere | **Send to Chorus Pro** |
+| `false` | everything else | **Send Peppol document** |
+
+Branch on that result the same way you branch on [Directory lookup](/guides/fr-lookup). Keep it after the record step, which is where the answer comes from. Everything after it is shared: both paths forward to the PPF.
+
+<Card iconType="duotone" title="PPF send invoice (public sector)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice-b2g" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaSendInvoiceB2GWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <SendInvoiceB2GWorkflow />
+  </Tab>
+</Tabs>
+
+<Note>
+Chorus Pro adds its own rules on top of the norm, and they apply only to public-sector invoices. The record step enforces them once an invoice is identified as `b2g` — invoice numbers of 20 characters or fewer, a SIRET alongside every SIREN, an IBAN of exactly 27 characters, and the length limits Chorus Pro places on names, notes and references. An invoice that breaks one is rejected at record rather than minutes later by Chorus Pro.
+</Note>
+
+#### Receiving from a public entity (G2B)
+
+G2B is the same exchange in reverse: a French public entity issues an invoice to your business. It is new with the 2026 reform — public bodies previously had no route to invoice the private sector electronically.
+
+The path differs from a B2B invoice in where it comes from, not in what you do with it:
+
+1. The public entity submits the invoice to Chorus Pro, in UBL or Factur-X.
+2. Chorus Pro delivers it to Invopop, addressed to the Annuaire line your party is registered under. That line is what decides which workspace receives it — so the party must be registered before any public entity can invoice it.
+3. Invopop converts it to GOBL and starts your Chorus Pro workflow on it.
+4. The invoice is recorded against your party, exactly as an inbound Peppol invoice would be.
+
+From there it behaves like any other received invoice: it appears in the France dashboard, and you answer with [status updates](/guides/fr-pa-status) as the invoice is accepted, disputed or paid.
+
+Two things are worth knowing. The lifecycle statuses you send back follow the AFNOR norm rather than Chorus Pro's own vocabulary — Chorus Pro translates its internal codes before they reach you, so `Rejetée` arrives as `210` and its own rejection motifs arrive as their AFNOR equivalents. And the workspace an invoice lands in is decided entirely by the Annuaire line it is addressed to, which is why registration is a prerequisite rather than a convenience.
 
 ### Invoice formats
 
