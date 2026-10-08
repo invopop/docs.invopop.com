@@ -141,6 +141,7 @@ Whichever you choose, the stream being reported is selected the same way:
 | `siren` | Only without a silo entry | The declarant's 9-digit SIREN. Takes precedence over the silo entry when both are given. |
 | `flux-kind` | No | `tx` for transactions, `py` for payments. Falls back to the step configuration. |
 | `role` | No | `seller` or `buyer`. Falls back to the step configuration. |
+| `window` | No | A specific closed window to report, such as `2026-SEP-1`. See below. |
 
 <CodeGroup>
 
@@ -166,6 +167,10 @@ curl -X POST "https://api.invopop.com/transform/v1/jobs" \
 ```
 
 </CodeGroup>
+
+<Note>
+  `window` is for testing and recovery. Name it `YEAR-MONTH-STEP`: `2026-SEP-1` to `2026-SEP-3` for 10-day windows, `2026-SEP-1` for monthly ones, and `2026-JAN-1` (January–February) for two-month ones. The window must have closed. Forcing a window doesn't change the schedule.
+</Note>
 
 
 ### Picking a VAT regime at supplier registration
@@ -222,20 +227,23 @@ Filter the table by **SIREN**, **Period ID**, the **Reporting period** window, o
 
 ## Reading what's filed
 
-Four read endpoints expose submission status and the raw report XML, all scoped to the party's silo entry id:
+These endpoints expose submission status and the raw report XML, all scoped to the party's SIREN. The party's silo entry ID is still accepted in its place.
 
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id` <br /> 
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren` <br /> 
 Summary per kind (current window, next deadline, last filed report)
  
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods` <br />
 Paginated history of filed periods (filter with `?kind=tx` or `?kind=py`)
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods/:period_id` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods/:period_id` <br />
 A single period's metadata
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods/:period_id/xml` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods/:period_id/xml` <br />
 The raw report XML sent to the PPF
+
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/preview?kind=tx` <br />
+The current window's report as it stands, built on the fly and never stored or sent. Useful for testing: pass `kind=py` for payments and `role=buyer` for the buyer stream.
 
 ## FAQ
 
