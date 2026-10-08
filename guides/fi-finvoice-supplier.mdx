@@ -36,13 +36,39 @@ A party must be registered before it can send documents. A workspace can hold se
 
 ## E-invoice addresses
 
-A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, sometimes with a five-character suffix for routing inside large organisations. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
+A Finnish e-invoice address is an **OVT code**: `0037` followed by the Business ID without its hyphen, optionally followed by a suffix of up to five letters or digits that the company chooses. For example, the Business ID `2617416-4` gives the OVT code `003726174164`. On Peppol, the same code is wrapped in scheme `0216`.
 
-Registration allocates a Finnish party's address on the operator's side: it is the party's own OVT code, the same one you set as the `0216` inbox on the supplier party. Counterparties will ask for it, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
+Registration allocates a Finnish party's address on the operator's side, its own OVT code, and adds it to the party as an endpoint in scheme `0216`. Counterparties will ask for it, and in Finland an e-invoice address is quoted as a pair, the address plus the operator that serves it. Give them both: your OVT code and Invopop's operator, **Apix Messaging, operator ID `003723327487`**.
 
 You'll also need your customers' addresses to send. Look any Finnish organisation up in the national registry at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi): since 2024 it mirrors the Peppol address list too, so one lookup covers both networks.
 
 You may also meet other address forms that circulate on the Finnish network: IBAN-style addresses from the older bank channel, and operator-prefixed ones such as `TE0037…`. On a Finnish party, always use the OVT code under scheme `0216`.
+
+### Moving from another operator
+
+If your company is moving to Invopop from another operator, its e-invoice address may still be active there, for example while your old system is being phased out. The address is then registered at two operators, and where an invoice to it arrives depends on the sender's operator. Until you can deactivate it, register the party under an **extended address**: your OVT code followed by a suffix you choose, which exists only at Invopop's operator.
+
+1. Choose a suffix of one to five capital letters A–Z or digits 0–9. For example, `003726174164` becomes `003726174164001`.
+2. Set the extended address as the party's `0216` endpoint, replacing the base address if the party already has it:
+
+   ```json
+   "endpoints": [
+       {
+           "uri": "iso6523-actorid-upis::0216:003726174164001"
+       }
+   ]
+   ```
+
+   Registration reads the endpoint. Once the party has the endpoint, a `0216` inbox is ignored, and registration leaves it as it is.
+3. Run the registration workflow. If the party is already registered, run it again: it switches to the new address, and the representative doesn't need to sign again. A company has one extended address at a time, so switching to another one replaces the previous one.
+4. Put the extended address on your invoices as the supplier's `0216` endpoint too. An invoice carries its own copy of the supplier, so updating the party doesn't change the invoices you build.
+5. Give your counterparties the extended address, together with Invopop's operator ID.
+
+Registration refuses an address that doesn't start with the party's own OVT code, or whose suffix isn't one to five letters A–Z or digits 0–9. A lowercase suffix is accepted and uppercased. It also refuses a second party entry for a company already registered in the workspace, so change the address on the entry you registered first.
+
+Your base address stays registered with Invopop's operator too. Until you deactivate it at your previous operator, invoices sent to it may still arrive there. Other operators find the extended address after the national registry's nightly refresh, so expect senders on other operators to reach it from the following day.
+
+Once you've deactivated the address at your previous operator, you can go back to the base address: set it as the party's endpoint again and run registration. The extended address stays registered, so invoices counterparties still send to it keep reaching you.
 
 ## Suppliers outside Finland
 
@@ -50,7 +76,7 @@ Companies from **any other country** can register here to invoice Finnish receiv
 
 Use the company's own tax ID on the party. The operator registers the company under that tax ID. For most countries this is the full VAT number. For Sweden and Norway it is the Org.nr on its own, because their VAT numbers are built from it.
 
-Sending works as it does for a Finnish supplier, with the same workflow, checks and formats. Give the party an inbox with the company's own electronic address, such as a Swedish Org.nr under scheme `0007`.
+Sending works as it does for a Finnish supplier, with the same workflow, checks and formats. Give the party an endpoint with the company's own electronic address. For a Swedish company, that's `iso6523-actorid-upis::0007:` followed by its Org.nr.
 
 Suppliers outside Finland are registered to **send only**. A Finnish e-invoice address is built from a Finnish Business ID, so they don't get one. They aren't listed in the [national registry](https://verkkolaskuosoite.fi), and Finnish senders can't reach them on the domestic network. The app doesn't poll an inbox for them, and the authorization agreement their representative signs covers sending only.
 
@@ -125,7 +151,7 @@ For a Finnish party, registration also waits until the operator has allocated it
 Once registration completes, a Finnish party can send and receive e-invoices, and its inbox at the operator starts being polled automatically. A supplier outside Finland can start sending.
 
 <Note>
-  A Finnish party's e-invoice address works from the moment registration completes, but the [national registry](https://verkkolaskuosoite.fi) counterparties look addresses up in is refreshed once a night. Expect the party to become findable there the following day.
+  The [national registry](https://verkkolaskuosoite.fi) counterparties look addresses up in is refreshed once a night, so expect the party to become findable there the following day. Until the operator's own directory catches up, which can take more than an hour after registration, invoices sent to the new party through Invopop can be refused as not reachable by e-invoice.
 </Note>
 
 <Warning>
