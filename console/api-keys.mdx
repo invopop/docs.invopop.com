@@ -1,15 +1,57 @@
 ---
 title: "API keys"
-description: "Access your workspace from anywhere"
+description: "Create workspace-scoped API keys in Admin and choose exactly which services each key can read or administer."
 sidebarTitle: API keys
 ---
 
-Invopop API Keys are generated using the [Console](https://console.invopop.com). Enter **Configuration → API Keys** and click on **+ New API Key** on the top right corner. Enter the name and the description and click "Save". You'll be presented with a screen showing a new token. For security reasons, we don’t store this token. Copy it now, or you’ll need to create a new API key if it’s lost.
+API keys authenticate requests to the Invopop API. Every key belongs to a single workspace and carries its own set of permissions, so an integration only gets access to the services it actually needs.
+
+Keys are managed in [Admin](https://access.invopop.com). The Console shows the keys of the current workspace under **Configuration → API keys**, and the <kbd>Manage API keys</kbd> button on that page takes you to the **API keys** section of Admin, where keys are created, reviewed and revoked.
+
+## Create an API key
+
+1. Open [Admin](https://access.invopop.com) and select **API keys** in the sidebar, or click <kbd>Manage API keys</kbd> from the Console.
+
+2. Click <kbd>New API key</kbd>.
+
+3. Choose the **workspace** the key will act on. A key never has access to more than one workspace, so sandbox and live environments always use different keys.
+
+4. Give the key a **name** for future reference and, optionally, a **description** of its use case.
+
+5. Tick the permissions the key needs for each service (see [Permissions](#permissions) below).
+
+6. Click <kbd>Create API key</kbd>.
+
+<Frame>
+  <img src="/assets/guides/sandbox-to-live-api-key.png" alt="New API key form in Admin showing the workspace, name, description and per-service Read and Admin checkboxes" />
+</Frame>
+
+The token is displayed once, immediately after creation. For security reasons Invopop does not store it, so copy it to a safe place now. If it is lost, revoke the key and create a new one.
 
 <Tip>
   Invopop uses JSON Web Tokens. If you're interested in seeing the contents, head over to [JWT.io](https://jwt.io) and paste your token to see what's
   inside.
 </Tip>
+
+## Permissions
+
+Permissions are granted per service and per resource. Each resource has two checkboxes:
+
+- **Read** allows the key to list and fetch the resource.
+- **Admin** allows the key to create, update and delete the resource as well as read it.
+
+| Service | Resources | What it covers |
+|---|---|---|
+| All services | Everything | Blanket access to everything in the workspace, present and future, including services added later. |
+| Access | Workspace, Enrollments | The workspace's own record and its enrollments in apps. |
+| Transform | Workflows, Jobs | Workflows and the jobs that run documents through them. |
+| Silo | Entries | The documents stored in the workspace. |
+
+Give each key only what it needs. A key that only submits invoices needs **Admin** on Silo entries and Transform jobs, and nothing else. A reporting or monitoring integration usually needs **Read** only. Use **All services** only for keys that genuinely need to do everything, such as a full back-office integration.
+
+The Admin list groups every key by workspace, with separate sections for live and sandbox workspaces, and shows the permission level of each key: **admin**, **read**, or **No permissions** for a key with nothing ticked. Review this list periodically and revoke keys that are no longer in use.
+
+## Use the token
 
 Tokens must be included in the `Authorization` HTTP header in all requests as a type `Bearer`.
 
@@ -21,6 +63,8 @@ $ curl -H "Authorization: Bearer [token]" https://api.invopop.com/utils/v1/ping
 
 {"ping":"pong"}
 ```
+
+A successful ping confirms the token is valid. If a request to another endpoint is rejected with a permission error, check the key's permissions in Admin.
 
 ## Related resources
 
