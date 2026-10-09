@@ -1,66 +1,187 @@
 ---
-title: "From sandbox to live"
-description: "Configure your payment method and live account"
-sidebarTitle: "Go live"
+title: "Replicate a sandbox workspace in live"
+description: "What changes between sandbox and live, and how to carry your workflows, apps, series and API key permissions over to a live workspace."
+sidebarTitle: "Sandbox to live"
 icon: "bolt"
 ---
 
-Have you set up your sandbox account and everything is working correctly? Time to go live! Here's what you need to do:
+A workspace is created as either **Sandbox** or **Live** and its type cannot be changed afterwards. Going live therefore means creating a live workspace and rebuilding its configuration so that it matches the sandbox you tested in. Nothing is copied automatically. This guide lists exactly what differs between the two environments and walks through replicating each piece.
 
-### Set up a payment method and live workspace
+<Note>
+Before you start, you need a billing account with a payment method and a live workspace. See [How to go live](/guides/how-to-go-live) for those steps. This guide picks up once the live workspace exists.
+</Note>
+
+## What changes between sandbox and live
+
+Both workspace types run on the same platform, the same API host and the same Console. The differences are in what each workspace contains and in how government apps behave.
+
+| | Sandbox | Live |
+|---|---|---|
+| **API host** | `https://api.invopop.com` | Same host. The token decides which workspace you are in. |
+| **API keys** | Scoped to the sandbox workspace | New key, scoped to the live workspace, with the same permissions |
+| **Console URL** | `console.invopop.com/sandbox/<handle>` | `console.invopop.com/<handle>` |
+| **Workflows** | Defined per workspace | Must be re-created. Every workflow gets a **new workflow ID**. |
+| **Apps** | Enabled and configured per workspace | Must be enabled and configured again, this time with production credentials |
+| **Government endpoints** | Apps talk to the tax authority's test environment | Apps talk to the production environment. Documents are legally binding. |
+| **Suppliers** | Pre-enabled test suppliers in most countries | Real suppliers, registered through the country's registration workflow |
+| **Series** | Defined per workspace | Must be re-created, usually starting from the number your real numbering requires |
+| **Documents and job history** | Test data | Starts empty |
+| **Members and roles** | Shared at organisation level | No change. Everyone with access to the organisation sees the live workspace. |
+| **Email and Slack** | Emailing customers and suppliers is disabled | Emails are delivered |
+| **Billing** | Free | Consumes pops from the billing account attached to the workspace |
+
+The most important consequence for your integration: **the only thing that changes in your code is the token**, plus the workflow IDs you call, because they are different in the live workspace. There is no separate sandbox host or sandbox header to remove.
+
+<Tip>
+You can confirm which environment a token points at with `GET /access/v1/workspace`. The response includes `"sandbox": true` or `false`. Add this check to your deployment so that a live system can never run with a sandbox key by mistake.
+</Tip>
+
+## What you need to re-create
+
+Go through this list for the sandbox workspace you are replicating. Everything on it lives inside the workspace and does not exist yet in the live one.
+
+- [ ] **Apps**: every app in the **Enabled apps** section, with its configuration.
+- [ ] **Workflows**: every published workflow, including supplier registration and cancellation workflows, not only the ones that issue invoices.
+- [ ] **Series**: every numbering series your workflows or your integration refer to.
+- [ ] **Suppliers**: every real company you will issue invoices for, registered with the tax authority.
+- [ ] **API key**: one key per integration, with the same permissions as its sandbox counterpart.
+
+<Prompt description="Let your agent diff the two workspaces and hand you the workflow JSON that is still missing in live." icon="code-compare" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/workspace/sandbox-to-live.md and https://docs.invopop.com/llms.md. I have two Invopop API keys: INVOPOP_SANDBOX_TOKEN for my sandbox workspace and INVOPOP_LIVE_TOKEN for my live workspace. Using curl, call GET /access/v1/workspace with each token and confirm that the first reports sandbox true and the second sandbox false. Then fetch all workflows from both workspaces with GET /transform/v1/workflows, compare them by name, and list the workflows that exist in sandbox but not in live. For each missing workflow, fetch its full definition from the sandbox and print the JSON of name, description, schema, steps and rescue so that I can paste it into the Code view of a new workflow in the live Console. Do not create anything in the live workspace yourself. Do not modify any workflow in the sandbox.
+</Prompt>
+
+## Replicate the workspace
+
+Keep two browser tabs open, one on the sandbox workspace and one on the live workspace, and work through the sections in order. Apps come first because a workflow cannot be published while one of its steps refers to an app that is not enabled.
 
 <Steps>
-  <Step title="Access your organization’s settings">
-    From the Console, click on your avatar (bottom left) and select **Configure \{organization\_name\}**.
+  <Step title="Enable and configure the apps">
+    In the sandbox workspace open **Apps** from the sidebar and note every app under **Enabled apps**. Switch to the live workspace, open **Apps** and click **Connect** on each of them.
 
-    <Frame caption="Click on 'Configure {organization_name}'">
-      <img
-        width="600"
-        src="/assets/guides/go-live-configure-org.png"
-        alt="Configure Organization"
-      />
+    <Frame caption="The live workspace must list the same enabled apps as the sandbox">
+      <img src="/assets/guides/sandbox-to-live-apps.png" alt="Apps page of a live workspace with the VERI*FACTU Spain app under Enabled apps" />
     </Frame>
 
+    Then open **Configure** on each app that has settings and fill them in for production. Configuration never carries over, and the values are usually different:
+
+    - **Government apps** need production credentials, certificates or agreements, and they are issued by the tax authority for the real company rather than for a test one. Each app page under [Apps](/apps) explains what is required.
+    - **Integration apps** such as Stripe, Chargebee, Slack, Email or Google Drive must be connected to the production account of the third-party service. A Stripe test-mode connection, for example, will not import live Stripe invoices.
+    - **PDF Generator** settings such as the logo and the footer are per workspace too.
   </Step>
 
-  <Step title="Create a Billing Account">
-  	In the left-hand menu, click on *Billing*, then on *Create Billing Account* (top right). Fill in your details and click on **Save**. A Stripe page will open.
-  	 <Frame caption="Create a Billing Account">
-      <img
-        width="600"
-        src="/assets/guides/go-live-create-billing-account.png"
-        alt="Billing setup"
-      />
+  <Step title="Copy each workflow with the Code view">
+    Open the workflow in the sandbox workspace. At the top right of the canvas, switch from the **Form view** to the **Code view**. The editor shows the complete JSON definition of the workflow: its name, description, schema, steps, conditions and exception handling. Select all of it and copy it.
+
+    <Frame caption="Code view of a workflow in the sandbox workspace">
+      <img src="/assets/guides/sandbox-to-live-code-view.png" alt="Workflow editor in Code view showing the JSON of a VERI*FACTU issue invoice workflow" />
     </Frame>
-  </Step>
 
-  <Step title="Add your payment method and billing details">
-			On the Stripe page:
+    In the live workspace, go to **Workflows**, click **Create workflow**, close the template picker if it opens, switch the new empty workflow to the **Code view** and paste over the empty definition. The step IDs inside the JSON can stay as they are.
 
-			* Add a payment method (card or direct debit) with *Add a payment method*
-			* Enter your tax information with *Update information*
-  	 <Frame caption="Add a card and your tax information on Stripe">
-      <img
-        width="600"
-        src="/assets/guides/go-live-stripe.png"
-        alt="Stripe screenshot"
-      />
+    <Frame caption="The same JSON pasted into a new workflow in the live workspace">
+      <img src="/assets/guides/sandbox-to-live-paste.png" alt="New workflow in a live workspace with the pasted JSON in Code view" />
     </Frame>
+
+    Switch back to the **Form view**. The name, description and schema fill in from the JSON and every step renders with its icon and configuration. The Console does not check at this point whether the apps behind the steps are enabled: a workflow pastes and publishes either way, and a job only fails when it reaches a step whose app is missing. That is why apps come first. Review any step that holds workspace-specific values, in particular:
+
+    - **Add sequential code** steps. A dynamic series is created in the live workspace the first time the step runs, using the `start` number in its configuration. Set it to continue your real numbering if you are migrating from another system.
+    - **Email** and **Slack** steps whose recipients or channels were test addresses.
+    - **Wait for supplier approval** style steps that were configured to auto-accept or reject in sandbox.
+
+    Click **Save draft** and then **Publish**. Repeat for every workflow on your list.
+
+    <Warning>
+    The live workflow has a **new workflow ID**. Copy it from the workflows list and update every place in your integration that creates jobs for it. Calling a sandbox workflow ID with a live token returns a `404`.
+    </Warning>
   </Step>
 
-  <Step title="Create your production environment (Live Workspace)">
-			Once you introduce your payment details on Stripe you will return to the billing accounts screen. Click on **Workspaces** (in the side menu), then on *New workspace*. Assign a name, select the **Live** type and the billing account you just created. Click *Create workspace*.
-  	 <Frame caption="Create your live workspace">
-      <img
-        width="600"
-        src="/assets/guides/go-live-new-workspace.png"
-        alt="Create your live workspace"
-      />
+  <Step title="Re-create the series">
+    Open **Series** in the sandbox workspace and re-create each one you created by hand in the live workspace under **Configuration → Series**, with the same name, code, prefix, padding and suffix. Set **Start number** to the next number your real numbering requires rather than `1` if you are migrating from another invoicing system. Series created dynamically by an **Add sequential code** step do not need this: they appear in the live workspace on the step's first run. See [Series](/console/series) for the field reference.
+  </Step>
+
+  <Step title="Register your real suppliers">
+    Sandbox workspaces ship with pre-enabled test suppliers so that you can issue invoices right away. They do not exist in live. For every company you issue invoices for, upload its `org/party` entry and run the country's supplier registration workflow, which you copied in the previous step. The supplier ends in the `registered` state once the tax authority accepts it. Every country has a supplier onboarding guide next to its invoicing guide under [Guides](/guides/index), for example [VERI\*FACTU supplier onboarding](/guides/es-verifactu-supplier).
+
+    In live, steps that waited for a manual approval in sandbox complete on their own as soon as the required documents are uploaded.
+  </Step>
+
+  <Step title="Create an API key with the same permissions">
+    API keys are created from Admin, which is where their permissions are set. From the Console, click your avatar and choose **Configure \{organization\_name\}**, open **API keys** in the sidebar and click **New API key**.
+
+    Select the **live workspace** in the **Workspace** field, then tick exactly the same **Read** and **Admin** boxes as the sandbox key your integration uses. The permissions are grouped by service: **Access** (workspace and enrollments), **Transform** (workflows and jobs) and **Silo** (entries). **Everything** grants blanket access to all current and future services.
+
+    <Frame caption="Creating the live key in Admin with the same permissions as the sandbox key">
+      <img src="/assets/guides/sandbox-to-live-api-key.png" alt="New API key form in Admin with the live workspace selected and permissions ticked" />
     </Frame>
+
+    The Admin **API keys** page lists every key in the organisation grouped by workspace with its permission level, so you can compare the sandbox key and the live key side by side. The token is shown once when you click **Create API key**; copy it into your secrets store now.
+
+    <Tip>
+    Keys are tied to the workspace, not to the person who created them, so they keep working when that person leaves the organisation. Give each integration its own key so that one can be revoked without affecting the others.
+    </Tip>
   </Step>
 
+  <Step title="Point your integration at the live workspace">
+    Two values change in your application's configuration:
+
+    1. The **API key**, swapped for the live one.
+    2. The **workflow IDs**, swapped for the IDs of the workflows you published in the live workspace.
+
+    Everything else stays the same: the host, the endpoints, the document format and your workflow logic. Before you issue the first real invoice, ping the workspace with the new key and check that it is not a sandbox:
+
+    ```bash
+    curl -s -H "Authorization: Bearer $INVOPOP_TOKEN" https://api.invopop.com/access/v1/workspace
+    ```
+
+    ```json
+    {
+      "id": "…",
+      "name": "Cyberdyne Sistemas Live",
+      "slug": "cyberdyne_sistemas_live",
+      "sandbox": false,
+      …
+    }
+    ```
+
+    If `sandbox` is `true`, you are still holding the sandbox key.
+  </Step>
 </Steps>
 
-#### All set!
+## Verify before issuing real invoices
 
-Your production environment is now configured. From the Console, you should see your new *Live Workspace* in the selector (top left). If it doesn't appear, reload the page. If the issue persists, contact us at **[support@invopop.com](mailto:support@invopop.com)**.
+Run one document through the live workspace as the final check. Create an invoice for a registered supplier, run the issuing workflow from the entry's menu in the Console, and open **Job history**. Every step should report `OK`, the entry should end in the state your workflow sets, and the attachments (PDF, XML, government receipt) should be on the entry. From this point on every document is a real, legally binding invoice: use the sandbox workspace for anything experimental.
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Can I copy workflows through the API instead of the Console?">
+Yes. Fetch the definition with [Fetch a workflow](/api-ref/transform/workflows/fetch-a-workflow) using the sandbox key, then send `name`, `description`, `schema`, `steps` and `rescue` to [Create a workflow](/api-ref/transform/workflows/create-a-workflow) using the live key. Workflows created through the API are published immediately, so review the steps in the Console first if you prefer to keep a draft.
+</Accordion>
+
+<Accordion title="Can I keep the same workflow IDs in live?">
+No. A workflow ID identifies one workflow inside one workspace. Your integration must store a separate ID per environment, for example in the same place it stores the token for that environment.
+</Accordion>
+
+<Accordion title="Do I need a new live workspace for every country?">
+We recommend one workspace per regime, in sandbox and in live. See [Set up your account for multiple countries](/workspace/multi-country). Repeat this guide for each pair.
+</Accordion>
+
+<Accordion title="Do test documents move over?">
+No. Invoices, parties, jobs and attachments stay in the sandbox workspace. The live workspace starts empty.
+</Accordion>
+
+<Accordion title="Do I need to invite the team again?">
+No. Members and roles belong to the organisation and apply to every workspace in it.
+</Accordion>
+
+<Accordion title="Can I archive the sandbox afterwards?">
+Keep it. The sandbox is where you test changes to workflows before copying them to live, and where government apps run against test environments at no cost.
+</Accordion>
+</AccordionGroup>
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  API Reference | <Icon icon="code" /> [Fetch workspace](/api-ref/access/workspace/fetch)<br /><Icon icon="code" /> [Fetch all workflows](/api-ref/transform/workflows/fetch-all-workflows)<br /><Icon icon="code" /> [Create a workflow](/api-ref/transform/workflows/create-a-workflow) |
+|  Related Guides | <Icon icon="book" /> [How to go live](/guides/how-to-go-live)<br /><Icon icon="book" /> [Create & configure workspaces](/admin/workspace-configure)<br /><Icon icon="book" /> [API keys](/console/api-keys)<br /><Icon icon="book" /> [Series](/console/series) |
