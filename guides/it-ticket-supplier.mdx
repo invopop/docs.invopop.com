@@ -6,6 +6,7 @@ description: Register suppliers to issue smart receipts in Italy using the Itali
 
 import PostRegistrationFlow, { itSdiPostRegistrationFlowWorkflow } from '/snippets/workflows/it/sdi-post-registration-flow.mdx';
 import TicketRegisterSupplier, { itTicketRegisterSupplierWorkflow } from '/snippets/workflows/it/ticket-register-supplier.mdx';
+import TicketUnregisterSupplier, { itTicketUnregisterSupplierWorkflow } from '/snippets/workflows/it/ticket-unregister-supplier.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-ticket-supplier.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
@@ -46,7 +47,7 @@ Follow these steps in the [Invopop Console](https://console.invopop.com).
 <Step title="Create Supplier post-registration workflow">
 
 
-<Card iconType="duotone" title="Smart Receipts supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-post-registration" horizontal>
+<Card iconType="duotone" title="Smart Receipts supplier post-registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-ticket-post-registration" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -79,7 +80,7 @@ Click the **Save** button.
 <Step title="Configure the supplier registration workflow">
 
 
-<Card iconType="duotone" title="Smart receipts supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-register-supplier" horizontal>
+<Card iconType="duotone" title="Smart receipts supplier registration workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-ticket-register-supplier" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -220,6 +221,26 @@ The whole registration process can also be completed programmatically. This is u
     The same endpoint can be called again with the same link to update the supplier's credentials when they expire.
   </Step>
 </Steps>
+
+## Unregister a supplier
+
+Unregistering a supplier revokes their receipt issuing privileges. You might need to unregister a supplier because they are no longer your client or because of a change in their Partita IVA. Unregistering disables receipt issuance for the supplier with our local partner and removes the registration link and _codice fiscale_ stored with the supplier. To do so, use the following workflow template:
+
+<Card title="Smart Receipts unregister supplier" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=it-ticket-unregister-supplier" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itTicketUnregisterSupplierWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <TicketUnregisterSupplier />
+  </Tab>
+</Tabs>
+
+Run the workflow on the supplier's silo entry, the same one you registered earlier. On success, the entry moves to the `Void` state. If the supplier was never registered, the step is skipped without error. To issue receipts for the supplier again, run the [registration workflow](#register-a-supplier) and submit their AdE credentials once more.
 
 ## FAQ
 
