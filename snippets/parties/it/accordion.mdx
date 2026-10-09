@@ -6,7 +6,7 @@ import ItCustomerForeign from '/snippets/parties/it/customer-foreign-private.mdx
 
   <Accordion title="Italian business">
 
-    The `tax_id` carries the *partita IVA*, and the `it-sdi-code` inbox carries the *codice destinatario* SDI routes by. A customer who receives through certified email instead has an `it-sdi-pec` inbox holding the address. A customer who has both can carry both: the invoice routes by the *codice destinatario*, and the PEC is left out of the file.
+    Put the *partita IVA* in `tax_id`, and the *codice destinatario* in an `it-sdi-code` inbox. SDI uses that code to deliver the invoice. A customer who receives by certified email (PEC) gets an `it-sdi-pec` inbox with their PEC address instead. If you have both, add both: SDI delivers to the *codice destinatario*, and the PEC is left out of the file.
 
     <CodeGroup>
       <ItCustomerBusiness />
@@ -15,7 +15,7 @@ import ItCustomerForeign from '/snippets/parties/it/customer-foreign-private.mdx
 
   <Accordion title="Italian private individual">
 
-    The *codice fiscale* identifies them, as an `identities` entry keyed `it-fiscal-code`. They have no VAT number, so the `tax_id` holds only the country, and there's no inbox. SDI doesn't deliver to private individuals — it files the invoice in their personal area on the tax authority portal — so you must give the customer a copy yourself, normally as a PDF.
+    Put their *codice fiscale* in `identities`, with the key `it-fiscal-code`. They have no VAT number, so `tax_id` holds only the country. Leave out inboxes: SDI files the invoice in the customer's personal area on the tax authority's portal, so send them a copy yourself, normally as a PDF.
 
     <CodeGroup>
       <ItCustomerPrivate />
@@ -24,7 +24,7 @@ import ItCustomerForeign from '/snippets/parties/it/customer-foreign-private.mdx
 
   <Accordion title="Customer outside Italy">
 
-    The country in `tax_id` is all SDI needs, alongside a VAT number for a business inside the EU. No inbox: SDI cannot deliver outside Italy, so the file always carries the cross-border recipient code `XXXXXXX`, and an inbox on the party is ignored.
+    Put their country in `tax_id`, with their VAT number as `code` if they have one. A private individual like the one below has none, so `tax_id` holds only the country. Leave out inboxes: SDI can't deliver outside Italy, so the file always uses the cross-border recipient code `XXXXXXX`, and you send the customer a copy yourself.
 
     <CodeGroup>
       <ItCustomerForeign />
