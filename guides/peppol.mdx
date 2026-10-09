@@ -9,6 +9,7 @@ import PeppolSendWorkflow, { peppolSendWorkflow } from '/snippets/workflows/pepp
 import PeppolReceiveWorkflow, { peppolReceiveWorkflow } from '/snippets/workflows/peppol/receive.mdx';
 import PeppolRegisterWorkflow, { peppolRegisterWorkflow } from '/snippets/workflows/peppol/register.mdx';
 import PeppolUnregisterWorkflow, { peppolUnregisterWorkflow } from '/snippets/workflows/peppol/unregister.mdx';
+import PeppolMigrateWorkflow, { peppolMigrateWorkflow } from '/snippets/workflows/peppol/migrate.mdx';
 import BEPeppolSupplier from '/snippets/parties/be/supplier.mdx';
 import ESPeppolSupplier from '/snippets/parties/es/supplier.mdx';
 import ITPeppolSupplier from '/snippets/parties/it/supplier.mdx';
@@ -285,9 +286,38 @@ When `peppol-migration-key` is provided:
 - If the key is invalid or has expired, the job fails with a `migration key is not valid` error and no registration takes place.
 - If the key is valid, registration proceeds as usual.
 
-<Note>
-Invopop doesn't currently support the reverse direction — generating a migration key so a participant can move away to another provider.
-</Note>
+#### Migrating a participant to another provider
+
+If a party wants to move to another Peppol provider, Invopop can issue the migration key their new provider needs. The participant keeps receiving invoices through Invopop until the new provider completes the migration, so there is no gap in delivery.
+
+Use the following workflow template on the party's silo entry:
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={peppolMigrateWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <PeppolMigrateWorkflow />
+  </Tab>
+</Tabs>
+
+1. **Start Peppol migration** asks the Peppol SML to prepare the participant for migration and stores the key in the entry's Meta tab, under `migration-key` (`sandbox-migration-key` in sandbox):
+
+   ```json
+   {
+     "migration_key": "Ab12$%cdEF34!!"
+   }
+   ```
+
+   Read it from the Console or from the `meta` array returned by [Fetch an entry](/api-ref/silo/entries/fetch-an-entry), and pass it to the new provider. Running the step again while the key is still in the meta reuses it instead of issuing a new one.
+2. **Wait for Peppol migration** checks every hour whether the Peppol network now routes the participant to another provider's Access Point. The job stays queued until it does; once it does, Invopop removes the participant from its SMP and deletes the key from the meta.
+3. **Unregister supplier from Peppol** then closes the registration in Invopop, the same as the [unregister workflow](#unregistering-a-participant).
+
+Only parties registered to receive documents through Invopop can be migrated. The steps fail for a party registered for sending only, or for one whose Peppol inbox no longer matches the identity it was registered with.
+
+<Warning>
+Treat the migration key as a credential and share it only with the new provider. Peppol keys don't expire and can't be revoked, so the wait step has no timeout: it keeps waiting until the new provider uses the key.
+</Warning>
 
 ### Sending invoices
 
