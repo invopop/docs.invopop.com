@@ -25,6 +25,19 @@ Each recorded document is classified into one of four sub-flows based on supplie
 | `10.3` | Domestic B2C invoices         |
 | `10.4` | Domestic B2C payments         |
 
+## Reporting windows
+
+A recorded document belongs to the reporting window that is open when it is **recorded**, not to the window of its issue or payment date. A document recorded late, even months after it was issued, goes into the next report instead of being left out.
+
+Windows follow the cadence of the party's VAT regime: every 10 days, monthly, or every two months. At any moment there are three kinds of window:
+
+| Window | What happens to it |
+|---|---|
+| Current | Collects new records. |
+| Previous | The window being reported. Its report can be generated, sent, and corrected until the current window closes. Its records can still be updated or removed. |
+| Closed | Anything older. Its records can no longer be changed. |
+
+For example, for transactions on a 10-day cadence, on 25 September the current window is 21–30 September, the previous one is 11–20 September, and everything up to 10 September is closed.
 
 ## Recording workflow
 
@@ -93,15 +106,25 @@ The `key` must match the rate used on the line. Lines on `standard` or `zero` ra
 
 ### Correcting a recorded document
 
-To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` action against its silo entry. It removes the document from the pending records so you can correct it and run the record workflow again.
+While a document's window is the current or the previous one:
 
-- You can unrecord at any time until the window's filing deadline, whatever state its report is in. The next generation rebuilds the report without the document: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
-- After the filing deadline a submitted or filed report stands, and its documents can no longer be unrecorded.
-- Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
+- **To update it**, correct the document and run the record workflow again on the same silo entry. The record is updated with the new data and stays in its window.
+- **To remove it**, run the `gov-fr.reporting.unrecord` action against its silo entry. If you record it again later, it goes into the window open at that moment.
+
+When the previous window is generated again, its report is rebuilt with the changes: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
+
+Once a window is closed, what you can do depends on whether its report reached the PPF:
+
+- **Never sent**: recording the document again fails and points you to unrecord it. Unrecord it, then record it again: it is reported with the current window. This is how you recover a document that was missed.
+- **Sent to the PPF**: the report stands. Recording again and unrecording both fail, because the window has closed and the document can no longer be changed or reported again.
+
+Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
 
 ## Submitting reports
 
-A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
+A separate workflow bundles the records of the previous reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically each time a window closes, on the cadence set by the VAT regime — you do not need to trigger it. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
+
+The previous window can be generated and sent until the current window closes, even after its PPF filing deadline. Running the workflow again for a window that already reached the PPF sends a corrective report (`RE`) with every change made since. A report sent after its filing deadline is a late filing, so send before the deadline whenever you can.
 
 <Card iconType="duotone" title="PPF generate and send reporting document" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-send" horizontal>
   Add to my workspace →
