@@ -9,7 +9,7 @@ FAQ snippets are organized as a `country / scope / task` grid. **Leaves** hold t
 
 ## Axes
 
-- **Country** — ISO-2 lowercase: `ar`, `be`, `br`, `co`, `de`, `dk`, `es`, `fi`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`, `sa`. Plus `peppol`, a top-level pseudo-country (see below).
+- **Country** — ISO-2 lowercase: `ar`, `au`, `be`, `br`, `co`, `de`, `dk`, `es`, `fi`, `fr`, `gr`, `it`, `mx`, `no`, `pl`, `pt`, `sa`. Plus `peppol`, a top-level pseudo-country (see below).
 - **Scope** — `country` (cross-regime, country-level answers) or one regime from the manifest.
 - **Task** — `invoicing`, `supplier`, `receiving`, `reporting`. Populate only the tasks that genuinely apply to the scope. Plus `compliance` as a special scope-wide file (see below).
 
@@ -67,6 +67,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Country | ISO | Regimes |
 |---|---|---|
 | Argentina | ar | `arca` |
+| Australia | au | (country scope only; Peppol with PINT A-NZ) |
 | Belgium | be | (uses `peppol` only) |
 | Brazil | br | `nfe`, `nfse` |
 | Colombia | co | `dian` |
