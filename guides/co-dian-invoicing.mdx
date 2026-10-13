@@ -32,7 +32,7 @@ Please refer to the docs of the [GOBL Colombia tax regime](https://docs.gobl.org
 In order to complete this guide, you will need:
 
 - **A registered supplier**: follow the [supplier registration guide](/guides/co-dian-registration) to create the supplier's Alegra account and complete the DIAN enablement before issuing.
-- Customer details for B2B transactions, including name, NIT or international ID, address, and municipality code for national transactions.
+- Customer details for B2B transactions, including name, NIT or international ID, address, and municipality code for Colombian customers.
 - Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
 
 ## Document types
@@ -53,6 +53,7 @@ The same workflow handles all three DIAN document types:
 
 <Steps>
   <Step title="Create the send workflow">
+    {/* TODO: add the "Add to my workspace" card once the co-send-invoice template exists in the Console (workflow-templates/co/send-invoice.json): https://console.invopop.com/redirect/workflows/new?template=co-send-invoice */}
     <Tabs>
       <Tab title="Workflow">
         <WorkflowDiagram workflow={coSendInvoiceWorkflow} />
@@ -65,6 +66,10 @@ The same workflow handles all three DIAN document types:
     </Tabs>
   </Step>
 </Steps>
+
+<Note>
+  The **Add sequential code** step uses a dynamic sequence: each document `series` gets its own counter, starting at `1`. Invoice codes must fall within the series' numbering resolution, so if the authorized range starts elsewhere (the sandbox `SETP` range starts at `990000000`), create a [series](/console/series) with a matching start number and select it in the step instead.
+</Note>
 
 Setup is complete. You can now use the workflow you created to issue invoices, credit notes, and debit notes in Colombia.
 
@@ -102,9 +107,9 @@ The following examples are of [GOBL](https://docs.gobl.org) documents you can co
 - `supplier.tax_id.country` to be set to `CO`
 - `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Colombian customers need it too.
 
-<Warning>
-  When testing in the sandbox, adjust the examples to use the supplier NIT `9005590882`, the `SETP` series with a code between `990000000` and `995000000`, and today's date as the issue date.
-</Warning>
+<Info>
+  The examples are ready for the sandbox: they use Alegra's NIT `9005590882` and the `SETP` test series. Before sending, set the issue date to today and change the code to another one between `990000000` and `995000000`, since the range is shared.
+</Info>
 
 <ExampleAccordion />
 

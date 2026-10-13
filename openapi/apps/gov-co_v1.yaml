@@ -7,7 +7,7 @@ info:
     name: Invopop Developers
   description:
     Set of end-points for the Colombia app, covering the DIAN enablement
-    and numbering resolutions of suppliers onboarded through Alegra.
+    and numbering resolutions of registered suppliers.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -46,7 +46,7 @@ paths:
       description:
         Submit the DIAN enablement test set for a registered supplier
         using the TestSetId obtained from the DIAN enablement portal.
-        Alegra then emits the test documents to the DIAN on the supplier's
+        The test documents are then emitted to the DIAN on the supplier's
         behalf.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
@@ -79,9 +79,7 @@ paths:
       summary: List the numbering resolutions
       description:
         List the DIAN numbering resolutions linked to a registered
-        supplier. Sandbox suppliers return the fixed DIAN test resolution;
-        production suppliers return their current resolutions, fetched
-        live from the DIAN through Alegra.
+        supplier, fetched live from the DIAN.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       responses:
@@ -202,7 +200,7 @@ components:
   responses:
     BadRequest:
       description: |-
-        The request is malformed, Alegra rejected the TestSetId, or the
+        The request is malformed, the TestSetId was rejected, or the
         supplier can't submit a test set in its current state: one is
         already awaiting the DIAN outcome, the supplier is already
         enabled, or a previous enablement failed and the registration
@@ -235,7 +233,7 @@ components:
             error: "not found"
 
     UnprocessableEntity:
-      description: Alegra rejected the request; the error carries its reason.
+      description: The request was rejected; the error carries its reason.
       content:
         application/json:
           schema:

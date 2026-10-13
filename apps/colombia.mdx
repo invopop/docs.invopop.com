@@ -8,6 +8,7 @@ mode: wide
 import RegisterSupplierWorkflow from '/snippets/workflows/co/co-register.mdx';
 import SendInvoiceWorkflow from '/snippets/workflows/co/co-send-invoice.mdx';
 import Supplier from '/snippets/parties/co/supplier.mdx';
+import Customer from '/snippets/parties/co/customer.mdx';
 import ExampleAccordion from '/snippets/invoices/co/accordion.mdx';
 import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
 import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
@@ -45,10 +46,11 @@ import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
 
 		* **Workflow automation:** Automated workflows for registering suppliers and issuing invoices, credit notes, and debit notes through the DIAN system.
 		* **Clearance:** Every document is validated by the DIAN before it's issued, receiving its unique CUFE or CUDE code as the `dian-cude` stamp on the envelope.
-		* **Supplier onboarding:** A hosted portal walks suppliers through the DIAN enablement test set, with the workflow resuming automatically once the DIAN accepts it.
-		* **Resolution management:** Billing numbering resolutions are fetched from the DIAN automatically and invoice numbers are validated against them before sending.
+		* **Supplier onboarding:** A hosted portal walks suppliers through the DIAN enablement test set, with the workflow resuming automatically once the DIAN accepts it. You can also [submit the test set via the API](/api-ref/apps/gov-co/enablement-submit).
+		* **Resolution management:** Billing numbering resolutions are fetched from the DIAN automatically and invoice numbers are validated against them before sending. You can also [list them via the API](/api-ref/apps/gov-co/resolutions-list).
 		* **UBL 2.1 generation:** The signed DIAN XML (AttachedDocument) is stored as a file on the silo entry.
 		* **QR code:** The DIAN QR code is added as the `dian-qr` stamp, ready for legally compliant PDF generation.
+		* **Legally compliant PDF invoices:** The send workflow renders a PDF with all mandatory fields, the CUFE or CUDE, and the DIAN QR code.
 
 		Check out the guides below to get started:
 		- [Supplier registration](/guides/co-dian-registration) · [Invoicing](/guides/co-dian-invoicing)
@@ -86,6 +88,7 @@ import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
 		<AccordionGroup>
 			<Accordion title="Colombia register supplier">
 				<RegisterSupplierWorkflow />
+				{/* TODO: add the "Add to my workspace" link once the co-register template exists in the Console (workflow-templates/co/register.json): https://console.invopop.com/redirect/workflows/new?template=co-register */}
 			</Accordion>
 		</AccordionGroup>
 
@@ -93,6 +96,7 @@ import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
 		<AccordionGroup>
 			<Accordion title="Colombia send invoice">
 				<SendInvoiceWorkflow />
+				{/* TODO: add the "Add to my workspace" link once the co-send-invoice template exists in the Console (workflow-templates/co/send-invoice.json): https://console.invopop.com/redirect/workflows/new?template=co-send-invoice */}
 			</Accordion>
 		</AccordionGroup>
 
@@ -100,8 +104,12 @@ import FAQ from '/snippets/faqs/co/composers/app-colombia.mdx';
 	<Tab title="Documents">
 		<AccordionGroup>
 			<Accordion title="Colombia supplier">
-				A NIT with the verification digit, an email address, and the `co-dian-municipality` extension identifying where the supplier is registered.
+				The name, NIT with the verification digit, and an email address are required for registration. The example also includes the address and the `co-dian-municipality` extension identifying where the supplier is registered, and uses Alegra's sandbox NIT so it can be registered in the sandbox.
 				<Supplier />
+			</Accordion>
+			<Accordion title="Colombia customer">
+				A business customer with name, NIT, and the `co-dian-municipality` extension, which invoices require, plus the address, email, and phone usually shown on the invoice.
+				<Customer />
 			</Accordion>
 		</AccordionGroup>
 
