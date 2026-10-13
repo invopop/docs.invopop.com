@@ -100,19 +100,41 @@ Each supplier NIT can be registered once per workspace and environment. For each
   </Step>
   <Step title="Share the portal link">
     Open the supplier entry in the Console and copy the **registration-link** from its meta section. Share it with the supplier's legal representative: it is public and needs no Invopop account.
+
+    Via the API, [fetch the silo entry](/api-ref/silo/entries/fetch-an-entry) and read the `link_url` of the `meta` row with the key `registration-link`:
+
+    ```json
+    {
+      "meta": [
+        {
+          "key": "registration-link",
+          "link_scope": "public",
+          "link_url": "https://gov-co.invopop.app/portal/{silo_entry_id}"
+        }
+      ]
+    }
+    ```
+
+    To skip the portal entirely, submit the TestSetId yourself as described in [Complete the enablement via the API](#complete-the-enablement-via-the-api).
   </Step>
   <Step title="Select Alegra as technology provider at the DIAN">
     In the DIAN **Habilitación** portal, the legal representative:
 
     1. Goes to **Registro y habilitación** → **Documentos electrónicos** → **Factura electrónica**.
     2. Selects **Software de un proveedor tecnológico** as the operation mode.
-    3. Under **Datos de empresa y software**, picks **Soluciones Alegra S.A.S** as the provider and Alegra's software, then clicks **Asociar**.
+    3. Selects **Soluciones Alegra S.A.S** as the provider and Alegra's software, then clicks **Asociar**.
     4. Opens the test set details and copies the **TestSetId**.
 
-    The DIAN explains these screens in sections 1 and 2 of [Registro y selección del modo de operación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
+    The DIAN explains these screens in sections 1 and 2 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
   </Step>
   <Step title="Submit the test set">
     The legal representative pastes the TestSetId into the Invopop portal and clicks **Enviar set de pruebas**. Alegra sends the required test documents to the DIAN automatically.
+
+    <Frame caption="Enablement portal">
+      <img width="600" src="/assets/guides/co-dian-enablement-portal.png" alt="Enablement portal with the DIAN TestSetId field and the Enviar set de pruebas button" />
+    </Frame>
+
+    To submit the TestSetId without the hosted portal, use the [Submit test set](/api-ref/apps/gov-co/enablement-submit) endpoint.
   </Step>
   <Step title="Wait for the DIAN response">
     The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. If the DIAN rejects the test set, the workflow fails with the DIAN's error details; fix the cause and re-run the registration workflow to start again.
@@ -129,14 +151,14 @@ In live, every invoice series needs a DIAN numbering range authorization linked 
 
 <Steps>
   <Step title="Request the numbering range">
-    The legal representative requests the range in the DIAN's MUISCA system, which issues form 1876 at the end. See [Solicitud de Autorización de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf).
+    The legal representative requests the range in the DIAN's MUISCA system (**Numeración de Facturación** → **Solicitar numeración de facturación** → **Autorizar Rango**), choosing a prefix of up to four letters or digits, which becomes the invoice `series`. Once signed, the DIAN issues form 1876 with the authorized ranges and validity. See [Request for invoice numbering authorization](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf).
   </Step>
   <Step title="Link the range to Alegra">
-    Once the DIAN has accepted the test set and at least an hour after the request, log in through **Facturando Electrónicamente**, go to **Configuración** → **Rangos de numeración**, select **Soluciones Alegra S.A.S** under **Proveedor - Software**, pick the prefix, and click **Agregar**. If Alegra or the range doesn't show up, use **Sincronizar contribuyente** in the Habilitación portal. The DIAN explains this in section 4 of [Registro y selección del modo de operación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
+    Once the DIAN has accepted the test set, and about two hours after the range request, log in to the production environment through **Facturando Electrónicamente**. Go to **Configuración** → **Rangos de numeración**, select Alegra's software (**Soluciones Alegra S.A.S**) and the authorized range, and click **Agregar**. If the operation mode doesn't show in production, use **Sincronizar a Producción** in the test set details of the Habilitación portal. The DIAN explains this in sections 3 and 4 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
   </Step>
 </Steps>
 
-Invopop fetches the supplier's linked resolutions automatically before sending, so no further action is needed. Check them anytime with [List resolutions](/api-ref/apps/gov-co/resolutions-list). To extend a range that is about to expire with numbers left, see [Solicitud de Habilitación de Numeración de Facturación](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf); once a range is used up, request a new one.
+Invopop fetches the supplier's linked resolutions automatically before sending, so no further action is needed. Check them anytime with [List resolutions](/api-ref/apps/gov-co/resolutions-list). To extend a range that is about to expire with numbers left, see [Request for invoice numbering extension](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf); once a range is used up, request a new one.
 
 ## Complete the enablement via the API
 
