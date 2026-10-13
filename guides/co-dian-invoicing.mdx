@@ -45,6 +45,8 @@ The same workflow handles all three DIAN document types:
 | `credit-note` | CUDE | References the corrected invoice in `preceding`; the correction concept comes from the [`co-dian-credit-code`](https://docs.gobl.org/addons/co-dian-v2) extension. When the preceding entry carries no `dian-cude` stamp, the note is cleared as a _nota crédito sin referencia_ |
 | `debit-note` | CUDE | Every `preceding` entry must carry the `dian-cude` stamp of the original invoice; the concept comes from the `co-dian-debit-code` extension |
 
+Cleared invoices can't be cancelled or edited; correct them with a credit or debit note. Only invoices need a numbering resolution, so notes can use any series.
+
 ## Setup
 
 <Info>
@@ -84,20 +86,25 @@ Upload the invoice as a silo entry and run the workflow on it, either from the [
 On success, the workflow:
 
 - adds the `dian-cude` stamp to the envelope, holding the CUFE (invoices) or CUDE (credit and debit notes),
-- adds the `dian-qr` stamp with the DIAN QR code content, used by the PDF step to render a compliant invoice, and,
+- adds the `dian-qr` stamp with the DIAN QR code content, used by the PDF step to render a compliant invoice,
+- adds the `dian-resolution` stamp with the numbering resolution (invoices only) and the `email-subject` stamp with the subject the DIAN expects on the email notification, and,
 - attaches the signed DIAN XML (AttachedDocument) to the entry as a file.
+
+While the DIAN hasn't responded, the job stays queued and is checked again every 15 minutes. If the DIAN rejects the document, the job fails with the DIAN's error details.
 
 ### Validation notes
 
 Before sending, the document is validated against the [DIAN add-on](https://docs.gobl.org/addons/co-dian-v2) rules plus a few DIAN transmission requirements:
 
 - The issue date must be the current date in Colombia: the DIAN rejects back-dated documents.
+- The `code` must contain digits only; letters belong in the `series`.
 - For invoices, the series must match one of the supplier's numbering resolutions, and the code must be within the authorized range and validity dates. Resolutions are refreshed from the DIAN automatically.
 - Every tax combo must include a percent; you can set percents explicitly or use one of the supported rates of the [GOBL Colombia tax regime](https://docs.gobl.org/regimes/co).
 - All line items must have a price greater than zero, and due dates cannot be earlier than the issue date.
+- Totals rounding (`totals.rounding`) isn't supported.
 - Amounts in other currencies are converted to COP automatically. Invoices in a currency other than COP must include `exchange_rates` with a rate to COP, or the conversion fails.
 
-## Examples
+## Example invoices
 
 The following examples are of [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the Colombia workflow created during setup.
 
