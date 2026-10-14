@@ -1,12 +1,46 @@
----
-title: "SAT unregister platform for reporting"
-description: "Stop accepting new operations for a platform while keeping the SAT portal and its history available"
-countryCode: "mx"
-appId: "sat-mx"
-schema: "org/party"
----
+export const mxSatPlatformsUnregisterWorkflow = {
+    "name": "SAT unregister platform for reporting",
+    "description": "Stop accepting new operations for a platform while keeping the SAT portal and its history available",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "a3000000-0003-11f1-a000-000000000001",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "a3000000-0003-11f1-a000-000000000002",
+            "name": "Unregister platform with SAT",
+            "provider": "sat-mx.platforms.unregister"
+        },
+        {
+            "id": "a3000000-0003-11f1-a000-000000000003",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `void`{.state .void}",
+            "config": {
+                "state": "void"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a3000000-0003-11f1-a000-000000000099",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
 
-```json Example SAT unregister platform workflow
+```json SAT unregister platform for reporting workflow
 {
     "name": "SAT unregister platform for reporting",
     "description": "Stop accepting new operations for a platform while keeping the SAT portal and its history available",

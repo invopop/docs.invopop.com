@@ -1,19 +1,14 @@
 ---
 title: "KSeF issuing invoices guide"
 sidebarTitle: "Issuing invoices"
-description: "Issue FA(3) invoices and import received invoices through Poland's KSeF 2.0 system."
+description: "Issue FA(3) invoices through Poland's KSeF 2.0 system."
 ---
 
 import PolandResources from '/snippets/tables/poland-resources.mdx';
-import SendInvoiceWorkflow from '/snippets/workflows/pl/pl-send.mdx';
+import SendInvoiceWorkflow, { plSendWorkflow } from '/snippets/workflows/pl/pl-send.mdx';
 import ExampleAccordion from '/snippets/invoices/pl/accordion.mdx';
-import ImportInvoiceWorkflow from '/snippets/workflows/pl/pl-import.mdx';
-import SyncInvoicesWorkflow from '/snippets/workflows/pl/pl-sync.mdx';
 import FAQ from '/snippets/faqs/pl/composers/guide-ksef-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { plSendWorkflow } from '/snippets/workflows/pl/pl-send-data.mdx';
-import { plImportWorkflow } from '/snippets/workflows/pl/pl-import-data.mdx';
-import { plSyncWorkflow } from '/snippets/workflows/pl/pl-sync-data.mdx';
 
 ## Introduction
 
@@ -21,9 +16,10 @@ KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing sy
 
 Invoices are encoded in FA(3), a strict XML format that enforces standardized fields for domestic and cross-border transactions. The KSeF system validates all submitted invoices in real-time and assigns a unique KSeF ID upon successful clearance.
 
-This guide covers two key processes:
+This guide covers three key processes:
 
 - [Invoice issuance](#send-an-invoice): Creating and sending FA(3) invoices through KSeF
+- [Credit notes](#issue-a-credit-note): Correcting cleared invoices with a _faktura korygująca_
 - [Invoice import](#import-received-invoices): Importing received invoices from KSeF
 
 For registering parties (suppliers) in the KSeF system, see the companion guide: [Poland: Supplier registration](/guides/pl-ksef-supplier).
@@ -82,82 +78,11 @@ This workflow signs the GOBL document, converts it to FA(3) XML, and submits it 
 
 </Step>
 
-<Step title="Connect the Cron app">
-
-<Info>
-  You can skip this and the following steps if you only need to send invoices (**send only** use case).
-</Info>
-
-  1. Navigate to **Configuration** → **Apps**
-  2. Find **Cron** in the app discovery list
-  3. Click **Connect** to activate
-
-  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
-</Step>
-
-<Step title="Configure the invoice import workflow">
-
-This workflow imports an individual invoice from KSeF when it is received. It is automatically triggered by the sync workflow (configured in the next step) for each invoice found.
-
-<Card iconType="duotone" title="KSeF import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-import" horizontal>
-  Add to my workspace →
-</Card>
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={plImportWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-
-    <Note>
-      This workflow receives KSeF number and NIP as input arguments, not a silo entry. It's designed to be triggered automatically by the sync workflow.
-    </Note>
-
-    <ImportInvoiceWorkflow />
-  </Tab>
-</Tabs>
-
-</Step>
-
-<Step title="Configure the invoice sync workflow">
-
-This workflow syncs all received invoices for a party within a specific time range. It creates an import job for each invoice found, using the import workflow you configured in the previous step.
-
-Configure the **Sync received invoices from KSeF** step to reference the import workflow created in the previous step.
-
-<Frame>
-  <img
-    width="400"
-    src="/assets/guides/pl-sync-config.png"
-    alt="Configure the workflow that all invoices will be sent to"
-  />
-</Frame>
-
-<Card iconType="duotone" title="KSeF sync received invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-sync" horizontal>
-  Add to my workspace →
-</Card>
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={plSyncWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-
-    <SyncInvoicesWorkflow />
-  </Tab>
-</Tabs>
-
-<Info>
-  For the **send & receive** use case, parties must be registered with the **send & receive** variant of the registration workflow, which subscribes them to periodic invoice imports via the [Cron app](/apps/cron). See the [supplier registration guide](/guides/pl-ksef-supplier) for details.
-</Info>
-
-</Step>
-
 </Steps>
 
 ## Running
 
-In this section, we'll provide details on how to issue invoices on behalf of a registered party and how to import received invoices.
+In this section, we'll provide details on how to issue invoices on behalf of a registered party.
 
 ### Send an invoice
 
@@ -180,6 +105,25 @@ The invoice will be validated, converted to FA(3) XML format, and sent to KSeF. 
 <Note>
   For international transactions, the invoice is created and cleared in KSeF just like domestic invoices. Because the foreign recipient cannot log into KSeF, delivery happens outside the platform (via email, EDI, etc.) with the KSeF QR code included for verification.
 </Note>
+
+### Issue a credit note
+
+Polish VAT law does not recognise credit or debit notes as separate document types: every correction to a cleared invoice is issued as a _faktura korygująca_ (corrective invoice), as set out in art. 106j of the VAT act. In GOBL, you create one as an invoice with the type `credit-note` — the [`pl-favat-v3`](https://docs.gobl.org/addons/pl-favat-v3) addon automatically classifies it as the FA(3) `KOR` document type (setting the `pl-favat-invoice-type` tax extension) and applies the KSeF correction rules.
+
+To generate a credit note:
+
+- Set `type` to `credit-note`, and use the same supplier details as in the original invoice.
+- Reference the original invoice in the `preceding` array, including its `issue_date`, `series` and `code`, plus the KSeF number it was assigned on clearance as a `favat-ksef-number` stamp.
+- Optionally, add the `pl-favat-effective-date` extension to the preceding reference to state when the correction takes effect for VAT purposes: `1` (date of the original invoice), `2` (date of the credit note itself), or `3` (another date).
+- Add the line items for the amounts being credited. As with every GOBL credit note, quantities and amounts are expressed as positive values; Invopop inverts them wherever negative values are expected, such as in the FA(3) XML.
+
+Process the credit note with the same [send invoice workflow](#send-an-invoice) used for regular invoices: KSeF clears the correction and assigns it its own KSeF number. You can copy the **B2B Credit Note** example from the accordion above as a starting point.
+
+Corrections of prepayment and settlement invoices work the same way, keeping the matching tag on the credit note: `partial` produces a `KOR_ZAL` (correction of a _faktura zaliczkowa_) and `settlement` produces a `KOR_ROZ` (correction of a _faktura rozliczeniowa_).
+
+<Tip>
+  PDFs of Polish credit notes are titled "Faktura korygująca", following the official KSeF terminology. To also display the amounts as negative differences from the original invoice — the presentation Polish customers expect — enable the **Adjustment invoices** option in the Generate PDF step, or pass the `pdf-adjustment-mode` arg. See [Why would I want to use adjustment invoices?](/guides/pdf-invoice#why-would-i-want-to-use-adjustment-invoices) for details.
+</Tip>
 
 ### Import received invoices
 

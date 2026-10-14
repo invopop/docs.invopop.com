@@ -76,11 +76,13 @@ The country scope only populates a task if the corresponding country-level flow 
 | Finland | fi | `finvoice` (also uses `peppol`) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
 | Romania | ro | (country scope only; own RO e-Factura regime) |
+| Slovakia | sk | (country scope only; Peppol with eFaktúra tax data reporting) |
 | UAE | ae | (country scope only; own EIS / PINT AE regime) |
 | Spain | es | `verifactu`, `ticketbai`, `sii`, `noverifactu`, `facturae` |
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
 | Greece | gr | `mydata` |
 | Italy | it | `sdi`, `ticket` |
+| Malaysia | my | (country scope only; MyInvois clearance) |
 | Mexico | mx | `sat` |
 | Norway | no | (uses `peppol` only) |
 | Poland | pl | `ksef` |
@@ -377,12 +379,19 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/gr-iapr-supplier.mdx` | `gr/composers/guide-mydata-supplier.mdx` |
 | `faq/italy.mdx` | `it/composers/page-faq.mdx` |
 | `compliance/italy.mdx` | `it/composers/page-compliance.mdx` |
+| `apps/italy.mdx` | `it/composers/app-italy.mdx` |
 | `apps/sdi-italy.mdx` | `it/composers/app-sdi.mdx` |
 | `apps/smart-receipts-italy.mdx` | `it/composers/app-ticket.mdx` |
+| `guides/it-sdi-invoicing.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
+| `guides/it-sdi-status.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
+| `guides/it-sdi-reception.mdx` | `it/composers/guide-sdi-receiving.mdx` |
+| `guides/it-sdi-archiving.mdx` | `it/composers/guide-sdi-reporting.mdx` |
 | `guides/it-sdi-sending.mdx` | `it/composers/guide-sdi-invoicing.mdx` |
 | `guides/it-sdi-receiving.mdx` | `it/composers/guide-sdi-receiving.mdx` |
 | `guides/it-ticket.mdx` | `it/composers/guide-ticket-invoicing.mdx` |
 | `guides/it-ticket-supplier.mdx` | `it/composers/guide-ticket-supplier.mdx` |
+| `faq/malaysia.mdx` | `my/composers/page-faq.mdx` |
+| `compliance/malaysia.mdx` | `my/composers/page-compliance.mdx` |
 | `faq/mexico.mdx` | `mx/composers/page-faq.mdx` |
 | `compliance/mexico.mdx` | `mx/composers/page-compliance.mdx` |
 | `apps/sat-mexico.mdx` | `mx/composers/app-sat.mdx` |
@@ -396,6 +405,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/poland.mdx` | `pl/composers/app-ksef.mdx` |
 | `guides/pl-ksef.mdx` | `pl/composers/guide-ksef-invoicing.mdx` |
 | `guides/pl-ksef-supplier.mdx` | `pl/composers/guide-ksef-supplier.mdx` |
+| `guides/pl-ksef-receiving.mdx` | `pl/composers/guide-ksef-receiving.mdx` |
 | `faq/portugal.mdx` | `pt/composers/page-faq.mdx` |
 | `compliance/portugal.mdx` | `pt/composers/page-compliance.mdx` |
 | `apps/at-portugal.mdx` | `pt/composers/app-at.mdx` |
@@ -403,6 +413,8 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/pt-at-supplier.mdx` | `pt/composers/guide-at-supplier.mdx` |
 | `faq/romania.mdx` | `ro/composers/page-faq.mdx` |
 | `compliance/romania.mdx` | `ro/composers/page-compliance.mdx` |
+| `faq/slovakia.mdx` | `sk/composers/page-faq.mdx` |
+| `compliance/slovakia.mdx` | `sk/composers/page-compliance.mdx` |
 | `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
 | `apps/saudi-arabia.mdx` | `sa/composers/app-zatca.mdx` |
 | `guides/sa-zatca-clearance-reporting.mdx` | `sa/composers/guide-zatca-invoicing.mdx` |

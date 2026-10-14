@@ -1,12 +1,46 @@
----
-title: "KSeF import invoice"
-description: "Import an invoice received through KSeF"
-countryCode: "pl"
-appId: "gov-pl"
-schema: "bill/invoice"
----
+export const plImportWorkflow = {
+    "name": "KSeF import invoice",
+    "description": "Import an invoice received through KSeF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ba8faad0-01d7-11f1-8b4e-fdb288ce1d84",
+            "name": "Import invoice from KSeF",
+            "provider": "gov-pl.import"
+        },
+        {
+            "id": "5efe18e0-01e7-11f1-8a2b-3f4babb9af4d",
+            "name": "Set folder",
+            "provider": "silo.folder",
+            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+            "config": {
+                "folder": "expenses"
+            }
+        },
+        {
+            "id": "653ff700-01e7-11f1-8a2b-3f4babb9af4d",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "7d993da0-0275-11f1-94f6-05637523f70d",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
 
-```json Example KSeF import invoice workflow
+```json KSeF import invoice workflow
 {
     "name": "KSeF import invoice",
     "description": "Import an invoice received through KSeF",

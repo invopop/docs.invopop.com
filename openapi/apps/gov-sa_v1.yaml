@@ -43,6 +43,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/UnprocessableEntity"
         "500":
@@ -63,17 +65,11 @@ components:
     OTPSubmit:
       type: object
       required:
-        - name
         - invoice_type
         - branch_name
-        - registered_address
         - business_category
         - otp
       properties:
-        name:
-          type: string
-          description: Legal name of the supplier as registered with ZATCA.
-          example: "Acme Trading Co."
         invoice_type:
           type: string
           description: |-
@@ -92,10 +88,6 @@ components:
             In case of VAT Groups, this field should contain the 10-digit TIN number 
             of the individual group member.
           example: "Head Office"
-        registered_address:
-          type: string
-          description: Registered address of the supplier as recorded with ZATCA.
-          example: "King Fahd Road, Riyadh 12211"
         business_category:
           type: string
           description: Business category or industry of the supplier.
@@ -149,14 +141,26 @@ components:
 
     NotFound:
       description: |-
-        The referenced silo entry or its party registration could not be
-        found. The party must be registered before submitting the OTP.
+        No registration exists for the silo entry, so the onboarding has not
+        started. Run the `gov-sa.register` workflow step first.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
           example:
-            error: "party registration not found"
+            error: "no registration for this silo entry, run gov-sa.register first"
+
+    Conflict:
+      description: |-
+        The party already holds a Compliance CSID. Submitting an OTP again
+        would issue a second set of certificates, so the request is refused.
+        Unregister the party before onboarding it again.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "party is already registered"
 
     UnprocessableEntity:
       description: |-

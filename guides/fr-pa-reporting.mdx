@@ -6,15 +6,13 @@ description: Periodic e-reporting (Flux 10) of B2C and non-regulated B2B transac
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import SendWorkflow from '/snippets/workflows/fr/fr-reporting-send.mdx';
-import RecordWorkflow from '/snippets/workflows/fr/fr-reporting-record.mdx';
-import { frReportingSendWorkflow } from '/snippets/workflows/fr/fr-reporting-send-data.mdx';
-import { frReportingRecordWorkflow } from '/snippets/workflows/fr/fr-reporting-record-data.mdx';
+import SendWorkflow, { frReportingSendWorkflow } from '/snippets/workflows/fr/fr-reporting-send.mdx';
+import RecordWorkflow, { frReportingRecordWorkflow } from '/snippets/workflows/fr/fr-reporting-record.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-reporting.mdx';
 
 E-reporting covers everything that is out of scope for regulated e-invoicing (B2C sales, cross-border B2B, and any flow where one party is not registered in the Annuaire). Instead of routing each invoice individually, you **record** each invoice and payment, Invopop generates a Flux 10 XML for each reporting window, and sends it to the PPF.
 
-Reports use the [fr-ctc-flow10-v1](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on.
+Invoices and payments must declare the [fr-ctc-flow10-v1](https://docs.gobl.org/addons/fr-ctc-flow10-v1) add-on in `$addons`: GOBL applies the Flux 10 rules when the document is built, and the record step rejects documents that don't carry the add-on.
 
 ## Sub-flows
 
@@ -93,9 +91,17 @@ Lines using `exempt`, `reverse-charge`, `intra-community`, `export`, or `outside
 
 The `key` must match the rate used on the line. Lines on `standard` or `zero` rates do not need a note.
 
+### Correcting a recorded document
+
+To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` action against its silo entry. It removes the document from the pending records so you can correct it and run the record workflow again.
+
+- You can unrecord at any time until the window's filing deadline, whatever state its report is in. The next generation rebuilds the report without the document: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
+- After the filing deadline a submitted or filed report stands, and its documents can no longer be unrecorded.
+- Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
+
 ## Submitting reports
 
-A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it.
+A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
 
 <Card iconType="duotone" title="PPF generate and send reporting document" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-reporting-send" horizontal>
   Add to my workspace →
@@ -121,7 +127,50 @@ A separate workflow bundles the records for a closed reporting window into a sin
   />
 </Frame>
 
-You can also trigger this workflow manually against any registered party — useful for testing, or to bring a party up to date after onboarding.
+### Triggering a report manually
+
+You can also run the workflow yourself: useful for testing, or to bring a party up to date after onboarding. There are two ways to tell the workflow which declarant to report:
+
+- **Job arguments** — create the job with no silo entry and pass the SIREN in `args`. This is what the scheduler does.
+- **A silo entry** — run the job against the registered party's silo entry, as any other workflow.
+
+Whichever you choose, the stream being reported is selected the same way:
+
+| Argument | Required | Values |
+|---|---|---|
+| `siren` | Only without a silo entry | The declarant's 9-digit SIREN. Takes precedence over the silo entry when both are given. |
+| `flux-kind` | No | `tx` for transactions, `py` for payments. Falls back to the step configuration. |
+| `role` | No | `seller` or `buyer`. Falls back to the step configuration. |
+| `window` | No | A specific closed window to report, such as `2026-SEP-1`. See below. |
+
+<CodeGroup>
+
+```bash Job arguments
+curl -X POST "https://api.invopop.com/transform/v1/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_id": "<REPORTING_WORKFLOW_ID>",
+    "args": { "siren": "<SIREN>", "flux-kind": "tx", "role": "seller" }
+  }'
+```
+
+```bash Silo entry
+curl -X POST "https://api.invopop.com/transform/v1/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_id": "<REPORTING_WORKFLOW_ID>",
+    "silo_entry_id": "<PARTY_SILO_ENTRY_ID>",
+    "args": { "flux-kind": "tx", "role": "seller" }
+  }'
+```
+
+</CodeGroup>
+
+<Note>
+  `window` is for testing and recovery. Name it `YEAR-MONTH-STEP`: `2026-SEP-1` to `2026-SEP-3` for 10-day windows, `2026-SEP-1` for monthly ones, and `2026-JAN-1` (January–February) for two-month ones. The window must have closed. Forcing a window doesn't change the schedule.
+</Note>
 
 
 ### Picking a VAT regime at supplier registration
@@ -178,20 +227,23 @@ Filter the table by **SIREN**, **Period ID**, the **Reporting period** window, o
 
 ## Reading what's filed
 
-Four read endpoints expose submission status and the raw report XML, all scoped to the party's silo entry id:
+These endpoints expose submission status and the raw report XML, all scoped to the party's SIREN. The party's silo entry ID is still accepted in its place.
 
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id` <br /> 
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren` <br /> 
 Summary per kind (current window, next deadline, last filed report)
  
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods` <br />
 Paginated history of filed periods (filter with `?kind=tx` or `?kind=py`)
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods/:period_id` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods/:period_id` <br />
 A single period's metadata
 
-<Badge color="green" size="sm">GET</Badge> `/v1/reports/:silo_entry_id/periods/:period_id/xml` <br />
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/periods/:period_id/xml` <br />
 The raw report XML sent to the PPF
+
+<Badge color="green" size="sm">GET</Badge> `/v1/reports/:siren/preview?kind=tx` <br />
+The current window's report as it stands, built on the fly and never stored or sent. Useful for testing: pass `kind=py` for payments and `role=buyer` for the buyer stream.
 
 ## FAQ
 

@@ -2,6 +2,8 @@ import B2BInvoiceMin from '/snippets/invoices/it/sdi-b2b.min.mdx';
 import B2BInvoice from '/snippets/invoices/it/sdi-b2b.mdx';
 import B2GInvoiceMin from '/snippets/invoices/it/sdi-b2g.min.mdx';
 import B2GInvoice from '/snippets/invoices/it/sdi-b2g.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/it/sdi-simplified.min.mdx';
+import SimplifiedInvoice from '/snippets/invoices/it/sdi-simplified.mdx';
 import StampDutyInvoiceMin from '/snippets/invoices/it/sdi-stamp-duty.min.mdx';
 import StampDutyInvoice from '/snippets/invoices/it/sdi-stamp-duty.mdx';
 import B2BAdditionalMin from '/snippets/invoices/it/sdi-b2b-additional.min.mdx';
@@ -10,6 +12,8 @@ import CreditnoteMin from '/snippets/invoices/it/sdi-creditnote.min.mdx';
 import Creditnote from '/snippets/invoices/it/sdi-creditnote.mdx';
 import ExemptInvoiceMin from '/snippets/invoices/it/sdi-exempt.min.mdx';
 import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
+import AfterReceiptMin from '/snippets/invoices/it/sdi-after-receipt.min.mdx';
+import AfterReceipt from '/snippets/invoices/it/sdi-after-receipt.mdx';
 
 <AccordionGroup>
 
@@ -48,6 +52,23 @@ import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
 		<CodeGroup>
 			<B2GInvoiceMin />
 			<B2GInvoice />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Simplified Invoice (Fattura Semplificata)">
+
+		In this example, we're issuing a simplified invoice for a €49.00 restaurant bill to a private customer identified only by their codice fiscale.
+
+		Notice:
+
+		- `$tags` includes `simplified`, so `gobl build` sets the format to `FSM10` and the document type to `TD07`,
+		- the customer has no name or address: an Italian `tax_id` without a code, plus their codice fiscale as an `it-fiscal-code` identity,
+		- prices include VAT, and the total with VAT must stay within €400, which the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon checks before the invoice is sent, and,
+		- see [Simplified invoices](/guides/it-sdi-invoicing#simplified-invoices) for what else the format allows.
+
+		<CodeGroup>
+			<SimplifiedInvoiceMin />
+			<SimplifiedInvoice />
 		</CodeGroup>
 	</Accordion>
 
@@ -126,6 +147,25 @@ import ExemptInvoice from '/snippets/invoices/it/sdi-exempt.mdx';
 		<CodeGroup>
 			<CreditnoteMin />
 			<Creditnote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Invoice after a documento commerciale">
+
+		In this example, a retail sale was first recorded with a [Smart Receipt](/guides/it-ticket) (*documento commerciale*) and the customer later asked for an invoice. The invoice is an ordinary SDI invoice that references the receipt issued for the same sale.
+
+		Notice:
+
+		- the line item carries an `attributes` entry with `type` `N.DOC.COMM`, the receipt's AdE document number in `text`, its progressive number in `amount`, and the receipt date in `date`,
+		- the `it-sdi-v1` addon converts each item attribute into an `AltriDatiGestionali` block: `type` becomes `TipoDato`, `text` becomes `RiferimentoTesto`, `amount` becomes `RiferimentoNumero`, and `date` becomes `RiferimentoData`, which is the layout the AdE describes for invoices preceded by a receipt,
+		- `type` is limited to 10 ASCII characters and `text` to 60 characters, and `amount` is rendered with at least two decimals, so `7816` arrives at SDI as `7816.00`,
+		- the receipt's document number is the `ade-ref` stamp the Smart Receipts app adds to the receipt's header after the AdE accepts it,
+		- `issue_date` is the day of the sale, because FatturaPA's `Data` comes from `issue_date` (`op_date` is not written to the XML), and without further tags `gobl build` sets the document type to `TD01`,
+		- the Smart Receipt itself is not changed by this invoice, and your own VAT records must remove the invoiced amount from that day's *corrispettivi*. See [Invoice requested after a receipt](/guides/it-ticket#invoice-requested-after-a-receipt) for the full sequence.
+
+		<CodeGroup>
+			<AfterReceiptMin />
+			<AfterReceipt />
 		</CodeGroup>
 	</Accordion>
 

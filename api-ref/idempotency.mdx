@@ -25,3 +25,8 @@ it is unique before processing.
 Many API endpoints will detect duplicated requests and simply return the same response
 as expected initially. If however this cannot be guaranteed, the API will return a
 `409 Conflict` response which the client should be able to handle.
+
+Silo entries and Transform jobs take the second approach. Repeating a `PUT` with the same
+ID, or a `POST` with the same `key`, returns `409 Conflict` even when the body is identical
+(`entry already exists with same id`). Treat that response as confirmation that the first
+request succeeded, and fetch the existing record rather than generating a new ID.

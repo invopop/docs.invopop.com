@@ -1,0 +1,183 @@
+---
+title: "Tables guide"
+sidebarTitle: "Tables"
+description: "Store structured data in SQL tables and move it in and out of your workflow documents."
+icon: "https://assets.invopop.com/apps/tables/icon.svg"
+---
+
+Invopop's [Tables app](/apps/tables) gives your workspace a managed SQL database that lives right next to your documents. You create tables, load them with data, and then use workflow steps to turn rows into GOBL documents, enrich documents with values looked up from a table, or write results back, all without running any database infrastructure yourself.
+
+This guide walks through the full round trip: setting up a table, getting data into it, and wiring the app's four actions into your workflows.
+
+## How it works
+
+Everything revolves around one **database** per workspace (backed by [Turso](https://turso.tech), a managed libSQL/SQLite service) that holds your **tables**. Each table row can be linked to a GOBL document through its automatic `silo_entry_id` column, and data moves between rows and documents through four workflow actions:
+
+| Action | Direction | What it does |
+|---|---|---|
+| **Import** | row → document | Builds a GOBL document from a table row and saves it as a silo entry. |
+| **Export** | document → row | Writes fields from a GOBL document into a table row. |
+| **Merge** | table → document | Looks up a matching row and patches its values into the document. |
+| **Create batch** | table → many jobs | Runs a workflow once for every matching row. |
+
+Each action is configured with a [JQ](https://jqlang.org) query that maps columns onto GOBL fields, or the other way around. You can test your queries in the [online JQ playground](https://play.jqlang.org/) before saving them.
+
+Before you start, you'll want at least one [workflow](/guides/workflows) to process your documents.
+
+## Set up your database
+
+<Steps>
+  <Step title="Enable the Tables app">
+    In the Console, open the apps directory by clicking the icon next to **Apps** in the sidebar. Find **Tables** in the list of available apps and enable it in your workspace. A database is created for you automatically the first time you open the app.
+  </Step>
+
+  <Step title="Open the app">
+    Once enabled, **Tables** appears in the sidebar under **Apps**. Opening it gives you:
+
+    - a list of the **tables** in your database,
+    - a **SQL editor** for running queries,
+    - your database **connection details** for direct access from your own tools.
+  </Step>
+
+  <Step title="Create a table">
+    Create a table either from a **template** or by defining your own columns.
+
+    Templates are the quickest way to start with invoice data:
+
+    - **Simple**: one row per invoice with a single line item. Best for straightforward, one-line documents.
+    - **Multi-row**: one row per line item, plus a view that aggregates the rows of each invoice back into a single record.
+    - **Multi-table**: normalized `suppliers`, `customers`, `invoices`, and `invoice_lines` tables with a view that reassembles a full invoice.
+
+    Each template applies an `ordering_code` uniqueness constraint so the same document can't be inserted twice, and comes with a suggested import query (see [Import](#import-turn-a-row-into-a-document) below).
+
+    <Note>
+      Every table automatically includes an auto-incrementing `id` primary key and an optional `silo_entry_id` column that links a row back to the GOBL document it produced or came from. You don't need to add these yourself.
+    </Note>
+  </Step>
+</Steps>
+
+## Load data into a table
+
+There are three ways to get data into a table:
+
+- **SQL editor**: run `INSERT` statements (or any other SQL) directly from the app. Handy for seeding reference data and for quick edits.
+- **Direct connection**: generate database credentials from the app and connect with any libSQL/SQLite-compatible client to bulk-load data from your own systems.
+- **Export step**: let a workflow write rows for you as documents are processed (see [Export](#export-write-a-document-back-to-a-table) below).
+
+## Use tables in your workflows
+
+The four actions are added as steps inside your own workflows. Each step is configured with the fields described below.
+
+### Import: turn a row into a document
+
+The **Import** step reads one table row and builds a GOBL document from it, saving the result as a silo entry that the rest of the workflow can process.
+
+Configure it with:
+
+- **Schema**: the GOBL schema to produce: `bill/invoice`, `bill/payment`, `bill/status`, or `org/party`.
+- **Scope**: whether the query output is a **Document** or a full **Envelope**.
+- **Query definition**: the JQ that maps columns onto GOBL fields. Use **Load suggested JQ from template** to start from the query that ships with the table's template.
+- **Allow invalid envelopes**: store the result even if it doesn't fully pass schema validation.
+
+For a flat invoice table, the query looks something like this (the **Schema** selector adds `$schema` for you):
+
+```jq
+{
+  series: .series,
+  code: .code,
+  issue_date: .issue_date,
+  currency: .currency,
+  supplier: {
+    name: .supplier_name,
+    tax_id: { country: .supplier_country, code: .supplier_tax_code }
+  },
+  customer: {
+    name: .customer_name,
+    tax_id: { country: .customer_country, code: .customer_tax_code }
+  },
+  lines: [
+    {
+      quantity: .quantity,
+      item: { name: .item_name, price: .item_price },
+      taxes: [ { cat: "VAT", rate: .tax_rate } ]
+    }
+  ]
+}
+```
+
+<Tip>
+  Let GOBL do the maths. Map the raw quantities, prices, and tax rates onto the document and let the build step calculate totals. Don't try to write `total` or `sum` fields from your table.
+</Tip>
+
+### Export: write a document back to a table
+
+The **Export** step writes fields from the document into a table row, for reporting, reconciliation, or to capture values produced earlier in the workflow (such as a tax authority reference number).
+
+Configure it with:
+
+- **Target table**: where to write the row.
+- **Scope**: **Document** or **Envelope**.
+- **Query definition**: JQ that maps GOBL fields onto table columns.
+- **Upsert key**: one or more columns used to match an existing row. If a match is found the row is updated in place; otherwise a new row is inserted. Leave empty to always insert.
+
+Two helper functions are available in the query: `silo_entry_id` returns the current document's ID and `workspace_id` returns the workspace ID.
+
+```jq
+{
+  silo_entry_id: silo_entry_id,
+  code: .code,
+  total: .totals.payable,
+  status: "issued"
+}
+```
+
+With an **Upsert key** of `silo_entry_id`, re-running the workflow updates the same row instead of creating duplicates.
+
+### Merge: enrich a document from a table
+
+The **Merge** step looks up a row and patches its values into the document currently being processed. This is useful for pulling in reference data such as payment terms, customer details, or tax rates.
+
+Configure it with:
+
+- **Source table**: the table to look up.
+- **Scope**: **Document** or **Envelope**.
+- **Key query**: JQ that returns `{ column: value }` pairs used to find the matching row (a `WHERE` clause).
+- **Patch query**: JQ that returns the updated document. The matched row is available as the `$row` variable.
+- **Required**: when on, the step fails if no row matches. When off, the step is simply **skipped** and the workflow continues.
+- **Allow invalid envelopes**: save the patched document even if it doesn't fully pass schema validation.
+
+For example, to look up a customer's default payment terms by their tax code:
+
+```jq
+# Key query: find the row for this customer
+{ customer_code: .customer.tax_id.code }
+```
+
+```jq
+# Patch query: merge the row's value into the document
+. + { payment: { terms: { key: $row.payment_terms } } }
+```
+
+### Create batch: process many rows at once
+
+The **Create batch** step fans a workflow out over a whole table, running one job per row. It pairs naturally with an Import step to load a large set of rows as individual documents.
+
+Configure it with:
+
+- **Workflow to run for each row**: the workflow executed once per matching row.
+- **Filter** *(optional)*: a SQL `WHERE` clause that selects which rows to process, for example `status = 'pending'`.
+
+When the batch starts, Tables counts the matching rows, takes a consistent snapshot of the table, and then creates the per-row jobs. Each job receives the row's primary key, so the workflow's Import step knows exactly which row to build from.
+
+## Query and browse your data
+
+At any time you can open the **SQL editor** in the app to run `SELECT` queries, inspect a table's schema, and page through its rows. This is the fastest way to check what a workflow wrote, debug a query, or spot-fix a value.
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Tables app →
+</Card>

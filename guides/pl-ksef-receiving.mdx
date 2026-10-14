@@ -1,0 +1,299 @@
+---
+title: "KSeF receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: "Automatically import invoices received through Poland's KSeF 2.0 system into your Invopop workspace."
+---
+
+import PolandResources from '/snippets/tables/poland-resources.mdx';
+import ImportInvoiceWorkflow, { plImportWorkflow } from '/snippets/workflows/pl/pl-import.mdx';
+import SyncInvoicesWorkflow, { plSyncWorkflow } from '/snippets/workflows/pl/pl-sync.mdx';
+import PartyRegistrationReceiveWorkflow, { plRegisterReceiveWorkflow } from '/snippets/workflows/pl/pl-register-receive.mdx';
+import FAQ from '/snippets/faqs/pl/composers/guide-ksef-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+KSeF (Krajowy System e-Faktur) 2.0 is Poland's mandatory national e-invoicing system operated by the [Ministry of Finance](https://www.gov.pl/web/finanse). Because all B2B invoices are cleared through KSeF, the invoices your suppliers *receive* are also available in the system — and Invopop can import them into your workspace automatically.
+
+This guide walks you through configuring your workspace to periodically import received invoices from KSeF, and how to trigger imports manually when needed. Two companion guides cover the rest of the family: [Poland: Supplier registration](/guides/pl-ksef-supplier) and [Poland: Issuing invoices](/guides/pl-ksef).
+
+The import process uses two apps working together:
+
+- **[Poland](/apps/poland):** Queries KSeF for received invoices and converts the FA(3) XML to [GOBL](https://docs.gobl.org) format.
+- **[Cron](/apps/cron):** Schedules the sync workflow to run automatically at a regular interval (e.g., hourly or daily).
+
+## Prerequisites
+
+To receive invoices from KSeF, you will need:
+
+- **The Poland app connected and a registration workflow in place**: covered in the [KSeF supplier registration guide](/guides/pl-ksef-supplier). Parties must be registered with the **send & receive** variant of the registration workflow described below.
+- **The Cron app**, connected as part of the setup in this guide.
+
+## How it works
+
+Once everything is configured, imports run automatically:
+
+1. **Cron scheduling**: The [Cron app](/apps/cron) creates a job for the sync workflow at each configured interval, passing the time window (`from` and `upto`) to process
+2. **Sync workflow**: The sync workflow queries KSeF for all invoices received within the time window
+3. **Import jobs**: For each invoice found, a job is created using your import workflow
+4. **Import workflow**: Each job downloads the FA(3) XML from KSeF, converts it to GOBL format, and stores it in your Invopop silo
+5. **Organization**: Imported invoices are automatically placed in the configured folder (typically "Invoices · Expenses") with a `Registered` state
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Info>
+  The Poland app must already be connected — this is covered in the [supplier registration guide](/guides/pl-ksef-supplier).
+</Info>
+
+<Steps>
+
+<Step title="Connect the Cron app">
+
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Cron** in the app discovery list
+  3. Click **Connect** to activate
+
+  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
+</Step>
+
+<Step title="Configure the invoice import workflow">
+
+This workflow imports an individual invoice from KSeF when it is received. It is automatically triggered by the sync workflow (configured in the next step) for each invoice found.
+
+<Card iconType="duotone" title="KSeF import invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-import" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plImportWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <Note>
+      This workflow receives KSeF number and NIP as input arguments, not a silo entry. It's designed to be triggered automatically by the sync workflow.
+    </Note>
+
+    <ImportInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the invoice sync workflow">
+
+This workflow syncs all received invoices for a party within a specific time range. It creates an import job for each invoice found, using the import workflow you configured in the previous step.
+
+Configure the **Sync received invoices from KSeF** step to reference the import workflow created in the previous step.
+
+<Frame>
+  <img
+    width="400"
+    src="/assets/guides/pl-sync-config.png"
+    alt="Configure the workflow that all invoices will be sent to"
+  />
+</Frame>
+
+<Card iconType="duotone" title="KSeF sync received invoices workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-sync" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plSyncWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <SyncInvoicesWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the send & receive registration workflow">
+
+To receive invoices for a party, the party must be registered with the **send & receive** variant of the registration workflow. In addition to registering the party with KSeF, this variant subscribes the party to periodic invoice imports via the [Cron app](/apps/cron).
+
+<Card iconType="duotone" title="KSeF party registration workflow (receive)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=pl-register-receive" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={plRegisterReceiveWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <Note>
+      The template uses test mode by default (for sandbox). To use demo mode in sandbox, add `"config": {"environment": "demo"}` to the **Register supplier with KSeF** step. In Invopop production, the workflow automatically targets the KSeF production environment.
+    </Note>
+
+    <PartyRegistrationReceiveWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the cron step to start syncing invoices to Invopop">
+
+After adding the send & receive workflow (regardless of how you created it), open the **Subscribe to periodic KSeF sync** step and configure the two fields below. This is what tells the [Cron app](/apps/cron) which workflow to run and how often.
+
+1. **Workflow** — select the **KSeF Sync Received Invoices** workflow you created earlier in this setup. The Cron app will trigger this workflow on each tick.
+2. **Interval** — choose how often KSeF should be checked for new invoices (for example, every hour or every day). Pick a frequency that matches how quickly you need received invoices to appear in Invopop.
+
+Once configured, the step should look like this:
+
+<Frame>
+  <img
+    width="500"
+    src="/assets/guides/pl-config-cron.png"
+    alt="Configured Subscribe to periodic KSeF sync step showing the selected sync workflow and interval"
+  />
+</Frame>
+
+</Step>
+
+</Steps>
+
+## Running
+
+### Register a party for receiving
+
+Register each party whose received invoices you want to import by running the **send & receive** registration workflow on their party entry. The registration steps — creating the party, running the workflow, and completing the certificate upload in demo or production — are identical to the ones described in the [supplier registration guide](/guides/pl-ksef-supplier#running); simply select the send & receive workflow instead of the send-only one.
+
+<Info>
+  Each party is subscribed to periodic imports during registration. To use a different interval for a specific party, adjust the **Subscribe to periodic KSeF sync** step settings in the registration workflow before running it.
+</Info>
+
+<Note>
+  If a party was already registered with the send-only workflow, run the send & receive workflow on the same party entry to subscribe it to periodic imports.
+</Note>
+
+### Automatic import
+
+Once parties are registered with the send & receive workflow, the [Cron app](/apps/cron) automatically triggers the sync workflow at the interval configured in the registration workflow's **Subscribe to periodic KSeF sync** step, following the process described in [How it works](#how-it-works). Imported invoices appear in the configured folder (typically "Invoices · Expenses") with a `Registered` state.
+
+### Manual import
+
+If you need to import invoices outside of the automatic cron schedule, you can manually trigger imports from the [Console](/guides/workflows#running-from-the-console) or via the API.
+
+**Import a single invoice**
+
+To import a specific invoice from KSeF, you need:
+
+- **KSeF Number**: The unique invoice identifier (e.g., `1234567890-20260120-ABCD1234-EF`)
+- **Supplier NIP**: The Polish Tax ID of the invoice issuer
+
+<Tabs>
+  <Tab title="Console">
+    1. Navigate to **Workflows** and find your **KSeF Import Invoice** workflow
+    2. Click **Run** from the workflow editor or the `...` menu in the workflow list (see [Running from the Console](/guides/workflows#running-from-the-console))
+    3. Leave the document field empty — the import workflow will create a new silo entry automatically
+    4. Fill in the **Arguments**:
+
+    | Key | Value |
+    |-----|-------|
+    | `ksef-number` | `1234567890-20260120-ABCD1234-EF` |
+    | `nip` | `1234567890` |
+
+    5. Click <kbd>Run workflow</kbd>
+  </Tab>
+  <Tab title="API">
+    Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post):
+
+    ```bash
+    curl -X POST https://api.invopop.com/transform/v1/jobs \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "workflow_id": "YOUR_IMPORT_WORKFLOW_ID",
+        "args": {
+          "ksef-number": "1234567890-20260120-ABCD1234-EF",
+          "nip": "1234567890"
+        }
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+The invoice will be downloaded from KSeF, converted to GOBL, and stored in your silo.
+
+**Import multiple invoices by date range**
+
+To import all invoices received within a specific time period, you need:
+
+- The **party silo entry** for the supplier whose invoices you want to sync
+- The **date range** (`from` and `upto`) to process
+
+<Tabs>
+  <Tab title="Console">
+    1. Navigate to **Workflows** and find your **KSeF Sync Received Invoices** workflow
+    2. Click **Run** from the workflow editor or the `...` menu in the workflow list
+    3. In the **Select a document** field, search for and select the party (supplier) entry
+    4. Fill in the **Arguments**:
+
+    | Key | Value |
+    |-----|-------|
+    | `from` | `2026-01-01T00:00:00Z` |
+    | `upto` | `2026-01-31T23:59:59Z` |
+
+    5. Click <kbd>Run workflow</kbd>
+  </Tab>
+  <Tab title="API">
+    Use the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post) with your sync workflow:
+
+    ```bash
+    curl -X POST https://api.invopop.com/transform/v1/jobs \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "workflow_id": "YOUR_SYNC_WORKFLOW_ID",
+        "silo_entry_id": "YOUR_PARTY_ENTRY_ID",
+        "args": {
+          "from": "2026-01-01T00:00:00Z",
+          "upto": "2026-01-31T23:59:59Z"
+        }
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+The sync workflow will query KSeF for all invoices received in that date range and create individual import jobs for each invoice found.
+
+<Tip>
+  Use single invoice import to bring in a specific invoice immediately after receiving notification from a supplier. Use date range sync to backfill invoices or to import historical invoices from before the cron subscription was active.
+</Tip>
+
+### Error handling and notifications
+
+We strongly recommend adding notification steps to your workflows to alert you of import failures:
+
+- **In the import workflow**: Add email or Slack notifications to the error handling section
+- **In the sync workflow**: Add notifications for when the sync process encounters issues
+
+This ensures you're immediately aware if invoices fail to import, allowing you to take corrective action.
+
+<Tip>
+  Common import issues include certificate expired or invalid, KSeF API temporarily unavailable, invoice format not supported by GOBL conversion, and network connectivity issues. Check your workflow error logs in the Console for detailed error messages.
+</Tip>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Poland FAQ](/faq/poland) section
+
+---
+
+<PolandResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Poland →
+</Card>

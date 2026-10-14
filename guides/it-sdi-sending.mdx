@@ -4,12 +4,15 @@ sidebarTitle: "Issuing invoices"
 description: "Generate and issue electronic invoices through Italy's SDI system"
 ---
 
-import SDISendWorkflow from '/snippets/workflows/it/sdi-send.mdx';
+import SDISendWorkflow, { itSdiSendWorkflow } from '/snippets/workflows/it/sdi-send.mdx';
 import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { itSdiSendWorkflow } from '/snippets/workflows/it/sdi-send-data.mdx';
+
+<Warning>
+**The SDI Italy app is being retired.** New integrations should use the [Italy app](/apps/italy), which reaches SDI through Invopop's own accredited channel. See the [issuing invoices](/guides/it-sdi-invoicing) guide.
+</Warning>
 
 ## Introduction
 
@@ -80,7 +83,7 @@ Example invoices are provided below, or you can use the [GOBL Builder](https://b
 
 ### How the Send step works
 
-This step generates the FatturaPA XML and sends it to SDI through our integration partner. Upon successful completion, the XML file is attached to the invoice entry. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `Queued` state.
+This step generates the FatturaPA XML and sends it to SDI through our integration partner. Upon successful completion, the XML file is attached to the invoice entry. The SDI service usually responds within seconds but may take up to 24 hours. While waiting, this step remains in a `QUEUED` state.
 
 When the Send step completes, it returns one of three results:
 - `OK` if successful
@@ -93,10 +96,11 @@ Italian law requires issued electronic invoices to be preserved long-term throug
 
 Archiving is built into the standard Italy templates, so no extra setup is needed:
 
-- The party registration workflow includes a step that enables archiving for the supplier. It requires the party to have a valid Italian tax ID.
+- The party registration workflow includes a step that enables archiving for the supplier. It requires the party to have a valid Italian tax ID. Re-running it on an already-enabled supplier reports `SKIP`.
 - The send invoice workflow includes an archive step after the Send step. It preserves the exact FatturaPA file transmitted to SDI and attaches the preservation receipt to the invoice entry as `archive-receipt.pdf` and `archive-receipt.xml`, along with an indexed `archive-uuid` metadata field identifying the archived document.
+- The **SDI import invoices** workflow from the [receiving guide](/guides/it-sdi-receiving) includes the same archive step after the Import step, so the invoices you receive are preserved too, recorded as received.
 
-Preservation is asynchronous: the archive step stays in a `Queued` state until the receipt is ready, then completes with `OK`. It is safe to retry — an already-archived invoice completes without uploading or duplicating attachments. Only invoices you issue and send through SDI are archived; invoices you receive are not.
+Preservation is asynchronous: the archive step stays `QUEUED` until the receipt is ready, then completes with `OK`. The receipt normally arrives within minutes but can take hours; the step keeps checking, less often as time goes on, and gives up only after several hours. If the preservation service fails partway through, the step retries from where it stopped without uploading the document again. Re-running it on an already-archived invoice reports `SKIP`, with nothing fetched or attached again.
 
 ## Example invoices
 
@@ -114,11 +118,11 @@ When the SDI step processes a document, it returns detailed status codes that pr
 | `rejected` | **Notifica di scarto (NS)** <br />SDI has rejected the invoice because it contains errors. |
 | `delivered` | **Ricevuta consegna (RC)** <br />SDI has successfully delivered a B2B invoice to the recipient. |
 | `delivered-pa` | **Ricevuta consegna (RC)**<br /> SDI has successfully delivered an invoice to a Public Administration (PA). |
-| `not-delivered` | **Mancata consegna (MC)** <br />SDI could not deliver the invoice to the recipient. |
+| `not-delivered` | **Mancata consegna (MC)** <br />SDI could not deliver the invoice to the recipient. It is available to them on the AdE portal and you must tell them, see [MC in the status guide](/guides/it-sdi-status#business-invoices). |
 | `not-delivered` | **Attestazione trasmissione con impossibilità di recapito (AT)** <br />SDI couldn't deliver an invoice to PA after 10 days. |
 | `accepted-pa` | **Notifica esito (NE)** <br />A PA has decided to accept an invoice (outcome EC01). |
 | `rejected-pa` | **Notifica esito (NE)**<br /> A PA has decided to reject an invoice (outcome EC02). |
-| `deadline-terms` | **Notifica decorrenza termini (DT)**<br /> A PA didn't reply with acceptance or rejection within 15 days. |
+| `deadline-terms` | **Notifica decorrenza termini (DT)**<br /> A PA didn't reply with acceptance or rejection within 15 days. SDI closes the process and the PA can no longer reject the invoice, see [DT in the status guide](/guides/it-sdi-status#public-administration-invoices). |
 | `invoice-error` | An error occurred during the acquisition of a notification. |
 | `sent` | The invoice has been submitted to SDI and is awaiting a response. |
 | `not-received` | The invoice was not received by the recipient. |
@@ -127,8 +131,8 @@ Some SDI notifications (File metadati - MT, Esito committente - EC, Scarto esito
 
 These codes map to different step results as follows:
 
-- **OK Result**: `delivered`, `not-delivered`, `not-received`, `accepted-pa`
-- **KO Result**: `rejected`, `rejected-pa`, `invoice-error`, `deadline-terms`
+- **OK Result**: `delivered`, `not-delivered`, `not-received`, `accepted-pa`, `deadline-terms`
+- **KO Result**: `rejected`, `rejected-pa`, `invoice-error`
 - **QUEUED Result**: `sent`, `delivered-pa`
 
 When a step returns `QUEUED`, the workflow will check again later for updates from SDI.

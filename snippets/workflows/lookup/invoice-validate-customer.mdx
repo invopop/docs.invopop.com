@@ -1,0 +1,71 @@
+export const lookupInvoiceValidateCustomerWorkflow = {
+    "name": "Lookup validate invoice customer",
+    "description": "Validate and correct the customer's tax ID, then sign the invoice",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-000000000001",
+            "name": "Validate tax ID",
+            "provider": "lookup.validate",
+            "summary": "Validating and correcting customer, up to 30 days old",
+            "config": {
+                "party": "customer",
+                "max_age": 30,
+                "correct": true
+            }
+        },
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-000000000002",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json Lookup validate invoice customer workflow
+{
+    "name": "Lookup validate invoice customer",
+    "description": "Validate and correct the customer's tax ID, then sign the invoice",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-000000000001",
+            "name": "Validate tax ID",
+            "provider": "lookup.validate",
+            "summary": "Validating and correcting customer, up to 30 days old",
+            "config": {
+                "party": "customer",
+                "max_age": 30,
+                "correct": true
+            }
+        },
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-000000000002",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "01a0f8f1-7c00-7a10-9000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

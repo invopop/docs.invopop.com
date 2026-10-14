@@ -21,17 +21,24 @@ the steps to either log in or create an account.
 
 ## Get a token
 
-1. Once inside the console, click **Settings**.
+1. Once inside the console, open **Configuration → API keys** and click
+   <kbd>Manage API keys</kbd>. This takes you to the **API keys** section of
+   [Admin](https://access.invopop.com), where keys are created.
 
-2. Enter the <kbd>API Keys</kbd> section.
+2. Click <kbd>New API key</kbd>.
 
-3. Tap the <kbd>New API Key</kbd> button.
+3. Choose the workspace the key will act on. Pick your sandbox workspace while
+   you're testing.
 
-4. Provide a name for future reference, and any notes perhaps describing a use
-   case, then click <kbd>Save</kbd>.
+4. Provide a name for future reference, and optionally a description of the use
+   case.
 
-5. You'll be presented with a new token in text and a button to copy the
-   details. Tap the <kbd>copy</kbd> button, and paste the token somewhere safe.
+5. Tick the permissions the key needs. For this guide, **Read** on **All
+   services** is enough; for a real integration, grant only the services it
+   uses. See [API keys](/console/api-keys) for what each permission covers.
+
+6. Click <kbd>Create API key</kbd>. You'll be presented with the new token and a
+   button to copy it. The token is shown only once, so paste it somewhere safe.
 
 <Tip>
   Invopop uses JSON Web Tokens. If you're interested in seeing the contents,
@@ -71,6 +78,10 @@ connection and credentials are valid.
   Most examples throughout this documentation will assume you have set the
   `$INVOPOP_TOKEN` variable.
 </Note>
+
+<Prompt description="Have your agent wire the token into this project and verify it." icon="key" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/authentication.md. Add Invopop API access to this project: read the token from the INVOPOP_TOKEN environment variable or this project's secrets mechanism, never from source code, and send it as an Authorization Bearer header to https://api.invopop.com. Implement a small client with a ping method that calls GET /utils/v1/ping and returns true on pong, plus a helper that fetches a UUID from GET /utils/v1/uuid?v=7 for idempotent PUT requests. Keep one client instance per workspace, because each Invopop workspace has its own token. Add a test that calls ping when the variable is set and is skipped otherwise.
+</Prompt>
 
 ## Conclusion
 

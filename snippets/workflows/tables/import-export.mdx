@@ -1,0 +1,133 @@
+export const tablesImportExportWorkflow = {
+    "name": "Import and export invoice",
+    "description": "Build a GOBL invoice from a table row, then record it in a reporting table",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000001",
+            "name": "Import from table",
+            "provider": "tables.import",
+            "summary": "Build `bill/invoice` from a row",
+            "config": {
+                "schema": "bill/invoice",
+                "scope": "doc",
+                "jq": "e3NlcmllcywgY29kZSwgaXNzdWVfZGF0ZSwgY3VycmVuY3ksIHN1cHBsaWVyOiB7bmFtZTogLnN1cHBsaWVyX25hbWUsIHRheF9pZDoge2NvdW50cnk6IC5zdXBwbGllcl9jb3VudHJ5LCBjb2RlOiAuc3VwcGxpZXJfdGF4X2NvZGV9fSwgY3VzdG9tZXI6IHtuYW1lOiAuY3VzdG9tZXJfbmFtZSwgdGF4X2lkOiB7Y291bnRyeTogLmN1c3RvbWVyX2NvdW50cnksIGNvZGU6IC5jdXN0b21lcl90YXhfY29kZX19LCBsaW5lczogW3txdWFudGl0eSwgaXRlbToge25hbWU6IC5pdGVtX25hbWUsIHByaWNlOiAuaXRlbV9wcmljZX0sIHRheGVzOiBbe2NhdDogIlZBVCIsIHJhdGU6IC50YXhfcmF0ZX1dfV19"
+            }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": { "state": "processing" }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000003",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000004",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": { "locale": "en" }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000005",
+            "name": "Export to table",
+            "provider": "tables.export",
+            "summary": "Upsert into `invoices`",
+            "config": {
+                "table": "invoices",
+                "scope": "doc",
+                "jq": "e3NpbG9fZW50cnlfaWQ6IHNpbG9fZW50cnlfaWQsIGNvZGU6IC5jb2RlLCBpc3N1ZV9kYXRlOiAuaXNzdWVfZGF0ZSwgY3VycmVuY3k6IC5jdXJyZW5jeSwgdG90YWw6IC50b3RhbHMucGF5YWJsZX0=",
+                "upsert_key": ["silo_entry_id"]
+            }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": { "state": "sent" }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": { "state": "error" }
+        }
+    ]
+};
+
+```json Import and export invoice workflow
+{
+    "name": "Import and export invoice",
+    "description": "Build a GOBL invoice from a table row, then record it in a reporting table",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000001",
+            "name": "Import from table",
+            "provider": "tables.import",
+            "summary": "Build `bill/invoice` from a row",
+            "config": {
+                "schema": "bill/invoice",
+                "scope": "doc",
+                "jq": "e3NlcmllcywgY29kZSwgaXNzdWVfZGF0ZSwgY3VycmVuY3ksIHN1cHBsaWVyOiB7bmFtZTogLnN1cHBsaWVyX25hbWUsIHRheF9pZDoge2NvdW50cnk6IC5zdXBwbGllcl9jb3VudHJ5LCBjb2RlOiAuc3VwcGxpZXJfdGF4X2NvZGV9fSwgY3VzdG9tZXI6IHtuYW1lOiAuY3VzdG9tZXJfbmFtZSwgdGF4X2lkOiB7Y291bnRyeTogLmN1c3RvbWVyX2NvdW50cnksIGNvZGU6IC5jdXN0b21lcl90YXhfY29kZX19LCBsaW5lczogW3txdWFudGl0eSwgaXRlbToge25hbWU6IC5pdGVtX25hbWUsIHByaWNlOiAuaXRlbV9wcmljZX0sIHRheGVzOiBbe2NhdDogIlZBVCIsIHJhdGU6IC50YXhfcmF0ZX1dfV19"
+            }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": { "state": "processing" }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000003",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000004",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "English",
+            "config": { "locale": "en" }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000005",
+            "name": "Export to table",
+            "provider": "tables.export",
+            "summary": "Upsert into `invoices`",
+            "config": {
+                "table": "invoices",
+                "scope": "doc",
+                "jq": "e3NpbG9fZW50cnlfaWQ6IHNpbG9fZW50cnlfaWQsIGNvZGU6IC5jb2RlLCBpc3N1ZV9kYXRlOiAuaXNzdWVfZGF0ZSwgY3VycmVuY3k6IC5jdXJyZW5jeSwgdG90YWw6IC50b3RhbHMucGF5YWJsZX0=",
+                "upsert_key": ["silo_entry_id"]
+            }
+        },
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-000000000006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": { "state": "sent" }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "a1b2c3d0-0000-11f0-a000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": { "state": "error" }
+        }
+    ]
+}
+```

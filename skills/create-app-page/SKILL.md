@@ -85,7 +85,7 @@ Two-column header: guide cards left, metadata table right.
 ```
 
 - The **empty header row is deliberate** — `styles.css` hides it. Don't drop it.
-- `Category` must match the app's `docs.json` group name (Network / Government / Notify / Format / Document / Storage / Automation / Integrations).
+- `Category` must match the app's `docs.json` group name (Network / Government / Notify / Format / Document / Validation / Storage / Automation / Integrations).
 - `Scope` = `B2B` / `B2C` / `B2G` comma-joined; format and integration apps drop `Scope` and `Country`. Optional `System` row for the authority platform (`| System | FATOORA (ZATCA) |`).
 - Card body text uses `›` (not `→`): `Supplier registration guide ›`, `View guide ›`.
 - Country umbrella apps use the flag as icon: `https://assets.invopop.com/flags/<cc>.svg`.
@@ -127,7 +127,7 @@ Lead-in: `The following workflow actions will be available once you install and 
 		</Card>
 ```
 
-- The `pop-count` div is the step's credit cost (absolutely positioned by `styles.css`). **Omit it entirely for zero-cost actions** (register, wait, cancel, import).
+- The `pop-count` div is the step's credit cost (absolutely positioned by `styles.css`). Copy the value from the app's Actions tab in Access. **Omit it entirely for zero-cost actions** (wait, cancel, unregister). Register actions are **seats**: they charge their pops at registration and again every 30 days, so write them as a monthly figure (`100/mo`, `150/mo` for SII, `50/mo` for the French Annuaire and reporter seats).
 - Card bodies may embed essential input/output in prose (`Generates a unique URL in the \`meta\` property…`). No settings tables or parameter lists — the workflow JSON's `config` and the guides carry configuration detail.
 - Many actions → cluster them under plain-text label lines (`Registration`, `Clearance & Reporting`), not headings.
 
@@ -234,7 +234,7 @@ No `assets/` references — every icon is an absolute CDN URL:
 
 ## Registration (three places, keep in sync)
 
-1. **`docs.json`** — Apps tab, add the slug to the matching group's `pages`, alphabetical within the group. Groups and icons: Network `chart-network`, Government `building-columns`, Notify `bullhorn`, Format `code-compare`, Document `file`, Storage `garage-car`, Automation `clock`, Integrations `plug`.
+1. **`docs.json`** — Apps tab, add the slug to the matching group's `pages`, alphabetical within the group. Groups and icons: Network `chart-network`, Government `building-columns`, Notify `bullhorn`, Format `code-compare`, Document `file`, Validation `badge-check`, Storage `garage-car`, Automation `clock`, Integrations `plug`.
 2. **`apps/index.mdx`** — add a horizontal `<Card>` in the same category block, alphabetical: `title` = page title, body = page `description` verbatim, `icon` = app SVG or flag, `href` = `/apps/<slug>`.
 3. **Country resources table** — `Apps` row entry (country apps only).
 

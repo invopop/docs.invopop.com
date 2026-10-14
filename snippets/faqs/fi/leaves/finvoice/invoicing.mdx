@@ -3,7 +3,11 @@
 </Accordion>
 
 <Accordion title="Why was my invoice refused before it was sent anywhere?">
-  Three checks run before anything leaves the platform: the supplier must have an electronic address (`supplier-address-missing`), the invoice must carry a payment bank account (`payment-account-missing`), and the receiver must be reachable as a true e-invoice (`receiver-not-einvoice`). The last one matters most: receivers only reachable on paper, by email, or through the consumer bank channels (e-lasku, suoramaksu, Netposti) are rejected up front, with the channel the operator would have used named in the error, rather than quietly delivered another way.
+  Two checks run before anything leaves the platform. The invoice is converted to Finvoice first, so anything the [`fi-finvoice-v3` addon](https://docs.gobl.org/addons/fi-finvoice-v3) refuses fails the job with the rule it broke: missing payment data, a party without an e-invoice address, an identifier too long for its element. Then the receiver must be reachable as a true e-invoice (`receiver-not-einvoice`): receivers only reachable on paper, by email, or through the consumer bank channels (e-lasku, suoramaksu, Netposti) are rejected up front, with the channel the operator would have used named in the error, rather than quietly delivered another way.
+</Accordion>
+
+<Accordion title="My receiver's address is registered with two operators. Which one gets the invoice?">
+  The one you name. Set the operator ID the receiver gave you in the customer's `fi-finvoice-operator` extension, and the invoice is routed to that operator. Without it, the sending operator picks by its own preference, which may be the receiver's old operator. The value is the operator's OVT code (Apix Messaging is `003723327487`) or a bank's BIC, as listed beside the address at [verkkolaskuosoite.fi](https://verkkolaskuosoite.fi). An operator the address is not registered with is not rejected, so check the pair rather than expecting an error.
 </Accordion>
 
 <Accordion title="What does a submission with an unknown outcome mean?">

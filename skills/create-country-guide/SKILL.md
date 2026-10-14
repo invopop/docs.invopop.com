@@ -44,6 +44,7 @@ description: Issue invoices and credit notes in Colombia through the DIAN.
 [sandbox/live table]
 ## Prerequisites       <- bullets; FIRST bullet is always the registered supplier + link
 ## Setup               <- <Info> handoff to supplier guide, then <Steps>, one <Step> per workflow to create
+[<Prompt />]          <- optional agent prompt (CLAUDE.md § Agent-facing files); reference: guides/es-verifactu.mdx
 ## Running             <- (or "## Send an invoice") upload entry → run job, with API links
 ### <sub-flows>        <- Cancel a document, Import received invoices, …
 [## Example invoices]  <- <ExampleAccordion />

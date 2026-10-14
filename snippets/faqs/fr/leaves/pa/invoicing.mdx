@@ -10,6 +10,66 @@
     No. Most Peppol countries treat self-billing as a document type of its own, but France models it as a **standard invoice** with the `untdid-document-type` extension set to `389`. In GOBL you never set the code yourself: add the `self-billed` tag and the [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1#standard-self-billed) add-on applies it automatically. See [Self-billing](/guides/fr-pa-invoicing#self-billing) for the full flow.
   </Accordion>
 
+  <Accordion title="Why was my VAT-exempt invoice never sent to the PPF?">
+    Transactions exempt under articles 261 to 261 E of the CGI — insurance, medical care, education and the rest of that range — sit outside the e-invoicing mandate, and the PPF rejects them if you deposit one. When an invoice's whole VAT breakdown is exempt and carries a `VATEX-FR-CGI261*` code, Invopop records it but sends no F1 and raises no lifecycle status, and the dashboard shows it as <Badge color="blue">Exempt</Badge>. Keep issuing the invoice to your customer as usual. An invoice that mixes exempt and taxable lines is still sent normally, and so is `VATEX-FR-FRANCHISE`. See [VAT-exempt invoices](/guides/fr-pa-invoicing#vat-exempt-invoices).
+  </Accordion>
+
   <Accordion title="How many pops does a B2B e-invoice through France PA cost?">
     Each invoice or lifecycle status sent through France PA costs **5 pops**: 1 pop for the conversion to UBL/CII, 2 pops to send it over Peppol, 1 pop to forward it to the PPF, and 1 pop for the silo entry. See [Pops & pricing](/get-started/pricing) for how pops work.
+  </Accordion>
+
+  <Accordion title="What does the record document step check against the Annuaire?">
+    Before an invoice is recorded, the **PPF record document** step looks up both the supplier and the customer SIREN in the Annuaire. What each party must satisfy depends on the workflow's role:
+
+    | Role | Annuaire state | Outcome |
+    |---|---|---|
+    | Both | The SIREN has no effective entry | **Rejected** |
+    | Receiving | The SIREN has at least one effective entry | **Accepted** |
+    | Sending | The SIREN's only entry is the PPF's default line (matricule `9998`) | **Accepted** |
+    | Sending | The party's `0225` peppol endpoint matches one of the SIREN's entries | **Accepted** |
+    | Sending | The party's `0225` peppol endpoint matches none of the SIREN's entries | **Rejected** |
+
+    Sandbox invoices skip the Annuaire check entirely.
+  </Accordion>
+
+  <Accordion title="What should I do if the customer isn't registered in the Annuaire?">
+    Don't block the sale. An exchange where only one party has an
+    effective Annuaire entry is a
+    [non-regulated flow](/guides/fr-pa#key-concepts): it leaves
+    e-invoicing (flux 2) and is covered by
+    [e-reporting](/guides/fr-pa-reporting) (flux 10) instead.
+
+    In practice:
+
+    * Run a [Directory lookup](/guides/fr-lookup) against the
+      customer's SIREN before you generate the invoice — ideally in a
+      separate validation workflow run against customer data, so you
+      can prompt them to fix their registration ahead of time.
+    * If the SIREN has no effective entry, route the invoice through
+      your reporting workflow rather than the PA send workflow.
+    * If it slips through, the send workflow degrades rather than
+      failing: the **Verify document can be sent** step branches and
+      forwards the invoice to the PPF as *déposée – non transmise*.
+
+    A missing entry is common and not necessarily an error. A SIREN
+    visible in the public
+    [annuaire-entreprises](https://annuaire-entreprises.data.gouv.fr)
+    registry is not the same as an effective entry in the DGFiP
+    Annuaire, which only covers entities in scope of the mandate. It
+    can also be absent because the buyer hasn't yet appointed a PA, or
+    because their tax records don't match.
+  </Accordion>
+
+  <Accordion title="Should I check the Annuaire at order time or at invoice time?">
+    Both, for different reasons. A lookup at order or onboarding time
+    is a data-quality check: it lets you warn the customer and get
+    their SIREN or PA sorted before invoicing. A lookup at invoice
+    time is the one that decides the flow, because registrations are
+    added and withdrawn continuously and a party found at checkout may
+    no longer be routable days later (and vice versa).
+
+    Treat the early result as advisory, resolve again at generation,
+    and store the resolved electronic address on the transaction —
+    the routing address isn't always the bare SIREN. See
+    [Directory lookup](/guides/fr-lookup).
   </Accordion>

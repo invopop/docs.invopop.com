@@ -4,14 +4,12 @@ sidebarTitle: "Issuing receipts"
 description: Issue e-receipts in Italy
 ---
 
-import TicketIssueReceipt from '/snippets/workflows/it/ticket-send.mdx';
-import TicketVoidReceipt from '/snippets/workflows/it/ticket-void-receipt.mdx';
+import TicketIssueReceipt, { itTicketSendWorkflow } from '/snippets/workflows/it/ticket-send.mdx';
+import TicketVoidReceipt, { itTicketVoidReceiptWorkflow } from '/snippets/workflows/it/ticket-void-receipt.mdx';
 import TicketAccordion from '/snippets/invoices/it/ticket-accordion.mdx';
 import ItalyResources from '/snippets/tables/italy-resources.mdx';
 import FAQ from '/snippets/faqs/it/composers/guide-ticket-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { itTicketSendWorkflow } from '/snippets/workflows/it/ticket-send-data.mdx';
-import { itTicketVoidReceiptWorkflow } from '/snippets/workflows/it/ticket-void-receipt-data.mdx';
 
 ## Introduction
 
@@ -76,7 +74,7 @@ Follow these steps in the [Invopop Console](https://console.invopop.com).
 
 
 
-<Card iconType="duotone" title="Smart Receipts void receipt workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ticket-void-receipt" horizontal>
+<Card iconType="duotone" title="Smart Receipts void receipt workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-ticket-void-receipt" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -123,6 +121,7 @@ The AdE will automatically generate a document number for the invoice. Once the 
 Every receipt reports to the AdE how much of the total was collected at the time of sale, and how. Use `payment.advances` in your GOBL invoice to record what the customer paid:
 
 - Advances with the `cash` key are reported as cash payments (_pagamento contante_).
+- Advances with the `other+voucher` key are reported as payments with a multi-purpose voucher (_sconto a pagare_). Use it for the amount paid with a gift card that can be spent on goods or services taxed at different VAT rates. VAT is still calculated on the full price.
 - Advances with any other key, such as `card`, are reported as electronic payments (_pagamento elettronico_).
 
 <Warning>
@@ -147,6 +146,31 @@ You can void an invoice if it was issued in error, such as when a receipt is acc
 <Warning>
 Voiding produces a new document, dated the day it is emitted rather than the original sale date, and it reduces the daily totals reported to the AdE for that day. Keep this in mind when voiding receipts from previous days, as it may have fiscal implications for the supplier.
 </Warning>
+
+### Invoice requested after a receipt
+
+A customer sometimes asks for an invoice after their receipt has already been issued and transmitted to the AdE. The receipt stays as it is: issue a regular SDI invoice for the same sale and reference the receipt in it.
+
+The AdE's [FAQ n. 45 on electronic invoicing](https://www.agenziaentrate.gov.it/portale/web/guest/schede/comunicazioni/fatture-e-corrispettivi/faq-fe) describes how the invoice should reference the receipt. The sequence with Invopop is:
+
+1. **Leave the receipt in place, unless it carries a lottery code.** The AdE's [Consulenza giuridica n. 3/2022](https://www.agenziaentrate.gov.it/portale/documents/20143/4169774/Consulenza_giuridica_3_14.02.2022.pdf) (§17) says that a receipt issued with a lottery code must be voided when the customer then asks for an invoice; any other receipt stays as it is. There is no technical age limit on voids (see [Void an invoice](#void-an-invoice) for how a void affects daily totals).
+2. **Issue the invoice through the Italy app** using your normal [SDI sending workflow](/guides/it-sdi-invoicing). It needs no extra configuration: the receipt reference is ordinary line data.
+3. **Reference the receipt on each invoice line** with an item attribute. The `it-sdi-v1` addon maps it to the `AltriDatiGestionali` block the AdE expects:
+
+   | GOBL attribute field | FatturaPA field | Value |
+   |---|---|---|
+   | `type` | `TipoDato` | `N.DOC.COMM` |
+   | `text` | `RiferimentoTesto` | the receipt's AdE document number, which is the `ade-ref` stamp on the receipt |
+   | `amount` | `RiferimentoNumero` | the receipt's progressive number |
+   | `date` | `RiferimentoData` | the receipt's issue date |
+
+   `type` accepts up to 10 ASCII characters, `text` up to 60 characters, and `amount` is rendered with at least two decimals (`7816` becomes `7816.00`). Which identifier you place in `RiferimentoTesto` and `RiferimentoNumero` is your reading of the AdE guidance; Invopop passes the values through without validating them.
+
+4. **Adjust your own records.** The AdE FAQ requires the invoiced amount to be removed from that day's *corrispettivi* totals. The receipt reference from step 3 goes to SDI as part of the invoice, but Invopop doesn't act on it: neither Invopop nor the Smart Receipts provider changes the totals already transmitted, and the invoice does not affect the receipt's *corrispettivo non riscosso* reporting.
+
+Set `issue_date` to the day of the sale: FatturaPA's `Data` comes from `issue_date`, and `op_date` is not written to the XML. Without further tags `gobl build` sets the document type to `TD01`, which must reach SDI within 12 days of the sale. If your advisor concludes the receipt serves as the supporting document for a deferred invoice (`TD24`), add the `deferred` tag to `$tags`, send it by the 15th of the following month, and keep `issue_date` inside the month of the sale. Whether a sale qualifies for either document type is a compliance determination for you and your tax advisor.
+
+See the "Invoice after a documento commerciale" example in the [SDI issuing guide](/guides/it-sdi-invoicing#example-invoices) for a complete GOBL document.
 
 ## FAQ
 

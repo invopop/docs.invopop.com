@@ -18,3 +18,21 @@
 
     Give each PDP or inbox a distinct identifier and share the matching address with each issuer, so their invoices reach the intended destination. You can [look up an electronic address](/guides/fr-lookup) in the Annuaire to confirm where it currently routes.
   </Accordion>
+
+  <Accordion title="What is checked before a received invoice is recorded?">
+    An invoice arriving from another platform goes through three controls, run in the order the PPF applies them:
+
+    - **Syntax** — the invoice XML against the Flux 2 schematron for its syntax.
+    - **Addressing** — both parties carry a SIREN registered in the Annuaire, the transport addresses belong to the parties the invoice names, and the invoice is addressed to a party registered in your workspace.
+    - **Unicity** — the invoice is not already recorded for this party, number and year.
+
+    An invoice that passes every control is recorded on the receiving side. Only invoices are validated this way; incoming lifecycle statuses are simply recorded.
+  </Accordion>
+
+  <Accordion title="What reason does a rejected invoice come back with?">
+    Each control rejects under its own CDAR motif, carried on the [`213` Rejetée](/guides/fr-pa-status#issued-by-the-platform) status returned to the platform that sent the invoice:
+
+    - `REJ_SEMAN` — *rejet pour erreur sémantique*, when the invoice fails the Flux 2 schematron.
+    - `ADR_ERR` — *adresse de facturation électronique erronée*, when the addressing control fails.
+    - `REJ_UNI` — *rejet sur contrôle unicité*, when the invoice is already recorded.
+  </Accordion>

@@ -1,0 +1,75 @@
+export const tablesMergeWorkflow = {
+    "name": "Merge table data into invoice",
+    "description": "Enrich a GOBL invoice with reference data looked up from a table",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-000000000001",
+            "name": "Merge from table",
+            "provider": "tables.merge",
+            "summary": "Look up `customers` by tax code",
+            "config": {
+                "table": "customers",
+                "scope": "doc",
+                "key_jq": "e2N1c3RvbWVyX2NvZGU6IC5jdXN0b21lci50YXhfaWQuY29kZX0=",
+                "patch_jq": "LiArIHtwYXltZW50OiB7dGVybXM6IHtrZXk6ICRyb3cucGF5bWVudF90ZXJtc319fQ==",
+                "required": false
+            }
+        },
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-000000000002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `enriched`{.state .enriched}",
+            "config": { "state": "enriched" }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": { "state": "error" }
+        }
+    ]
+};
+
+```json Merge table data into invoice workflow
+{
+    "name": "Merge table data into invoice",
+    "description": "Enrich a GOBL invoice with reference data looked up from a table",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-000000000001",
+            "name": "Merge from table",
+            "provider": "tables.merge",
+            "summary": "Look up `customers` by tax code",
+            "config": {
+                "table": "customers",
+                "scope": "doc",
+                "key_jq": "e2N1c3RvbWVyX2NvZGU6IC5jdXN0b21lci50YXhfaWQuY29kZX0=",
+                "patch_jq": "LiArIHtwYXltZW50OiB7dGVybXM6IHtrZXk6ICRyb3cucGF5bWVudF90ZXJtc319fQ==",
+                "required": false
+            }
+        },
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-000000000002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `enriched`{.state .enriched}",
+            "config": { "state": "enriched" }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "c1d2e3f0-0000-11f0-c000-0000000000ff",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": { "state": "error" }
+        }
+    ]
+}
+```

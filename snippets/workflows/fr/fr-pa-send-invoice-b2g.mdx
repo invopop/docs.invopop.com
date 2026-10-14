@@ -1,0 +1,323 @@
+export const frPaSendInvoiceB2GWorkflow = {
+    "name": "PPF send document (public sector)",
+    "description": "Send an invoice via Chorus Pro or Peppol depending on the buyer, and record it with PPF",
+    "app_id": "gov-fr",
+    "country": "fr",
+    "steps": [
+        {
+            "id": "067bc16d-c1a7-11f1-8390-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "067e5b0d-c1a7-11f1-a890-4eb134dbe674",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "067e5bad-c1a7-11f1-a27a-4eb134dbe674",
+            "name": "Document is an invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "067e5bf8-c1a7-11f1-a34e-4eb134dbe674",
+                            "name": "Generate UBL document",
+                            "provider": "ubl.generate",
+                            "summary": "Peppol France CIUS v1",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "peppol-fr-cius",
+                                "private": false,
+                                "validate_ubl": false
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "067e5c2f-c1a7-11f1-a517-4eb134dbe674",
+                            "name": "Generate CDAR Status",
+                            "provider": "cii.generate",
+                            "summary": "France CTC Flow 6 CDAR (lifecycle status/payment)",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "fr-ctc-cdar-flow6",
+                                "validate_cii": false
+                            }
+                        }
+                    ]
+                }
+            ],
+            "config": {
+                "expr": "doc['$schema'] endsWith 'bill/invoice'",
+                "scope": "env"
+            }
+        },
+        {
+            "id": "067e5c5e-c1a7-11f1-9b94-4eb134dbe674",
+            "name": "Record outgoing document for e-invoicing",
+            "provider": "gov-fr.directory.record.outgoing"
+        },
+        {
+            "id": "067e5ddf-c1a7-11f1-aff3-4eb134dbe674",
+            "name": "Is B2G?",
+            "provider": "gov-fr.chorus-pro.lookup",
+            "summary": "Chorus Pro for a public buyer, Peppol otherwise",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "067e5daf-c1a7-11f1-a744-4eb134dbe674",
+                            "name": "Send to Chorus Pro",
+                            "provider": "gov-fr.chorus-pro.send",
+                            "summary": "Deliver to the public sphere"
+                        },
+                        {
+                            "id": "067e5d67-c1a7-11f1-875f-4eb134dbe674",
+                            "name": "Forward document to PPF",
+                            "provider": "gov-fr.directory.forward"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "067e5c7f-c1a7-11f1-96f3-4eb134dbe674",
+                            "name": "Verify document can be sent",
+                            "provider": "peppol.validate.endpoint",
+                            "next": [
+                                {
+                                    "code": "true",
+                                    "steps": [
+                                        {
+                                            "id": "067e5ca2-c1a7-11f1-a3ed-4eb134dbe674",
+                                            "name": "Send Peppol document",
+                                            "provider": "peppol.send"
+                                        },
+                                        {
+                                            "id": "067e5cc1-c1a7-11f1-99dd-4eb134dbe674",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "code": "false",
+                                    "steps": [
+                                        {
+                                            "id": "067e5ce6-c1a7-11f1-81bc-4eb134dbe674",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward",
+                                            "summary": "Forward to PPF (déposée – non transmise)",
+                                            "config": {
+                                                "not_transmitted": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "067e5d0b-c1a7-11f1-af09-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "067e6072-c1a7-11f1-ba65-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json PPF send document (public sector) workflow
+{
+    "name": "PPF send document (public sector)",
+    "description": "Send an invoice via Chorus Pro or Peppol depending on the buyer, and record it with PPF",
+    "app_id": "gov-fr",
+    "country": "fr",
+    "steps": [
+        {
+            "id": "067bc16d-c1a7-11f1-8390-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "067e5b0d-c1a7-11f1-a890-4eb134dbe674",
+            "name": "Sign envelope",
+            "provider": "silo.close"
+        },
+        {
+            "id": "067e5bad-c1a7-11f1-a27a-4eb134dbe674",
+            "name": "Document is an invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "067e5bf8-c1a7-11f1-a34e-4eb134dbe674",
+                            "name": "Generate UBL document",
+                            "provider": "ubl.generate",
+                            "summary": "Peppol France CIUS v1",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "peppol-fr-cius",
+                                "private": false,
+                                "validate_ubl": false
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "067e5c2f-c1a7-11f1-a517-4eb134dbe674",
+                            "name": "Generate CDAR Status",
+                            "provider": "cii.generate",
+                            "summary": "France CTC Flow 6 CDAR (lifecycle status/payment)",
+                            "config": {
+                                "attach_invoice_pdf": false,
+                                "doc_type": "fr-ctc-cdar-flow6",
+                                "validate_cii": false
+                            }
+                        }
+                    ]
+                }
+            ],
+            "config": {
+                "expr": "doc['$schema'] endsWith 'bill/invoice'",
+                "scope": "env"
+            }
+        },
+        {
+            "id": "067e5c5e-c1a7-11f1-9b94-4eb134dbe674",
+            "name": "Record outgoing document for e-invoicing",
+            "provider": "gov-fr.directory.record.outgoing"
+        },
+        {
+            "id": "067e5ddf-c1a7-11f1-aff3-4eb134dbe674",
+            "name": "Is B2G?",
+            "provider": "gov-fr.chorus-pro.lookup",
+            "summary": "Chorus Pro for a public buyer, Peppol otherwise",
+            "next": [
+                {
+                    "status": "NA",
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "067e5daf-c1a7-11f1-a744-4eb134dbe674",
+                            "name": "Send to Chorus Pro",
+                            "provider": "gov-fr.chorus-pro.send",
+                            "summary": "Deliver to the public sphere"
+                        },
+                        {
+                            "id": "067e5d67-c1a7-11f1-875f-4eb134dbe674",
+                            "name": "Forward document to PPF",
+                            "provider": "gov-fr.directory.forward"
+                        }
+                    ]
+                },
+                {
+                    "status": "NA",
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "067e5c7f-c1a7-11f1-96f3-4eb134dbe674",
+                            "name": "Verify document can be sent",
+                            "provider": "peppol.validate.endpoint",
+                            "next": [
+                                {
+                                    "code": "true",
+                                    "steps": [
+                                        {
+                                            "id": "067e5ca2-c1a7-11f1-a3ed-4eb134dbe674",
+                                            "name": "Send Peppol document",
+                                            "provider": "peppol.send"
+                                        },
+                                        {
+                                            "id": "067e5cc1-c1a7-11f1-99dd-4eb134dbe674",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "code": "false",
+                                    "steps": [
+                                        {
+                                            "id": "067e5ce6-c1a7-11f1-81bc-4eb134dbe674",
+                                            "name": "Forward document to PPF",
+                                            "provider": "gov-fr.directory.forward",
+                                            "summary": "Forward to PPF (déposée – non transmise)",
+                                            "config": {
+                                                "not_transmitted": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "067e5d0b-c1a7-11f1-af09-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `completed`{.state .completed}",
+            "config": {
+                "state": "completed"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "067e6072-c1a7-11f1-ba65-4eb134dbe674",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

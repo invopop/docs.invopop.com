@@ -1,0 +1,96 @@
+---
+title: "Tables"
+description: "Store, query, and transform structured data in SQL tables connected to your workflows."
+keywords: ['tables', 'database', 'sql', 'sqlite', 'turso', 'import', 'export', 'data']
+mode: wide
+---
+
+import TablesImportExport from '/snippets/workflows/tables/import-export.mdx';
+import TablesMerge from '/snippets/workflows/tables/merge.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Tables" icon="https://assets.invopop.com/apps/tables/icon.svg"
+				  href="/guides/tables" horizontal>
+				  View implementation guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Databases                              |
+				| Scope     | All                                    |
+		</Columns>
+
+	The **Tables app** gives each workspace a managed SQL database for storing structured data alongside your documents. Create tables, load them from your own SQL or from other steps in a workflow, browse and query them from a built-in editor, and move data in and out of your GOBL documents as part of any workflow.
+
+	Each workspace that enables Tables gets a single **database**, backed by [Turso](https://turso.tech) (a managed libSQL/SQLite service). Inside it you create **tables** with typed columns and constraints (primary keys, `UNIQUE`, `NOT NULL`, defaults). Every table automatically includes an auto-incrementing `id` primary key and an optional `silo_entry_id` column that links a row back to the GOBL document it came from.
+
+	Data moves between tables and documents using [JQ](https://jqlang.org) queries that you configure on each workflow step, so you control exactly how columns map onto GOBL fields and back. You can test your queries in the [online JQ playground](https://play.jqlang.org/) before saving them.
+
+	To get started quickly, Tables ships with ready-made **templates** that create invoice tables: from a single flat table (one row per invoice), to one row per line item with an aggregating view, to a fully normalized set of supplier, customer, invoice, and line-item tables with a view that reassembles them. Each template comes with a suggested import query and an `ordering_code` uniqueness constraint to keep rows idempotent.
+
+	#### Key features
+
+	* **Workflow automation:** Import, export, merge, and batch actions plug into your workflows as steps, moving data between tables and GOBL documents automatically.
+	* **Managed SQL database:** Each workspace gets its own libSQL/SQLite database, with no infrastructure to run or maintain.
+	* **Flexible mapping with JQ:** Map table columns onto GOBL fields, and GOBL fields back onto columns, with JQ queries you can test and refine.
+	* **Built-in SQL editor:** Browse tables, inspect schemas, and run ad-hoc SQL queries directly from the app.
+	* **Table templates:** Start from prebuilt invoice schemas (flat, multi-row, or normalized multi-table), each with a suggested import query.
+	* **Bulk processing:** Fan out a workflow over every row in a table, running one job per row for high-volume imports.
+	* **Direct access:** Generate database credentials to connect and load data from your own tools.
+
+	Make sure to check out our [Tables guide](/guides/tables) for step-by-step instructions on creating tables, loading data, and wiring the actions into your workflows.
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		<Card title="Import" icon="https://assets.invopop.com/apps/tables/icon.svg" horizontal>
+		 Build a GOBL document from a stored table row and save it as a silo entry.
+		</Card>
+
+		<Card title="Export" icon="https://assets.invopop.com/apps/tables/icon.svg" horizontal>
+		 Write data from a GOBL document into a table row, inserting a new row or updating an existing one.
+		</Card>
+
+		<Card title="Merge" icon="https://assets.invopop.com/apps/tables/icon.svg" horizontal>
+		 Enrich a GOBL document with values looked up from a matching table row.
+		</Card>
+
+		<Card title="Create batch" icon="https://assets.invopop.com/apps/tables/icon.svg" horizontal>
+		 Run a workflow once for every row in a table, with an optional SQL filter.
+		</Card>
+	</Tab>
+	<Tab title="Workflows">
+		Use these sample workflows as a starting point for your own.
+
+		<Note>
+			The `jq`, `key_jq`, and `patch_jq` values are base64-encoded, exactly as the workflow stores them (the app's step configuration screen encodes them for you). The plain-text queries are shown in the [Tables guide](/guides/tables).
+		</Note>
+
+		<AccordionGroup>
+			<Accordion title="Tables import and export invoice">
+				Build a GOBL invoice from a table row, sign it and generate a PDF, then record key fields back into a reporting table (upserting on `silo_entry_id` so re-runs update the same row). Trigger it per row, for example from a `Create batch` step, passing the table name and row key.
+				<TablesImportExport />
+			</Accordion>
+			<Accordion title="Tables merge invoice data">
+				Look up a matching row and patch its values into the invoice being processed, for example a customer's default payment terms.
+				<TablesMerge />
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
+</Tabs>
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Tables app →
+</Card>

@@ -1,0 +1,240 @@
+---
+title: "Italy issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: "Issue electronic invoices through Italy's SDI system over Invopop's accredited channel."
+---
+
+import SendInvoiceWorkflow, { itSendInvoiceWorkflow } from '/snippets/workflows/it/italy-send-invoice.mdx';
+import ImportStatusWorkflow, { itImportStatusWorkflow } from '/snippets/workflows/it/italy-import-status.mdx';
+import ItCustomerAccordion from '/snippets/parties/it/accordion.mdx';
+import InvoiceAccordion from '/snippets/invoices/it/accordion.mdx';
+import ItalyResources from '/snippets/tables/italy-resources.mdx';
+import FAQ from '/snippets/faqs/it/composers/guide-sdi-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+Electronic invoicing is mandatory for essentially every VAT-registered business in Italy. The *Sistema di Interscambio* (SDI) is the tax authority's central hub: it validates every invoice and delivers it to the buyer. The legal invoice is the cleared FatturaPA XML file.
+
+Invopop converts your [GOBL](https://docs.gobl.org) invoice into FatturaPA and transmits it over **its own accredited SDICoop channel**, registered with the tax authority in Invopop's name. Nothing sits between your workspace and SDI.
+
+Companion guides: [Status](/guides/it-sdi-status) for what SDI reports back about an invoice, [Receiving invoices](/guides/it-sdi-reception), and [Archiving](/guides/it-sdi-archiving).
+
+| - | Sandbox | Live |
+|---|---|---|
+| **SDI exchange** | Simulated end to end, nothing leaves the platform | Real SDI over Invopop's accredited channel |
+| **Outcome** | You choose it, using a reserved recipient code | Decided by SDI and the recipient |
+| **Archiving** | Test preservation, no legal validity | Certified preservation |
+| **Legal validity** | None | The invoice is legally filed with SDI |
+
+<Info>
+The Italy app sends your invoices to the appropriate environment based on whether your current workspace is Sandbox or Live.
+</Info>
+
+<Prompt description="Have your agent issue an invoice through SDI in your sandbox." icon="file-invoice" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/it-sdi-invoicing.md, https://docs.invopop.com/llms.md and https://docs.gobl.org/addons/it-sdi-v1.md. In my sandbox workspace, using the token in INVOPOP_TOKEN and the workflow ID I give you, create a bill/invoice entry with $regime IT, $addons containing it-sdi-v1, the supplier I describe, and a customer of the kind I describe. Start from one of the example invoices in the guide, and do not invent tax codes, recipient codes or extension codes. Run the workflow with wait=30, then fetch the entry and report its state, the job's per-step statuses and faults, and the files attached. Then open the FatturaPA XML and tell me what is in CodiceDestinatario, PECDestinatario and the CessionarioCommittente identifiers, and why each value is what it is.
+</Prompt>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+<Step title="Connect the Italy app">
+1. Navigate to **Configuration** → **Apps**
+2. Find **Italy** in the app discovery list
+3. Click **Connect** to activate
+
+The initial connection requires no configuration for sending invoices.
+</Step>
+
+<Step title="Configure the sending workflow">
+
+This workflow numbers the invoice, seals the envelope, and submits it to SDI.
+
+<Card iconType="duotone" title="Italy send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-send-invoice" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itSendInvoiceWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <SendInvoiceWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the status workflow">
+
+This workflow runs on each notification SDI sends about an invoice you issued, and records it as a status entry. Select it in the Italy app's configuration so incoming notifications run it automatically.
+
+<Card iconType="duotone" title="Italy import invoice status workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=it-italy-import-status" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={itImportStatusWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <ImportStatusWorkflow />
+  </Tab>
+</Tabs>
+
+Add whatever your integration needs after the import step — calling a webhook, notifying your systems, or moving the invoice itself.
+
+</Step>
+
+</Steps>
+
+## Sending invoices
+
+Invopop uses the [GOBL FatturaPA](https://github.com/invopop/gobl.fatturapa) library to process conversions. When creating invoices for SDI, you need to:
+
+1. Set the `regime` field to `IT` in your GOBL invoice
+2. Add the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon to enable Italian-specific validations and extensions
+
+Detailed information about the SDI-specific extensions and validations can be found in:
+- [Italy SDI FatturaPA v1.x Addon Documentation](https://docs.gobl.org/addons/it-sdi-v1)
+- [Italy Tax Regime Documentation](https://docs.gobl.org/regimes/it)
+
+Example invoices are provided below, or you can use the [GOBL Builder](https://build.gobl.org) to create custom invoices.
+
+### Identifying the customer
+
+Italy has two fiscal identifiers — the *partita IVA* (VAT number) and the *codice fiscale* — and which one you put on the customer depends on who they are.
+
+| Your customer is | What to put on the party |
+|---|---|
+| An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario*, an `it-sdi-pec` inbox holding their PEC address, or both |
+| An Italian private individual | `tax_id` with `country: "IT"` and no code, plus an `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
+| Anyone outside Italy | `tax_id` with their country, and their VAT number if they have one. No inbox |
+
+Codes never carry a country prefix, because the country has its own field: write a *partita IVA* as `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters, and a *codice fiscale* is 16 for a person or 11 digits for a company. If you don't have a code for a party, leave it out rather than inventing a placeholder.
+
+Here is each case as a customer [party](https://docs.gobl.org/draft-0/org/party):
+
+<ItCustomerAccordion />
+
+### How the send step works
+
+The step generates the FatturaPA XML, submits it to SDI, and attaches the transmitted file to the invoice entry. It completes as soon as SDI accepts the file for processing — it does **not** wait for SDI to decide what happens next, so a verdict that takes days never holds your workflow open.
+
+The step returns:
+
+- `OK` when SDI accepted the file. The result carries SDI's identifier for the submission (`sdi_id`), which every later notification about this invoice shares.
+- `KO` when the invoice couldn't be converted or SDI refused the submission outright.
+
+Acceptance is not delivery. An accepted file can still be rejected minutes later, and that arrives as a status.
+
+<Note>
+Invoices addressed to a public administration (`FPA12`) need a qualified electronic signature. The send step signs them with Invopop's qualified electronic seal, so the file attached to the entry is the signed `.xml.p7m`.
+</Note>
+
+### Simplified invoices
+
+Italian law lets you issue a simplified invoice (*fattura semplificata*) for a sale of up to €400 including VAT, and for credit and debit notes whatever their amount. It asks less about your customer: their partita IVA or codice fiscale is enough. You can keep issuing ordinary invoices for these sales; the simplified one is an option.
+
+To issue one, add the `simplified` tag to your invoice:
+
+```json
+"$tags": ["simplified"]
+```
+
+The [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon then sets the format to `FSM10` and the document type to `TD07` (`TD08` for a credit note, `TD09` for a debit note), and the send step delivers a simplified FatturaPA file to SDI. The invoice still needs a customer, identified in one of two ways:
+
+| Your customer is | What to put on the customer |
+|---|---|
+| A business or professional with a partita IVA | `name`, and `tax_id` with `country` set to `IT` and the partita IVA as `code` |
+| A private individual | `tax_id` with only `country` set to `IT`, and the codice fiscale as an identity with key `it-fiscal-code` |
+
+GOBL requires a name for a customer with a partita IVA, but the simplified file carries a name only together with an address: without one, the name stays on your invoice and isn't sent to SDI. A private individual needs neither.
+
+If you only have the partita IVA, put a placeholder such as the partita IVA itself in `name`: without an address the simplified file doesn't include the name, so the placeholder stays on your invoice and isn't sent to SDI. Don't add an address in that case, or the placeholder would be sent as the customer's name.
+
+The addon rejects a simplified invoice that the format or the law doesn't allow, before it reaches SDI:
+
+- A total over €400 including VAT, converted to euros with the invoice's exchange rate. The limit doesn't apply to credit and debit notes, or to suppliers in the flat-rate regime (`RF19`) or the cross-border VAT franchise (`RF20`).
+- A customer that is a public administration.
+- Intra-EU supplies of goods (`N3.2`), services taxed on a business in another EU country (`N2.1`), reverse charge (`N6`) and VAT due in another EU country (`N7`).
+- A sale to a habitual exporter (`N3.5`) or a stamp duty exemption (`NB1`, `NB2`, `NB3`). Only the ordinary format carries the declaration of intent and these exemptions.
+- Withholding taxes, fund contributions, a rounding amount, and charges or discounts without VAT.
+
+Payment terms, bank details, ordering references and notes are not part of the simplified format, so the file leaves them out.
+
+To correct a simplified invoice, issue a credit or debit note with the `simplified` tag. It must refer to the invoice it corrects, with that invoice's code and issue date and the reason for the correction. If you create the note from the original with `previous_id` and `correct`, set `reason` in the `correct` object. The [Simplified Invoice](#example-invoices) example below shows a complete document.
+
+## Invoice statuses
+
+SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
+
+Each notification and what it means for the invoice is covered in the [Status](/guides/it-sdi-status) guide.
+
+## Archiving (conservazione a norma)
+
+Italian law requires issued electronic invoices to be preserved long-term through a certified process. Add the **Archive document** step after the send step to preserve each invoice as you issue it. See the [Archiving](/guides/it-sdi-archiving) guide for the full setup.
+
+## Testing in the sandbox
+
+There is no public SDI test environment you can point a workflow at. In sandbox, the app plays SDI's part itself: it accepts the file, then feeds the status notifications a real exchange would produce back through the same intake the live channel uses. Your workflow cannot tell the difference, and nothing leaves the platform.
+
+### Choosing the outcome
+
+You choose which outcome to rehearse by setting a reserved *codice destinatario* on the customer. In GOBL that is an inbox with the key `it-sdi-code`:
+
+```json
+{
+  "customer": {
+    "name": "Test Customer SRL",
+    "tax_id": { "country": "IT", "code": "12345678903" },
+    "inboxes": [
+      { "key": "it-sdi-code", "code": "SIMNS00" }
+    ]
+  }
+}
+```
+
+| Recipient code | Simulated outcome |
+|---|---|
+| *(any ordinary code)* | `RC` — delivered to the recipient |
+| `SIMNS00` | `NS` — SDI rejected the invoice |
+| `SIMMC00` | `MC` — accepted, but undeliverable |
+| `SIMAT00` | `AT` — delivery impossible, attestation issued |
+| `SIMDT00` | `RC`, then `DT` — delivered, then the response window expired |
+| `SIMEC1` | `RC`, then `NE`/`EC01` — delivered, then accepted |
+| `SIMEC2` | `RC`, then `NE`/`EC02` — delivered, then rejected |
+
+The codes are sized to real FatturaPA recipient-code lengths, so they pass validation. Any code not in this list — including a real customer's — resolves to a successful delivery.
+
+<Note>
+The sandbox simulates SDI's *responses*, not its validation. In practice this distinction rarely matters: the [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon validates invoices against the same rules SDI applies, so an invoice that builds cleanly should only rarely be rejected live — though edge cases can still slip through.
+</Note>
+
+### Receiving your own invoices
+
+Send a sandbox invoice to a company you have [registered for reception](/guides/it-sdi-reception) and the app also loops it back to you as an inbound delivery, running your import workflow exactly as a live delivery would. This is the only way to receive an invoice in sandbox, and a convenient way to exercise sending and receiving in a single run.
+
+## Example invoices
+
+<InvoiceAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Italy FAQ](/faq/italy) section
+
+---
+
+<ItalyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Italy →
+</Card>

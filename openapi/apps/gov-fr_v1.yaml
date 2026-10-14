@@ -25,11 +25,7 @@ paths:
       summary: Look up directory entries by SIREN
       description: |-
         Returns all entries from the PPF Annuaire that
-        match the given French SIREN. A company may have several entries 
-        so the response is always a list.
-
-        Only available to **live** workspaces. Sandbox workspaces receive
-        `403 Forbidden`.
+        match the given French SIREN.
       parameters:
         - name: siren
           in: path
@@ -38,9 +34,13 @@ paths:
           schema:
             type: string
             example: "123456789"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Lookup completed. `count` may be `0` if the SIREN is not present in the directory.
+          description: |-
+            One page of matching directory entries. `count` may be `0` if the
+            SIREN is not present in the directory.
           content:
             application/json:
               schema:
@@ -52,19 +52,39 @@ paths:
                     siren: "123456789"
                     count: 1
                     results:
-                      - id_instance: "1020993"
-                        siren: "123456789"
-                        siret: ""
-                        routing_code: "ROUTE123"
-                        platform_id: "0431"
-                        nature: "M"
-                        identifier: "269909452"
-                        suffix: ""
-                        start_date: "20251227"
-                        end_date: ""
-                        effective_end_date: "20280402"
-                        created_at: "2026-01-15T10:00:00Z"
-                        updated_at: "2026-01-15T10:00:00Z"
+                      - IDInstance: "1020993"
+                        SIREN: "123456789"
+                        SIRET: ""
+                        RoutingCode: "ROUTE123"
+                        PlatformID: "0431"
+                        Nature: "M"
+                        Identifier: "269909452"
+                        Suffix: ""
+                        StartDate: "20251227"
+                        EndDate: ""
+                        EffectiveEndDate: "20280402"
+                        CreatedAt: "2026-01-15T10:00:00Z"
+                        UpdatedAt: "2026-01-15T10:00:00Z"
+                paginated:
+                  summary: First page with more results available (`?limit=1`)
+                  value:
+                    siren: "123456789"
+                    count: 1
+                    results:
+                      - IDInstance: "1020993"
+                        SIREN: "123456789"
+                        SIRET: ""
+                        RoutingCode: "ROUTE123"
+                        PlatformID: "0431"
+                        Nature: "M"
+                        Identifier: "269909452"
+                        Suffix: ""
+                        StartDate: "20251227"
+                        EndDate: ""
+                        EffectiveEndDate: "20280402"
+                        CreatedAt: "2026-01-15T10:00:00Z"
+                        UpdatedAt: "2026-01-15T10:00:00Z"
+                    next_offset: 1
                 not_found:
                   summary: SIREN not in the directory
                   value:
@@ -115,19 +135,19 @@ paths:
                     identifier: "123456789"
                     count: 1
                     results:
-                      - id_instance: "1020994"
-                        siren: "269909452"
-                        siret: ""
-                        routing_code: "ROUTE123"
-                        platform_id: "0431"
-                        nature: "M"
-                        identifier: "269909452_suffixe1"
-                        suffix: "suffixe1"
-                        start_date: "20251227"
-                        end_date: ""
-                        effective_end_date: "20280402"
-                        created_at: "2026-01-15T10:00:00Z"
-                        updated_at: "2026-01-15T10:00:00Z"
+                      - IDInstance: "1020994"
+                        SIREN: "269909452"
+                        SIRET: ""
+                        RoutingCode: "ROUTE123"
+                        PlatformID: "0431"
+                        Nature: "M"
+                        Identifier: "269909452_suffixe1"
+                        Suffix: "suffixe1"
+                        StartDate: "20251227"
+                        EndDate: ""
+                        EffectiveEndDate: "20280402"
+                        CreatedAt: "2026-01-15T10:00:00Z"
+                        UpdatedAt: "2026-01-15T10:00:00Z"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -328,19 +348,19 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/reports/{silo_entry_id}:
+  /apps/gov-fr/v1/reports/{siren}:
     get:
       operationId: fetchReportingSummary
       summary: Fetch the e-reporting summary for a party
       description: |-
         Returns the current Flux 10 e-reporting status for the party
-        identified by the silo entry, one block per report kind:
+        identified by the SIREN, one block per report kind:
 
         - `tx` — **transactions**.
         - `py` — **payments**.
 
       parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/ReportsSIREN"
       responses:
         "200":
           description: Reporting summary for the party.
@@ -404,7 +424,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/reports/{silo_entry_id}/periods:
+  /apps/gov-fr/v1/reports/{siren}/periods:
     get:
       operationId: listReportingPeriods
       summary: List e-reporting periods for a party
@@ -412,7 +432,7 @@ paths:
         Returns the party's Flux 10 report periods, most recent first
         (`created_at` descending). 
       parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/ReportsSIREN"
         - $ref: "#/components/parameters/ReportKind"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Limit"
@@ -451,15 +471,15 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/reports/{silo_entry_id}/periods/{period_id}:
+  /apps/gov-fr/v1/reports/{siren}/periods/{period_id}:
     get:
       operationId: fetchReportingPeriod
       summary: Fetch a single e-reporting period
       description: |-
         Returns the metadata for one report period, scoped to the party
-        identified by the silo entry.
+        identified by the SIREN.
       parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/ReportsSIREN"
         - $ref: "#/components/parameters/PeriodID"
       responses:
         "200":
@@ -494,14 +514,14 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /apps/gov-fr/v1/reports/{silo_entry_id}/periods/{period_id}/xml:
+  /apps/gov-fr/v1/reports/{siren}/periods/{period_id}/xml:
     get:
       operationId: fetchReportingPeriodXML
       summary: Download a period's Flux 10 XML
       description: |-
         Streams the raw Flux 10 `Report.xml` body generated for the period.
       parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/ReportsSIREN"
         - $ref: "#/components/parameters/PeriodID"
       responses:
         "200":
@@ -520,8 +540,63 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/gov-fr/v1/reports/{siren}/preview:
+    get:
+      operationId: previewReport
+      summary: Preview the current window's Flux 10 report
+      description: |-
+        Builds the Flux 10 `Report.xml` for everything recorded in the
+        current reporting window so far and returns it. Nothing is stored or
+        sent. The report is checked against the PPF rules as before sending:
+        a report that would be rejected answers `422` with the issues found.
+      parameters:
+        - $ref: "#/components/parameters/ReportsSIREN"
+        - name: kind
+          in: query
+          required: true
+          description: "`tx` for transactions, `py` for payments."
+          schema:
+            type: string
+            enum: [tx, py]
+        - name: role
+          in: query
+          required: false
+          description: Stream to preview. Defaults to `seller`.
+          schema:
+            type: string
+            enum: [seller, buyer]
+      responses:
+        "200":
+          description: The Flux 10 XML body, served as `application/xml`.
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Nothing is recorded in the current window.
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
   parameters:
+    ReportsSIREN:
+      name: siren
+      in: path
+      required: true
+      description: |-
+        SIREN of the reporting party. The party's `org.Party` silo entry ID
+        is still accepted in its place, but will be phased out.
+      schema:
+        type: string
+        example: "123456789"
+
     SiloEntryID:
       name: silo_entry_id
       in: path
@@ -560,7 +635,7 @@ components:
       name: offset
       in: query
       required: false
-      description: Number of periods to skip, for pagination. Must be non-negative.
+      description: Number of results to skip, for pagination. Must be non-negative.
       schema:
         type: integer
         minimum: 0
@@ -572,7 +647,7 @@ components:
       in: query
       required: false
       description: |-
-        Maximum number of periods to return. Values outside the `1`–`200`
+        Maximum number of results to return. Values outside the `1`–`200`
         range fall back to the default of `50`.
       schema:
         type: integer
@@ -587,60 +662,62 @@ components:
       description: |-
         Single entry in the PPF Annuaire. Each entry
         represents one registered electronic address for a SIREN/SIRET.
+      # Unlike the rest of this spec, the API returns these fields with the
+      # server's Go field names. Don't "fix" them to snake_case.
       properties:
-        id_instance:
+        IDInstance:
           type: string
           description: Unique instance identifier from the PPF export.
           example: "1020993"
-        siren:
+        SIREN:
           type: string
           description: 9-digit French SIREN of the company.
           example: "269909452"
-        siret:
+        SIRET:
           type: string
           description: 14-digit French SIRET of the establishment, when applicable.
           example: ""
-        routing_code:
+        RoutingCode:
           type: string
           description: Routing code used by the PPF to deliver invoices.
           example: "ROUTE123"
-        platform_id:
+        PlatformID:
           type: string
           description: 4-digit identifier of the PA platform that registered the entry.
           example: "0431"
-        nature:
+        Nature:
           type: string
           description: Single-letter code for the nature of the entry as classified by the Annuaire.
           example: "M"
-        identifier:
+        Identifier:
           type: string
           description: |-
             Electronic address identifier used for routing. Typically the SIREN,
             optionally with a `_suffix` qualifier when multiple addresses exist
             for the same company.
           example: "269909452"
-        suffix:
+        Suffix:
           type: string
           description: Optional suffix qualifying the identifier.
           example: "suffixe1"
-        start_date:
+        StartDate:
           type: string
           description: Date from which this entry is active in the Annuaire, as `YYYYMMDD`.
           example: "20251227"
-        end_date:
+        EndDate:
           type: string
           description: Scheduled end date of the entry as `YYYYMMDD`, when set.
           example: ""
-        effective_end_date:
+        EffectiveEndDate:
           type: string
           description: Effective end date as `YYYYMMDD`, once the entry has been deactivated.
           example: "20280402"
-        created_at:
+        CreatedAt:
           type: string
           format: date-time
           description: When this entry was first stored in the local mirror.
           example: "2026-01-15T10:00:00Z"
-        updated_at:
+        UpdatedAt:
           type: string
           format: date-time
           description: When this entry was last refreshed from a PPF export.
@@ -656,13 +733,19 @@ components:
           example: "123456789"
         count:
           type: integer
-          description: Number of directory entries returned.
+          description: Number of directory entries returned on this page.
           example: 1
         results:
           type: array
           description: Matching directory entries. Empty when the SIREN is not in the Annuaire.
           items:
             $ref: "#/components/schemas/DirectoryEntry"
+        next_offset:
+          type: integer
+          description: |-
+            Offset of the next page of results. Omitted on the last page —
+            its presence means more entries remain.
+          example: 50
 
     IdentifierLookupResponse:
       type: object
