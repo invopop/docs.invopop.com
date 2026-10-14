@@ -127,7 +127,7 @@ Lead-in: `The following workflow actions will be available once you install and 
 		</Card>
 ```
 
-- The `pop-count` div is the step's credit cost (absolutely positioned by `styles.css`). **Omit it entirely for zero-cost actions** (register, wait, cancel, import).
+- The `pop-count` div is the step's credit cost (absolutely positioned by `styles.css`). Copy the value from the app's Actions tab in Access. **Omit it entirely for zero-cost actions** (wait, cancel, unregister). Register actions are **seats**: they charge their pops at registration and again every 30 days, so write them as a monthly figure (`100/mo`, `150/mo` for SII, `50/mo` for the French Annuaire and reporter seats).
 - Card bodies may embed essential input/output in prose (`Generates a unique URL in the \`meta\` property…`). No settings tables or parameter lists — the workflow JSON's `config` and the guides carry configuration detail.
 - Many actions → cluster them under plain-text label lines (`Registration`, `Clearance & Reporting`), not headings.
 
