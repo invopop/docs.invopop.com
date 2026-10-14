@@ -366,6 +366,7 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/france.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa.mdx` | `fr/composers/app-pa.mdx` |
 | `guides/fr-pa-invoicing.mdx` | `fr/composers/guide-pa-invoicing.mdx` |
+| `guides/fr-pa-b2g.mdx` | `fr/composers/guide-pa-b2g.mdx` |
 | `guides/cb-france.mdx` | `fr/composers/guide-pa-invoicing.mdx` |
 | `guides/fr-pa-registration.mdx` | `fr/composers/guide-pa-supplier.mdx` |
 | `guides/fr-pa-reporting.mdx` | `fr/composers/guide-pa-reporting.mdx` |
