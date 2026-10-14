@@ -25,6 +25,10 @@ Invopop has partnered with [Alegra](https://www.alegra.com), a DIAN-authorized t
 
 Once a supplier is registered, continue with the companion guide: [Invoicing in Colombia](/guides/co-dian-invoicing).
 
+<Warning>
+  The previous Plemsi integration is deprecated and no longer maintained. If your suppliers still issue through Plemsi, follow [Migrate from Plemsi](#migrate-from-plemsi) to move them to this integration.
+</Warning>
+
 | - | Sandbox | Live |
 |---|---|---|
 | **Supplier** | Only Alegra's test NIT (`9005590882`) | Any Colombian supplier with an active RUT |
@@ -189,6 +193,28 @@ The same registration flow runs in sandbox workspaces against the DIAN test envi
 | `f70562e0-631e-4ceb-aa65-36887b57dc17` | Failed |
 
 Use the accepted value to complete a supplier registration end to end; the other values let you test how your integration handles rejected, pending, and failed outcomes.
+
+## Migrate from Plemsi
+
+Moving a supplier from the old Plemsi integration takes the same steps as a new registration. At the DIAN, the supplier simply adds Alegra as another technology provider.
+
+<Steps>
+  <Step title="Set up the Colombia app">
+    Connect the app and create the registration workflow as described in [Setup](#setup), and the send workflow from the [invoicing guide](/guides/co-dian-invoicing#setup).
+  </Step>
+  <Step title="Register the supplier">
+    Follow [Register a supplier](#register-a-supplier): run the registration workflow, add Alegra as technology provider at the DIAN, and submit the test set. The Plemsi enablement doesn't carry over, so this is needed even for suppliers already issuing.
+  </Step>
+  <Step title="Set up the numbering ranges">
+    Under **Configuración** → **Rangos de numeración** (see [Numbering resolutions](#numbering-resolutions)), choose one of:
+
+    - **Move the existing range:** unlink it from Plemsi and link it to Alegra. The series stays the same, and new invoices must continue after the last number issued through Plemsi.
+    - **Add a new range:** request a new range with a new prefix and link it to Alegra. Invoices sent through Alegra start a fresh series, while the old range stays with Plemsi until it's no longer needed.
+  </Step>
+  <Step title="Switch to the new send workflow">
+    Send new invoices with the Colombia send workflow, using the series from the previous step. Once they clear, stop using the Plemsi workflow.
+  </Step>
+</Steps>
 
 At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Invoicing in Colombia guide](/guides/co-dian-invoicing) to continue.
 
