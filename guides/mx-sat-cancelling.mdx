@@ -1,0 +1,172 @@
+---
+title: "CFDI cancellation guide"
+sidebarTitle: "Cancelling documents"
+description: Cancel CFDI invoices and payment receipts in Mexico using the SAT Mexico app.
+---
+
+import CancelWorkflow, { mxSatCancelWorkflow } from '/snippets/workflows/mx/sat-cancel.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import FAQ from '/snippets/faqs/mx/composers/guide-sat-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+A CFDI stamped by the SAT can only be withdrawn by requesting its cancellation. The request carries a reason (_motivo_), and for most B2B invoices and payment receipts the receiver must accept it within three business days, otherwise it is accepted automatically. See [Cancellations in Mexico](/compliance/mexico#cancellations) for the rules.
+
+In this guide you'll learn how to cancel invoices and payment receipts (_comprobantes de pago_) issued with the [SAT Mexico app](/apps/sat-mexico). A cancellation is requested with a GOBL [status document](https://docs.gobl.org/draft-0/bill/status) that references the CFDI to cancel.
+
+## Prerequisites
+
+- **A document issued through Invopop**: the CFDI must have been stamped by the SAT Mexico app, following the [CFDI issuing guide](/guides/mx-sat-issuing), and its `sat-uuid` stamp is needed to reference it.
+- **The cancellation reason**: one of the four SAT motivos listed below.
+- **For motivo 01**: the replacement CFDI, already issued with the original in its `preceding` list and relation type `04` (`mx-cfdi-rel-type`).
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+  <Step title="Set up the SAT cancel CFDI workflow">
+    <Card iconType="duotone" title="SAT cancel CFDI workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=mx-sat-cancel" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={mxSatCancelWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Status workflow](https://console.invopop.com/redirect/workflows/new?template=empty-status) code view.
+        <CancelWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+### How it works
+
+<Steps>
+  <Step title="Sign envelope">
+    The status document is signed. Only signed status documents can be cancelled.
+  </Step>
+  <Step title="Cancel CFDI at SAT">
+    The app checks the CFDI's current status at the SAT and sends the cancellation request. The SAT acknowledgement (_acuse_) is attached to the status document as `cancel-acuse.xml`. The step then waits for the outcome, checking every minute, or every four hours while the receiver has to accept.
+  </Step>
+  <Step title="Set state">
+    Once the SAT confirms the cancellation, the status document is set to `completed`. If the request fails or the receiver rejects it, the rescue step sets it to `error`.
+  </Step>
+</Steps>
+
+## Cancel a document
+
+Create a status document of type `update` with one `rejected` line referencing the CFDI to cancel, then run the cancel workflow on it.
+
+<Info>
+  The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).
+</Info>
+
+The `rejected` line must include:
+
+- `doc.code` with the document's code, and the `sat-uuid` stamp of the CFDI.
+- `ext` with the reason in `mx-cfdi-cancel-reason`.
+
+| Reason | Description | Replacement line |
+|---|---|---|
+| `01` | Issued with errors, with relation | Required |
+| `02` | Issued with errors, without relation | No |
+| `03` | The operation was not carried out | No |
+| `04` | Nominative operation included in a global invoice | No |
+
+For motivo `01`, add a second line with key `issued` that references the replacement CFDI and its `sat-uuid` stamp. Each status document cancels a single CFDI.
+
+<AccordionGroup>
+  <Accordion title="Cancellation without replacement (motivo 02)">
+    ```json
+    {
+      "$schema": "https://gobl.org/draft-0/bill/status",
+      "$addons": ["mx-cfdi-v4"],
+      "type": "update",
+      "code": "CANCEL-0001",
+      "supplier": {
+        "name": "ESCUELA KEMPER URGATE",
+        "tax_id": { "country": "MX", "code": "EKU9003173C9" }
+      },
+      "lines": [
+        {
+          "key": "rejected",
+          "doc": {
+            "code": "0001",
+            "stamps": [{ "prv": "sat-uuid", "val": "fbff00b3-6577-437b-b15e-cbf25be09663" }]
+          },
+          "ext": { "mx-cfdi-cancel-reason": "02" }
+        }
+      ]
+    }
+    ```
+  </Accordion>
+  <Accordion title="Cancellation with substitution (motivo 01)">
+    ```json
+    {
+      "$schema": "https://gobl.org/draft-0/bill/status",
+      "$addons": ["mx-cfdi-v4"],
+      "type": "update",
+      "code": "CANCEL-0002",
+      "supplier": {
+        "name": "ESCUELA KEMPER URGATE",
+        "tax_id": { "country": "MX", "code": "EKU9003173C9" }
+      },
+      "lines": [
+        {
+          "key": "rejected",
+          "doc": {
+            "code": "0001",
+            "stamps": [{ "prv": "sat-uuid", "val": "fbff00b3-6577-437b-b15e-cbf25be09663" }]
+          },
+          "ext": { "mx-cfdi-cancel-reason": "01" }
+        },
+        {
+          "key": "issued",
+          "doc": {
+            "code": "0002",
+            "stamps": [{ "prv": "sat-uuid", "val": "1c996ae9-7ebf-4bcc-a1a8-9c0289bcefc9" }]
+          }
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  A newly issued CFDI can take a few minutes to be available for cancellation. If the job fails with a message asking to wait, run it again after a few minutes.
+</Warning>
+
+### Outcomes
+
+The cancel step ends with one of these results, and the error codes can be used to route the workflow:
+
+| Result | Code | Meaning |
+|---|---|---|
+| OK | | The SAT cancelled the CFDI. |
+| KO | `cancel-rejected` | The receiver rejected the cancellation, so the CFDI remains valid. |
+| KO | `already-cancelled` | The CFDI was already cancelled before this status document. |
+| KO | `cancel-in-process` | Another cancellation request for the CFDI is still waiting for the receiver. |
+| KO | `not-cancellable` | The CFDI has related documents in force, such as an active payment receipt, and cannot be cancelled until they are cancelled. |
+
+## FAQ
+
+<FAQ />
+
+More available in our [Mexico FAQ](/faq/mexico) section
+
+---
+
+<MexicoResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Mexico →
+</Card>
