@@ -1,155 +1,153 @@
 ---
 title: "Invopop CLI"
-description: "Install the Invopop command-line tool, sign in with your account and run your first command."
-sidebarTitle: "Get started"
+description: "Install the Invopop command-line tool, sign in with your account, and check, store and send documents from your terminal or through an AI assistant."
+sidebarTitle: "CLI"
 icon: "terminal"
 ---
 
-The Invopop CLI is a small program you run in your terminal. It lets you do most of what the [Console](/console/index) does without opening a browser: check an invoice, send it through a workflow, look up a job, or reserve the next invoice number.
+The Invopop CLI is a small program you run in your terminal. It lets you do most of what the [Console](/console/index) does without opening a browser: check an invoice, send it through a workflow, look up a job, or reserve the next invoice number. It is also the easiest way to let an AI assistant such as Claude Code work in your workspace on your behalf.
 
-You don't need to be a developer to use it. If you can open a terminal and paste a line of text, you can use the CLI. It is also the easiest way to let an AI assistant such as Claude Code work in your workspace on your behalf. See [Use the CLI with AI agents](/cli/ai-agents).
+You don't need to be a developer to use it. If you can open a terminal and paste a line of text, you can use the CLI.
 
 <Info>
-The CLI is open source at [github.com/invopop/cli](https://github.com/invopop/cli). Everything it does goes through the same public API that the Console uses, so it can only do what your account is allowed to do.
+The CLI is open source at [github.com/invopop/cli](https://github.com/invopop/cli). Everything it does goes through the same public API as the Console, so it can only do what your account is allowed to do.
 </Info>
 
 ## Install
 
 <Tabs>
   <Tab title="macOS and Linux (Homebrew)">
-    If you have [Homebrew](https://brew.sh), this is the simplest option. It also keeps the CLI up to date with the rest of your tools.
+    If you have [Homebrew](https://brew.sh), this is the simplest option and keeps the CLI up to date with your other tools.
 
     ```bash
     brew install invopop/tap/invopop
     ```
 
-    Homebrew builds the CLI from source the first time, so the install can take a minute. Later updates come with your usual `brew upgrade`.
+    Homebrew builds the CLI from source the first time, so the install can take a minute.
   </Tab>
   <Tab title="Download a release">
-    Download the file for your computer from the [releases page](https://github.com/invopop/cli/releases). Builds are available for macOS, Linux and Windows, on both Intel and ARM.
-
-    Unpack it and move the `invopop` program somewhere on your `PATH`, for example `/usr/local/bin` on macOS and Linux.
+    Download the file for your computer from the [releases page](https://github.com/invopop/cli/releases). Builds are available for macOS, Linux and Windows. Unpack it and move the `invopop` program somewhere on your `PATH`.
   </Tab>
   <Tab title="Go">
-    If you already have Go installed:
-
     ```bash
     go install github.com/invopop/cli/cmd/invopop@latest
     ```
-
-    This puts an `invopop` program in your Go `bin` directory.
   </Tab>
 </Tabs>
 
-Check that it worked:
-
-```bash
-invopop --help
-```
-
-You should see the list of available commands. If the terminal says the command is not found, close and reopen it, or check that the install location is on your `PATH`.
+Check that it worked with `invopop --help`. You should see the list of commands.
 
 ## Sign in
 
-Run the login command. It opens your browser so you can sign in with the same account you use for the Console.
+The login command opens your browser so you can sign in with the same account you use for the Console. The browser then shows a short code to paste back into the terminal, and the CLI asks which of your workspaces to use by default.
 
 ```bash
 invopop auth login
 ```
 
-After signing in, the browser shows a short code. Paste it back into the terminal when asked. The CLI then lists the workspaces you belong to and asks which one to use by default.
-
-<Tip>
-Working over SSH or inside a container where the browser can't open? Add `--no-browser` and the CLI prints the sign-in link for you to open anywhere.
-</Tip>
-
-That's it. From now on every command runs in the workspace you chose, with the same permissions you have in the Console. The CLI keeps you signed in for a week and renews its access automatically, so you won't need to log in again for everyday use.
-
-To see who you are signed in as and which workspace is active:
+From then on every command runs in that workspace with the same permissions you have in the Console. The CLI keeps you signed in for a week and renews its access on its own.
 
 ```bash
-invopop auth status
-```
-
-To sign out:
-
-```bash
+invopop auth status      # who you are and which workspace is active
+invopop auth workspace   # pick a different default workspace
 invopop auth logout
 ```
 
-<Accordion title="Using an API key instead of signing in">
-If you prefer, or if you are setting up a script that runs without a person present, you can use an [API key](/console/api-keys) from the Console instead. Put it in the `INVOPOP_TOKEN` environment variable, or pass it with `--token` on each command.
+If you belong to several workspaces, name one directly with its slug. Use `sandbox/` plus the slug for a sandbox, since live and sandbox workspaces can share a name. To run a single command elsewhere without changing your default, add `-w`:
 
 ```bash
-export INVOPOP_TOKEN=YOUR_API_KEY
-invopop ping
-```
-
-An API key already belongs to one workspace, so it cannot be combined with workspace switching. If both a sign-in and an API key are present, the API key wins.
-</Accordion>
-
-## Your first command
-
-Check that the CLI can reach Invopop:
-
-```bash
-invopop ping
-```
-
-Then list the most recent documents in your workspace:
-
-```bash
-invopop silo entries list --limit 5
-```
-
-Results always come back as JSON, the same structure you see in the API reference. This makes them easy to read, copy into a support ticket, or pass to another tool.
-
-## Switch workspaces
-
-Most people only need one workspace, but if you belong to several, you can change the default at any time:
-
-```bash
-invopop auth workspace
-```
-
-You can also name the workspace directly. Use its slug for a live workspace, or `sandbox/` plus the slug for its sandbox, since both can share the same name:
-
-```bash
-invopop auth workspace my-company
 invopop auth workspace sandbox/my-company
-```
-
-To run a single command in another workspace without changing your default, add `-w`:
-
-```bash
-invopop -w sandbox/my-company silo entries list
-```
-
-To see every workspace you belong to, with the exact name to use:
-
-```bash
-invopop access workspaces
+invopop -w my-company silo entries list
 ```
 
 <Note>
-Sandbox and live workspaces use the same commands. The only difference is which workspace you point the CLI at, so be sure to check `invopop auth status` before doing anything in a live workspace.
+Sandbox and live workspaces use exactly the same commands. Check `invopop auth status` before doing anything in a live workspace.
 </Note>
 
-## Getting help
+<Accordion title="Using an API key instead of signing in">
+For scripts that run without a person present, use an [API key](/console/api-keys) from the Console instead. Put it in the `INVOPOP_TOKEN` environment variable or pass it with `--token`. An API key already belongs to one workspace, so it cannot be combined with `-w`.
+</Accordion>
 
-Every command explains itself. Add `--help` to any of them to see what it does and which options it accepts:
+## Everyday tasks
 
-```bash
-invopop silo entries create --help
+The CLI works with [GOBL](https://docs.gobl.org) documents, the same format the API uses, written in JSON or in YAML. Save this as `invoice.yaml` to follow along. There are no totals because Invopop calculates them for you.
+
+```yaml invoice.yaml
+$schema: "https://gobl.org/draft-0/bill/invoice"
+currency: "EUR"
+issue_date: "2026-10-14"
+series: "SAMPLE"
+code: "0001"
+supplier:
+  name: "My Company S.L."
+  tax_id:
+    country: "ES"
+    code: "B98602642"
+customer:
+  name: "Customer Ltd"
+  tax_id:
+    country: "ES"
+    code: "A58818501"
+lines:
+  - quantity: 1
+    item:
+      name: "Consulting services"
+      price: "100.00"
+    taxes:
+      - cat: "VAT"
+        rate: "standard"
 ```
 
-## Next steps
+**Check a document.** This fills in the totals, validates the document against the rules of the country involved and prints the result. Nothing is stored, so run it as often as you like. If something is wrong, such as an invalid tax ID, you get a message saying which field to fix.
 
-<Columns cols="2">
-<Card title="Everyday tasks" icon="list-check" href="/cli/everyday-tasks">
-  Check, store and send documents, run workflows and reserve invoice numbers.
-</Card>
-<Card title="Use with AI agents" icon="robot" href="/cli/ai-agents">
-  Let Claude Code or another assistant work in your workspace through the CLI.
-</Card>
-</Columns>
+```bash
+invopop silo build --file invoice.yaml
+```
+
+**Store a document.** Every stored document is a *silo entry*. The response includes an `id` you'll need later. Giving the entry a `--key` of your own, such as the invoice number in your system, lets you find it again by that key and makes the command safe to repeat.
+
+```bash
+invopop silo entries create --file invoice.yaml --key my-invoice-0001
+invopop silo entries fetch-key my-invoice-0001
+```
+
+**Send it through a workflow.** Workflows are the sequences of steps you set up in the Console. List them to find the `id` you want, then create a *job*, which runs one entry through one workflow. With `--wait`, the CLI waits up to that many seconds and shows you the outcome, including a `faults` list if a step failed. You can also pass `--file` instead of an entry ID and the CLI stores the document for you.
+
+```bash
+invopop transform workflows list
+invopop transform jobs create --workflow-id WORKFLOW_ID --silo-entry-id ENTRY_ID --wait 30
+```
+
+**Download a generated file.** Workflows often attach files to the entry, such as the invoice PDF or the XML sent to the tax authority. Fetch the entry to see its `files`, then download one. This is the one command that writes to disk instead of printing JSON.
+
+```bash
+invopop silo entries fetch ENTRY_ID
+invopop silo files download ENTRY_ID FILE_ID
+```
+
+**Reserve invoice numbers.** If Invopop manages your numbering, each call hands out the next unused number in a [series](/console/series).
+
+```bash
+invopop sequence series list
+invopop sequence entries create SERIES_ID
+```
+
+Results always come back as JSON, so they are easy to read, paste into a support ticket or pass to another tool. Every command accepts `--help` for the full list of options.
+
+## Use with AI agents
+
+Because every command is a line of text with JSON output, an assistant such as [Claude Code](https://claude.com/claude-code) can drive the CLI just as a person would. You describe what you want in plain language and the agent works out which commands to run.
+
+The agent never gets a key of its own. It uses your sign-in, so it can only do what you are allowed to do, in the workspace you chose. You stay in charge of logging in: the agent cannot complete the browser sign-in for you and should never ask for the code the browser shows.
+
+The CLI ships with a skill that teaches Claude Code how Invopop works. Install it, then type `/invopop` in Claude Code followed by what you need, for example "check whether invoice.yaml is valid and tell me what's wrong".
+
+```bash
+invopop skill install
+```
+
+<Tip>
+Start in a sandbox workspace, and ask the agent to run `invopop silo build` and show you the result before it sends anything. Documents sent from a live workspace are real and may be legally binding.
+</Tip>
+
+Any other assistant that can run terminal commands can use the CLI in the same way. Print the skill with `invopop skill show` and paste it into that tool's instructions. For agents that call the API directly, see the [agent primer](/llms).
