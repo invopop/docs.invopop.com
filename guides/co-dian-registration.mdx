@@ -1,0 +1,239 @@
+---
+title: "Supplier registration in Colombia"
+sidebarTitle: "Supplier registration"
+description: Register suppliers with the DIAN through Alegra to issue invoices in Colombia.
+---
+
+import Supplier from '/snippets/parties/co/supplier.mdx';
+import SupplierAccordion from '/snippets/parties/co/supplier-accordion.mdx';
+import RegisterWorkflow from '/snippets/workflows/co/register.mdx';
+import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
+import FAQ from '/snippets/faqs/co/composers/guide-dian-supplier.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { coRegisterWorkflow } from '/snippets/workflows/co/register.mdx';
+
+## Introduction
+
+The [DIAN](https://www.dian.gov.co/) is the Colombian government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+
+Before issuing electronic invoices, a business must be registered with the DIAN with an active RUT (_Registro Único Tributario_), pass the DIAN enablement (_habilitación_) with its chosen technology provider, and hold an authorized numbering range for its invoices.
+
+Invopop has partnered with [Alegra](https://www.alegra.com), a DIAN-authorized technology provider, to onboard suppliers and issue documents on their behalf. Registering a supplier involves three steps:
+
+1. **Invopop:** a workflow creates the supplier's Alegra account and publishes a portal link.
+2. **DIAN:** the supplier selects Alegra as their technology provider and submits the enablement test set through that portal.
+3. **Numbering (live only):** the supplier links their authorized numbering range to Alegra in the DIAN portal.
+
+Once a supplier is registered, continue with the companion guide: [Invoicing in Colombia](/guides/co-dian-invoicing).
+
+<Warning>
+  The previous Plemsi integration is deprecated and no longer maintained. If your suppliers still issue through Plemsi, follow [Migrate from Plemsi](#migrate-from-plemsi) to move them to this integration.
+</Warning>
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Only Alegra's test NIT (`9005590882`) | Any Colombian supplier with an active RUT |
+| **Enablement** | Simulated with fixed TestSetIds | DIAN enablement, once per supplier |
+| **Resolution** | Fixed test resolution (`SETP`), seeded automatically | The supplier's numbering ranges linked to Alegra |
+
+## Prerequisites
+
+To register a supplier in Colombia, you will need:
+
+- **Supplier details** to build the [GOBL](https://docs.gobl.org) party: legal name, NIT with the verification digit, and email. The address and the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension are optional here but required on invoices.
+- **The supplier's legal representative**, with access to the [DIAN e-invoicing portal](https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/instructivo-de-registro-y-habilitacion-en-factura-electronica-dian/), to select Alegra and run the enablement.
+- For live issuing, a **numbering range authorization** (_resolución de numeración_) from the DIAN for each invoice series. See [Numbering resolutions](#numbering-resolutions).
+
+<SupplierAccordion />
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+  <Step title="Connect the Colombia app">
+    1. Navigate to **Configuration** → **Apps**
+    2. Find **Colombia** in the app discovery list
+    3. Click **Connect** to activate
+  </Step>
+  <Step title="Create the registration workflow">
+    <Card iconType="duotone" title="Colombia register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=co-register" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={coRegisterWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <RegisterWorkflow />
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+### How it works
+
+<Steps>
+  <Step title="Set state → Processing">
+    Sets the state of the silo entry to <Badge color="yellow">Processing</Badge>.
+  </Step>
+  <Step title="Register supplier">
+    Validates the party's name, NIT, and email, creates the supplier's company in Alegra, and publishes a public enablement portal link under the `registration-link` key in the entry's meta section.
+  </Step>
+  <Step title="Wait for DIAN enablement">
+    Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds.
+  </Step>
+  <Step title="Set state → Registered">
+    Sets the state of the silo entry to <Badge color="purple">Registered</Badge>.
+  </Step>
+</Steps>
+
+## Register a supplier
+
+Each supplier NIT can be registered once per workspace and environment. For each supplier:
+
+<Steps>
+  <Step title="Upload the supplier party">
+    Create a silo entry with the supplier's details as a GOBL [`org.Party`](https://docs.gobl.org/draft-0/org/party) document, either from the Console or via the [API](/api-ref/silo/entries/create-an-entry-put):
+
+    <Supplier />
+  </Step>
+  <Step title="Run the registration workflow">
+    Run the workflow created during setup on the supplier entry, from the Console or by [creating a job](/api-ref/transform/jobs/create-a-job-post). The job creates the Alegra company and pauses at the **Wait for DIAN enablement** step.
+  </Step>
+  <Step title="Share the portal link">
+    Open the supplier entry in the Console and copy the **registration-link** from its meta section. Share it with the supplier's legal representative: it is public and needs no Invopop account.
+
+    Via the API, [fetch the silo entry](/api-ref/silo/entries/fetch-an-entry) and read the `link_url` of the `meta` row with the key `registration-link`:
+
+    ```json
+    {
+      "meta": [
+        {
+          "key": "registration-link",
+          "link_scope": "public",
+          "link_url": "https://gov-co.invopop.app/portal/{silo_entry_id}"
+        }
+      ]
+    }
+    ```
+
+    To skip the portal entirely, submit the TestSetId yourself as described in [Complete the enablement via the API](#complete-the-enablement-via-the-api).
+  </Step>
+  <Step title="Select Alegra as technology provider at the DIAN">
+    In the DIAN **Habilitación** portal, the legal representative:
+
+    1. Goes to **Registro y habilitación** → **Documentos electrónicos** → **Factura electrónica**.
+    2. Selects **Software de un proveedor tecnológico** as the operation mode.
+    3. Selects **Soluciones Alegra S.A.S** as the provider and Alegra's software, then clicks **Asociar**.
+    4. Opens the test set details and copies the **TestSetId**.
+
+    The DIAN explains these screens in sections 1 and 2 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
+  </Step>
+  <Step title="Submit the test set">
+    The legal representative pastes the TestSetId into the Invopop portal and clicks **Enviar set de pruebas**. Alegra sends the required test documents to the DIAN automatically.
+
+    <Frame caption="Enablement portal">
+      <img width="600" src="/assets/guides/co-dian-enablement-portal.png" alt="Enablement portal with the DIAN TestSetId field and the Enviar set de pruebas button" />
+    </Frame>
+
+    To submit the TestSetId without the hosted portal, use the [Submit test set](/api-ref/apps/gov-co/enablement-submit) endpoint.
+  </Step>
+  <Step title="Wait for the DIAN response">
+    The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. If the DIAN rejects the test set, the workflow fails with the DIAN's error details; fix the cause and re-run the registration workflow to start again.
+  </Step>
+</Steps>
+
+<Info>
+  Re-running the registration workflow on the same entry is safe: it restarts the enablement if it hasn't been accepted yet, and does nothing once the supplier is enabled.
+</Info>
+
+## Numbering resolutions
+
+In live, every invoice series needs a DIAN numbering range authorization linked to Alegra. This isn't needed in the sandbox, which uses the fixed `SETP` test resolution.
+
+<Steps>
+  <Step title="Request the numbering range">
+    The legal representative requests the range in the DIAN's MUISCA system (**Numeración de Facturación** → **Solicitar numeración de facturación** → **Autorizar Rango**), choosing a prefix of up to four letters or digits, which becomes the invoice `series`. Once signed, the DIAN issues form 1876 with the authorized ranges and validity. See [Request for invoice numbering authorization](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf).
+  </Step>
+  <Step title="Link the range to Alegra">
+    Once the DIAN has accepted the test set, and about two hours after the range request, log in to the production environment through **Facturando Electrónicamente**. Go to **Configuración** → **Rangos de numeración**, select Alegra's software (**Soluciones Alegra S.A.S**) and the authorized range, and click **Agregar**. If the operation mode doesn't show in production, use **Sincronizar a Producción** in the test set details of the Habilitación portal. The DIAN explains this in sections 3 and 4 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
+  </Step>
+</Steps>
+
+Invopop fetches the supplier's linked resolutions automatically before sending, so no further action is needed. Check them anytime with [List resolutions](/api-ref/apps/gov-co/resolutions-list). To extend a range that is about to expire with numbers left, see [Request for invoice numbering extension](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf); once a range is used up, request a new one.
+
+## Complete the enablement via the API
+
+For platforms that want to drive the enablement programmatically instead of sharing the hosted portal, use the enablement API (both endpoints under `/apps/gov-co/v1/entries/{silo_entry_id}/enablement`). The entry must belong to the authenticated workspace and have been registered first.
+
+<Steps>
+  <Step title="Submit the test set">
+    [Submit test set](/api-ref/apps/gov-co/enablement-submit) with the TestSetId from the DIAN enablement portal. It responds `400` when a test set is already awaiting the DIAN outcome, the supplier is already enabled, or a previous enablement failed. Run the registration workflow again to restart a failed enablement.
+  </Step>
+  <Step title="Track the outcome">
+    [Fetch the enablement status](/api-ref/apps/gov-co/enablement-get): `status` moves from `pending` to `accepted` or `failed` once the DIAN responds. The workflow's **Wait for DIAN enablement** step picks up the outcome exactly as it does for portal submissions.
+  </Step>
+</Steps>
+
+## Sandbox
+
+The same registration flow runs in sandbox workspaces against the DIAN test environment, with a few differences:
+
+- Only Alegra's own NIT (`9005590882`) can be registered, since the DIAN test registry accepts documents from that emitter alone. A NIT can be registered once per workspace, so each workspace has a single sandbox supplier.
+- The fixed DIAN test resolution (series `SETP`, codes `990000000`–`995000000`) is seeded automatically on registration. The range is shared with other users testing in the sandbox, so pick codes unlikely to collide.
+- The enablement is simulated: instead of a real DIAN TestSetId, enter one of the following values in the portal to choose the outcome.
+
+| TestSetId | Simulated result |
+|---|---|
+| `a70562e0-631e-4ceb-aa65-36887b57dc17` | Accepted (completes the registration) |
+| `r70562e0-631e-4ceb-aa65-36887b57dc17` | Rejected |
+| `p70562e0-631e-4ceb-aa65-36887b57dc17` | Processing (stays pending) |
+| `f70562e0-631e-4ceb-aa65-36887b57dc17` | Failed |
+
+Use the accepted value to complete a supplier registration end to end; the other values let you test how your integration handles rejected, pending, and failed outcomes.
+
+## Migrate from Plemsi
+
+Moving a supplier from the old Plemsi integration takes the same steps as a new registration. At the DIAN, the supplier simply adds Alegra as another technology provider.
+
+<Steps>
+  <Step title="Set up the Colombia app">
+    Connect the app and create the registration workflow as described in [Setup](#setup), and the send workflow from the [invoicing guide](/guides/co-dian-invoicing#setup).
+  </Step>
+  <Step title="Register the supplier">
+    Follow [Register a supplier](#register-a-supplier): run the registration workflow, add Alegra as technology provider at the DIAN, and submit the test set. The Plemsi enablement doesn't carry over, so this is needed even for suppliers already issuing.
+  </Step>
+  <Step title="Set up the numbering ranges">
+    Under **Configuración** → **Rangos de numeración** (see [Numbering resolutions](#numbering-resolutions)), choose one of:
+
+    - **Move the existing range:** unlink it from Plemsi and link it to Alegra. The series stays the same, and new invoices must continue after the last number issued through Plemsi.
+    - **Add a new range:** request a new range with a new prefix and link it to Alegra. Invoices sent through Alegra start a fresh series, while the old range stays with Plemsi until it's no longer needed.
+  </Step>
+  <Step title="Switch to the new send workflow">
+    Send new invoices with the Colombia send workflow, using the series from the previous step. Once they clear, stop using the Plemsi workflow.
+  </Step>
+</Steps>
+
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Invoicing in Colombia guide](/guides/co-dian-invoicing) to continue.
+
+## FAQ
+
+<FAQ />
+
+More available in our [Colombia FAQ](/faq/colombia) section
+
+---
+
+<ColombiaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Colombia →
+</Card>

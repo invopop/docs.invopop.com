@@ -1,0 +1,260 @@
+# OpenAPI gov-co v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points for the Colombia app, covering the DIAN enablement
+    and numbering resolutions of registered suppliers.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Colombia Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-co/v1/entries/{silo_entry_id}/enablement:
+    get:
+      operationId: fetchEnablement
+      summary: Fetch the enablement status
+      description:
+        Fetch the current DIAN enablement state of a registered supplier.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The supplier's current enablement state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enablement"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      operationId: submitEnablementTestSet
+      summary: Submit the DIAN test set
+      description:
+        Submit the DIAN enablement test set for a registered supplier
+        using the TestSetId obtained from the DIAN enablement portal.
+        The test documents are then emitted to the DIAN on the supplier's
+        behalf.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestSetSubmit"
+      responses:
+        "200":
+          description:
+            Test set submitted, the enablement is now pending the DIAN
+            outcome.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enablement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /apps/gov-co/v1/entries/{silo_entry_id}/resolutions:
+    get:
+      operationId: listResolutions
+      summary: List the numbering resolutions
+      description:
+        List the DIAN numbering resolutions linked to a registered
+        supplier, fetched live from the DIAN.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The supplier's numbering resolutions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolutionList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    SiloEntryID:
+      name: silo_entry_id
+      in: path
+      required: true
+      description: ID of the `org.Party` silo entry the supplier was registered with.
+      schema:
+        type: string
+        example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
+  schemas:
+    TestSetSubmit:
+      type: object
+      required:
+        - test_set_id
+      properties:
+        test_set_id:
+          type: string
+          description: |-
+            TestSetId issued by the DIAN enablement portal for the
+            supplier's e-invoicing software.
+          example: "a70562e0-631e-4ceb-aa65-36887b57dc17"
+
+    Enablement:
+      type: object
+      properties:
+        status:
+          type: string
+          description: |-
+            Current enablement state. Omitted until a test set has been
+            submitted.
+
+              - `pending`: test set submitted, awaiting the DIAN outcome.
+              - `accepted`: the DIAN accepted the test set; the supplier is enabled.
+              - `failed`: the DIAN rejected the test set or the submission failed.
+          enum: ["pending", "accepted", "failed"]
+          example: "pending"
+
+    ResolutionList:
+      type: object
+      required:
+        - resolutions
+      properties:
+        resolutions:
+          type: array
+          description: Numbering resolutions; empty when the DIAN has none for the supplier.
+          items:
+            $ref: "#/components/schemas/Resolution"
+
+    Resolution:
+      type: object
+      properties:
+        prefix:
+          type: string
+          description: |-
+            Series prefix authorized by the resolution. Use it as the
+            invoice `series`.
+          example: "SETP"
+        resolution_number:
+          type: string
+          description: Number of the DIAN numbering resolution.
+          example: "18760000001"
+        min_number:
+          type: integer
+          format: int64
+          description: First invoice code authorized in the range.
+          example: 990000000
+        max_number:
+          type: integer
+          format: int64
+          description: Last invoice code authorized in the range.
+          example: 995000000
+        start_date:
+          type: string
+          format: date
+          description: First day the resolution is valid.
+          example: "2019-01-19"
+        end_date:
+          type: string
+          format: date
+          description: Last day the resolution is valid.
+          example: "2030-01-19"
+        technical_key:
+          type: string
+          description: |-
+            Technical key the DIAN assigned to the range, used to compute
+            each invoice's CUFE.
+          example: "fc8eac422eba16e22ffd8c6f94b3f40a6e38162c"
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable description of the error.
+          example: "the DIAN TestSetId is required"
+
+  responses:
+    BadRequest:
+      description: |-
+        The request is malformed, the TestSetId was rejected, or the
+        supplier can't submit a test set in its current state: one is
+        already awaiting the DIAN outcome, the supplier is already
+        enabled, or a previous enablement failed and the registration
+        workflow must be run again to restart it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "the DIAN TestSetId is required"
+
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "missing enrollment"
+
+    NotFound:
+      description: |-
+        The referenced silo entry has no registered supplier account in the
+        authenticated workspace. Run the registration workflow first.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "not found"
+
+    UnprocessableEntity:
+      description: The request was rejected; the error carries its reason.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    InternalServerError:
+      description: An unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "internal error"
+
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Authenticate using a valid Invopop enrollment token in the `Bearer`
+        scheme.
+
+        Example: `Authorization: Bearer <token>`

@@ -4,6 +4,8 @@ import B2CInvoiceMin from '/snippets/invoices/co/b2c-invoice.min.mdx';
 import B2CInvoice from '/snippets/invoices/co/b2c-invoice.mdx';
 import CreditNoteMin from '/snippets/invoices/co/credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/co/credit-note.mdx';
+import DebitNoteMin from '/snippets/invoices/co/debit-note.min.mdx';
+import DebitNote from '/snippets/invoices/co/debit-note.mdx';
 
 <AccordionGroup>
 	<Accordion title="Example B2B invoice">
@@ -13,8 +15,8 @@ import CreditNote from '/snippets/invoices/co/credit-note.mdx';
 		Notice:
 
 		- the `$schema` is set to [`https://gobl.org/draft-0/bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice),
-		- the supplier's `tax_id` country is set to `CO`, and the DIAN municipality code is set with the `co-dian-municipality` extension on the party,
-		- the customer details include full address, email, and telephone information,
+		- the supplier uses Alegra's sandbox NIT and the `series` is the `SETP` test series, so the example can be sent in the sandbox,
+		- both parties carry the DIAN municipality code in the `co-dian-municipality` extension,
 		- the invoice includes VAT at the standard Colombian rate of 19%,
 		- payment terms are specified with a due date and payment amount, and,
 		- there are no calculations in some fields; these will be made automatically when uploading.
@@ -32,7 +34,7 @@ import CreditNote from '/snippets/invoices/co/credit-note.mdx';
 		Notice:
 
 		- we've set the `simplified` tag in the `tax.tags` field; this indicates the invoice is for a final consumer,
-		- the customer information is omitted, as it's not required for B2C transactions,
+		- the customer information is omitted, as it's not required for B2C transactions; the DIAN receives it as _Consumidor final_,
 		- the invoice includes a prepayment advance of 100%, meaning the invoice has been fully paid,
 		- the totals section shows the `advance` and `due` amounts, with the latter being zero since the invoice is fully paid, and,
 		- there are no calculations in some fields; these will be made automatically when uploading.
@@ -50,14 +52,35 @@ import CreditNote from '/snippets/invoices/co/credit-note.mdx';
 		Notice:
 
 		- the `type` is set to `credit-note`,
-		- the `series` is set to the credit note series (`NCTT` in the sandbox environment, which is separate from the `SETT` invoice series),
+		- the `series` is set to a dedicated credit note series, separate from the invoice series,
 		- the `preceding` array references the original invoice being corrected by its `series`, `code`, and `issue_date`, along with a `reason` for the correction,
+		- the correction concept is set with the [`co-dian-credit-code`](https://docs.gobl.org/addons/co-dian-v2) extension on the preceding entry,
 		- the lines describe the amounts being credited — a credit note can cover the full original invoice or just part of it, and,
 		- there are no calculations in some fields; these will be made automatically when uploading.
 
 		<CodeGroup>
 			<CreditNoteMin />
 			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="Example debit note">
+
+		In this example, we're issuing a debit note (nota de débito) that increases the amount of a previously cleared invoice.
+
+		Notice:
+
+		- the `type` is set to `debit-note`,
+		- the `series` is set to a dedicated debit note series, separate from the invoice series; notes don't need a numbering resolution,
+		- the `preceding` array references the original invoice by its `series`, `code`, and `issue_date`, along with a `reason` for the adjustment,
+		- the preceding entry carries the `dian-cude` stamp of the original invoice, taken from its cleared envelope; the DIAN requires it for every debit note,
+		- the adjustment concept is set with the [`co-dian-debit-code`](https://docs.gobl.org/addons/co-dian-v2) extension on the preceding entry,
+		- the lines describe only the additional amount being charged, and,
+		- there are no calculations in some fields; these will be made automatically when uploading.
+
+		<CodeGroup>
+			<DebitNoteMin />
+			<DebitNote />
 		</CodeGroup>
 	</Accordion>
 
