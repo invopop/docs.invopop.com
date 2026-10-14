@@ -1,0 +1,179 @@
+---
+title: "Everyday tasks with the CLI"
+description: "Check an invoice, store it, send it through a workflow, follow the job and reserve invoice numbers, all from the terminal."
+sidebarTitle: "Everyday tasks"
+icon: "list-check"
+---
+
+This page walks through the things most people use the CLI for, in the order you would normally do them. Each example is a single line you can copy and adapt. If you haven't installed the CLI yet, start with [Get started](/cli/index).
+
+The commands are grouped the same way the platform is: **silo** for documents, **transform** for workflows and jobs, and **sequence** for invoice numbering.
+
+## Write a document
+
+The CLI works with [GOBL](https://docs.gobl.org) documents, the same format the API uses. You can write them in JSON or in YAML, which is a little easier to read by hand. Save the following as `invoice.yaml` to follow along:
+
+```yaml invoice.yaml
+$schema: "https://gobl.org/draft-0/bill/invoice"
+currency: "EUR"
+issue_date: "2026-10-14"
+series: "SAMPLE"
+code: "0001"
+supplier:
+  name: "My Company S.L."
+  tax_id:
+    country: "ES"
+    code: "B98602642"
+customer:
+  name: "Customer Ltd"
+  tax_id:
+    country: "ES"
+    code: "A58818501"
+lines:
+  - quantity: 1
+    item:
+      name: "Consulting services"
+      price: "100.00"
+    taxes:
+      - cat: "VAT"
+        rate: "standard"
+```
+
+Notice that there are no totals. Invopop calculates taxes and totals for you, so you never need to work them out by hand.
+
+## Check a document
+
+Before storing or sending anything, ask the CLI to check it. This fills in the totals, validates the document against the rules of the country involved, and prints the full result:
+
+```bash
+invopop silo build --file invoice.yaml
+```
+
+If something is wrong, such as a missing customer or an invalid tax ID, you get a clear message saying which field needs fixing. Nothing is stored in your workspace by this command, so you can run it as often as you like.
+
+<Tip>
+Most commands that take a document accept it either with `--file` (or `-f`) or on standard input, so you can pipe a document in from another tool.
+</Tip>
+
+## Store a document
+
+Once the document checks out, store it in your workspace. In Invopop, every stored document is called a **silo entry**:
+
+```bash
+invopop silo entries create --file invoice.yaml
+```
+
+The response includes an `id`. Keep it, as you'll need it to send the document through a workflow. You can also give the entry a key of your own, such as the invoice number in your own system, and use that instead of the ID later:
+
+```bash
+invopop silo entries create --file invoice.yaml --key my-invoice-0001
+invopop silo entries fetch-key my-invoice-0001
+```
+
+Using a key also makes the command safe to repeat. If you run it twice with the same key, you still end up with one entry.
+
+## Find documents
+
+To list the most recent entries:
+
+```bash
+invopop silo entries list --limit 10
+```
+
+To search by what's inside the documents, use `query` with the document type and a filter. This example finds every invoice marked as sent since the start of the year, sorted newest first:
+
+```bash
+invopop silo entries query bill/invoice \
+  --filter 'state = "sent" AND issue_date > "2026-01-01"' \
+  --order-by 'issue_date desc'
+```
+
+Add `--all` to fetch every page of results, or use `count` instead of `query` to get only the number of matches.
+
+<Note>
+Search results can lag a moment behind. An entry you created a few seconds ago may not show up in a query yet. If you need it straight away, fetch it by its ID or key instead.
+</Note>
+
+## Send a document through a workflow
+
+Workflows are the sequences of steps you set up in the Console, such as "validate, sign, send to the tax authority, generate a PDF, email the customer". To find the one you want:
+
+```bash
+invopop transform workflows list
+```
+
+Copy the `id` of the workflow, then create a **job**. A job runs one entry through one workflow. The `--wait` option tells the CLI to hang on for up to that many seconds and show you the outcome:
+
+```bash
+invopop transform jobs create \
+  --workflow-id WORKFLOW_ID \
+  --silo-entry-id ENTRY_ID \
+  --wait 30
+```
+
+You can skip the separate storing step and send a file straight into a workflow. The CLI creates the entry for you:
+
+```bash
+invopop transform jobs create --workflow-id WORKFLOW_ID --file invoice.yaml --wait 30
+```
+
+When the job finishes, the response shows its `status` and the steps it went through. If a step failed, look at the `faults` list for the reason. This is the same information you see under **Workflow history** in the Console.
+
+To check on a job later:
+
+```bash
+invopop transform jobs fetch JOB_ID
+```
+
+## Download a generated file
+
+Many workflows attach files to the entry, for example the PDF of the invoice or the XML sent to the tax authority. Fetch the entry to see its `files`, then download one by its ID:
+
+```bash
+invopop silo entries fetch ENTRY_ID
+invopop silo files download ENTRY_ID FILE_ID
+```
+
+This is the one command that writes a file to disk instead of printing JSON.
+
+## Reserve invoice numbers
+
+If you let Invopop manage your invoice numbering, the CLI can hand out the next number in a series. First see which series exist, or create one:
+
+```bash
+invopop sequence series list
+invopop sequence series create --name "Sales invoices" --prefix "INV-" --padding 4 --start 1
+```
+
+Then ask for the next number whenever you need one. Each call reserves a new, unused number:
+
+```bash
+invopop sequence entries create SERIES_ID
+```
+
+See [Series](/console/series) for how numbering works in the Console.
+
+## Sign a document
+
+Signing wraps the document in an envelope that proves it came from your workspace and hasn't been changed since. Workflows do this for you as one of their steps, so you rarely need it by hand, but it's available:
+
+```bash
+invopop silo sign --file invoice.yaml
+```
+
+## Quick reference
+
+| What you want to do | Command |
+|---|---|
+| Check a document without storing it | `invopop silo build -f FILE` |
+| Store a document | `invopop silo entries create -f FILE` |
+| Look at a stored document | `invopop silo entries fetch ID` |
+| Search documents | `invopop silo entries query bill/invoice --filter '…'` |
+| See your workflows | `invopop transform workflows list` |
+| Run a workflow on a document | `invopop transform jobs create --workflow-id … --silo-entry-id … --wait 30` |
+| Check on a job | `invopop transform jobs fetch ID` |
+| Download a file from an entry | `invopop silo files download ENTRY_ID FILE_ID` |
+| Reserve the next invoice number | `invopop sequence entries create SERIES_ID` |
+| Run anything in another workspace | `invopop -w sandbox/my-company …` |
+
+Every command accepts `--help` for the full list of options.
