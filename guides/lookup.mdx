@@ -24,6 +24,11 @@ Each **Validate Tax IDs** step checks one party:
 
 The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers is skipped and costs nothing.
 
+The step asks the register that issues the tax ID:
+
+- **Spanish tax IDs** go to the AEAT census. See [Spanish tax IDs](#spanish-tax-ids).
+- **Other EU VAT numbers** go to VIES.
+
 ## Set up the step
 
 <Steps>
@@ -72,13 +77,18 @@ The step returns `OK`:
 
 - **`found`**: the register confirms the tax ID, and the names match. The comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
 - **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different. The message gives the registered name. With **Correct the party** on, the step writes that name into the document. To review these documents instead, turn the correction off and add a condition on this code.
+- **`found-inactive`**: the register confirms the tax ID, but holds the party as inactive. For example, AEAT holds a company that stopped its activity in this state. The message names the register, for example `tax ID is inactive on the AEAT register`.
+- **`found-dissolved`**: the register confirms the tax ID, but holds the party as dissolved.
+
+`found-inactive` and `found-dissolved` are warnings: the workflow continues, and the correction still runs. To review these documents, add a condition on the code. When a party is inactive or dissolved and its name is also different, the step returns the inactive or dissolved code.
 
 ### The tax ID is not valid
 
 The step returns `KO`:
 
 - **`not-found`**: the register does not hold the tax ID. Check the tax ID with your customer. To reject these invoices automatically, see [Stop on an unregistered customer](#stop-on-an-unregistered-customer).
-- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again.
+- **`revoked`**: the register identifies the party, but the tax authority revoked the tax ID, so it has no legal effect. For example: `tax ID was revoked by AEAT`. Ask your customer for a valid tax ID. The step never corrects a party with a revoked tax ID.
+- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again. The step also returns this code when the party lacks data that the register needs, for example `AEAT needs the name of a natural person to check a DNI or NIE`. Add the name to the party and run the job again.
 
 ### The step is skipped
 
@@ -114,7 +124,26 @@ With **Correct the party** on, a check that passes writes the register's data in
 
 Nothing is written when the check does not pass, when the register gives no name, or when the document is already signed. To correct a document and then sign it, place **Validate Tax IDs** before **Sign envelope**.
 
-The correction never changes the result code or the message. A corrected document still returns `found` or `found-name-mismatch`.
+The correction never changes the result code or the message. A corrected document still returns `found`, `found-name-mismatch`, `found-inactive` or `found-dissolved`.
+
+## Spanish tax IDs
+
+Lookup checks Spanish tax IDs (NIF) in the census of AEAT, the Spanish tax agency. AEAT holds every NIF, not only the NIFs registered for intra-EU trade, and gives the registered name.
+
+- **Companies** are identified by the NIF alone. A wrong or empty name still gives a valid answer with the registered name.
+- **Natural persons**, such as self-employed workers (autónomos), have a DNI or NIE as their NIF. AEAT needs the person's name to check it, and accepts small differences, such as the order of the words or one wrong letter. A name that AEAT accepts returns `found`. A name that belongs to another person returns `not-found`. A party without a name returns `input`, unless VIES confirms the NIF.
+- **Revoked NIFs** return `revoked`. **Deregistered NIFs** return `found-inactive`.
+- **The NIF `B99999997`** is a placeholder that does not identify a real party, so it returns `not-found`.
+
+AEAT writes names in its own format: in capital letters, and with the surnames first for a natural person. With **Correct the party** on, the step writes this format into the document, also when the names match. For example:
+
+| Name in the document | Name after the correction | Code |
+|---|---|---|
+| `Invopop S.L.` | `INVOPOP, SL` | `found` |
+| `Pablo Martínez Gutiérrez` | `MARTINEZ GUTIERREZ PABLO` | `found` |
+| `Acme Trading SL` with Invopop's NIF | `INVOPOP, SL` | `found-name-mismatch` |
+
+When AEAT does not answer, VIES can confirm a Spanish NIF, but cannot reject it. VIES holds only the NIFs registered for intra-EU trade, so a NIF that VIES does not hold may still be valid. In that case the step returns `ERR` with the code `upstream`, and Invopop retries it.
 
 ## Workflow examples
 
