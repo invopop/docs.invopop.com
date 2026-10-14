@@ -5,19 +5,20 @@ description: Register suppliers with the DIAN through Alegra to issue invoices i
 ---
 
 import Supplier from '/snippets/parties/co/supplier.mdx';
-import RegisterWorkflow from '/snippets/workflows/co/co-register.mdx';
+import SupplierAccordion from '/snippets/parties/co/supplier-accordion.mdx';
+import RegisterWorkflow from '/snippets/workflows/co/register.mdx';
 import ColombiaResources from '/snippets/tables/colombia-resources.mdx';
 import FAQ from '/snippets/faqs/co/composers/guide-dian-supplier.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { coRegisterWorkflow } from '/snippets/workflows/co/co-register-data.mdx';
+import { coRegisterWorkflow } from '/snippets/workflows/co/register.mdx';
 
 ## Introduction
 
-The [DIAN](https://www.dian.gov.co/) in Colombia stands for _Dirección de Impuestos y Aduanas Nacionales_ (National Directorate of Taxes and Customs). It is the government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
+The [DIAN](https://www.dian.gov.co/) is the Colombian government agency responsible for managing and overseeing tax collection, customs operations, and facilitating international trade.
 
 Before issuing electronic invoices, a business must be registered with the DIAN with an active RUT (_Registro Único Tributario_), pass the DIAN enablement (_habilitación_) with its chosen technology provider, and hold an authorized numbering range for its invoices.
 
-Invopop has partnered with [Alegra](https://www.alegra.com), a DIAN-authorized technology provider, to onboard suppliers and issue documents on their behalf. Registering a supplier takes three parts:
+Invopop has partnered with [Alegra](https://www.alegra.com), a DIAN-authorized technology provider, to onboard suppliers and issue documents on their behalf. Registering a supplier involves three steps:
 
 1. **Invopop:** a workflow creates the supplier's Alegra account and publishes a portal link.
 2. **DIAN:** the supplier selects Alegra as their technology provider and submits the enablement test set through that portal.
@@ -43,9 +44,7 @@ To register a supplier in Colombia, you will need:
 - **The supplier's legal representative**, with access to the [DIAN e-invoicing portal](https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/instructivo-de-registro-y-habilitacion-en-factura-electronica-dian/), to select Alegra and run the enablement.
 - For live issuing, a **numbering range authorization** (_resolución de numeración_) from the DIAN for each invoice series. See [Numbering resolutions](#numbering-resolutions).
 
-<Note>
-  If the supplier has special tax obligations, set them with the [`co-dian-fiscal-responsibility`](https://docs.gobl.org/addons/co-dian-v2) extension: `O-13` _Gran contribuyente_, `O-15` _Autorretenedor_, `O-23` _Agente de retención IVA_, or `O-47` _Régimen simple de tributación_. It defaults to `R-99-PN` when none apply.
-</Note>
+<SupplierAccordion />
 
 ## Setup
 
@@ -58,7 +57,9 @@ All of the following steps must be carried out from the [Invopop Console](https:
     3. Click **Connect** to activate
   </Step>
   <Step title="Create the registration workflow">
-    {/* TODO: add the "Add to my workspace" card once the co-register template exists in the Console (workflow-templates/co/register.json): https://console.invopop.com/redirect/workflows/new?template=co-register */}
+    <Card iconType="duotone" title="Colombia register supplier workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=co-register" horizontal>
+      Add to my workspace →
+    </Card>
     <Tabs>
       <Tab title="Workflow">
         <WorkflowDiagram workflow={coRegisterWorkflow} />
@@ -76,7 +77,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Steps>
   <Step title="Set state → Processing">
-    Sets the state of the silo entry to "Processing".
+    Sets the state of the silo entry to <Badge color="yellow">Processing</Badge>.
   </Step>
   <Step title="Register supplier">
     Validates the party's name, NIT, and email, creates the supplier's company in Alegra, and publishes a public enablement portal link under the `registration-link` key in the entry's meta section.
@@ -85,7 +86,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
     Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds.
   </Step>
   <Step title="Set state → Registered">
-    Sets the state of the silo entry to "Registered".
+    Sets the state of the silo entry to <Badge color="purple">Registered</Badge>.
   </Step>
 </Steps>
 
