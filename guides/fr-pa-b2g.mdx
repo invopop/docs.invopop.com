@@ -1,0 +1,208 @@
+---
+title: "Public sector invoicing in France"
+sidebarTitle: "Public sector"
+description: Send invoices to French public entities through Chorus Pro, and receive theirs, with the same PA workflows used for B2B.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import ExampleAccordion from '/snippets/invoices/fr/pa-b2g-accordion.mdx';
+import FAQ from '/snippets/faqs/fr/composers/guide-pa-b2g.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import SendInvoiceB2GWorkflow, { frPaSendInvoiceB2GWorkflow } from '/snippets/workflows/fr/fr-pa-send-invoice-b2g.mdx';
+
+Invoices to French public entities (the State, local authorities, hospitals, public establishments) have had to go through **Chorus Pro**, the government's invoicing portal, since 2020. Under the 2026 reform, Chorus Pro becomes one more platform on the French Directory, listed under its own matricule, so a public entity is simply a customer whose Annuaire line points to it.
+
+That is what makes B2G invoicing in Invopop the same as B2B invoicing. A B2G invoice is [recorded](/guides/fr-pa-invoicing#sending) like any other, its F1 copy and `200` Déposée status reach the PPF unchanged, and the same [send workflow](#setup) handles every customer. Only delivery differs: the invoice goes to Chorus Pro instead of Peppol. Invopop holds the connection with Chorus Pro, so there is nothing to register on the public portal.
+
+This guide covers:
+
+* [Who this guide is for](#who-this-guide-is-for): French companies on the PA use this path; foreign entities use the standalone Chorus Pro app.
+* [How routing works](#how-routing-works): the record step decides whether a customer is a public entity, and the workflow branches on it.
+* [Setup](#setup): the send workflow with the public-sector branch.
+* [What a public buyer needs](#what-a-public-buyer-needs): the SIRET, service code and commitment number, and the limits Chorus Pro adds on top of the norm.
+* [Following the invoice](#following-the-invoice): the Chorus Pro lifecycle and how the job reports it.
+* [Receiving from a public entity (G2B)](#receiving-from-a-public-entity-g2b): public bodies can now invoice you through the same channel.
+* [Testing in sandbox](#testing-in-sandbox) and [example invoices](#example-invoices).
+
+## Who this guide is for
+
+There are two ways to reach Chorus Pro through Invopop, and which one applies depends on the supplier, not the customer.
+
+| Supplier | Use | Why |
+|---|---|---|
+| **French company** with a SIREN, registered in the Annuaire through Invopop | This guide, with the [France app](/apps/france) | Invopop is the company's Plateforme Agréée. Chorus Pro is reached through the PA connection, with the F1 copy reported to the PPF as the mandate requires. |
+| **Foreign entity** without a French SIREN invoicing a French public body | The standalone [Chorus Pro app](/apps/choruspro-france) and its [supplier registration](/guides/fr-chorus-pro-supplier) and [issuing](/guides/fr-chorus-pro) guides | A company outside the French mandate has no Annuaire line. It submits directly to Chorus Pro with its own Chorus Pro credentials. |
+
+<Warning>
+Don't combine the two. A French company that already uses the standalone Chorus Pro app should move its public-sector invoicing to the PA path described here, so that every domestic invoice is recorded and reported the same way.
+</Warning>
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Any party registered in the sandbox Annuaire | Party registered in the Annuaire through the [registration guide](/guides/fr-pa-registration) |
+| **Chorus Pro** | Qualification environment | Production |
+| **Annuaire** | Qualification directory | Production directory |
+
+## Prerequisites
+
+- **A registered supplier**: follow the [registration guide](/guides/fr-pa-registration) to connect the France app and register the party in the Annuaire. The same registration serves B2B and B2G.
+- **The public entity's identifiers**: its SIRET and, where the entity requires them, a service code and a commitment number. The public entity gives you these; see [What a public buyer needs](#what-a-public-buyer-needs).
+- **The invoicing guide**: this page builds on the [Invoicing in France](/guides/fr-pa-invoicing) guide and assumes you know how recording, formats and the PPF copy work.
+
+## How routing works
+
+You do not mark an invoice as B2G yourself. When the **Record outgoing document** step records an invoice, it looks the customer up in the Annuaire. A customer whose line is routed to Chorus Pro's public sphere, under matricule `9999`, is a public entity, and the invoice is flagged `b2g`. The flag is only set while the line is in force, so a party that leaves Chorus Pro stops being B2G.
+
+The **Is B2G?** step then reads that flag and answers `true` or `false`, so the workflow can branch on it the same way it branches on [Directory lookup](/guides/fr-lookup):
+
+| Result | Meaning | Deliver with |
+|---|---|---|
+| `true` | The customer's Annuaire line points to Chorus Pro | **Send to Chorus Pro** |
+| `false` | Everything else | **Send Peppol document** |
+
+Keep **Is B2G?** after the record step, which is where the answer comes from. For a document that has not been recorded, the step asks the Annuaire directly. Everything after the branch is shared: both paths **Forward document to PPF**.
+
+<Steps>
+  <Step title="Record">
+    The invoice is validated against the French rules, the customer is checked in the Annuaire, and the invoice is flagged `b2g` when the customer is a public entity. The [Chorus Pro rules](#rules-checked-at-record) are applied at this point, so a breach is reported here rather than minutes later by Chorus Pro.
+  </Step>
+  <Step title="Is B2G?">
+    Reads the flag and branches.
+  </Step>
+  <Step title="Send to Chorus Pro">
+    Deposits the invoice with Chorus Pro and waits for its answer. The job stays queued until Chorus Pro has received the invoice and made it available to the public entity. See [Following the invoice](#following-the-invoice).
+  </Step>
+  <Step title="Forward document to PPF">
+    Sends the F1 copy and the `200` Déposée status to the PPF, exactly as for a B2B invoice.
+  </Step>
+</Steps>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+The **PPF send document (public sector)** template is the regular [send workflow](/guides/fr-pa-invoicing#sending) with the **Is B2G?** branch inserted after the record step. Use it in place of the regular one: it handles every customer, public or not, so you need only one send workflow.
+
+<Card iconType="duotone" title="PPF send document (public sector)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice-b2g" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaSendInvoiceB2GWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <SendInvoiceB2GWorkflow />
+  </Tab>
+</Tabs>
+
+<Info>
+The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).
+</Info>
+
+The workflow is shared with [status documents](/guides/fr-pa-status). The **Is B2G?** step resolves a status or payment to the invoice it answers, so it follows the same channel as that invoice.
+
+## What a public buyer needs
+
+A B2G invoice is a regular [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1) invoice. Chorus Pro needs a few more things on it to find the public entity and route the invoice to the right department.
+
+| Data | GOBL field | Notes |
+|---|---|---|
+| **Customer SIRET** | `customer.identities[]` with `type` `SIRET` | Chorus Pro identifies public entities by SIRET, not SIREN. The add-on tags it with ISO scheme `0009` and derives the SIREN. Rule `BR-FR-CPRO-10`. |
+| **Supplier SIRET** | `supplier.identities[]` with `type` `SIRET` | Same reason. A supplier giving only a SIREN is refused by Chorus Pro (`BR-FR-CPRO-09`). |
+| **Service code** (*code service*, also called *code routage*) | `customer.identities[]` with `key` `private-id` | The department within the public entity. Many entities require it; the add-on tags it with scheme `0224`. |
+| **Commitment number** (*numéro d'engagement juridique*) | `ordering.purchases[0].code` | The purchase order reference, BT-13. Required by entities that work with commitments. 50 characters or fewer. |
+| **Contract reference** (*numéro de marché*) | `ordering.contracts[0].code` | BT-12. 50 characters or fewer. |
+| **Billing mode** | `tax.ext.fr-ctc-billing-mode` | As for B2B. `S3` (subcontracting with direct payment) is specific to public contracts and not yet supported. |
+
+Ask the public entity which of the service code and commitment number it requires. Chorus Pro publishes each entity's requirements, and an invoice missing a required one is rejected by Chorus Pro after deposit.
+
+<Tip>
+Invopop cannot yet check whether a given public entity requires a service code or a commitment number, because the Annuaire does not carry that information. Collect it from the buyer when you take the order.
+</Tip>
+
+### Rules checked at record
+
+Chorus Pro adds its own management rules on top of the norm, `BR-FR-CPRO-01` to `50`, and they apply only to invoices bound for the public sphere. None of them is covered by the standard schematrons, so without a local check the first time you hear of a breach is Chorus Pro's rejection, which names a rule but not the field.
+
+Once an invoice is flagged `b2g`, the record step enforces the rules below and reports **every** breach at once, so a single round of fixes is enough.
+
+| Group | Rules | What is checked |
+|---|---|---|
+| Length caps | `02`, `14`, `15`, `30`–`37`, `39`, `41`–`44` | Invoice number and preceding invoice reference 20 characters; contract, purchase order and supporting document references 50; party names and trade names 99; address line and city 400; notes, item descriptions and payment terms 1024; attachment file names 50 |
+| Identifiers | `09`, `10`, `17` | Supplier, customer and payee each give a SIRET |
+| Cardinality | `19`, `20`, `26`, `27` | Fewer than one million lines, one preceding invoice reference, one contact per party |
+| Payment | `48`, `49` | IBAN of exactly 27 characters, counted as written, so no spaces; BIC of 8 to 11 characters |
+| Billing framework | `24`, `47` | `S5` is refused, as are the multi-vendor modes `B8`, `S8` and `M8` |
+
+The IBAN rule is the one that catches most people. Chorus Pro counts the IBAN as written, so `FR76 3000 6000 0112 3456 7890 189` is 33 characters and is refused. Write it without spaces.
+
+Rules that depend on data Invopop does not hold (whether the entity requires a service code or commitment number, `11` to `13`), that the norm itself marks as unverifiable, or that turn on the `S3` billing mode are not checked locally and remain enforced by Chorus Pro.
+
+## Following the invoice
+
+**Send to Chorus Pro** deposits the invoice and then waits. Chorus Pro first acknowledges the deposit as a whole, then walks the invoice through its own lifecycle, which is richer than the PPF's accepted or rejected pair. Invopop keeps the codes as Chorus Pro sends them, so the workflow and the France dashboard show the same vocabulary as the Chorus Pro portal.
+
+| Answer | Meaning | Job |
+|---|---|---|
+| Receipt `500` | The deposit was readable and accepted for processing | Keeps waiting |
+| Receipt `501` | The deposit was *irrecevable*: a file Chorus Pro could not read. The invoice never entered a lifecycle | **KO** |
+| <Badge color="blue">202</Badge> Reçue | Chorus Pro has received the invoice | Keeps waiting |
+| <Badge color="blue">203</Badge> Mise à disposition | The invoice is available to the public entity | **OK** |
+| <Badge color="blue">204</Badge> Prise en charge, <Badge color="blue">205</Badge> Approuvée | The entity is processing or has approved it | **OK** |
+| <Badge color="yellow">208</Badge> Suspendue | The entity needs more information | Keeps waiting |
+| <Badge color="yellow">209</Badge> Complétée | The missing information was supplied | **OK** |
+| <Badge color="red">210</Badge> Refusée, <Badge color="red">213</Badge> Rejetée | Refused by the entity, or rejected by Chorus Pro's own checks | **KO** |
+| <Badge color="green">211</Badge> Mandatée, <Badge color="green">212</Badge> Mise en paiement | Payment ordered, then paid | **OK** |
+
+The job completes as soon as Chorus Pro has made the invoice available (`203`) or any later code arrives. Later statuses keep updating the invoice after the job has finished, and each is visible on the invoice in the [France dashboard](/guides/fr-pa-invoicing#reading-submitted-invoices). Chorus Pro does not always deliver statuses in the order it applied them, so the invoice keeps whichever carries the latest timestamp.
+
+A `213` from Chorus Pro names the rule that failed. If it is one of the [rules checked at record](#rules-checked-at-record), the invoice was flagged `b2g` after the fact; otherwise fix the field the rule names and send a new invoice.
+
+<Note>
+For an invoice you issued, the public entity drives the lifecycle through Chorus Pro. Statuses you build on such an invoice are not forwarded: Chorus Pro rules on the invoices it receives, and Invopop does not answer them. Statuses you send only travel to Chorus Pro for invoices a public entity sent **to you**, described next.
+</Note>
+
+## Receiving from a public entity (G2B)
+
+G2B is the same exchange in reverse: a French public entity issues an invoice to your business. It is new with the 2026 reform. Public bodies previously had no route to invoice the private sector electronically.
+
+The path differs from a B2B invoice in where it comes from, not in what you do with it:
+
+1. The public entity submits the invoice to Chorus Pro, in UBL or Factur-X.
+2. Chorus Pro delivers it to Invopop, addressed to the Annuaire line your party is registered under. That line decides which workspace receives it, so the party must be [registered](/guides/fr-pa-registration) before any public entity can invoice it.
+3. **Receive document from Chorus Pro** converts it to GOBL and hands it to your [receive workflow](/guides/fr-pa-invoicing#receiving), which records it against your party with the same controls as an inbound Peppol invoice.
+
+From there it behaves like any other received invoice: it appears in the France dashboard, and you answer with [status updates](/guides/fr-pa-status) as it is accepted, disputed or paid. Build each status as you would for a B2B invoice and run it through the send workflow. **Is B2G?** resolves it to the invoice it answers, and **Send to Chorus Pro** deposits it on the public circuit.
+
+The statuses you send back follow the AFNOR norm rather than Chorus Pro's own vocabulary. Chorus Pro translates its internal codes before they reach you, so a rejection arrives as `210` and its own motifs arrive as their AFNOR equivalents.
+
+## Testing in sandbox
+
+A sandbox workspace delivers B2G invoices to Chorus Pro's **qualification environment**, and the record step reads the **qualification Annuaire** to decide whether a customer is a public entity. Both are separate from production, so a public entity you find in the production Annuaire is unknown there, and the invoice routes to Peppol instead.
+
+To exercise the Chorus Pro branch in sandbox, use a customer registered as a public entity in the qualification Annuaire. [Contact us](https://invopop.com/contact) for test buyer details if you don't have any.
+
+## Example invoices
+
+<ExampleAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [France FAQ](/faq/france) section
+
+---
+
+<FranceResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in France →
+</Card>
