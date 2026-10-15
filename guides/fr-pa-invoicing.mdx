@@ -31,13 +31,15 @@ These workflows are shared between invoice and [status documents](/guides/fr-pa-
 
 ### Sending
 
-The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is transmitted automatically alongside the F1. 
+The send workflow records the invoice for compliance, generates the chosen format, transmits it to the receiver’s PA over Peppol, and forwards the F1 copy to the PPF. The mandatory `200` Déposée status is generated when the invoice is recorded and transmitted to the PPF together with the F1.
 
 The **PPF record document** step validates SIRENs and checks both parties against the Annuaire. Documents where either side is missing are rejected and should branch into the [reporting flow](/guides/fr-pa-reporting)  for non-regulated transactions.
 
 It also sets aside invoices that fall outside the mandate — see [VAT-exempt invoices](#vat-exempt-invoices) below.
 
-The **Forward document to PPF** step generates and transmits to the PPF the F1 copy of the invoice and its `200` Déposée status. When the step's **Deposited and not transmitted** toggle is enabled, the status carries the `NON_TRANSMISE` reason and reports a *déposée – non transmise* instead of the standard *déposée*. This should be used when the recipient has no active receiving address. Gate that branch on the Peppol [Validate endpoint](/guides/peppol#validating-the-customer-endpoint) action: when it returns `false`, the invoice can't be delivered over Peppol and the workflow should route into a forward step configured as not transmitted.
+The **Forward document to PPF** step transmits to the PPF the F1 copy of the invoice together with its `200` Déposée status, created when the invoice was recorded. When the step's **Deposited and not transmitted** toggle is enabled, the status carries the `NON_TRANSMISE` reason and reports a *déposée – non transmise* instead of the standard *déposée*. This should be used when the recipient has no active receiving address. Gate that branch on the Peppol [Validate endpoint](/guides/peppol#validating-the-customer-endpoint) action: when it returns `false`, the invoice can't be delivered over Peppol and the workflow should route into a forward step configured as not transmitted.
+
+For invoices, the **Forward document to PPF** step stays queued until the PPF has acknowledged both the F1 copy and the `200` status, and completes only once the PPF has accepted both. If the PPF rejects either, the step fails and the job's [faults](/api-ref/transform/jobs/fetch-a-job#response-faults) carry the PPF's reasons. A job that gets past this step, or a workflow state set after it, therefore tells you through the API that the invoice is on record with the PPF. The [E-Invoicing Flow 2](#reading-submitted-invoices) tab shows the same outcome per invoice.
 
 <Card iconType="duotone" title="PPF send invoice" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-fr-pa-send-invoice" horizontal>
   Add to my workspace →
@@ -50,6 +52,10 @@ The **Forward document to PPF** step generates and transmits to the PPF the F1 c
     <SendInvoiceWorkflow />
   </Tab>
 </Tabs>
+
+<Note>
+Both branches of the template, Peppol delivery and *déposée – non transmise*, end in the same **Set state** step, so a `completed` entry doesn't tell you whether the invoice was delivered to the buyer. To tell them apart in your system, replace that final step with a distinct state at the end of each branch (for example `sent` after **Send Peppol document** and `registered` after the not-transmitted forward), or add a [Send Webhook](/guides/webhooks) step to the `false` branch. The `NON_TRANSMISE` reason isn't exposed as an API field, and [states](/console/doc-states) are labels only: they have no impact on delivery or government validation.
+</Note>
 
 ### Receiving
 
@@ -157,10 +163,12 @@ How each step of the self-billing use case maps to an action in Invopop, on both
 | Step | Actor | In Invopop |
 |---|---|---|
 | 1 | Buyer | Creates a GOBL invoice tagged `self-billed`. |
-| 2 | Buyer's PA | The buyer's [send workflow](#sending) generates the UBL, CII, or Factur-X document and transmits it as normal. The mandatory `200` Déposée status is emitted automatically once the PPF accepts flow 1. |
+| 2 | Buyer's PA | The buyer's [send workflow](#sending) generates the UBL, CII, or Factur-X document and transmits it as normal. The mandatory `200` Déposée status, generated when the invoice is recorded, is transmitted to the PPF together with the flow 1 copy by the **Forward document to PPF** step. |
 | 3 | Seller's PA | The seller's [receive workflow](#receiving) imports the invoice and records it, resolving the seller's registered party as the `supplier`. |
 | 4 | Seller | Upon reception of payment, the seller builds a `bill.Payment` referencing the invoice, sends it to the customer and forwards it to the PPF. |
 | 5 | Buyer | The buyer's receive workflow imports the inbound CDAR and records it against the invoice. |
+
+Lifecycle statuses work as for any other invoice. Keep the invoice's `supplier` and `customer` on every status, whichever side sends it, and the platform works out the direction.
 
 ## VAT-exempt invoices
 
@@ -201,6 +209,8 @@ The PPF status column tracks the copy forwarded to the tax authority:
 | <Badge color="green">Accepted</Badge> | The PPF accepted the document. |
 | <Badge color="red">Rejected</Badge> | The PPF rejected the document. |
 | <Badge color="blue">Exempt</Badge> | Outside the mandate; nothing was sent, and nothing will be. |
+
+To get the same outcome through the API, read the send job: the **Forward document to PPF** step only completes once the PPF has accepted the F1 copy and the `200` status, and fails with the PPF's reasons otherwise (see [Sending](#sending)).
 
 <Note>
 Clicking the Invoice code looks up all associated statuses on the **E-Invoicing Flow 6** tab, filtered by the Invoice ID.
