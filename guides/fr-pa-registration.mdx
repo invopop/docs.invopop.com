@@ -21,7 +21,7 @@ Registration on the French Directory is required for any SIREN that will issue, 
 | **Registration** | Peppol SMK  and PPF's _environnement de qualification_| Peppol SML and Annuaire production |
 
 <Note>
-A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has its own identifier, mapped to the Peppol in the Party inbox's `code`, in one of the forms `SIREN`, `SIREN_SIRET`, `SIREN_SIRET_suffix`, or `SIREN_suffix`.
+A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has its own electronic address, set as the `code` of the party's `peppol` inbox. Invopop registers addresses in one of the forms `SIREN`, `SIREN_SIRET`, or `SIREN_suffix`; addresses with a routing code (`SIREN_SIRET_routingcode`) aren't supported. See [Choosing the electronic address](#choosing-the-electronic-address).
 </Note>
 
 <Accordion title="Example of French supplier" defaultOpen="true">
@@ -29,7 +29,7 @@ A single SIREN registered in the Annuaire can have several directory entries, re
     * The `tax_id` contains the French TVA number without the `FR` prefix: a 2-digit control key followed by the company's 9-digit SIREN.
     * The `SIREN` identity uses the `iso-scheme-id` extension `0002` (SIRENE), and must match the last 9 digits of the TVA number.
     * The person in `people` is the company representative required to sign the *mandat de facturation* (billing mandate), including their `role`.
-    * The `peppol` inbox uses scheme `0225` (French CTC electronic address). A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has its own identifier, mapped to the Peppol inbox's `code`, in one of the forms `SIREN`, `SIREN_SIRET`, `SIREN_SIRET_suffix`, or `SIREN_suffix`.
+    * The `peppol` inbox uses scheme `0225` (French CTC electronic address). A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has its own electronic address, mapped to the Peppol inbox's `code`, in one of the forms `SIREN`, `SIREN_SIRET`, or `SIREN_suffix`. Addresses with a routing code (`SIREN_SIRET_routingcode`) aren't supported.
       * If no inbox is specified, the Register for Peppol step assigns one automatically, using scheme `0225` with the supplier's bare SIREN as the code, ignoring any SIRET present in the supplier's identities.
       * To register a specific directory entry instead, set the inbox explicitly, for example:
 
@@ -48,6 +48,17 @@ A single SIREN registered in the Annuaire can have several directory entries, re
         Here is the full example of a Party
   <Supplier />
 </Accordion>
+
+## Choosing the electronic address
+
+The address you register decides which invoices Invopop receives for the company. This matters most for platforms that register the companies they issue invoices for, such as marketplaces and invoicing software.
+
+- **The bare SIREN is the company's main address.** With no inbox set, the workflow registers `SIREN`. Senders that address the company by its SIREN deliver there, so only register it if Invopop should receive *all* of the company's incoming invoices.
+- **Use a dedicated address when you only issue on the company's behalf**, or when it already has, or will have, another PA. Set the inbox explicitly to a `SIREN_suffix` address such as `526018155_PLATFORMNAME`, as in the [example above](#example-of-french-supplier). The company's other addresses stay with its own PA.
+- **Statuses come back to the sending address.** Lifecycle statuses on invoices you send from an address are delivered to that address, so a dedicated address still receives the statuses for the invoices you issue.
+- **Companies with several establishments** need only one registration per SIREN, with a single mandate signature. Put each establishment's SIRET on its invoices, in the supplier's identities; it's independent of the directory address. Register one suffix per establishment only if you need statuses delivered to separate addresses: each address is a separate party entry and registration.
+- **Pick a suffix with a clear meaning.** The DGFiP recommends suffixes that make their purpose obvious and that don't look like a SIRET. A 14-digit suffix that starts with the SIREN is read as a SIRET.
+- **If another PA already holds the address**, registration fails; see [Taking over a line from another Plateforme Agréée](#taking-over-a-line-from-another-plateforme-agréée).
 
 ## PPF register supplier workflow
 
