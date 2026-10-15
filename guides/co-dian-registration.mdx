@@ -83,12 +83,16 @@ All of the following steps must be carried out from the [Invopop Console](https:
     Validates the party's name, NIT, and email, creates the supplier's company in Alegra, and publishes a public enablement portal link under the `registration-link` key in the entry's meta section.
   </Step>
   <Step title="Wait for DIAN enablement">
-    Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds.
+    Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds. If the DIAN rejects the test set, the step fails and the rescue branch sets the entry to <Badge color="red">Error</Badge>; see [Failed enablement](#failed-enablement).
   </Step>
   <Step title="Set state → Registered">
     Sets the state of the silo entry to <Badge color="purple">Registered</Badge>.
   </Step>
 </Steps>
+
+<Tip>
+  To be notified of the outcome instead of polling, add a [Send Webhook](/guides/webhooks) step after **Wait for DIAN enablement** for the accepted case, and another in the rescue branch for failures. The rescue payload carries the job's `faults`, including the DIAN's rejection reason.
+</Tip>
 
 ## Register a supplier
 
@@ -142,7 +146,7 @@ Each supplier NIT can be registered once per workspace and environment. For each
     To submit the TestSetId without the hosted portal, use the [Submit test set](/api-ref/apps/gov-co/enablement-submit) endpoint.
   </Step>
   <Step title="Wait for the DIAN response">
-    The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. If the DIAN rejects the test set, the workflow fails with the DIAN's error details; fix the cause and re-run the registration workflow to start again.
+    The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. If the DIAN rejects the test set, the workflow fails and the DIAN's reason is recorded in the job's faults; see [Failed enablement](#failed-enablement) for where to read it and how to start again.
   </Step>
 </Steps>
 
@@ -175,8 +179,26 @@ For platforms that want to drive the enablement programmatically instead of shar
   </Step>
   <Step title="Track the outcome">
     [Fetch the enablement status](/api-ref/apps/gov-co/enablement-get): `status` moves from `pending` to `accepted` or `failed` once the DIAN responds. The workflow's **Wait for DIAN enablement** step picks up the outcome exactly as it does for portal submissions.
+
+    The endpoint returns the status only. When it's `failed`, read the reason in the registration job's faults, as described in [Failed enablement](#failed-enablement).
   </Step>
 </Steps>
+
+## Failed enablement
+
+When the DIAN rejects the test set, or the submission fails, the **Wait for DIAN enablement** step fails the registration job, the rescue branch sets the entry to <Badge color="red">Error</Badge>, and the enablement status becomes `failed`. The DIAN's reason isn't returned by the enablement endpoint; it's recorded in the [faults](/api-ref/transform/jobs/fetch-a-job#response-faults) of the registration job, under the `gov-co.wait.enablement` provider. Read it from any of:
+
+- **The Console:** open the supplier entry and check its [job history](/console/workflow-history).
+- **The API:** [fetch the job](/api-ref/transform/jobs/fetch-a-job) and read its `faults` array. Prefer the job's faults over the `faults` field on the silo entry.
+- **A webhook:** with a [Send Webhook](/guides/webhooks) step in the rescue branch, the payload includes the same `faults`.
+
+The fault message carries the reasons given by the DIAN or the technology provider, when they return any. Reasons that quote a DIAN validation rule (such as `Regla: FAJ40`) are explained in section 8 of the DIAN's [technical annex](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Anexo-Tecnico-Factura-Electronica-de-Venta-vr-1-9.pdf), and section 7.12 lists the test set status codes.
+
+To start again:
+
+1. Fix the cause, for example by correcting the supplier details in the entry or getting a new TestSetId from the DIAN portal.
+2. Re-run the registration workflow on the same entry. Until you do, [Submit test set](/api-ref/apps/gov-co/enablement-submit) responds `400`.
+3. Submit the test set again, from the portal or via the API.
 
 ## Sandbox
 
@@ -193,7 +215,7 @@ The same registration flow runs in sandbox workspaces against the DIAN test envi
 | `p70562e0-631e-4ceb-aa65-36887b57dc17` | Processing (stays pending) |
 | `f70562e0-631e-4ceb-aa65-36887b57dc17` | Failed |
 
-Use the accepted value to complete a supplier registration end to end; the other values let you test how your integration handles rejected, pending, and failed outcomes.
+Use the accepted value to complete a supplier registration end to end; the other values let you test how your integration handles rejected, pending, and failed outcomes. Submit the rejected or failed value to exercise your [failed enablement](#failed-enablement) handling end to end, from reading the job's faults to re-running the workflow.
 
 ## Migrate from Plemsi
 
