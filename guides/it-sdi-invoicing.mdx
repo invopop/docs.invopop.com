@@ -166,6 +166,27 @@ Payment terms, bank details, ordering references and notes are not part of the s
 
 To correct a simplified invoice, issue a credit or debit note with the `simplified` tag. It must refer to the invoice it corrects, with that invoice's code and issue date and the reason for the correction. If you create the note from the original with `previous_id` and `correct`, set `reason` in the `correct` object. The [Simplified Invoice](#example-invoices) example below shows a complete document.
 
+### Issuing on behalf of a supplier
+
+Italian law lets a third party issue an invoice on the supplier's behalf, under an agreement between the two; the supplier stays responsible for the VAT. This is your case when you invoice for the businesses that sell through your platform: the business is the supplier on the invoice, and you are the issuer. FatturaPA records this in the file, so SDI and the customer can see who issued it.
+
+To issue one, add yourself as the `issuer` in the invoice's [`ordering`](https://docs.gobl.org/draft-0/bill/ordering), with your name and partita IVA:
+
+```json
+"ordering": {
+  "issuer": {
+    "name": "Your Company S.r.l.",
+    "tax_id": { "country": "IT", "code": "01234567897" }
+  }
+}
+```
+
+The [`it-sdi-v1`](https://docs.gobl.org/addons/it-sdi-v1) addon then marks the invoice as issued by a third party (`it-sdi-issuer-type` set to `TZ`), and the send step writes your details into the file next to the supplier's and the customer's. If you have a codice fiscale and no partita IVA, give it as an `it-fiscal-code` identity. A person gives the name in `people`. An issuer outside Italy gives its own country and tax number.
+
+SDI needs nothing else: the supplier doesn't register you with it, and no notice is sent. The one exception is an issuer established in a country with no mutual-assistance agreement with Italy; then the supplier must notify the Agenzia delle Entrate before you issue for them.
+
+When the customer issues the document, as in the self-billed types TD16 to TD20, TD22, TD23 and TD28, the addon marks it as issued by the customer (`CC`) on its own. Don't add an `issuer` to those. TD21 and TD27 get no issuer type, because the supplier issues those itself.
+
 ## Invoice statuses
 
 SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
