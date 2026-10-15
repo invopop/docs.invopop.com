@@ -1,5 +1,5 @@
   <Accordion title="My GOBL document for a Colombian invoice fails to build because of the postal code">
-    The DIAN expects a 5-digit [municipal code](https://www.dian.gov.co/atencionciudadano/formulariosinstructivos/Formularios/2007/Codigos_municipios_2007.pdf), not a 6-digit postal code, in the supplier's [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension.
+    The DIAN expects a 5-digit [municipal code](https://www.dian.gov.co/atencionciudadano/formulariosinstructivos/Formularios/2007/Codigos_municipios_2007.pdf), not a 6-digit postal code, in the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension of the supplier and of customers identified by a Colombian NIT. For example, use `11001` for Bogotá.
   </Accordion>
 
   <Accordion title="How does Invopop issue invoices in Colombia?">
@@ -7,7 +7,11 @@
   </Accordion>
 
   <Accordion title="What does a GOBL invoice need to be accepted by the DIAN?">
-    Set `$schema` to `https://gobl.org/draft-0/bill/invoice`, the supplier's `tax_id.country` to `CO`, and include the supplier's and customer's DIAN municipality codes via the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension in each party's `ext`. See the [GOBL Colombia tax regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) for the full field reference and examples.
+    Set `$schema` to `https://gobl.org/draft-0/bill/invoice`, the supplier's `tax_id.country` to `CO`, and include the supplier's DIAN municipality code via the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension in its `ext`. Customers identified by a Colombian NIT need the extension too; foreign customers and `simplified` B2C invoices don't (see [When is the municipality code required?](/guides/co-dian-invoicing#when-is-the-municipality-code-required)). See the [GOBL Colombia tax regime](https://github.com/invopop/gobl/blob/main/regimes/co/README.md) for the full field reference and examples.
+  </Accordion>
+
+  <Accordion title="Do foreign or consumer customers need a municipality code?">
+    No. The [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension is only required on customers identified by a Colombian NIT, that is, with `tax_id.country` set to `CO` and a `tax_id.code`. Foreign customers, `simplified` B2C invoices without a customer, and consumers identified only by a cédula build without it. Invopop can't derive the code from the NIT, so collect it for each Colombian business customer.
   </Accordion>
 
   <Accordion title="Which taxes can appear on a Colombian invoice?">

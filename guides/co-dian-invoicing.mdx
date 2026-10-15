@@ -32,7 +32,7 @@ Please refer to the docs of the [GOBL Colombia tax regime](https://docs.gobl.org
 In order to complete this guide, you will need:
 
 - **A registered supplier**: follow the [supplier registration guide](/guides/co-dian-registration) to create the supplier's Alegra account and complete the DIAN enablement before issuing.
-- Customer details for B2B transactions, including name, NIT or international ID, address, and municipality code for Colombian customers.
+- Customer details for B2B transactions, including name, NIT or international ID, and address, plus the DIAN municipality code for customers identified by a Colombian NIT (see [When is the municipality code required?](#when-is-the-municipality-code-required)).
 - Line and item details, including quantity, price, description, and taxes to apply. Colombia can be complicated, as a single invoice may need to apply up to three different value added and retained taxes.
 
 ## Document types
@@ -106,6 +106,22 @@ Before sending, the document is validated against the [DIAN add-on](https://docs
 - Totals rounding (`totals.rounding`) isn't supported.
 - Amounts in other currencies are converted to COP automatically. Invoices in a currency other than COP must include `exchange_rates` with a rate to COP, or the conversion fails.
 
+### When is the municipality code required?
+
+The [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2#municipality-codes) extension in a party's `ext` identifies its municipality. Whether a party needs it depends on how it's identified:
+
+| Party | Municipality code |
+|---|---|
+| Colombian supplier | Required |
+| Customer identified by a Colombian NIT (`tax_id.country` is `CO` and `tax_id.code` is set) | Required |
+| Foreign customer (`tax_id.country` other than `CO`) | Not required |
+| `simplified` B2C invoice with no customer | Not required |
+| `simplified` B2C customer identified only by an identity, such as a cédula (`co-dian-citizen-id`), with no `tax_id` | Not required |
+
+- The value is the 5-digit DIAN municipality code (DIVIPOLA), such as `11001` for Bogotá or `05001` for Medellín, not the 6-digit postal code. See the [DIAN list of municipality codes](https://www.dian.gov.co/atencionciudadano/formulariosinstructivos/Formularios/2007/Codigos_municipios_2007.pdf).
+- When a required code is missing, the GOBL build fails with `extension 'co-dian-municipality' is required` on `$.supplier.ext` or `$.customer.ext`, so the invoice never reaches the DIAN.
+- Invopop can't derive the code from the NIT, so collect it with the rest of your customer data for each Colombian business customer, for example in your customer form. Foreign and consumer customers don't need the field.
+
 ## Example invoices
 
 The following examples are of [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the Colombia workflow created during setup.
@@ -114,7 +130,7 @@ The following examples are of [GOBL](https://docs.gobl.org) documents you can co
 
 - `$schema` to be set to `https://gobl.org/draft-0/bill/invoice`
 - `supplier.tax_id.country` to be set to `CO`
-- `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Colombian customers need it too.
+- `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Customers identified by a Colombian NIT need it too; foreign and `simplified` B2C customers don't. See [When is the municipality code required?](#when-is-the-municipality-code-required).
 
 <Info>
   The examples are ready for the sandbox: they use Alegra's NIT `9005590882` and the `SETP` test series. Before sending, set the issue date to today and change the code to another one between `990000000` and `995000000`, since the range is shared.
