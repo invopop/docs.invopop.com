@@ -145,6 +145,26 @@ AEAT writes names in its own format: in capital letters, and with the surnames f
 
 When AEAT does not answer, VIES can confirm a Spanish NIF, but cannot reject it. VIES holds only the NIFs registered for intra-EU trade, so a NIF that VIES does not hold may still be valid. In that case the step returns `ERR` with the code `upstream`, and Invopop retries it.
 
+## French VAT numbers
+
+Lookup checks French VAT numbers with the DGFiP, the French tax administration, which publishes every active French VAT number. A number that is not published yet, because the list is updated on working days only, is checked in VIES.
+
+- **Name and address:** the registered name and the structured address of the head office come from Sirene, the French business register. A sole trader gets the person's name. With **Correct the party** on, both are written into the document.
+- **People who opted out of publication** in Sirene: the VAT number is checked, but no name or address is written.
+- **Closed companies** return `found-inactive`.
+- **A bare SIREN** in the tax ID is completed to the VAT number before the check.
+
+| Tax ID | Name after the correction | Address after the correction | Code |
+|---|---|---|---|
+| `FR27552032534`, name `Danone SA` | `DANONE` | 59 RUE LA FAYETTE, 75009 PARIS | `found-name-mismatch` |
+| `FR99123456782` | not changed | not changed | `not-found` |
+
+When the DGFiP does not answer, VIES checks the number and gives the name only.
+
+## Italian VAT numbers
+
+Lookup checks Italian VAT numbers (partita IVA) in VIES. VIES holds only the numbers registered for intra-EU trade, so a business that trades only in Italy can return `not-found`. VIES gives the Italian address in a regular shape, so with **Correct the party** on, the step writes it as a structured address: for example `VIA EMILIA EST 1163`, `41122 MODENA MO` becomes the street `VIA EMILIA EST`, the number `1163`, the postcode `41122`, the locality `MODENA` and the province `MO`.
+
 ## Workflow examples
 
 ### Validate the invoice customer
