@@ -76,20 +76,20 @@ The step returns a status and a code. After `OK` or `SKIP`, the workflow continu
 
 The step returns `OK`:
 
-- **`found`**: the register confirms the tax ID, and the names match. The comparison ignores case, accents, punctuation and extra spaces, so `Telefónica, S.A.` and `TELEFONICA SA` match.
-- **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different. The message gives the registered name. With **Correct the party** on, the step writes that name into the document. To review these documents instead, turn the correction off and add a condition on this code.
-- **`found-inactive`**: the register confirms the tax ID, but holds the party as inactive. For example, AEAT holds a company that stopped its activity in this state. The message names the register, for example `tax ID is inactive on the AEAT register`.
+- **`found`**: the register confirms the tax ID, and the names match.
+- **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different.
+- **`found-inactive`**: the register confirms the tax ID, but holds the party as inactive.
 - **`found-dissolved`**: the register confirms the tax ID, but holds the party as dissolved.
 - **`found-not-vat-registered`**: the tax ID belongs to an active business that is not registered for VAT, such as a French micro-entrepreneur under the franchise en base. The business exists, but has no VAT number.
 
-`found-inactive`, `found-dissolved` and `found-not-vat-registered` are warnings: the workflow continues, and the correction still runs. To review these documents, add a condition on the code. For example, an invoice that needs the customer's VAT number, such as a reverse charge invoice, should stop on `found-not-vat-registered`. When a party has one of these warnings and its name is also different, the step returns the warning code.
+`found-inactive`, `found-dissolved` and `found-not-vat-registered` are warnings: the workflow continues, and the correction still runs.
 
 ### The tax ID is not valid
 
 The step returns `KO`:
 
 - **`not-found`**: the register does not hold the tax ID. Check the tax ID with your customer. To reject these invoices automatically, see [Stop on an unregistered customer](#stop-on-an-unregistered-customer).
-- **`revoked`**: the register identifies the party, but the tax authority revoked the tax ID, so it has no legal effect. For example: `tax ID was revoked by AEAT`. Ask your customer for a valid tax ID. The step never corrects a party with a revoked tax ID.
+- **`revoked`**: the register identifies the party, but the tax authority revoked the tax ID, so it has no legal effect. Ask your customer for a valid tax ID.
 - **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again. The step also returns this code when the party lacks data that the register needs, for example `AEAT needs the name of a natural person to check a DNI or NIE`. Add the name to the party and run the job again.
 
 ### The step is skipped
@@ -133,9 +133,8 @@ The correction never changes the result code or the message. A corrected documen
 Lookup checks Spanish tax IDs (NIF) in the census of AEAT, the Spanish tax agency. AEAT holds every NIF, not only the NIFs registered for intra-EU trade, and gives the registered name.
 
 - **Companies** are identified by the NIF alone. A wrong or empty name still gives a valid answer with the registered name.
-- **Natural persons**, such as self-employed workers (autónomos), have a DNI or NIE as their NIF. AEAT needs the person's name to check it, and accepts small differences, such as the order of the words or one wrong letter. A name that AEAT accepts returns `found`. A name that belongs to another person returns `not-found`. A party without a name returns `input`, unless VIES confirms the NIF.
+- **Natural persons**, such as self-employed workers (autónomos), have a DNI or NIE as their NIF. AEAT needs the person's name to check it. A name that AEAT accepts returns `found`. A name that belongs to another person returns `not-found`.
 - **Revoked NIFs** return `revoked`. **Deregistered NIFs** return `found-inactive`.
-- **The NIF `B99999997`** is a placeholder that does not identify a real party, so it returns `not-found`.
 
 AEAT writes names in its own format: in capital letters, and with the surnames first for a natural person. With **Correct the party** on, the step writes this format into the document, also when the names match. For example:
 
@@ -145,29 +144,18 @@ AEAT writes names in its own format: in capital letters, and with the surnames f
 | `Pablo Martínez Gutiérrez` | `MARTINEZ GUTIERREZ PABLO` | `found` |
 | `Acme Trading SL` with Invopop's NIF | `INVOPOP, SL` | `found-name-mismatch` |
 
-When AEAT does not answer, VIES can confirm the NIF. Otherwise the step returns `ERR` with the code `upstream`, and Invopop retries it.
-
 ## French tax IDs
 
-Lookup checks French VAT numbers with the DGFiP, the French tax administration, which publishes every active French VAT number on working days.
+Lookup checks French VAT numbers with the DGFiP, the French tax administration, which publishes every active French VAT number.
 
-- **Businesses without a VAT number**, such as micro-entrepreneurs under the franchise en base, use their SIREN as tax ID. When the SIREN belongs to an active business in Sirene, the French business register, the step returns `found-not-vat-registered`. A VAT number issued in the last working days returns the same code until the DGFiP publishes it.
-- **A bare SIREN** in the tax ID is completed to the VAT number before the check.
+- **Businesses without a VAT number**, such as micro-entrepreneurs under the franchise en base, use their SIREN as tax ID. When the SIREN belongs to an active business in Sirene, the French business register, the step returns `found-not-vat-registered`.
 - **Name and address:** the registered name and the structured address of the head office come from Sirene. A sole trader gets the person's name. With **Correct the party** on, both are written into the document.
-- **People who opted out of publication** in Sirene: the tax ID is checked, but no name or address is written.
 - **Closed companies** return `found-inactive` while their VAT number is active, and `not-found` otherwise.
 
 | Tax ID | Name after the correction | Address after the correction | Code |
 |---|---|---|---|
 | `FR27552032534`, name `Danone SA` | `DANONE` | 59 RUE LA FAYETTE, 75009 PARIS | `found-name-mismatch` |
 | SIREN of an active micro-entrepreneur | the person's name | the head office | `found-not-vat-registered` |
-| `FR11123456782` | not changed | not changed | `not-found` |
-
-When the DGFiP or Sirene does not answer, VIES checks the number and gives the name only.
-
-## Italian VAT numbers
-
-Lookup checks Italian VAT numbers (partita IVA) in VIES. VIES holds only the numbers registered for intra-EU trade, so a business that trades only in Italy can return `not-found`. VIES gives the Italian address in a regular shape, so with **Correct the party** on, the step writes it as a structured address: for example `VIA EMILIA EST 1163`, `41122 MODENA MO` becomes the street `VIA EMILIA EST`, the number `1163`, the postcode `41122`, the locality `MODENA` and the province `MO`.
 
 ## Workflow examples
 
