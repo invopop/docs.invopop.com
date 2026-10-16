@@ -24,6 +24,12 @@ Each **Validate Tax IDs** step checks one party:
 
 The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers is skipped and costs nothing.
 
+The step asks the register that issues the tax ID:
+
+- **Spanish tax IDs** go to the AEAT census. See [Spanish tax IDs](#spanish-tax-ids).
+- **French tax IDs** go to the DGFiP. See [French tax IDs](#french-tax-ids).
+- **Other EU VAT numbers** go to VIES.
+
 ## Set up the step
 
 <Steps>
@@ -70,15 +76,21 @@ The step returns a status and a code. After `OK` or `SKIP`, the workflow continu
 
 The step returns `OK`:
 
-- **`found`**: the register confirms the tax ID, and the names match. The comparison ignores case, punctuation and extra spaces, so `Acme Trading GmbH.` and `ACME TRADING GMBH` match.
-- **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different. The message gives the registered name. With **Correct the party** on, the step writes that name into the document. To review these documents instead, turn the correction off and add a condition on this code.
+- **`found`**: the register confirms the tax ID, and the names match.
+- **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different.
+- **`found-inactive`**: the register confirms the tax ID, but holds the party as inactive.
+- **`found-dissolved`**: the register confirms the tax ID, but holds the party as dissolved.
+- **`found-not-vat-registered`**: the tax ID belongs to an active business that is not registered for VAT, such as a French micro-entrepreneur under the franchise en base. The business exists, but has no VAT number.
+
+`found-inactive`, `found-dissolved` and `found-not-vat-registered` are warnings: the workflow continues, and the correction still runs.
 
 ### The tax ID is not valid
 
 The step returns `KO`:
 
 - **`not-found`**: the register does not hold the tax ID. Check the tax ID with your customer. To reject these invoices automatically, see [Stop on an unregistered customer](#stop-on-an-unregistered-customer).
-- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again.
+- **`revoked`**: the register identifies the party, but the tax authority revoked the tax ID, so it has no legal effect. Ask your customer for a valid tax ID.
+- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again. The step also returns this code when the party lacks data that the register needs, for example `AEAT needs the name of a natural person to check a DNI or NIE`. Add the name to the party and run the job again.
 
 ### The step is skipped
 
@@ -114,7 +126,23 @@ With **Correct the party** on, a check that passes writes the register's data in
 
 Nothing is written when the check does not pass, when the register gives no name, or when the document is already signed. To correct a document and then sign it, place **Validate Tax IDs** before **Sign envelope**.
 
-The correction never changes the result code or the message. A corrected document still returns `found` or `found-name-mismatch`.
+The correction never changes the result code or the message. A corrected document still returns `found`, `found-name-mismatch` or its warning code.
+
+## Spanish tax IDs
+
+Lookup checks Spanish tax IDs (NIF) in the census of AEAT, the Spanish tax agency. AEAT holds every NIF, not only the NIFs registered for intra-EU trade, and gives the registered name.
+
+- **Companies** are identified by the NIF alone. A wrong or empty name still gives a valid answer with the registered name.
+- **Natural persons**, such as self-employed workers (autónomos), have a DNI or NIE as their NIF. AEAT needs the person's name to check it. A name that AEAT accepts returns `found`. A name that belongs to another person returns `not-found`.
+- **Revoked NIFs** return `revoked`. **Deregistered NIFs** return `found-inactive`.
+
+## French tax IDs
+
+Lookup checks French VAT numbers with the DGFiP, the French tax administration, which publishes every active French VAT number.
+
+- **Businesses without a VAT number**, such as micro-entrepreneurs under the franchise en base, use their SIREN as tax ID. When the SIREN belongs to an active business in Sirene, the French business register, the step returns `found-not-vat-registered`.
+- **Name and address:** the registered name and the structured address of the head office come from Sirene. A sole trader gets the person's name. With **Correct the party** on, both are written into the document.
+- **Closed companies** return `found-inactive` while their VAT number is active, and `not-found` otherwise.
 
 ## Workflow examples
 
