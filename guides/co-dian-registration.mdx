@@ -41,7 +41,7 @@ Once a supplier is registered, continue with the companion guide: [Invoicing in 
 To register a supplier in Colombia, you will need:
 
 - **Supplier details** to build the [GOBL](https://docs.gobl.org) party: legal name, NIT with the verification digit, and email. The address and the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension are optional here but required on the supplier's invoices (see [When is the municipality code required?](/guides/co-dian-invoicing#when-is-the-municipality-code-required)).
-- **The supplier's legal representative**, with access to the [DIAN e-invoicing portal](https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/instructivo-de-registro-y-habilitacion-en-factura-electronica-dian/), to select Alegra and run the enablement.
+- **The supplier's legal representative**, with access to the email on their own RUT (the DIAN's [Habilitación portal](https://catalogo-vpfe-hab.dian.gov.co/User/Login) sends its login links there) and, for numbering, a MUISCA account with a DIAN electronic signature.
 - For live issuing, a **numbering range authorization** (_resolución de numeración_) from the DIAN for each invoice series. See [Numbering resolutions](#numbering-resolutions).
 
 <SupplierAccordion />
@@ -126,18 +126,49 @@ Each supplier NIT can be registered once per workspace and environment. For each
 
     To skip the portal entirely, submit the TestSetId yourself as described in [Complete the enablement via the API](#complete-the-enablement-via-the-api).
   </Step>
-  <Step title="Select Alegra as technology provider at the DIAN">
-    In the DIAN **Habilitación** portal, the legal representative:
+  <Step title="Register as electronic invoicer at the DIAN">
+    The legal representative opens the DIAN's [Habilitación portal](https://catalogo-vpfe-hab.dian.gov.co/User/Login) (also linked from [dian.gov.co](https://www.dian.gov.co/) under **Factura Electrónica**) and logs in as **Empresa** (or **Persona** for individuals). The DIAN emails an access link, valid for 60 minutes, to the address on the RUT of the person logging in, the legal representative for companies.
 
-    1. Goes to **Registro y habilitación** → **Documentos electrónicos** → **Factura electrónica**.
-    2. Selects **Software de un proveedor tecnológico** as the operation mode.
-    3. Selects **Soluciones Alegra S.A.S** as the provider and Alegra's software, then clicks **Asociar**.
-    4. Opens the test set details and copies the **TestSetId**.
+    <Frame caption="Habilitación login (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-login.png" alt="DIAN Habilitación login with the Empresa and Persona options highlighted" />
+    </Frame>
+
+    The first time they open **Registro y habilitación** → **Documentos electrónicos**, the **Registrar facturador** screen appears: they enter the **Correo electrónico para recepción de facturas** and click **Registrar**. They then log out and log back in with a new access link before continuing.
+
+    <Frame caption="Registrar facturador (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-register-invoicer.png" alt="DIAN Registrar facturador screen with the Registrar button highlighted" />
+    </Frame>
+  </Step>
+  <Step title="Select Alegra as technology provider at the DIAN">
+    Back in the **Habilitación** portal, the legal representative:
+
+    1. Goes to **Registro y habilitación** → **Documentos electrónicos** → **Factura electrónica** and clicks **Configurar modos de operación**.
+
+    <Frame caption="Facturador electrónico (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-configure-operation-modes.png" alt="DIAN Facturador electrónico page with the Configurar modos de operación button highlighted" />
+    </Frame>
+
+    2. Under **Seleccione el modo de operación**, picks **Software de un proveedor tecnológico**.
+    3. Under **Datos de empresa y software**, sets **Nombre empresa proveedora** to **Soluciones Alegra S.A.S** and **Nombre del software** to Alegra's software from the list, then clicks **Asociar**.
+
+    <Frame caption="Configurar modos de operación, filled in for Alegra (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-operation-mode.png" alt="DIAN Configurar modos de operación form with the operation mode, provider and software fields and the Asociar button" />
+    </Frame>
+
+    4. Under **Listado de modos de operación asociados**, clicks the eye icon in **Acciones**. If asked for a **Tipo de documento**, they choose **Factura electrónica** and click **Set de pruebas**. They copy the **TestSetId** shown in the **¡Importante!** banner.
+
+    <Frame caption="Listado de modos de operación asociados, with Alegra (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-operation-modes-list.png" alt="DIAN list of associated operation modes with the Acciones icons" />
+    </Frame>
+
+    <Frame caption="Set de pruebas with the TestSetId, for Alegra (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-test-set-id.png" alt="DIAN Set de pruebas page with the TestSetId highlighted in the Importante banner" />
+    </Frame>
 
     The DIAN explains these screens in sections 1 and 2 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
   </Step>
   <Step title="Submit the test set">
-    The legal representative pastes the TestSetId into the Invopop portal and clicks **Enviar set de pruebas**. Alegra sends the required test documents to the DIAN automatically.
+    The legal representative pastes the TestSetId into the Invopop portal and clicks **Enviar set de pruebas**. Alegra sends the required test documents to the DIAN automatically, signed with its own digital certificate, so the supplier doesn't need one.
 
     <Frame caption="Enablement portal">
       <img width="600" src="/assets/guides/co-dian-enablement-portal.png" alt="Enablement portal with the DIAN TestSetId field and the Enviar set de pruebas button" />
@@ -146,28 +177,76 @@ Each supplier NIT can be registered once per workspace and environment. For each
     To submit the TestSetId without the hosted portal, use the [Submit test set](/api-ref/apps/gov-co/enablement-submit) endpoint.
   </Step>
   <Step title="Wait for the DIAN response">
-    The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. If the DIAN rejects the test set, the workflow fails and the DIAN's reason is recorded in the job's faults; see [Failed enablement](#failed-enablement) for where to read it and how to start again.
+    The portal refreshes while the DIAN processes the test set. Once accepted, the workflow resumes and the entry moves to the registered state. The DIAN then asks the supplier for their production start date, when their RUT is updated with responsibility 52 (_Facturador electrónico_). If the DIAN rejects the test set, the workflow fails and the DIAN's reason is recorded in the job's faults; see [Failed enablement](#failed-enablement) for where to read it and how to start again.
   </Step>
 </Steps>
 
 <Info>
-  Re-running the registration workflow on the same entry is safe: it restarts the enablement if it hasn't been accepted yet, and does nothing once the supplier is enabled.
+  Re-running the registration workflow on the same entry is safe: it restarts a failed enablement, keeps a test set that is still waiting for the DIAN, and does nothing once the supplier is enabled.
 </Info>
 
 ## Numbering resolutions
 
-In live, every invoice series needs a DIAN numbering range authorization linked to Alegra. This isn't needed in the sandbox, which uses the fixed `SETP` test resolution.
+In live, every invoice series needs a DIAN numbering range authorization linked to Alegra. This isn't needed in the sandbox, which uses the fixed `SETP` test resolution. Each authorization is valid for 2 years.
 
 <Steps>
   <Step title="Request the numbering range">
-    The legal representative requests the range in the DIAN's MUISCA system (**Numeración de Facturación** → **Solicitar numeración de facturación** → **Autorizar Rango**), choosing a prefix of up to four letters or digits, which becomes the invoice `series`. Once signed, the DIAN issues form 1876 with the authorized ranges and validity. See [Request for invoice numbering authorization](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf).
+    In the DIAN's [MUISCA system](https://muisca.dian.gov.co/WebArquitectura/DefLogin.faces) (**Usuario Registrado** on dian.gov.co), under **Numeración de Facturación** → **Solicitar numeración de facturación**, the legal representative:
+
+    <Frame caption="MUISCA menu (DIAN)">
+      <img width="400" src="/assets/guides/co-dian-muisca-menu.png" alt="DIAN MUISCA menu with Numeración de Facturación and Solicitar Numeración de Facturación" />
+    </Frame>
+
+    1. Checks that the RUT is up to date (name, address, invoicing responsibility, and establishments).
+    2. Clicks **Autorizar Rangos** and fills in **Prefijo** (up to four letters or digits, which becomes the invoice `series`), **Tipo Facturación** set to **FACTURA ELECTRÓNICA DE VENTA**, and **Rango Desde** / **Rango Hasta**, then clicks **Agregar**.
+    3. Signs the request with their DIAN electronic signature (_firma electrónica_), first as form 1302 and then as form 1876, which the DIAN issues with the authorized ranges and validity.
+
+    <Frame caption="Solicitud de autorización de rangos (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-numbering-request.png" alt="DIAN MUISCA Solicitud de Autorización de Rangos form with Prefijo, Tipo Facturación, Rango Desde and Rango Hasta fields" />
+    </Frame>
+
+    See [Request for invoice numbering authorization](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-AutorizacionF.pdf).
   </Step>
   <Step title="Link the range to Alegra">
-    Once the DIAN has accepted the test set, and about two hours after the range request, log in to the production environment through **Facturando Electrónicamente**. Go to **Configuración** → **Rangos de numeración**, select Alegra's software (**Soluciones Alegra S.A.S**) and the authorized range, and click **Agregar**. If the operation mode doesn't show in production, use **Sincronizar a Producción** in the test set details of the Habilitación portal. The DIAN explains this in sections 3 and 4 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
+    Once the DIAN has accepted the test set, and about two hours after the range request, log in to the production environment through [Facturando Electrónicamente](https://catalogo-vpfe.dian.gov.co/User/Login). Go to **Configuración** → **Rangos de numeración**, pick **Soluciones Alegra S.A.S** under **Proveedor - Software** and the range under **Prefijo**, and click **Agregar**.
+
+    <Frame caption="Gestionar asociación de prefijos, with Alegra selected (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-numbering-prefix.png" alt="DIAN Gestionar Asociación de Prefijos page with the Proveedor - Software and Prefijo fields and the Agregar button" />
+    </Frame>
+
+    If production shows **Empresa no se encuentra habilitada**, or Alegra's operation mode doesn't appear there, click **Sincronizar Contribuyente a producción** on the **Facturador electrónico** page of the Habilitación portal:
+
+    <Frame caption="Sincronizar contribuyente a producción (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-sync-production.png" alt="DIAN Facturador electrónico page with the Sincronizar Contribuyente a producción button highlighted" />
+    </Frame>
+
+    The DIAN explains this in sections 3 and 4 of [Registration and operation mode selection](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Registro-y-Seleccion-del-Modo-de-Operacion-Factura-Electronica.pdf).
   </Step>
 </Steps>
 
-Invopop fetches the supplier's linked resolutions automatically before sending, so no further action is needed. Check them anytime with [List resolutions](/api-ref/apps/gov-co/resolutions-list). To extend a range that is about to expire with numbers left, see [Request for invoice numbering extension](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf); once a range is used up, request a new one.
+### Renew a range
+
+A range with numbers left can be extended once it's within 15 business days of its expiry date; the new validity is set by the DIAN on the resulting form 1876. Once a range is used up or expired, request a new one as described above instead.
+
+<Steps>
+  <Step title="Open the range">
+    In MUISCA, under **Numeración de Facturación** → **Solicitar numeración de facturación**, the legal representative clicks **Habilitar Rangos**.
+
+    <Frame caption="Consultar numeración de facturación (DIAN)">
+      <img width="600" src="/assets/guides/co-dian-numbering-renew.png" alt="DIAN MUISCA Consultar Numeración de Facturación screen with the Habilitar Rangos button highlighted" />
+    </Frame>
+  </Step>
+  <Step title="Request the extension">
+    They enter the same **Prefijo** and **Tipo Facturación**, click **Consultar**, review the range shown (editing **Rango Desde** if prompted), and click **Borrador**.
+  </Step>
+  <Step title="Sign it">
+    They sign form 1302 and then form 1876, which carries the new validity.
+  </Step>
+</Steps>
+
+See [Request for invoice numbering extension](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Numeracion2022-Habilitacion-F.pdf).
+
+Invopop picks up new and renewed resolutions automatically on the next send. Check them anytime with [List resolutions](/api-ref/apps/gov-co/resolutions-list).
 
 ## Complete the enablement via the API
 
@@ -231,7 +310,7 @@ Moving a supplier from the old Plemsi integration takes the same steps as a new 
   <Step title="Set up the numbering ranges">
     Under **Configuración** → **Rangos de numeración** (see [Numbering resolutions](#numbering-resolutions)), choose one of:
 
-    - **Move the existing range:** unlink it from Plemsi and link it to Alegra. The series stays the same, and new invoices must continue after the last number issued through Plemsi.
+    - **Move the existing range:** unlink it from Plemsi (the ✕ icon next to it in the list) and link it to Alegra. The series stays the same, and new invoices must continue after the last number issued through Plemsi.
     - **Add a new range:** request a new range with a new prefix and link it to Alegra. Invoices sent through Alegra start a fresh series, while the old range stays with Plemsi until it's no longer needed.
   </Step>
   <Step title="Switch to the new send workflow">
