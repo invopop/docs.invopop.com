@@ -45,12 +45,16 @@ The `fr-ctc-flow6-v1` addon maps each document to its CDV `ProcessConditionCode`
 
 ### Issued by the platform
 
-Emitted automatically by Invopop as the Plateforme Agréée — you never build or send these.
+Invopop emits <Badge color="gray">200</Badge> and <Badge color="gray">213</Badge> automatically as the Plateforme Agréée — you never build or send these. <Badge color="gray">201</Badge> is optional: Invopop doesn't emit it in every case, and if your process needs it you can send it yourself as a `bill/status` with a line of key `issued`, like any other status (see the [201 example](#examples)).
+
+<Note>
+Don't rely on receiving a <Badge color="gray">201</Badge>. The regulatory confirmation is the PPF's acceptance of the F1 copy and the <Badge color="gray">200</Badge> status, which the [Forward document to PPF](/guides/fr-pa-invoicing#sending) step waits for.
+</Note>
 
 | Status | Document | Notes |
 |---|---|---|
-| <Badge color="gray">200</Badge><br /> <small>Déposée / Deposited</small> | — | Emitted when the invoice is deposited on the platform. |
-| <Badge color="gray">201</Badge><br /> <small>Émise par la plateforme / Issued by platform</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Emitted when the platform transmits the invoice. You may receive it on the buyer side — no action needed. |
+| <Badge color="gray">200</Badge><br /> <small>Déposée / Deposited</small> | — | Generated when the invoice is recorded on the platform, and transmitted to the PPF together with the F1 copy by the **Forward document to PPF** step. |
+| <Badge color="gray">201</Badge><br /> <small>Émise par la plateforme / Issued by platform</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Signals that the platform issued the invoice. You may send it yourself, or receive it on the buyer side — no action needed. |
 | <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Emitted when a platform rejects the invoice on validation. |
 
 ### Issued by the buyer
@@ -133,7 +137,7 @@ Start from the schema and let the document `type` plus the line `key` select the
 }
 ```
 
-Keep the same `supplier` and `customer` as on the invoice, whichever direction the event travels, and point the line's `doc` at the invoice's full number and issue date. The platform resolves the invoice by supplier SIREN + number + year and links the two in the console's **Related** tab.
+Keep the same `supplier` and `customer` as on the invoice, whichever direction the event travels, and point the line's `doc` at the invoice's full number and issue date. When it records the status, the platform resolves the invoice by supplier SIREN + number + year and writes the invoice's UUID into the line's `doc.uuid`. From then on the two are linked, both in the console's **Related** tab and through the API's [Find related entries](/api-ref/silo/entries/find-related) endpoint. Some statuses can be recorded even when no invoice matches; they're stored without the link.
 
 ```json bill/status focus={7-8,11}
 {
@@ -318,11 +322,11 @@ The supplier's <Badge color="yellow">209</Badge> Complétée uses the same struc
 
 ### Examples
 
-One example per code you build, each referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`). Every example pairs the **Minimal** hand-authored GOBL input with the **Built version** produced by `gobl build` — which adds the derived fields (the `fr-ctc-flow6-*` extensions, party roles, ISO scheme ids and endpoints). The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
+One example per code you build, including the optional <Badge color="gray">201</Badge>, each referencing the same invoice (`INV-2026-0042`, supplier SIREN `698680774`). Every example pairs the **Minimal** hand-authored GOBL input with the **Built version** produced by `gobl build` — which adds the derived fields (the `fr-ctc-flow6-*` extensions, party roles, ISO scheme ids and endpoints). The interesting detail is on the **dispute / partial / refusal** codes: their `reason` carries `faults` (the exact field, its actual vs expected value, and the XML path) plus an `action` telling the issuer what to do next. The plain acknowledgements (`201`–`205`) carry no reason — the code itself is the message.
 
 <AccordionGroup>
   <Accordion title="201 — Émise par la plateforme (Issued by platform)">
-    `bill.Status` · `type: response` · line `key: issued`. A plain acknowledgement — no reason or action.
+    `bill.Status` · `type: response` · line `key: issued`. Optional: send it only if your process needs it. A plain acknowledgement — no reason or action.
     <CodeGroup>
       <State201Min />
       <State201 />
@@ -425,6 +429,8 @@ Clicking the Invoice code looks up the exact invoice on the **E-Invoicing Flow 2
 </Note>
 
 Filter the table by **Owner SIREN**, **Invoice ID**, **Invoice code**, or **Status code**.
+
+Via the API, a recorded status carries the invoice's UUID in `lines[].doc.uuid`, including statuses received from another PA. To list every status recorded against an invoice, call [Find related entries](/api-ref/silo/entries/find-related) on the invoice's entry.
 
 ## FAQ
 
