@@ -83,7 +83,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
     Validates the party's name, NIT, and email, creates the supplier's company in Alegra, and publishes a public enablement portal link under the `registration-link` key in the entry's meta section.
   </Step>
   <Step title="Wait for DIAN enablement">
-    Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds. If the DIAN rejects the test set, the step fails and the rescue branch sets the entry to <Badge color="red">Error</Badge>; see [Failed enablement](#failed-enablement).
+    Pauses until the DIAN accepts the enablement test set the supplier submits from the portal. The step resumes automatically as soon as the DIAN responds. If the DIAN rejects the test set, the step fails and the workflow continues in its [error handling flow](/guides/workflows#error-handling); see [Failed enablement](#failed-enablement).
   </Step>
   <Step title="Set state → Registered">
     Sets the state of the silo entry to <Badge color="purple">Registered</Badge>.
@@ -91,7 +91,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 </Steps>
 
 <Tip>
-  To be notified of the outcome instead of polling, add a [Send Webhook](/guides/webhooks) step after **Wait for DIAN enablement** for the accepted case, and another in the rescue branch for failures. The rescue payload carries the job's `faults`, including the DIAN's rejection reason.
+  To be notified of the outcome instead of polling, add a [Send Webhook](/guides/webhooks) step after **Wait for DIAN enablement** for the accepted case, and another in the error handling flow for failures. The failure payload carries the job's `faults`, including the DIAN's rejection reason.
 </Tip>
 
 ## Register a supplier
@@ -186,11 +186,11 @@ For platforms that want to drive the enablement programmatically instead of shar
 
 ## Failed enablement
 
-When the DIAN rejects the test set, or the submission fails, the **Wait for DIAN enablement** step fails the registration job, the rescue branch sets the entry to <Badge color="red">Error</Badge>, and the enablement status becomes `failed`. The DIAN's reason isn't returned by the enablement endpoint; it's recorded in the [faults](/api-ref/transform/jobs/fetch-a-job#response-faults) of the registration job, under the `gov-co.wait.enablement` provider. Read it from any of:
+When the DIAN rejects the test set, or the submission fails, the **Wait for DIAN enablement** step fails, the enablement status becomes `failed`, and the registration job continues in the workflow's [error handling flow](/guides/workflows#error-handling). The DIAN's reason isn't returned by the enablement endpoint; it's recorded in the [faults](/api-ref/transform/jobs/fetch-a-job#response-faults) of the registration job, under the `gov-co.wait.enablement` provider. Read it from any of:
 
 - **The Console:** open the supplier entry and check its [job history](/console/workflow-history).
 - **The API:** [fetch the job](/api-ref/transform/jobs/fetch-a-job) and read its `faults` array. Prefer the job's faults over the `faults` field on the silo entry.
-- **A webhook:** with a [Send Webhook](/guides/webhooks) step in the rescue branch, the payload includes the same `faults`.
+- **A webhook:** with a [Send Webhook](/guides/webhooks) step in the error handling flow, the payload includes the same `faults`.
 
 The fault message carries the reasons given by the DIAN or the technology provider, when they return any. Reasons that quote a DIAN validation rule (such as `Regla: FAJ40`) are explained in section 8 of the DIAN's [technical annex](https://www.dian.gov.co/impuestos/factura-electronica/Documents/Anexo-Tecnico-Factura-Electronica-de-Venta-vr-1-9.pdf), and section 7.12 lists the test set status codes.
 
