@@ -51,12 +51,13 @@ paths:
             as the call that produced it.
           title: Cursor
           type: string
-      - description: The maximum number of entries to return in a single page of results, between 10 and 100.
+      - description: The maximum number of entries to return in a single page of results,
+          up to 100.
         in: query
         name: limit
         schema:
           description: The maximum number of entries to return in a single page of
-            results.
+            results, up to 100.
           example: 20
           title: Limit
           type: integer
@@ -95,10 +96,9 @@ paths:
       description: Add a new file to a silo entry without an explicit UUID. The file
         data can be provided inline as base64 encoded data, or omitted to create a
         placeholder. When data is not provided, you must provide sha256, size, and
-        mime fields, and the response will include a `url` field that can be used
-        to stream/upload the file contents directly via a PUT request to that URL.
-        For non-enrolled users, only the `format` and `attachment` categories are
-        allowed.
+        mime fields, then send the raw contents with a PUT to this file's `/data`
+        path. For non enrolled users, only the `format` and `attachment` categories
+        are allowed.
       parameters:
       - description: UUID of the silo entry.
         in: path
@@ -119,8 +119,10 @@ paths:
                   title: Category
                   type: string
                 data:
-                  description: Base64 encoded binary data. Optional - if not provided,
-                    sha256, size, and mime are required.
+                  deprecated: true
+                  description: 'Deprecated: provide sha256, size and mime instead,
+                    then PUT the raw contents to this file''s /data path. Sending
+                    data inline is limited to 5MB.'
                   format: byte
                   type: string
                 desc:
@@ -213,9 +215,8 @@ paths:
       description: Add a new file to a silo entry with a specific UUID. The file data
         can be provided inline as base64 encoded data, or omitted to create a placeholder.
         When data is not provided, you must provide sha256, size, and mime fields,
-        and the response will include a `url` field that can be used to stream/upload
-        the file contents directly via a PUT request to that URL. For non-enrolled
-        users, only the `format` and `attachment` categories are allowed.
+        then send the raw contents with a PUT to this file's `/data` path. For non
+        enrolled users, only the `format` and `attachment` categories are allowed.
       parameters:
       - description: UUID of file to create
         in: path
@@ -245,8 +246,10 @@ paths:
                   title: Category
                   type: string
                 data:
-                  description: Base64 encoded binary data. Optional - if not provided,
-                    sha256, size, and mime are required.
+                  deprecated: true
+                  description: 'Deprecated: provide sha256, size and mime instead,
+                    then PUT the raw contents to this file''s /data path. Sending
+                    data inline is limited to 5MB.'
                   format: byte
                   type: string
                 desc:
@@ -302,6 +305,46 @@ paths:
               required:
               - name
               type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloFile'
+          description: OK
+  /silo/v1/entries/{entry_id}/files/{id}/data:
+    put:
+      description: Upload a file's contents as a raw stream. Register the file first
+        with sha256, size and mime and no data, then PUT the bytes here. They are
+        checked against the registered sha256 and size before being stored, and a
+        mismatch is rejected. Files up to 100MB are accepted. This is the only way
+        to send files larger than 5MB.
+      parameters:
+      - description: UUID of the file whose data is being uploaded
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the file whose data is being uploaded
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: UUID of the silo entry.
+        in: path
+        name: entry_id
+        required: true
+        schema:
+          description: UUID of the silo entry.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: Entry ID
+          type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        description: Raw file contents.
       responses:
         "200":
           content:
@@ -518,6 +561,171 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
           description: OK
+  /silo/v1/entries/{id}/export:
+    get:
+      description: |-
+        Convert a silo entry's GOBL envelope into an external format, such as UBL or CII,
+        optionally embedding the entry's files. Nothing is stored: use the "silo.export"
+        workflow action to keep the result as one of the entry's files. The response is the
+        converted document as a raw download, with the key of the format used in the
+        "GOBL-Convert-Format" header.
+      parameters:
+      - description: 'Key of the format to export to, as listed by /gobl/convert/formats.
+          Repeat the parameter, or separate keys with commas, to offer several in
+          order of preference: the first that accepts the document is used.'
+        in: query
+        name: format
+        required: true
+        schema:
+          description: 'Key of the format to export to, as listed by /gobl/convert/formats.
+            Repeat the parameter, or separate keys with commas, to offer several in
+            order of preference: the first that accepts the document is used.'
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Format
+          type: array
+      - description: Category of the entry's files to embed in the exported document.
+          None are embedded when omitted.
+        in: query
+        name: attachments
+        schema:
+          description: Category of the entry's files to embed in the exported document.
+            None are embedded when omitted.
+          enum:
+          - all
+          - format
+          - attachment
+          title: Attachments
+          type: string
+      - description: Only embed files of these MIME types, any when omitted.
+        in: query
+        name: mime
+        schema:
+          description: Only embed files of these MIME types, any when omitted.
+          example:
+          - application/pdf
+          items:
+            type: string
+          title: MIME
+          type: array
+      - description: UUID of the silo entry to export.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the silo entry to export.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: The exported document. Content type and disposition are set
+            according to the format.
+  /silo/v1/entries/{id}/import:
+    put:
+      description: |-
+        Create a new silo entry from a document in an external format, such as UBL or CII,
+        sent as the raw request body; its format is detected automatically. An existing entry
+        is never updated. The original document is kept as one of the entry's files with the
+        "format" category, and any files embedded in it with the "attachment" category.
+        Requests up to 100MB are accepted.
+      parameters:
+      - description: 'Key used to identify the entry idempotently within a workspace:
+          repeating an import with the same key provides the entry already created.'
+        in: query
+        name: key
+        schema:
+          description: 'Key used to identify the entry idempotently within a workspace:
+            repeating an import with the same key provides the entry already created.'
+          example: invoice-101
+          title: Key
+          type: string
+      - description: In which folder the entry should be associated, leave empty to
+          use the automatic rules.
+        in: query
+        name: folder
+        schema:
+          description: In which folder the entry should be associated, leave empty
+            to use the automatic rules.
+          title: Folder
+          type: string
+      - description: Keys of the formats to limit detection to. When omitted, the
+          format is detected from the document.
+        in: query
+        name: format
+        schema:
+          description: Keys of the formats to limit detection to. When omitted, the
+            format is detected from the document.
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Format
+          type: array
+      - description: File name of the original document, kept with the entry's file.
+        in: query
+        name: name
+        schema:
+          description: File name of the original document, kept with the entry's file.
+          example: invoice.xml
+          title: Name
+          type: string
+      - description: When true, the envelope's contents are allowed to be invalid.
+        in: query
+        name: allow_invalid
+        schema:
+          description: When true, the envelope's contents are allowed to be invalid.
+          example: true
+          title: Allow Invalid
+          type: boolean
+      - description: When true, the GOBL envelope will be signed automatically.
+        in: query
+        name: sign
+        schema:
+          description: When true, the GOBL envelope will be signed automatically.
+          example: false
+          title: Sign
+          type: boolean
+      - description: When true, the entry's files are stored as private, and attachments
+          are not linked from the document.
+        in: query
+        name: private
+        schema:
+          description: When true, the entry's files are stored as private, and attachments
+            are not linked from the document.
+          example: false
+          title: Private
+          type: boolean
+      - description: UUID of the silo entry to create.
+        in: path
+        name: id
+        required: true
+        schema:
+          description: UUID of the silo entry to create.
+          example: 347c5b04-cde2-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        description: Raw document to import.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntry'
+          description: OK
   /silo/v1/entries/{id}/related:
     get:
       description: Find silo entries whose document mentions the given entry's UUID.
@@ -616,6 +824,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloEntryData'
           description: OK
+  /silo/v1/entries/import:
+    post:
+      description: |-
+        Create a new silo entry from a document in an external format, such as UBL or CII,
+        sent as the raw request body; its format is detected automatically. An existing entry
+        is never updated. The original document is kept as one of the entry's files with the
+        "format" category, and any files embedded in it with the "attachment" category.
+        Requests up to 100MB are accepted.
+      parameters:
+      - description: 'Key used to identify the entry idempotently within a workspace:
+          repeating an import with the same key provides the entry already created.'
+        in: query
+        name: key
+        schema:
+          description: 'Key used to identify the entry idempotently within a workspace:
+            repeating an import with the same key provides the entry already created.'
+          example: invoice-101
+          title: Key
+          type: string
+      - description: In which folder the entry should be associated, leave empty to
+          use the automatic rules.
+        in: query
+        name: folder
+        schema:
+          description: In which folder the entry should be associated, leave empty
+            to use the automatic rules.
+          title: Folder
+          type: string
+      - description: Keys of the formats to limit detection to. When omitted, the
+          format is detected from the document.
+        in: query
+        name: format
+        schema:
+          description: Keys of the formats to limit detection to. When omitted, the
+            format is detected from the document.
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Format
+          type: array
+      - description: File name of the original document, kept with the entry's file.
+        in: query
+        name: name
+        schema:
+          description: File name of the original document, kept with the entry's file.
+          example: invoice.xml
+          title: Name
+          type: string
+      - description: When true, the envelope's contents are allowed to be invalid.
+        in: query
+        name: allow_invalid
+        schema:
+          description: When true, the envelope's contents are allowed to be invalid.
+          example: true
+          title: Allow Invalid
+          type: boolean
+      - description: When true, the GOBL envelope will be signed automatically.
+        in: query
+        name: sign
+        schema:
+          description: When true, the GOBL envelope will be signed automatically.
+          example: false
+          title: Sign
+          type: boolean
+      - description: When true, the entry's files are stored as private, and attachments
+          are not linked from the document.
+        in: query
+        name: private
+        schema:
+          description: When true, the entry's files are stored as private, and attachments
+            are not linked from the document.
+          example: false
+          title: Private
+          type: boolean
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        description: Raw document to import.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntry'
+          description: OK
   /silo/v1/entries/key/{key}:
     get:
       description: Fetch an existing silo entry by its key.
@@ -635,6 +932,381 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SiloEntry'
+          description: OK
+  /silo/v1/entries/query:
+    get:
+      description: |
+        Search the documents of one GOBL type using a filter expression.
+
+        Unlike the other entry endpoints, this reads an indexed copy of your
+        documents rather than the documents themselves, which is what makes
+        filtering and sorting on document fields possible. Two consequences are
+        worth knowing:
+
+        - Results are eventually consistent. A document created a moment ago may
+          not appear yet. Each response carries a "watermark" giving the time of
+          the most recent change reflected in it.
+        - The fields you may filter and sort on depend on the document type. They
+          are listed in full under "Fields" below.
+
+        Set "schema" to the document type to search: `bill/delivery`, `bill/invoice`, `bill/order`, `bill/payment`, `bill/status`, `note/message`, `org/item`, `org/party`.
+
+        Filter terms are combined with AND. OR is accepted only between values of
+        a single field, which is how a set membership test is written. For
+        free-text searching across documents, use the search endpoint instead.
+
+        "AND" and "OR" are keywords and must be written in capitals; "and", "&&"
+        and "||" are not accepted. The whole filter must be URL-encoded, because
+        an unencoded "&" ends the parameter and the rest of the filter would be
+        silently dropped — a request carrying the leftovers is rejected rather
+        than answered with a wider result set than was asked for.
+
+        For example, invoices for one customer in the sales folder. Note that
+        curl's -G with --data-urlencode does the encoding for you:
+
+            curl -G https://api.invopop.com/silo/v1/entries/query -H "Authorization: Bearer $TOKEN" --data-urlencode 'schema=bill/invoice' --data-urlencode 'filter=customer_tax_code = "X3157928M" AND folder = "sales"'
+
+        A tax code is stored without its country prefix, which is held separately
+        as supplier_country or customer_country. Filter on "X3157928M", not on
+        "ESX3157928M".
+
+        Page through results by passing the previous response's "next_cursor" as
+        "cursor". A cursor is only valid for the same schema, filter and
+        order_by, and only in the workspace that produced it.
+
+        ## Fields
+
+        Fields available to `filter`, `order_by` and `fields`, for each of the 8 document types.
+
+        **Indexed** means the field has a database index behind it. Several of those indexes also lead with `folder`, so a filter that names only the indexed field cannot always use one — if a response comes back with a note about index coverage, adding `folder` to the filter will usually resolve it. Filtering on a field with no index at all is still allowed, but runs under a shorter time limit.
+
+        ### Common to every document type
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `id` | uuid | `=` `!=` `in` | yes | yes |
+        | `rev` | string | *not filterable* | — | — |
+        | `rev_num` | int | *not filterable* | — | — |
+        | `folder` | key | `=` `!=` `in` | yes | yes |
+        | `state` | key | `=` `!=` `in` | yes | yes |
+        | `state_at` | timestamp | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `doc_schema` | string | `=` `!=` `in` | — | — |
+        | `env_schema` | string | `=` `!=` `in` | — | — |
+        | `entry_key` | string | `=` `!=` `in` | — | — |
+        | `version` | string | `=` `!=` `in` | — | — |
+        | `digest_alg` | string | *not filterable* | — | — |
+        | `digest_val` | string | `=` `!=` `in` `starts_with` | — | — |
+        | `tags` | strings | `:` | — | — |
+        | `signed` | bool | `=` `!=` | yes | — |
+        | `invalid` | bool | `=` `!=` | yes | — |
+        | `relations_hash` | int | *not filterable* | — | — |
+        | `files` | json | *not filterable* | — | — |
+        | `faults` | json | *not filterable* | — | — |
+        | `snippet` | json | *not filterable* | — | — |
+        | `created_at` | timestamp | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `updated_at` | timestamp | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `synced_at` | timestamp | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `doc_uuid` | uuid | `=` `!=` `in` | — | — |
+        | `related` | uuid | `:` | — | — |
+        | `related.self` | uuid | `:` | — | — |
+
+        > `folder` and `state` accept values defined by your own workspace: the folders you have created, and any custom states you have added to the built-in ones. Those values are workspace data rather than part of this schema, so they are not listed here.
+
+        ### `bill/delivery`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `type` | key | `=` `!=` `in` | yes | — |
+        | `series` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `currency` | string | `=` `!=` `in` | yes | — |
+        | `issue_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `despatch_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `order_code` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `supplier_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `supplier_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_country` | string | `=` `!=` `in` | yes | — |
+        | `supplier_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `customer_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `customer_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `customer_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `customer_country` | string | `=` `!=` `in` | yes | — |
+        | `customer_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `total` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `total_with_tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `related.supplier` | uuid | `:` | — | — |
+        | `related.customer` | uuid | `:` | — | — |
+        | `related.lines` | uuid | `:` | — | — |
+        | `related.lines.item` | uuid | `:` | — | — |
+
+        ### `bill/invoice`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `type` | key | `=` `!=` `in` | yes | — |
+        | `series` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `currency` | string | `=` `!=` `in` | yes | — |
+        | `issue_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `order_code` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `supplier_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `supplier_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_country` | string | `=` `!=` `in` | yes | — |
+        | `supplier_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `customer_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `customer_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `customer_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `customer_country` | string | `=` `!=` `in` | yes | — |
+        | `customer_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `total` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `total_with_tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `payable` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `preceding_series` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `preceding_code` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `preceding_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `related.supplier` | uuid | `:` | — | — |
+        | `related.customer` | uuid | `:` | — | — |
+        | `related.lines` | uuid | `:` | — | — |
+        | `related.lines.item` | uuid | `:` | — | — |
+        | `related.preceding` | uuid | `:` | — | — |
+
+        ### `bill/order`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `type` | key | `=` `!=` `in` | yes | — |
+        | `series` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `currency` | string | `=` `!=` `in` | yes | — |
+        | `issue_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `supplier_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `supplier_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `supplier_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_country` | string | `=` `!=` `in` | yes | — |
+        | `supplier_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `customer_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `customer_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `customer_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `customer_country` | string | `=` `!=` `in` | yes | — |
+        | `customer_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `total` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `total_with_tax` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `related.supplier` | uuid | `:` | — | — |
+        | `related.customer` | uuid | `:` | — | — |
+        | `related.lines` | uuid | `:` | — | — |
+        | `related.lines.item` | uuid | `:` | — | — |
+
+        ### `bill/payment`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `type` | key | `=` `!=` `in` | yes | — |
+        | `series` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `method_keys` | strings | `:` | — | — |
+        | `currency` | string | `=` `!=` `in` | yes | — |
+        | `issue_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `value_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `supplier_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `supplier_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `supplier_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_country` | string | `=` `!=` `in` | yes | — |
+        | `supplier_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `customer_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `customer_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `customer_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `customer_country` | string | `=` `!=` `in` | yes | — |
+        | `customer_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `total` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `related.supplier` | uuid | `:` | — | — |
+        | `related.customer` | uuid | `:` | — | — |
+
+        ### `bill/status`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `type` | key | `=` `!=` `in` | yes | — |
+        | `series` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `issue_date` | date | `=` `!=` `<` `<=` `>` `>=` `in` | yes | yes |
+        | `issue_time` | time | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+        | `supplier_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `supplier_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `supplier_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `supplier_country` | string | `=` `!=` `in` | yes | — |
+        | `supplier_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `customer_uuid` | uuid | `=` `!=` `in` | — | yes |
+        | `customer_name` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `customer_alias` | string | `=` `!=` `in` `starts_with` `contains` | — | — |
+        | `customer_country` | string | `=` `!=` `in` | yes | — |
+        | `customer_tax_code` | string | `=` `!=` `in` `starts_with` `contains` | — | yes |
+        | `related.supplier` | uuid | `:` | — | — |
+        | `related.customer` | uuid | `:` | — | — |
+
+        ### `note/message`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `title` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+
+        ### `org/item`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `name` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `currency` | string | `=` `!=` `in` | yes | — |
+        | `price` | decimal | `=` `!=` `<` `<=` `>` `>=` `in` | yes | — |
+
+        ### `org/party`
+
+        Default order: `created_at desc`.
+
+        In addition to the common fields above:
+
+        | Field | Type | Operators | Sortable | Indexed |
+        | --- | --- | --- | --- | --- |
+        | `name` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+        | `alias` | string | `=` `!=` `in` `starts_with` `contains` | yes | — |
+        | `country` | string | `=` `!=` `in` | yes | — |
+        | `tax_code` | string | `=` `!=` `in` `starts_with` `contains` | yes | yes |
+      parameters:
+      - description: GOBL document type to search. See the field reference in this
+          endpoint's description for the fields available on each type.
+        in: query
+        name: schema
+        required: true
+        schema:
+          $ref: '#/components/schemas/SiloSchemaName'
+      - description: Filter expression. Combine terms with AND; use OR only between
+          values of a single field. See this endpoint's field reference for the fields
+          available and the operators each accepts.
+        in: query
+        name: filter
+        schema:
+          description: Filter expression. Combine terms with AND; use OR only between
+            values of a single field. See this endpoint's field reference for the
+            fields available and the operators each accepts.
+          example: state = "sent" AND issue_date > "2026-01-01"
+          title: Filter
+          type: string
+      - description: Sort order, as a field name optionally followed by asc or desc.
+          Defaults to the schema's own order.
+        in: query
+        name: order_by
+        schema:
+          description: Sort order, as a field name optionally followed by asc or desc.
+            Defaults to the schema's own order.
+          example: issue_date desc
+          title: Order By
+          type: string
+      - description: Maximum number of entries in a page of results, up to 100.
+        in: query
+        name: limit
+        schema:
+          description: Maximum number of entries in a page of results, up to 100.
+          example: 20
+          title: Limit
+          type: integer
+      - description: Position marker from a previous result's next_cursor. Only valid
+          for the same schema, filter and order_by.
+        in: query
+        name: cursor
+        schema:
+          description: Position marker from a previous result's next_cursor. Only
+            valid for the same schema, filter and order_by.
+          title: Cursor
+          type: string
+      - description: Comma-separated list of fields to populate on each entry. Fewer
+          fields means less work for the database, not merely a smaller response.
+          Defaults to the standard set.
+        in: query
+        name: fields
+        schema:
+          description: Comma-separated list of fields to populate on each entry. Fewer
+            fields means less work for the database, not merely a smaller response.
+            Defaults to the standard set.
+          example: id,code,state,issue_date
+          title: Fields
+          type: string
+      - description: When true, the response includes the number of matching entries.
+          This costs an additional query, so it is off by default.
+        in: query
+        name: count
+        schema:
+          description: When true, the response includes the number of matching entries.
+            This costs an additional query, so it is off by default.
+          title: Count
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloQueryEntryCollection'
+          description: OK
+  /silo/v1/entries/query/count:
+    get:
+      description: |-
+        Count the documents matching a filter, without returning them.
+
+        Counting is bounded: past an internal limit the response reports
+        "count_capped", meaning the real total is at least the number given. A
+        count that cannot be produced in time reports "count_unavailable"
+        instead of failing.
+      parameters:
+      - description: GOBL document type to count.
+        in: query
+        name: schema
+        required: true
+        schema:
+          $ref: '#/components/schemas/SiloSchemaName'
+      - description: Filter expression, as used when listing entries.
+        in: query
+        name: filter
+        schema:
+          description: Filter expression, as used when listing entries.
+          example: state = "sent"
+          title: Filter
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloEntryCount'
           description: OK
   /silo/v1/entries/related:
     get:
@@ -711,6 +1383,139 @@ paths:
               schema:
                 $ref: '#/components/schemas/SiloGOBL'
           description: OK
+  /silo/v1/gobl/convert/export:
+    post:
+      description: |-
+        Convert a GOBL Envelope or Object into an external format without persisting anything.
+        Send a JSON object with the GOBL document in "data", as with the other GOBL operations,
+        along with any attachments to embed, base64 encoded. JSON requests are limited to 8MB.
+        Larger documents and attachments may be sent instead as a multipart form, which is
+        streamed and accepted up to 100MB: its first part is named "data", followed by one
+        "attachment" file part per file. Each attachment part may set the standard "Content-ID"
+        and "Content-Description" MIME headers to provide the ID that identifies it in the
+        exported document, and its description; text that is not plain ASCII may use RFC 2047
+        encoded-words. Formats may be given in the query, or in a JSON request's "formats".
+        The response is the converted document as a raw download, with the key of the format
+        used in the "GOBL-Convert-Format" header.
+      parameters:
+      - description: 'Key of the format to export to, as listed by /gobl/convert/formats.
+          Repeat the parameter, or separate keys with commas, to offer several in
+          order of preference: the first that accepts the document is used. Required
+          unless given as formats in a JSON request.'
+        in: query
+        name: format
+        schema:
+          description: 'Key of the format to export to, as listed by /gobl/convert/formats.
+            Repeat the parameter, or separate keys with commas, to offer several in
+            order of preference: the first that accepts the document is used. Required
+            unless given as formats in a JSON request.'
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Format
+          type: array
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiloExportGOBL'
+          multipart/form-data:
+            schema:
+              properties:
+                attachment:
+                  description: Files to embed in the exported document, each with
+                    a file name, and optionally Content-ID and Content-Description
+                    part headers.
+                  items:
+                    $ref: '#/components/schemas/MultipartFileHeader'
+                  type: array
+                data:
+                  $ref: '#/components/schemas/MultipartFileHeader'
+              required:
+              - data
+              type: object
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: The exported document. Content type and disposition are set
+            according to the format.
+  /silo/v1/gobl/convert/formats:
+    get:
+      description: List the external formats, such as UBL or CII, that GOBL documents
+        can be exported to or imported from.
+      parameters:
+      - description: Only formats that apply in the country.
+        in: query
+        name: country
+        schema:
+          description: Only formats that apply in the country.
+          example: DE
+          title: Country
+          type: string
+      - description: Only formats that convert the GOBL schema.
+        in: query
+        name: schema
+        schema:
+          description: Only formats that convert the GOBL schema.
+          example: https://gobl.org/draft-0/bill/invoice
+          title: Schema
+          type: string
+      - description: Only formats that support the conversion direction.
+        in: query
+        name: direction
+        schema:
+          description: Only formats that support the conversion direction.
+          enum:
+          - import
+          - export
+          title: Direction
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloFormatCollection'
+          description: OK
+  /silo/v1/gobl/convert/import:
+    post:
+      description: Convert a document in an external format, such as UBL or CII, into
+        a GOBL Envelope without persisting anything. Send the raw document as the
+        request body; its format is detected automatically. Any files embedded in
+        the document are returned as attachments. Requests up to 100MB are accepted.
+      parameters:
+      - description: Keys of the formats to limit detection to. When omitted, the
+          format is detected from the document.
+        in: query
+        name: format
+        schema:
+          description: Keys of the formats to limit detection to. When omitted, the
+            format is detected from the document.
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Format
+          type: array
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        description: Raw document to import.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiloImportedGOBL'
+          description: OK
   /silo/v1/gobl/correct:
     post:
       description: Correct or determine the correction options for a GOBL Envelope
@@ -763,11 +1568,13 @@ paths:
           example: invoices
           title: Folder
           type: string
-      - description: Maximum number of entries to show in a page of results, between 10 and 100.
+      - description: Maximum number of entries to show in a page of results, up to
+          100.
         in: query
         name: limit
         schema:
-          description: Maximum number of entries to show in a page of results, between 10 and 100.
+          description: Maximum number of entries to show in a page of results, up
+            to 100.
           example: 20
           title: Limit
           type: integer
@@ -857,6 +1664,13 @@ components:
         val:
           type: string
       type: object
+    MultipartFileHeader:
+      format: binary
+      type: string
+    SiloBase64:
+      description: Base64 encoded binary data.
+      format: byte
+      type: string
     SiloBuildGOBL:
       properties:
         data:
@@ -869,6 +1683,34 @@ components:
             to the standalone object.
           title: Envelop
           type: boolean
+      type: object
+    SiloConvertAttachment:
+      properties:
+        data:
+          $ref: '#/components/schemas/SiloBase64'
+        desc:
+          description: Description of the file.
+          title: Description
+          type: string
+        id:
+          description: Identifies the attachment inside the document.
+          title: ID
+          type: string
+        mime:
+          description: MIME type of the file.
+          example: application/pdf
+          title: MIME
+          type: string
+        name:
+          description: Name of the file.
+          example: invoice.pdf
+          title: Name
+          type: string
+        size:
+          description: Size of the file in bytes.
+          example: 12345
+          title: Size
+          type: integer
       type: object
     SiloCorrectGOBL:
       properties:
@@ -1001,7 +1843,8 @@ components:
           title: Created At
           type: string
         data:
-          description: JSON envelope contents. Included when fetching, creating or updating an entry and in entry lists.
+          description: JSON envelope contents. Included when fetching, creating or
+            updating an entry and in entry lists.
           title: Data
           type: object
         digest:
@@ -1130,6 +1973,32 @@ components:
           title: Next Cursor
           type: string
       type: object
+    SiloEntryCount:
+      properties:
+        count:
+          description: Number of matching entries.
+          example: 42
+          title: Count
+          type: integer
+        count_capped:
+          description: When true, counting stopped at an internal limit and the real
+            total is at least count.
+          title: Count Capped
+          type: boolean
+        count_unavailable:
+          description: When true, the count could not be produced in time.
+          title: Count Unavailable
+          type: boolean
+        filter:
+          description: Filter expression that was applied.
+          title: Filter
+          type: string
+        schema:
+          description: Document type that was counted.
+          example: bill/invoice
+          title: Schema
+          type: string
+      type: object
     SiloEntryData:
       properties:
         data:
@@ -1173,6 +2042,59 @@ components:
           example: FT-101
           title: Query
           type: string
+      type: object
+    SiloExportAttachment:
+      properties:
+        data:
+          $ref: '#/components/schemas/SiloBase64'
+        desc:
+          description: Description of the file.
+          example: Payment receipt
+          title: Description
+          type: string
+        id:
+          description: Identifies the attachment in the exported document, such as
+            the reference of a UBL or CII additional document.
+          example: REC-1
+          title: ID
+          type: string
+        mime:
+          description: MIME type of the file, detected from the data when omitted.
+          example: application/pdf
+          title: MIME
+          type: string
+        name:
+          description: Name of the file.
+          example: receipt.pdf
+          title: Name
+          type: string
+      required:
+      - name
+      - data
+      type: object
+    SiloExportGOBL:
+      properties:
+        attachments:
+          description: Files to embed in the exported document.
+          items:
+            $ref: '#/components/schemas/SiloExportAttachment'
+          title: Attachments
+          type: array
+        data:
+          description: GOBL Envelope or Object to export.
+          title: Data
+          type: object
+        formats:
+          description: 'Keys of the formats to export to, in order of preference,
+            after any given in the query: the first that accepts the document is used.'
+          example:
+          - ubl+peppol+bis-v3
+          items:
+            type: string
+          title: Formats
+          type: array
+      required:
+      - data
       type: object
     SiloFault:
       properties:
@@ -1303,6 +2225,68 @@ components:
           title: Size
           type: integer
       type: object
+    SiloFormat:
+      properties:
+        attachments:
+          description: True when exports can embed attachments.
+          title: Attachments
+          type: boolean
+        countries:
+          description: Countries the format applies in; empty for any.
+          items:
+            type: string
+          title: Countries
+          type: array
+        description:
+          additionalProperties:
+            type: string
+          description: Description of the format, by language.
+          title: Description
+          type: object
+        export_schemas:
+          description: GOBL schemas that can be exported to the format.
+          items:
+            type: string
+          title: Export Schemas
+          type: array
+        import_schemas:
+          description: GOBL schemas documents in the format can be imported into.
+          items:
+            type: string
+          title: Import Schemas
+          type: array
+        key:
+          description: Identifies the format in export and import requests.
+          example: ubl+peppol+bis-v3
+          title: Key
+          type: string
+        mime:
+          description: MIME type of documents in the format.
+          example: application/xml
+          title: MIME
+          type: string
+        name:
+          additionalProperties:
+            type: string
+          description: Name of the format, by language.
+          title: Name
+          type: object
+        syntax:
+          description: Underlying document syntax.
+          example: ubl
+          title: Syntax
+          type: string
+      type: object
+    SiloFormatCollection:
+      properties:
+        list:
+          description: Conversion formats.
+          items:
+            $ref: '#/components/schemas/SiloFormat'
+          nullable: true
+          title: List
+          type: array
+      type: object
     SiloGOBL:
       properties:
         data:
@@ -1310,6 +2294,25 @@ components:
           nullable: true
           title: Data
           type: object
+      type: object
+    SiloImportedGOBL:
+      properties:
+        attachments:
+          description: Files embedded in the document.
+          items:
+            $ref: '#/components/schemas/SiloConvertAttachment'
+          title: Attachments
+          type: array
+        data:
+          description: GOBL Envelope built from the document.
+          nullable: true
+          title: Data
+          type: object
+        format:
+          description: Key of the format detected.
+          example: ubl+peppol+bis-v3
+          title: Format
+          type: string
       type: object
     SiloMeta:
       properties:
@@ -1393,6 +2396,82 @@ components:
           title: Value
           type: object
       type: object
+    SiloQueryEntryCollection:
+      properties:
+        count:
+          description: Number of matching entries, when count was requested.
+          example: 42
+          title: Count
+          type: integer
+        count_capped:
+          description: When true, counting stopped at an internal limit and the real
+            total is at least count.
+          title: Count Capped
+          type: boolean
+        count_unavailable:
+          description: When true, the count could not be produced in time. The entries
+            in this page are still valid.
+          title: Count Unavailable
+          type: boolean
+        cursor:
+          description: Cursor that produced this page, when one was given.
+          title: Cursor
+          type: string
+        filter:
+          description: Filter expression that was applied.
+          title: Filter
+          type: string
+        limit:
+          description: Maximum number of entries in this page of results.
+          example: 20
+          title: Limit
+          type: integer
+        list:
+          description: Array of matching entries.
+          items:
+            $ref: '#/components/schemas/SiloEntry'
+          nullable: true
+          title: List
+          type: array
+        next_cursor:
+          description: Cursor for the next page. Absent on the last page.
+          title: Next Cursor
+          type: string
+        notes:
+          description: Non-fatal advisories about the query, such as a filter that
+            no index covers.
+          items:
+            type: string
+          title: Notes
+          type: array
+        order_by:
+          description: Sort order that was applied.
+          title: Order By
+          type: string
+        schema:
+          description: Document type that was searched.
+          example: bill/invoice
+          title: Schema
+          type: string
+        watermark:
+          description: Timestamp of the most recent change known to be reflected in
+            these results. Results are eventually consistent, so a recently created
+            entry may not appear until the watermark passes its creation time.
+          example: "2026-01-01T00:00:00.000Z"
+          title: Watermark
+          type: string
+      type: object
+    SiloSchemaName:
+      enum:
+      - bill/delivery
+      - bill/invoice
+      - bill/order
+      - bill/payment
+      - bill/status
+      - note/message
+      - org/item
+      - org/party
+      type: string
     SiloSignGOBL:
       properties:
         data:

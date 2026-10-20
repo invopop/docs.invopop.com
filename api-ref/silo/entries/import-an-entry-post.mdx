@@ -1,0 +1,21 @@
+---
+title: "Import an entry"
+sidebarTitle: "Import entry (no ID)"
+tag: "NEW"
+openapi: "POST /silo/v1/entries/import"
+---
+
+Create a new silo entry from a document in an external format, such as a UBL or CII invoice. Send the raw document as the request body; its format is detected automatically. An existing entry is never updated.
+
+The original document is kept as one of the new entry's files, with the `format` category, and any files embedded in it, such as a PDF copy of the invoice, are kept with the `attachment` category. Set `private` to keep the files private and leave them unlinked from the GOBL document.
+
+Options that would go in the body when [creating an entry](/api-ref/silo/entries/create-an-entry-post) go in the query instead, as the body is the document. Use `key` to make imports idempotent: repeating an import with the same key returns the entry already created.
+
+```bash
+curl -X POST "https://api.invopop.com/silo/v1/entries/import?key=supplier-inv-101&name=invoice.xml" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -H "Content-Type: application/xml" \
+  --data-binary @invoice.xml
+```
+
+To convert a document without storing anything, use [import a format to GOBL](/api-ref/silo/gobl/convert-import).
