@@ -45,7 +45,7 @@ The `fr-ctc-flow6-v1` addon maps each document to its CDV `ProcessConditionCode`
 
 ### Issued by the platform
 
-Invopop emits <Badge color="gray">200</Badge> and <Badge color="gray">213</Badge> automatically as the Plateforme Agréée — you never build or send these. <Badge color="gray">201</Badge> is optional: Invopop doesn't emit it in every case, and if your process needs it you can send it yourself as a `bill/status` with a line of key `issued`, like any other status (see the [201 example](#examples)).
+Invopop automatically emits <Badge color="gray">200</Badge> on the invoices you send and <Badge color="gray">213</Badge> on the invoices your parties receive, automatically, as the Plateforme Agréée — you never build or send these. <Badge color="gray">201</Badge> is optional: Invopop doesn't emit it in every case, and if your process needs it you can send it yourself as a `bill/status` with a line of key `issued`, like any other status (see the [201 example](#examples)).
 
 <Note>
 Don't rely on receiving a <Badge color="gray">201</Badge>. The regulatory confirmation is the PPF's acceptance of the F1 copy and the <Badge color="gray">200</Badge> status, which the [Forward document to PPF](/guides/fr-pa-invoicing#sending) step waits for.
@@ -55,7 +55,13 @@ Don't rely on receiving a <Badge color="gray">201</Badge>. The regulatory confir
 |---|---|---|
 | <Badge color="gray">200</Badge><br /> <small>Déposée / Deposited</small> | — | Generated when the invoice is recorded on the platform, and transmitted to the PPF together with the F1 copy by the **Forward document to PPF** step. |
 | <Badge color="gray">201</Badge><br /> <small>Émise par la plateforme / Issued by platform</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Signals that the platform issued the invoice. You may send it yourself, or receive it on the buyer side — no action needed. |
-| <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Emitted when a platform rejects the invoice on validation. |
+| <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Raised by a platform that rejects an invoice it received. Forwarded to the PPF. See below for where it comes from. |
+
+A <Badge color="gray">213</Badge> depends on which side of the invoice you are on:
+
+* **Invoices your parties receive**: Invopop raises it when an incoming invoice fails its controls (see [Receiving](/guides/fr-pa-invoicing#receiving)).
+* **Invoices you send**: the buyer's platform may raise one, and it arrives through your receive workflow like any other status. The PPF also raises one when it rejects the deposit, for example as a duplicate; the **Forward document to PPF** step then fails with the PPF's reasons in the job's [faults](/api-ref/transform/jobs/fetch-a-job#response-faults).
+* **Invoices that fail Invopop's checks before sending**: there is no 213. The send job fails, with the reasons in its faults.
 
 ### Issued by the buyer
 
@@ -111,7 +117,7 @@ flowchart LR
 
 There is no dedicated status workflow. The invoicing workflow will generate the appropriate format for each type (CDAR) and report to the tax authority when required.
 
-If you have installed the [workflows from the invoicing guide](/guides/fr-pa-invoicing#workflows), then you're ready to generate status lifecycle events.
+If you have installed the [workflows from the invoicing guide](/guides/fr-pa-invoicing#workflows), then you're ready to generate status lifecycle events. To receive the statuses your counterparties send, the Peppol app's **Incoming Workflow** must point at the receive workflow (see [Receiving](/guides/fr-pa-invoicing#receiving)).
 
 ## Building a status
 
@@ -420,7 +426,7 @@ The France dashboard's **E-Invoicing Flow 6** tab lists every lifecycle status s
 
 Each row shows the referenced Invoice code and Invoice year, the CDAR Code (for example <Badge color="green">205</Badge> Approved), the Silo entry that holds the status document, the Owner SIREN, the invoice's Supplier SIREN, the Role (Sender when you issued the status, Receiver when it arrived from the counterparty's PA), the PPF status of the mandatory forward (same vocabulary as the [invoicing guide](/guides/fr-pa-invoicing#reading-submitted-invoices)), the Issue date, and the Invoice ID this status was recorded against. 
 
-The PPF status only applies to the [mandatory status codes](#status-codes) — <Badge color="gray">200</Badge> Déposée, <Badge color="red">210</Badge> Refusée, and <Badge color="green">212</Badge> Encaissée, the only ones forwarded to the PPF. All other codes are exchanged between PAs over Peppol only, so their PPF status stays at <Badge color="gray">Ready</Badge>.
+The PPF status only applies to the [mandatory status codes](#status-codes) — <Badge color="gray">200</Badge> Déposée, <Badge color="red">210</Badge> Refusée, <Badge color="green">212</Badge> Encaissée, and <Badge color="gray">213</Badge> Rejetée, the only ones forwarded to the PPF. All other codes are exchanged between PAs over Peppol only, so their PPF status stays at <Badge color="gray">Ready</Badge>.
 
 Statuses recorded against a [VAT-exempt invoice](/guides/fr-pa-invoicing#vat-exempt-invoices) show <Badge color="blue">Exempt</Badge> and are never forwarded. That invoice was never deposited, so the PPF has nothing to record a status against.
 
