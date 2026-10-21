@@ -45,7 +45,7 @@ The `fr-ctc-flow6-v1` addon maps each document to its CDV `ProcessConditionCode`
 
 ### Issued by the platform
 
-Invopop emits <Badge color="gray">200</Badge> and <Badge color="gray">213</Badge> automatically as the Plateforme Agréée — you never build or send these. <Badge color="gray">201</Badge> is optional: Invopop doesn't emit it in every case, and if your process needs it you can send it yourself as a `bill/status` with a line of key `issued`, like any other status (see the [201 example](#examples)).
+Invopop emits <Badge color="gray">200</Badge> on the invoices you send and <Badge color="gray">213</Badge> on the invoices your parties receive, automatically, as the Plateforme Agréée — you never build or send these. <Badge color="gray">201</Badge> is optional: Invopop doesn't emit it in every case, and if your process needs it you can send it yourself as a `bill/status` with a line of key `issued`, like any other status (see the [201 example](#examples)).
 
 <Note>
 Don't rely on receiving a <Badge color="gray">201</Badge>. The regulatory confirmation is the PPF's acceptance of the F1 copy and the <Badge color="gray">200</Badge> status, which the [Forward document to PPF](/guides/fr-pa-invoicing#sending) step waits for.
@@ -55,7 +55,7 @@ Don't rely on receiving a <Badge color="gray">201</Badge>. The regulatory confir
 |---|---|---|
 | <Badge color="gray">200</Badge><br /> <small>Déposée / Deposited</small> | — | Generated when the invoice is recorded on the platform, and transmitted to the PPF together with the F1 copy by the **Forward document to PPF** step. |
 | <Badge color="gray">201</Badge><br /> <small>Émise par la plateforme / Issued by platform</small> | [bill/status](https://docs.gobl.org/draft-0/bill/status#status) | Optional. Signals that the platform issued the invoice. You may send it yourself, or receive it on the buyer side — no action needed. |
-| <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Emitted when a platform rejects the invoice on validation. |
+| <Badge color="gray">213</Badge><br /> <small>Rejetée / Rejected by platform</small> | — | Raised by the **receiving** platform when an incoming invoice fails its controls. Invopop raises it for invoices your parties receive (see [Receiving](/guides/fr-pa-invoicing#receiving)). On invoices you send, a 213 from the buyer's platform arrives through your receive workflow like any other status. If your own invoice fails Invopop's checks, there is no 213: the send job fails, with the reasons in its [faults](/api-ref/transform/jobs/fetch-a-job#response-faults). |
 
 ### Issued by the buyer
 
@@ -111,7 +111,7 @@ flowchart LR
 
 There is no dedicated status workflow. The invoicing workflow will generate the appropriate format for each type (CDAR) and report to the tax authority when required.
 
-If you have installed the [workflows from the invoicing guide](/guides/fr-pa-invoicing#workflows), then you're ready to generate status lifecycle events.
+If you have installed the [workflows from the invoicing guide](/guides/fr-pa-invoicing#workflows), then you're ready to generate status lifecycle events. To receive the statuses your counterparties send, the Peppol app's **Incoming Workflow** must point at the receive workflow (see [Receiving](/guides/fr-pa-invoicing#receiving)).
 
 ## Building a status
 
