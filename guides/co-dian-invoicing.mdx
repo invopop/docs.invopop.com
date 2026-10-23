@@ -129,7 +129,7 @@ The DIAN defines what to do when invoices can't be issued electronically in [Res
 | Outage | DIAN type | What to do |
 |---|---|---|
 | The DIAN's validation service is unavailable | 04 | Nothing: Invopop manages it. Keep sending invoices as usual; jobs stay queued until the DIAN responds. |
-| The supplier's systems, or invoices can't be issued through Invopop | 03 | Issue invoices on paper and transmit them once back online, as described below. |
+| The supplier's systems or Invopop can't issue invoices | 03 | Issue invoices on paper and transmit them once back online, as described below. |
 
 #### While offline: issue on paper
 
@@ -137,8 +137,6 @@ During the outage, invoices are issued by hand or printed from any other system 
 
 - Must be numbered from a [contingency range](/guides/co-dian-registration#contingency-range), which the supplier needs to request from the DIAN ahead of time.
 - Can only be issued while the outage lasts, and are valid support for the sale for both the supplier and the customer.
-
-The supplier must declare the outage to the DIAN by emailing [contingencia.facturadorvp@dian.gov.co](mailto:contingencia.facturadorvp@dian.gov.co) with the NIT and verification digit followed by the company name as the subject (e.g. `123456789-8; EMPRESA EJEMPLO S.A.S.`), a PDF letter signed by the legal representative, and contact details in the body.
 
 #### Once back online: transmit the invoices
 
@@ -173,7 +171,7 @@ Within 48 hours of the outage ending, each paper invoice must be captured and se
    }
    ```
 
-   This partial example shows only the contingency-specific fields. Complete the document with the supplier, customer, and lines copied from the paper invoice.
+   This partial example shows only the contingency-specific fields. Complete the document with the supplier, customer, and lines copied from the paper invoice; see the complete contingency invoice in the [example invoices](#example-invoices).
 
 2. **Run your regular send workflow** on the document. The invoice is validated against the contingency range like any other series, transmitted as a DIAN type 03 document, and gets the same stamps as a regular invoice. The `dian-cude` stamp holds a CUDE instead of a CUFE, as contingency ranges have no technical key.
 
@@ -190,6 +188,7 @@ The following examples are of [GOBL](https://docs.gobl.org) documents you can co
 [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to the DIAN require the following properties to perform the correct normalization and validation steps:
 
 - `$schema` to be set to `https://gobl.org/draft-0/bill/invoice`
+- `$addons` to include [`co-dian-v2`](https://docs.gobl.org/addons/co-dian-v2), so the document is validated with the DIAN rules
 - `supplier.tax_id.country` to be set to `CO`
 - `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Customers identified by a Colombian NIT need it too; foreign and `simplified` B2C customers don't. See [When is the municipality code required?](#when-is-the-municipality-code-required).
 
