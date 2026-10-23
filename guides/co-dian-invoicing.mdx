@@ -140,7 +140,11 @@ During the outage, invoices are issued by hand or printed from any other system 
 
 #### Once back online: transmit the invoices
 
-Within 48 hours of the outage ending, each paper invoice must be captured and sent to the DIAN through Invopop. The [contingency range](/guides/co-dian-registration#contingency-range) must be linked by then.
+Within 48 hours of the outage ending, each paper invoice must be captured and sent to the DIAN through Invopop.
+
+<Warning>
+  Before sending, the supplier's [contingency resolution](/guides/co-dian-registration#contingency-range) must be [uploaded to Invopop](/api-ref/apps/gov-co/resolutions-upload). Invopop rejects contingency invoices without one, and in production the DIAN rejects those whose number isn't within it.
+</Warning>
 
 1. **Create a GOBL invoice replicating the paper invoice**, with the same customer, lines, and taxes, and with these specifics:
 
@@ -172,7 +176,7 @@ Keep in mind:
 
 - Credit and debit notes have no contingency procedure: wait until the systems are back and issue them with your usual note series. They can correct a transmitted contingency invoice like any other invoice.
 - Outages on the DIAN's side (type 04 contingency) are handled by Invopop and need no changes to your documents.
-- In sandbox, the `SETP` test series can be used with the `03` extension, as the DIAN test environment doesn't check contingency ranges.
+- In sandbox, upload a contingency resolution with any values first, such as prefix `CONT` and range `1`–`5000`. The DIAN test environment doesn't check contingency ranges, but Invopop still checks the invoice's code and date against the uploaded resolution.
 
 ## Example invoices
 
