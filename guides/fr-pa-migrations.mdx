@@ -1,0 +1,112 @@
+---
+title: "Moving parties between Plateformes Agréées"
+sidebarTitle: "Migrations"
+description: Answer another Plateforme Agréée's request to take over a party's Annuaire line, and take over lines from other platforms.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+import FAQ from '/snippets/faqs/fr/composers/guide-pa-migrations.mdx';
+
+A company can change Plateforme Agréée (PA) at any time. The new PA sends a `MOBILITY_REQUEST` to the old one, and the old PA answers with a `MOBILITY_RESPONSE`: accepted, accepted on another date, or refused. Invopop handles both sides of this exchange:
+
+- **Incoming:** another PA asks to take over an address registered through Invopop.
+- **Outgoing:** you register an address another PA holds.
+
+## Incoming requests
+
+### Setup
+
+Add the **PPF incoming migration** template to your workspace, then select it as the migration workflow in the France app's configuration.
+
+<Card iconType="duotone" title="PPF incoming migration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-incoming-migration" horizontal>
+  Add to my workspace →
+</Card>
+
+In the **Apps** view, open the **France** app, click **Configure**, and select the workflow under **Migration Workflow**.
+
+When another PA asks to take over addresses registered through Invopop, Invopop starts one migration job per requested address. Each job runs the configured workflow on the silo entry that registered the address.
+
+Invopop only accepts a request when it comes from the requesting platform's registered contact address. Anything else is refused and no job starts.
+
+### Takeover form
+
+The **Start migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address.
+
+The form shows the requesting platform and the address, and lets the user:
+
+- **Accept** the takeover, on the requested date or on another effective date picked from a calendar.
+- **Refuse** the takeover.
+
+### Answer deadline
+
+The company has **5 business days** from the request's arrival to answer. This deadline only applies to workspaces with a migration workflow configured (see [Setup](#setup)). The form shows the deadline. If the address is still unanswered after that, **Wait for migration approval** accepts it automatically.
+
+### Response
+
+**Complete migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
+
+| Answer | Response status |
+|---|---|
+| Accepted on the requested date | `ACCP` |
+| Accepted on another date | `ACWC`, with the agreed effective date |
+| Refused | `RJCT`, with motif `REFUS_CLIENT` |
+
+## Outgoing takeovers
+
+To take over an address another PA holds, set the former PA's line under the `fr-former-matricule` meta key of the party. The signed agreement then includes an additional section asking the company to consent to the takeover.
+
+When you run the [PPF register supplier](/guides/fr-pa-registration#ppf-register-supplier-workflow) workflow for that address, **Register party in Directory** (`gov-fr.directory.register`) sends a `MOBILITY_REQUEST` to that PA and waits for its answer. Once the takeover is accepted, Invopop registers the line with the agreed effective date, and the step stays queued until that date.
+
+If the other PA refuses, or its answer can't be processed, the step fails with the reason.
+
+## Reading migrations
+
+The France dashboard's **Migrations** tab lists every takeover request involving your workspace's addresses, newest first. In the Console, open the **Apps** view, select the **France** app, and switch to the **Migrations** tab. A workspace with no takeovers shows **No migrations yet**.
+
+Each row shows the New PA and Old PA, the Status, the SIREN, the Role, the company's Denomination, the Request number, the number of Endpoints (addresses) it covers, the New PA and Old PA matricules, and, for failed takeovers, the Failure reason.
+
+The Role tells you which side of the exchange Invopop is on:
+
+| Role | Meaning |
+|---|---|
+| Outgoing | Invopop is the new PA, taking over an address from another platform. |
+| Incoming | Another platform asked to take over one of your addresses. Invopop is the old PA. |
+
+| Status | Role | Meaning |
+|---|---|---|
+| <Badge color="gray">Created</Badge> | Outgoing | The request is built but not sent yet. |
+| <Badge color="blue">Sent</Badge> | Outgoing | The request was emailed to the old PA. |
+| <Badge color="blue">Acknowledged</Badge> | Outgoing | The old PA acknowledged the request. |
+| <Badge color="purple">Responded</Badge> | Outgoing | The old PA agreed; the Peppol migration code is still to follow. |
+| <Badge color="blue">Received</Badge> | Incoming | The request is waiting for answers. |
+| <Badge color="green">Completed</Badge> | Outgoing, Incoming | The migration has been completed, either accepted or rejected. |
+| <Badge color="red">Failed</Badge> | Outgoing | The takeover failed, failure reason is logged in the launcher. |
+
+An outgoing takeover moves from **Created** to **Sent**, **Acknowledged**, **Responded** and **Completed**, or ends as **Failed**. An incoming request moves from **Received** to **Completed**. 
+
+The Failure reason explains why an outgoing takeover failed: for example, the old PA rejected it or put it on hold because of a dispute, accepted it without a migration code, sent a reply that couldn't be read, or the request email couldn't be sent. If the reason is unclear, contact Invopop support.
+
+<Note>
+Clicking a row opens a read-only side panel titled **SIREN** followed by the party's SIREN, with one **Details** block per address: its Endpoint, the Silo entry ID, the Decision, and the Reason and Effective Date when they are set.
+</Note>
+
+The Decision is your answer on an incoming request, or the old PA's answer on an outgoing one. It stays blank until the address is answered.
+
+| Decision | Meaning |
+|---|---|
+| `ACCP` | Accepted on the requested date. |
+| `ACWC` | Accepted on another effective date. |
+| `ACSP` | Accepted in principle; the final answer and Peppol migration code will follow. |
+| `RJCT` | Rejected. |
+| `PDNG` | On hold because of a dispute (outgoing only). |
+
+
+## FAQ
+
+<FAQ />
+
+More available in our [France FAQ](/faq/france) section
+
+---
+
+<FranceResources />
