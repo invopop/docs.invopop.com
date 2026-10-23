@@ -1,7 +1,7 @@
   <Accordion title="How does the 5-day deadline work?">
-    The company has 5 business days, Monday to Friday, to answer, counted from the moment Invopop receives the request and ending at the same time of day (Paris time). For example, a request received on Friday at 15:00 expires the following Friday at 15:00. French public holidays are not taken into account. The form shows the date to answer by.
+    The company has 5 business days, to answer, counted from the moment Invopop receives the request and ending at the same time of day (Paris time). For example, a request received on Friday at 15:00 expires the following Friday at 15:00. French public holidays are not taken into account. The form shows the date to answer by.
 
-    Until then, **Wait for migration approval** stays queued, and the workflow continues as soon as the company answers. If the address is still unanswered at the deadline, Invopop accepts it automatically: on the date the new PA requested when that is still possible (`ACCP`), otherwise on the earliest possible date (`ACWC`). Once the response is sent, the answer can't be changed.
+    Until then, **Wait for migration approval** stays queued, and the workflow continues as soon as the company answers. If the address is still unanswered at the deadline, Invopop accepts it automatically: on the date the new PA requested when that is still possible, otherwise on the earliest possible date. Once the response is sent, the answer can't be changed.
 
     The deadline only applies to workspaces with a migration workflow configured.
   </Accordion>
@@ -13,7 +13,7 @@
   </Accordion>
 
   <Accordion title="When is a migration request complete?">
-    A request can cover several addresses, and each address gets its own job and form. Each answer is sent to the new PA as soon as it's given, with the addresses not answered yet marked `ACSP`: accepted in principle, with the final answer and Peppol migration code to follow.
+    An incoming request can cover several addresses, and each address gets its own job and form. Each answer is sent to the new PA as soon as it's given, with the addresses not answered yet marked pending.
 
     The request is complete once every address in it has been answered and the last answer has been sent. Until then, it shows as **Received** in the [Migrations tab](/guides/fr-pa-migrations#reading-migrations).
   </Accordion>
@@ -29,9 +29,7 @@
   </Accordion>
 
   <Accordion title="Does the 'Start Peppol migration' action always have to run?">
-    No, it's optional. Run it on the `accepted` branch when the party is registered on Peppol through Invopop: its migration key is passed to the new PA, which uses it to move the party's Peppol registration.
-
-    The PPF incoming migration template runs it on the `accepted` branch; remove that step from your copy if the party isn't registered on Peppol through Invopop.
+    No, it's optional. Run it on the `accepted` branch when the party is registered on Peppol: its migration key is passed to the new PA, which uses it to move the party's Peppol registration.
 
     Without it, the response carries `NEANT`, meaning there is nothing to migrate on Peppol. The key is never sent for refused addresses.
   </Accordion>
@@ -43,6 +41,4 @@
     - `rejected`: the company refused the takeover. The response is sent as `RJCT` with motif `REFUS_CLIENT`.
 
     Both outcomes continue to **Complete migration**, which sends the answer to the other PA. A typical workflow runs **Start Peppol migration** only on the `accepted` branch.
-
-    The step fails without retrying if the request doesn't match the silo entry, for example when none of the request's addresses is registered by that entry.
   </Accordion>
