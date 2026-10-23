@@ -141,6 +141,16 @@ Every entry carries the `SDI` series and the SDI message identifier as its code,
 
 The status line records the outcome as one of GOBL's own keys — `acknowledged`, `accepted`, `rejected`, `error` or `processing` — with the exact Italian notification code preserved alongside it in the `it-sdi-notification` extension, and a plain-language description of what happened.
 
+When there's more to say, the status line also carries `reasons`:
+
+- **`NS`**: one reason per error SDI found, with SDI's error code in `reasons[].faults[].code` and its description in `reasons[].faults[].message`. This is what to show the user so they can fix the invoice before sending a new one.
+- **`NE` rejected (`EC02`)**: the public administration's rejection text in `reasons[].description`.
+- **`MC`**: SDI's explanation of why delivery failed, in `reasons[].description`.
+
+Other notifications carry no reasons.
+
+To read them, add a webhook step after the import: it receives the status entry's ID as `silo_entry_id`, and [fetching that entry](/api-ref/silo/entries/fetch-an-entry) gives you the full status with its reasons.
+
 Entries are typed by who is speaking. Notifications from SDI are an `update`, since the platform is reporting; a `NE` is a `response`, because there the buyer is answering.
 
 ## FAQ
