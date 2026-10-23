@@ -145,8 +145,8 @@ Within 48 hours of the outage ending, each paper invoice must be captured and se
 1. **Create a GOBL invoice replicating the paper invoice**, with the same customer, lines, and taxes, and with these specifics:
 
    - The `series` and `code` are the paper invoice's contingency prefix and number.
+   - The `issue_date` is the date the paper invoice was issued.
    - The [`co-dian-invoice-type`](https://docs.gobl.org/addons/co-dian-v2) extension in `tax.ext` is set to `03`.
-   - The `preceding` array holds one entry for the paper invoice, with its `series` (if it has a prefix), `code`, and `issue_date`.
 
    ```json
    {
@@ -155,25 +155,18 @@ Within 48 hours of the outage ending, each paper invoice must be captured and se
      "$addons": ["co-dian-v2"],
      "series": "CONT",
      "code": "1001",
-     "issue_date": "2026-10-23",
+     "issue_date": "2026-10-22",
      "tax": {
        "ext": {
          "co-dian-invoice-type": "03"
        }
-     },
-     "preceding": [
-       {
-         "series": "CONT",
-         "code": "1001",
-         "issue_date": "2026-10-22"
-       }
-     ]
+     }
    }
    ```
 
-   This partial example shows only the contingency-specific fields. Complete the document with the supplier, customer, and lines copied from the paper invoice; see the complete contingency invoice in the [example invoices](#example-invoices).
+   This partial example shows only the contingency-specific fields. Complete the document with the supplier, customer, and lines copied from the paper invoice.
 
-2. **Run your regular send workflow** on the document. The invoice is validated against the contingency range like any other series, transmitted as a DIAN type 03 document, and gets the same stamps as a regular invoice. The `dian-cude` stamp holds a CUDE instead of a CUFE, as contingency ranges have no technical key.
+2. **Run your regular send workflow** on the document. It's sent to the DIAN as a type 03 invoice and gets the same stamps as a regular invoice, with a CUDE instead of a CUFE.
 
 Keep in mind:
 
