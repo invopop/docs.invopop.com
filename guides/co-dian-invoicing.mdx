@@ -122,6 +122,65 @@ The [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2#municipalit
 - When a required code is missing, the GOBL build fails with `extension 'co-dian-municipality' is required` on `$.supplier.ext` or `$.customer.ext`, so the invoice never reaches the DIAN.
 - Invopop can't derive the code from the NIT, so collect it with the rest of your customer data for each Colombian business customer, for example in your customer form. Foreign and consumer customers don't need the field.
 
+### Transmitting invoices issued during a contingency
+
+The DIAN defines what to do when invoices can't be issued electronically in [Resolución 000165 de 2023](https://normograma.dian.gov.co/dian/compilacion/docs/resolucion_dian_0165_2023.htm). The required action depends on where the outage is:
+
+| Outage | DIAN type | What to do |
+|---|---|---|
+| The DIAN's validation service is unavailable | 04 | Nothing: Invopop manages it. Keep sending invoices as usual; jobs stay queued until the DIAN responds. |
+| The supplier's systems or Invopop can't issue invoices | 03 | Issue invoices on paper and transmit them once back online, as described below. |
+
+#### While offline: issue on paper
+
+During the outage, invoices are issued by hand or printed from any other system (_facturas de talonario o de papel_). These paper invoices:
+
+- Must be numbered from a [contingency range](/guides/co-dian-registration#contingency-range), which the supplier needs to request from the DIAN ahead of time.
+- Can only be issued while the outage lasts, and are valid support for the sale for both the supplier and the customer.
+
+#### Once back online: transmit the invoices
+
+Within 48 hours of the outage ending, each paper invoice must be captured and sent to the DIAN through Invopop. The [contingency range](/guides/co-dian-registration#contingency-range) must be linked by then.
+
+1. **Create a GOBL invoice replicating the paper invoice**, with the same customer, lines, and taxes, and with these specifics:
+
+   - The `series` and `code` are the paper invoice's contingency prefix and number.
+   - The [`co-dian-invoice-type`](https://docs.gobl.org/addons/co-dian-v2) extension in `tax.ext` is set to `03`.
+   - The `preceding` array holds one entry for the paper invoice, with its `series` (if it has a prefix), `code`, and `issue_date`.
+
+   ```json
+   {
+     "$schema": "https://gobl.org/draft-0/bill/invoice",
+     "$regime": "CO",
+     "$addons": ["co-dian-v2"],
+     "series": "CONT",
+     "code": "1001",
+     "issue_date": "2026-10-23",
+     "tax": {
+       "ext": {
+         "co-dian-invoice-type": "03"
+       }
+     },
+     "preceding": [
+       {
+         "series": "CONT",
+         "code": "1001",
+         "issue_date": "2026-10-22"
+       }
+     ]
+   }
+   ```
+
+   This partial example shows only the contingency-specific fields. Complete the document with the supplier, customer, and lines copied from the paper invoice; see the complete contingency invoice in the [example invoices](#example-invoices).
+
+2. **Run your regular send workflow** on the document. The invoice is validated against the contingency range like any other series, transmitted as a DIAN type 03 document, and gets the same stamps as a regular invoice. The `dian-cude` stamp holds a CUDE instead of a CUFE, as contingency ranges have no technical key.
+
+Keep in mind:
+
+- Credit and debit notes have no contingency procedure: wait until the systems are back and issue them with your usual note series. They can correct a transmitted contingency invoice like any other invoice.
+- Outages on the DIAN's side (type 04 contingency) are handled by Invopop and need no changes to your documents.
+- In sandbox, the `SETP` test series can be used with the `03` extension, as the DIAN test environment doesn't check contingency ranges.
+
 ## Example invoices
 
 The following examples are of [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the Colombia workflow created during setup.
@@ -129,6 +188,7 @@ The following examples are of [GOBL](https://docs.gobl.org) documents you can co
 [GOBL Invoices](https://docs.gobl.org/draft-0/bill/invoice) sent to the DIAN require the following properties to perform the correct normalization and validation steps:
 
 - `$schema` to be set to `https://gobl.org/draft-0/bill/invoice`
+- `$addons` to include [`co-dian-v2`](https://docs.gobl.org/addons/co-dian-v2), so the document is validated with the DIAN rules
 - `supplier.tax_id.country` to be set to `CO`
 - `supplier.ext` to include the DIAN municipality code under the [`co-dian-municipality`](https://docs.gobl.org/addons/co-dian-v2) extension. Customers identified by a Colombian NIT need it too; foreign and `simplified` B2C customers don't. See [When is the municipality code required?](#when-is-the-municipality-code-required).
 
