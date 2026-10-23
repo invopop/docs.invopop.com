@@ -1,0 +1,30 @@
+  <Accordion title="How does the 5-day deadline work?">
+    The company has 5 business days, Monday to Friday, to answer, counted from the moment Invopop receives the request and ending at the same time of day (Paris time). For example, a request received on Friday at 15:00 expires the following Friday at 15:00. French public holidays are not taken into account. The form shows the date to answer by.
+
+    Until then, **Wait for migration approval** stays queued, and the workflow continues as soon as the company answers. If the address is still unanswered at the deadline, Invopop accepts it automatically: on the date the new PA requested when that is still possible (`ACCP`), otherwise on the earliest possible date (`ACWC`). Once the response is sent, the answer can't be changed.
+
+    The deadline only applies to workspaces with a migration workflow configured.
+  </Accordion>
+
+  <Accordion title="What happens if I don't have a migration workflow configured?">
+    Invopop receives and records the request, but no workflow job starts for your workspace's addresses: there is no form link, no automatic acceptance at the deadline, and no `MOBILITY_RESPONSE` is sent to the other PA.
+
+    To answer it, select a migration workflow in the France app configuration, then contact Invopop support to have the pending request processed again. The 5-day deadline still counts from when the request first arrived, so if it has already passed, the address is accepted automatically as soon as the workflow runs.
+  </Accordion>
+
+  <Accordion title="Does the 'Start Peppol migration' action always have to run?">
+    No, it's optional. Run it on the `accepted` branch when the party is registered on Peppol through Invopop: its migration key is passed to the new PA, which uses it to move the party's Peppol registration.
+
+    Without it, the response carries `NEANT`, meaning there is nothing to migrate on Peppol. The key is never sent for refused addresses.
+  </Accordion>
+
+  <Accordion title="What outcomes does the 'Wait for migration approval' action have?">
+    The step stays queued until the company answers or the deadline passes, then ends with one of these codes:
+
+    - `accepted`: the address was accepted, on the requested date or another one, either by the company or automatically at the deadline.
+    - `rejected`: the company refused the takeover. The response is sent as `RJCT` with motif `REFUS_CLIENT`.
+
+    Both outcomes continue to **Complete migration**, which sends the answer to the other PA. A typical workflow runs **Start Peppol migration** only on the `accepted` branch.
+
+    The step fails without retrying if the request doesn't match the silo entry, for example when none of the request's addresses is registered by that entry.
+  </Accordion>
