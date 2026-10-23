@@ -79,7 +79,8 @@ paths:
       summary: List the numbering resolutions
       description:
         List the DIAN numbering resolutions linked to a registered
-        supplier, fetched live from the DIAN.
+        supplier, fetched live from the DIAN, plus any uploaded
+        contingency resolutions.
       parameters:
         - $ref: "#/components/parameters/SiloEntryID"
       responses:
@@ -95,6 +96,42 @@ paths:
           $ref: "#/components/responses/NotFound"
         "422":
           $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /apps/gov-co/v1/entries/{silo_entry_id}/resolutions/contingency:
+    post:
+      operationId: uploadContingencyResolution
+      summary: Upload a contingency resolution
+      description:
+        Upload a contingency (talonario o papel) numbering resolution for a
+        registered supplier, replacing any uploaded with the same prefix.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContingencyResolution"
+      responses:
+        "200":
+          description: The uploaded contingency resolution, as stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resolution"
+        "400":
+          description: The request is malformed or a resolution field is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "resolution must have a prefix"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -146,7 +183,7 @@ components:
       properties:
         resolutions:
           type: array
-          description: Numbering resolutions; empty when the DIAN has none for the supplier.
+          description: Numbering resolutions; empty when the supplier has none from the DIAN and none uploaded.
           items:
             $ref: "#/components/schemas/Resolution"
 
@@ -187,8 +224,49 @@ components:
           type: string
           description: |-
             Technical key the DIAN assigned to the range, used to compute
-            each invoice's CUFE.
+            each invoice's CUFE. Empty for contingency resolutions.
           example: "fc8eac422eba16e22ffd8c6f94b3f40a6e38162c"
+
+    ContingencyResolution:
+      type: object
+      required:
+        - resolution_number
+        - prefix
+        - min_number
+        - max_number
+        - start_date
+        - end_date
+      properties:
+        resolution_number:
+          type: string
+          description: Number of the DIAN contingency numbering resolution, as shown on form 1876.
+          example: "18764000012345"
+        prefix:
+          type: string
+          description: |-
+            Series prefix authorized by the resolution. Use it as the
+            `series` of the contingency invoices.
+          example: "CONT"
+        min_number:
+          type: integer
+          format: int64
+          description: First invoice code authorized in the range.
+          example: 1
+        max_number:
+          type: integer
+          format: int64
+          description: Last invoice code authorized in the range.
+          example: 5000
+        start_date:
+          type: string
+          format: date
+          description: First day the resolution is valid.
+          example: "2026-01-01"
+        end_date:
+          type: string
+          format: date
+          description: Last day the resolution is valid.
+          example: "2027-12-31"
 
     Error:
       type: object
