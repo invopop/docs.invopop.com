@@ -1,0 +1,141 @@
+---
+title: "Moving parties between Plateformes Agréées"
+sidebarTitle: "Migrations"
+description: Answer another Plateforme Agréée's request to take over a party's Annuaire line, and take over lines from other platforms.
+---
+
+import FranceResources from '/snippets/tables/france-resources.mdx';
+
+A company can change Plateforme Agréée (PA) at any time. The new PA sends a `MOBILITY_REQUEST` to the old one, listing the Annuaire addresses it wants to take over, and the old PA answers each address with a `MOBILITY_RESPONSE`: accepted, accepted on another date, or refused. Invopop handles both sides of this exchange:
+
+- **Incoming:** another PA asks to take over an address one of your parties registered through Invopop. A migration workflow asks the company to accept or refuse, then sends the answer.
+- **Outgoing:** you register an address another PA holds. The registration workflow requests the takeover and waits until the line is handed over.
+
+## Prerequisites
+
+- The party is [registered](/guides/fr-pa-registration) through Invopop, in its own silo entry.
+- A migration workflow, selected in the France app configuration (see [Setup](#setup)).
+
+<Note>
+  Each silo entry registers one Annuaire address. Requests are answered per address, and each answer runs on the silo entry that registered it. To register a second address for the same SIREN, use a new silo entry: **Sign PPF agreement** (`gov-fr.agreement.sign`) fails on a silo entry that already has an active registration.
+</Note>
+
+## Setup
+
+<Steps>
+  <Step title="Create the migration workflow">
+    Create an `org/party` workflow with the migration steps, in this order:
+
+    | Step | Action | Description |
+    |---|---|---|
+    | Start migration | `gov-fr.migration.start` | Publishes the form where the company answers the request. |
+    | Wait for migration approval | `gov-fr.migration.wait.approval` | Waits for the answer. Ends with code `accepted` or `rejected`. |
+    | Start Peppol migration | `peppol.migrate` | Optional, on the `accepted` branch: issues the Peppol migration key that the response hands to the new PA. |
+    | Complete migration | `gov-fr.migration.complete` | Sends the `MOBILITY_RESPONSE` for the address to the new PA. |
+
+    <Accordion title="Example migration workflow">
+    ```json
+    {
+        "name": "PA migration",
+        "description": "Answer another PA's request to take over a party",
+        "schema": "org/party",
+        "steps": [
+            {
+                "name": "Start migration",
+                "provider": "gov-fr.migration.start"
+            },
+            {
+                "name": "Wait for migration approval",
+                "provider": "gov-fr.migration.wait.approval",
+                "next": [
+                    {
+                        "status": "OK",
+                        "code": "accepted",
+                        "steps": [
+                            {
+                                "name": "Start Peppol migration",
+                                "provider": "peppol.migrate"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Complete migration",
+                "provider": "gov-fr.migration.complete"
+            }
+        ],
+        "rescue": [
+            {
+                "name": "Set state",
+                "provider": "silo.state",
+                "config": {
+                    "state": "error"
+                }
+            }
+        ]
+    }
+    ```
+    </Accordion>
+  </Step>
+  <Step title="Select it in the France app">
+    In the **Apps** view, open the **France** app, click **Configure**, and select the workflow under **Migration Workflow**. Without one, requests for the workspace's parties are left for Invopop support to answer by hand.
+  </Step>
+</Steps>
+
+## Incoming requests
+
+When another PA asks to take over addresses registered through Invopop, Invopop starts one migration job per requested address. Each job runs the configured workflow on the silo entry that registered the address. Addresses no Invopop party holds are refused straight away.
+
+Invopop only accepts a request when it comes from the requesting platform's registered contact address. Anything else is refused and no job starts.
+
+### Takeover form
+
+The **Start migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address. Forward it to the company, or embed it as an `iframe`, as with the [registration wizard](/guides/fr-pa-registration#registration-wizard).
+
+<Accordion title="Example migration-link meta entry">
+```json
+{
+  "src": "gov-fr",
+  "key": "migration-link",
+  "ref": "Xk3pQ9vLm2A",
+  "link_url": "https://gouv-fr.invopop.com/mig/Xk3pQ9vLm2A/start",
+  "link_scope": "public",
+  "indexed": true,
+  "shared": true
+}
+```
+</Accordion>
+
+The form, in French, shows the requesting platform and the address, and lets the company:
+
+- **Accept** the takeover, on the requested date or on another effective date picked from a calendar. The calendar only offers dates from the earliest the switch can happen: at least 3 business days and 4 calendar days from the answer.
+- **Refuse** the takeover.
+
+Once answered, the form shows the outcome and can't be changed.
+
+### Answer deadline
+
+The company has **5 business days** from the request's arrival to answer. The form shows the deadline. If the address is still unanswered after that, **Wait for migration approval** accepts it on the requested date, as the AIFE process requires.
+
+### Response
+
+**Complete migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
+
+| Answer | Response status |
+|---|---|
+| Accepted on the requested date | `ACCP` |
+| Accepted on another date | `ACWC`, with the agreed effective date |
+| Refused | `RJCT`, with motif `REFUS_CLIENT` |
+
+If **Start Peppol migration** ran, the response carries its Peppol migration key so the new PA can move the participant on the Peppol network. Otherwise the key field is `NEANT`. The request is complete once every address in it has been answered.
+
+## Outgoing takeovers
+
+When you run the [PPF register supplier](/guides/fr-pa-registration#ppf-register-supplier-workflow) workflow for an address another PA holds, **Register party in Directory** (`gov-fr.directory.register`) sends a `MOBILITY_REQUEST` to that PA and waits for its answer. Once the takeover is accepted, Invopop registers the line with the agreed effective date, and the step stays queued until that date. The workflow then continues to **Register party on Peppol** with the Peppol migration key from the response, if any.
+
+If the other PA refuses, or its answer can't be processed, the step fails with the reason.
+
+---
+
+<FranceResources />
