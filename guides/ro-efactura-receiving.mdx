@@ -1,0 +1,197 @@
+---
+title: "RO e-Factura receiving invoices guide"
+sidebarTitle: "Receiving invoices"
+description: "Automatically import invoices received through Romania's RO e-Factura system into your Invopop workspace."
+---
+
+import RomaniaResources from '/snippets/tables/romania-resources.mdx';
+import ImportWorkflow, { roImportWorkflow } from '/snippets/workflows/ro/import.mdx';
+import SyncWorkflow, { roSyncWorkflow } from '/snippets/workflows/ro/sync.mdx';
+import RegisterWorkflow, { roRegisterWorkflow } from '/snippets/workflows/ro/register.mdx';
+import FAQ from '/snippets/faqs/ro/composers/guide-efactura-receiving.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+[RO e-Factura](https://mfinante.gov.ro/ro/web/efactura) is Romania's mandatory national e-invoicing system, run by the Ministry of Finance and [ANAF](https://www.anaf.ro). Because all B2B invoices go through RO e-Factura, the invoices your suppliers *receive* are also available in the system, in their SPV — and Invopop can import them into your workspace automatically.
+
+This guide walks you through configuring your workspace to periodically import received invoices from RO e-Factura. Two companion guides cover the rest of the family: [Romania: Supplier registration](/guides/ro-efactura-supplier) and [Romania: Issuing invoices](/guides/ro-efactura).
+
+The import process uses two apps working together:
+
+- **[Romania](/apps/romania):** Fetches received invoices from RO e-Factura and converts them to [GOBL](https://docs.gobl.org) format.
+- **[Cron](/apps/cron):** Runs the sync workflow automatically at a regular interval (e.g., hourly or daily).
+
+## Prerequisites
+
+To receive invoices from RO e-Factura, you will need:
+
+- **The Romania app connected and a registration workflow in place**: covered in the [RO e-Factura supplier registration guide](/guides/ro-efactura-supplier). Parties must be registered with the registration workflow that includes the **Subscribe to periodic execution** step.
+- **The Cron app**, connected as part of the setup in this guide.
+
+## How it works
+
+Once everything is configured, imports run automatically:
+
+1. **Cron scheduling**: The [Cron app](/apps/cron) creates a job for the sync workflow on the party at each configured interval
+2. **Sync workflow**: The **Receive all new invoices from RO e-Factura** step asks RO e-Factura for the invoices received since the last successful sync
+3. **Import jobs**: For each invoice found, a job is created using the workflow set as **Import Workflow** in the sync step
+4. **Import workflow**: Each job downloads the invoice from RO e-Factura, archives it, converts it to GOBL and stores it as a new invoice in your Invopop silo
+5. **Organization**: Imported invoices are placed in the configured folder (typically "Invoices · Expenses") with a `Registered` state
+
+<Note>
+  The import workflow is run by the sync workflow only. Don't run it yourself: everything is handled by configuring the sync workflow.
+</Note>
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Info>
+  The Romania app must already be connected — this is covered in the [supplier registration guide](/guides/ro-efactura-supplier).
+</Info>
+
+<Steps>
+
+<Step title="Connect the Cron app">
+
+  1. Navigate to **Configuration** → **Apps**
+  2. Find **Cron** in the app discovery list
+  3. Click **Connect** to activate
+
+  No additional configuration is needed. The [Cron app](/apps/cron) handles scheduling periodic workflow execution for importing received invoices.
+</Step>
+
+<Step title="Configure the invoice import workflow">
+
+This workflow imports one received invoice. It is triggered by the sync workflow (configured in the next step) for each invoice found:
+
+1. **Import a single invoice from RO e-factura** downloads the invoice, archives it, converts it to GOBL and stores it as a new invoice entry.
+2. **Set folder** to **Invoices · Expenses**.
+3. **Set state** to `Registered`.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={roImportWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <Note>
+      This workflow receives the ANAF message to import as arguments set by the sync workflow, not a silo entry. It creates the invoice entry itself.
+    </Note>
+
+    <ImportWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the invoice sync workflow">
+
+This workflow fetches the invoices a party received since the last sync and creates an import job for each one, using the import workflow you configured in the previous step.
+
+Open the **Receive all new invoices from RO e-Factura** step and set **Import Workflow** to **RO Import Invoice**.
+
+<Frame>
+  <img width="600" src="/assets/guides/ro-efactura-sync-config.png" alt="Receive all new invoices step with Import Workflow set to RO Import Invoice" />
+</Frame>
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={roSyncWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <SyncWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+<Step title="Configure the cron step of the registration workflow">
+
+The **RO register party** workflow ends with the **Subscribe to periodic execution** step, which tells the [Cron app](/apps/cron) which workflow to run on the party and how often. Open the step and configure:
+
+1. **Workflow** — select the **RO Sync Received Invoices** workflow you created in the previous step. The Cron app runs it on each tick.
+2. **Every** and **Unit** — choose how often RO e-Factura should be checked for new invoices (for example, every 12 hours).
+
+<Frame>
+  <img width="600" src="/assets/guides/ro-efactura-cron-config.png" alt="Subscribe to periodic execution step configured with the sync workflow and interval" />
+</Frame>
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={roRegisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <RegisterWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Running
+
+### Register a party for receiving
+
+Register each party whose received invoices you want to import by running the **RO register party** workflow on their party entry. The steps — creating the party, running the workflow and completing the ANAF authorization — are described in the [supplier registration guide](/guides/ro-efactura-supplier#register-a-supplier).
+
+<Info>
+  Invoices are imported from the moment the party completes its registration. Invoices received before that are not imported.
+</Info>
+
+<Note>
+  If a party was registered without the subscribe step, run the registration workflow with the step on the same party entry to subscribe it to periodic imports.
+</Note>
+
+### Automatic import
+
+Once parties are registered, the [Cron app](/apps/cron) runs the sync workflow at the interval configured in the **Subscribe to periodic execution** step, following the process described in [How it works](#how-it-works). Imported invoices appear in the configured folder (typically "Invoices · Expenses") with a `Registered` state.
+
+<Frame>
+  <img width="383" src="/assets/guides/ro-efactura-imported.png" alt="Imported invoice in Registered state with the official ANAF XML" />
+</Frame>
+
+Each sync picks up where the last successful one finished, so no invoice is missed when a sync fails or runs late. ANAF keeps received invoices for 60 days, so make sure the sync runs at least that often.
+
+### Sync on demand
+
+To fetch new invoices without waiting for the next tick, run the **RO Sync Received Invoices** workflow on the party entry, from the Console or with the [Create a job endpoint](/api-ref/transform/jobs/create-a-job-post). It imports everything received since the last successful sync.
+
+### Error handling and notifications
+
+We strongly recommend adding notification steps to your workflows to alert you of import failures:
+
+- **In the import workflow**: Add email or Slack notifications to the error handling section
+- **In the sync workflow**: Add notifications for when the sync process encounters issues
+
+This ensures you're immediately aware if invoices fail to import, allowing you to take corrective action.
+
+<Tip>
+  Common sync issues include an expired ANAF authorization (register the party again), missing SPV rights for the certificate holder, and ANAF being temporarily unavailable. Check your workflow error logs in the Console for detailed error messages.
+</Tip>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Romania FAQ](/faq/romania) section
+
+---
+
+<RomaniaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Romania →
+</Card>

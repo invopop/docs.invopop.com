@@ -50,6 +50,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     "gov-es.facturae": "https://assets.invopop.com/apps/facturae/icon.svg",
     verifactu: "https://assets.invopop.com/apps/verifactu/icon.svg",
     "gov-pl": "https://assets.invopop.com/apps/ksef/icon.svg",
+    "gov-ro": "https://assets.invopop.com/flags/ro.svg",
     "gov-sa": "https://assets.invopop.com/apps/zatca/icon.svg",
     "gov-ar": "https://assets.invopop.com/apps/arca/icon.svg",
     "at-pt": "https://assets.invopop.com/apps/at-pt/icon.svg",
@@ -130,7 +131,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     (steps || []).map((step) => {
       counter.n += 1;
       const n = counter.n;
-      const branches = (step.next || []).filter((b) => b.steps && b.steps.length > 0);
+      const branches = (step.next || []).filter((b) => Array.isArray(b.steps));
       return (
         <div key={step.id || "step-" + n}>
           {step.notes ? <NoteRow text={step.notes} /> : null}
