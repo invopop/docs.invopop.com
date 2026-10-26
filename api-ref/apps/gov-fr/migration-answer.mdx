@@ -6,12 +6,8 @@ openapi: "POST /apps/gov-fr/v1/entry/{silo_entry_id}/migration"
 
 Answers the incoming takeover request currently in progress for the silo entry's address, the same one the takeover form shows. Use it instead of the form to answer from your own system. See [Moving parties between Plateformes Agréées](/guides/fr-pa-migrations#incoming-requests) for the full flow.
 
-- **Accept** without `effective_date` to take over on the date the new PA requested (`ACCP`). If that date is too soon, the answer becomes `ACWC` on the earliest possible date.
-- **Accept** with `effective_date` to agree on another date (`ACWC`). The date must be at least 3 business days (Monday to Friday) and 4 calendar days away, whichever is later.
-- **Reject** to refuse the takeover (`RJCT`, motif `REFUS_CLIENT`). Any `effective_date` is ignored.
+- **Accept** without `effective_date` to take over on the date the new PA requested. If that date is too soon, the answer is the earliest possible date.
+- **Accept** with `effective_date` to agree on another date. The date must be at least 3 business days and 4 calendar days away, whichever is later.
+- **Reject** to refuse the takeover. Any `effective_date` is ignored.
 
 The answer wakes the workflow's **Wait for migration approval** step immediately. An address can only be answered once: a second call returns `400`.
-
-<Note>
-  Only workspaces with a migration workflow configured have requests to answer. The 5-business-day deadline still applies: an address left unanswered after it is accepted automatically.
-</Note>
