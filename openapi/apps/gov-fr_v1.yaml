@@ -348,6 +348,133 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/gov-fr/v1/entry/{silo_entry_id}/migration:
+    post:
+      operationId: answerEntryMigration
+      summary: Answer an incoming migration request
+      description: |-
+        Accepts or rejects the takeover request another Plateforme
+        Agréée sent for the address registered by this silo entry. It
+        answers the request currently in progress for the entry, the
+        same one the takeover form shows, and wakes the workflow's
+        **Wait for migration approval** step immediately.
+
+        - **Accept** without `effective_date` to use the date the new
+          PA requested (`ACCP`). If that date is too soon, the answer
+          becomes `ACWC` on the earliest possible date.
+        - **Accept** with `effective_date` to propose another date
+          (`ACWC`). The date must be at least 3 business days (Monday
+          to Friday) and 4 calendar days away, whichever is later.
+        - **Reject** to refuse the takeover (`RJCT`, motif
+          `REFUS_CLIENT`). Any `effective_date` is ignored.
+
+        Only workspaces with a migration workflow configured have
+        requests to answer. The 5-business-day deadline still applies:
+        an address left unanswered after it is accepted automatically.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MigrationAnswer"
+            examples:
+              accept:
+                summary: Accept on the requested date
+                value:
+                  action: "accept"
+              accept_on_date:
+                summary: Accept on another date
+                value:
+                  action: "accept"
+                  effective_date: "2026-11-16"
+              reject:
+                summary: Reject the takeover
+                value:
+                  action: "reject"
+      responses:
+        "200":
+          description: Answer recorded. Returns the decision that will be sent to the new PA.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationAnswerResponse"
+              examples:
+                accepted:
+                  summary: Accepted on the requested date
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "ACCP"
+                    effective_date: "2026-11-12"
+                accepted_on_date:
+                  summary: Accepted on another date
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "ACWC"
+                    effective_date: "2026-11-16"
+                rejected:
+                  summary: Rejected
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "RJCT"
+        "400":
+          description: |-
+            The body is malformed, `action` is missing or not `accept` or
+            `reject`, `effective_date` is not a `YYYY-MM-DD` date or is too
+            soon, or the takeover request has already been answered (its
+            response is queued or sent).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_action:
+                  summary: Unknown action
+                  value:
+                    error: "action must be accept or reject"
+                too_soon:
+                  summary: Effective date too soon
+                  value:
+                    error: "the effective date 2026-11-02 is too soon; the earliest possible is 2026-11-05"
+                already_answered:
+                  summary: Request already answered
+                  value:
+                    error: "this takeover request has already been answered"
+        "401":
+          description: Missing or invalid enrollment token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    description: Human-readable description of the error.
+              example:
+                message: "access denied: missing auth token"
+        "404":
+          description: |-
+            No takeover request names the silo entry's address, or the
+            entry belongs to another workspace. When the latest request for
+            the entry has already been answered, the endpoint returns `400`
+            instead.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no takeover request names this silo entry's address"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /apps/gov-fr/v1/reports/{siren}:
     get:
       operationId: fetchReportingSummary
@@ -994,6 +1121,67 @@ components:
           type: string
           description: Current status of the approval flow after finalisation.
           example: "submitted"
+
+    MigrationAnswer:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          description: |-
+            Answer to the takeover request.
+
+              - `accept` - Let the new PA take over the address.
+              - `reject` - Refuse the takeover.
+          enum: ["accept", "reject"]
+          example: "accept"
+        effective_date:
+          type: string
+          format: date
+          description: |-
+            Effective date of the takeover (`YYYY-MM-DD`), only used with
+            `accept`. Omit it to use the date the new PA requested. Must
+            be at least 3 business days and 4 calendar days away,
+            whichever is later.
+          example: "2026-11-16"
+
+    MigrationAnswerResponse:
+      type: object
+      required: [migration_id, request_number, address, status]
+      properties:
+        migration_id:
+          type: string
+          description: ID (UUIDv7) of the migration the request belongs to.
+          example: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+        request_number:
+          type: string
+          description: |-
+            Request number assigned by the new PA, in the form
+            `<SIREN>_<new PA matricule>_<YYYYMMDD>_<NN>_<counter>`.
+          example: "123456789_0999_20261023_01_101500"
+        address:
+          type: string
+          description: |-
+            Billing address being taken over, as it appears in the PPF
+            Annuaire: the SIREN, optionally followed by a suffix (for
+            example `123456789_ACHATS`). It carries no scheme prefix and is
+            not a Peppol ID.
+          example: "123456789"
+        status:
+          type: string
+          description: |-
+            Decision sent to the new PA in the `MOBILITY_RESPONSE`.
+
+              - `ACCP` - Accepted on the requested date.
+              - `ACWC` - Accepted on another effective date.
+              - `RJCT` - Rejected, with motif `REFUS_CLIENT`.
+          enum: ["ACCP", "ACWC", "RJCT"]
+          example: "ACCP"
+        effective_date:
+          type: string
+          format: date
+          description: Agreed effective date of the takeover. Omitted for `RJCT`.
+          example: "2026-11-12"
 
     IdentityUpload:
       type: object
