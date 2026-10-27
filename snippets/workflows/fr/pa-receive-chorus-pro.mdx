@@ -1,0 +1,135 @@
+export const frPaReceiveChorusProWorkflow = {
+    "name": "PPF receive document (Chorus Pro)",
+    "description": "Receive an invoice or status from Chorus Pro, run the PPF recording controls over invoices, and raise a 213 for the ones that fail",
+    "steps": [
+        {
+            "id": "fb7f43cc-d218-11f1-9cfe-be97565502bf",
+            "name": "Receive document from Chorus Pro",
+            "provider": "gov-fr.chorus-pro.receive",
+            "notes": "Converts the invoice or status Chorus Pro sent and stores it"
+        },
+        {
+            "id": "fb7f4159-d218-11f1-9ae0-be97565502bf",
+            "name": "Record incoming document for e-invoicing",
+            "provider": "gov-fr.directory.record.incoming",
+            "summary": "Validate and record incoming document"
+        },
+        {
+            "id": "fb7f41bb-d218-11f1-b4f9-be97565502bf",
+            "name": "Document is invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "fb7f4226-d218-11f1-af3f-be97565502bf",
+                            "name": "Set Folder",
+                            "provider": "silo.folder",
+                            "next": [],
+                            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+                            "config": {
+                                "folder": "expenses"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "summary": "",
+            "config": {
+                "expr": "$schema endsWith \"bill/invoice\"",
+                "scope": "doc"
+            },
+            "notes": "Checks for bill/invoice document"
+        },
+        {
+            "id": "fb7f42ab-d218-11f1-b21e-be97565502bf",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `received`{.state .received}",
+            "config": {
+                "state": "received"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "fb7f433a-d218-11f1-abd4-be97565502bf",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json PPF receive document (Chorus Pro) workflow
+{
+    "name": "PPF receive document (Chorus Pro)",
+    "description": "Receive an invoice or status from Chorus Pro, run the PPF recording controls over invoices, and raise a 213 for the ones that fail",
+    "steps": [
+        {
+            "id": "fb7f43cc-d218-11f1-9cfe-be97565502bf",
+            "name": "Receive document from Chorus Pro",
+            "provider": "gov-fr.chorus-pro.receive",
+            "notes": "Converts the invoice or status Chorus Pro sent and stores it"
+        },
+        {
+            "id": "fb7f4159-d218-11f1-9ae0-be97565502bf",
+            "name": "Record incoming document for e-invoicing",
+            "provider": "gov-fr.directory.record.incoming",
+            "summary": "Validate and record incoming document"
+        },
+        {
+            "id": "fb7f41bb-d218-11f1-b4f9-be97565502bf",
+            "name": "Document is invoice?",
+            "provider": "silo.if",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "fb7f4226-d218-11f1-af3f-be97565502bf",
+                            "name": "Set Folder",
+                            "provider": "silo.folder",
+                            "next": [],
+                            "summary": "Set folder to `Invoices · Expenses`{.font-medium}",
+                            "config": {
+                                "folder": "expenses"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "summary": "",
+            "config": {
+                "expr": "$schema endsWith \"bill/invoice\"",
+                "scope": "doc"
+            },
+            "notes": "Checks for bill/invoice document"
+        },
+        {
+            "id": "fb7f42ab-d218-11f1-b21e-be97565502bf",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `received`{.state .received}",
+            "config": {
+                "state": "received"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "fb7f433a-d218-11f1-abd4-be97565502bf",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
