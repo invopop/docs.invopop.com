@@ -2,6 +2,8 @@ import B2BMin from '/snippets/invoices/fr/pa-b2b.min.mdx';
 import B2B from '/snippets/invoices/fr/pa-b2b.mdx';
 import CreditNoteMin from '/snippets/invoices/fr/pa-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/fr/pa-credit-note.mdx';
+import DebitNoteMin from '/snippets/invoices/fr/pa-debit-note.min.mdx';
+import DebitNote from '/snippets/invoices/fr/pa-debit-note.mdx';
 import AdvanceMin from '/snippets/invoices/fr/pa-advance.min.mdx';
 import Advance from '/snippets/invoices/fr/pa-advance.mdx';
 import ReverseChargeMin from '/snippets/invoices/fr/pa-reverse-charge.min.mdx';
@@ -63,6 +65,23 @@ import FacturxB2B from '/snippets/invoices/fr/facturx-b2b.mdx';
 		<CodeGroup>
 			<CreditNoteMin />
 			<CreditNote />
+		</CodeGroup>
+	</Accordion>
+
+	<Accordion title="PA B2B debit note (treated as invoice)">
+
+		A debit note that is subject to VAT and carries all the mandatory invoice information, such as re-invoicing shared site costs to a joint-venture partner, must be sent as a regular e-invoice. Issue it as a standard invoice.
+
+		Notice:
+
+		- `type` is `standard`, so the add-on sets `untdid-document-type` to `380`. Flux 2 has no separate debit-note type, and [`fr-ctc-flow2-v1`](https://docs.gobl.org/addons/fr-ctc-flow2-v1) has no `debit-note` scenario,
+		- don't use `corrective` (`384`) unless the document actually corrects a previous invoice. A corrected invoice needs a `preceding` reference,
+		- debit notes that are not invoices (no VAT, just a statement of an amount owed) are out of scope for both e-invoicing and e-reporting, so there is nothing to send,
+		- if the buyer issues the debit note for an amount the seller owes them, the seller issues a [credit note](/guides/fr-pa-invoicing#pa-b2b-credit-note) instead, or the buyer issues a self-billed credit note (`261`) using the `self-billed` tag (see [Self-billing](/guides/fr-pa-invoicing#self-billing)).
+
+		<CodeGroup>
+			<DebitNoteMin />
+			<DebitNote />
 		</CodeGroup>
 	</Accordion>
 
