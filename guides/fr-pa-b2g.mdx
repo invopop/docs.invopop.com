@@ -20,7 +20,7 @@ This guide covers:
 * [How routing works](#how-routing-works): the record step decides whether a customer is a public entity, and the workflow branches on it.
 * [Setup](#setup): the send workflow with the public-sector branch.
 * [What a public buyer needs](#what-a-public-buyer-needs): the SIRET, service code and commitment number, and the limits Chorus Pro adds on top of the norm.
-* [Following the invoice](#following-the-invoice): the Chorus Pro lifecycle and how the job reports it.
+* [Following the invoice](#following-the-invoice): the Chorus Pro lifecycle, delivered back to you as status documents.
 * [Receiving from a public entity (G2B)](#receiving-from-a-public-entity-g2b): public bodies can now invoice you through the same channel.
 * [Testing in sandbox](#testing-in-sandbox) and [example invoices](#example-invoices).
 
@@ -70,7 +70,7 @@ Keep **Is B2G?** after the record step, which is where the answer comes from. Fo
     Reads the flag and branches.
   </Step>
   <Step title="Send to Chorus Pro">
-    Deposits the invoice with Chorus Pro and waits for its answer. The job stays queued until Chorus Pro has received the invoice and made it available to the public entity. See [Following the invoice](#following-the-invoice).
+    Deposits the invoice with Chorus Pro and completes. What Chorus Pro and the public entity do with it comes back later as statuses. See [Following the invoice](#following-the-invoice).
   </Step>
   <Step title="Forward document to PPF">
     Sends the F1 copy and the `200` Déposée status to the PPF, exactly as for a B2B invoice.
@@ -142,23 +142,25 @@ Rules that depend on data Invopop does not hold (whether the entity requires a s
 
 ## Following the invoice
 
-**Send to Chorus Pro** deposits the invoice and then waits. Chorus Pro first acknowledges the deposit as a whole, then walks the invoice through its own lifecycle, which is richer than the PPF's accepted or rejected pair. Invopop keeps the codes as Chorus Pro sends them, so the workflow and the France dashboard show the same vocabulary as the Chorus Pro portal.
+**Send to Chorus Pro** deposits the invoice and completes. It does not wait for Chorus Pro. From there Chorus Pro walks the invoice through its own lifecycle, which is richer than the PPF's accepted or rejected pair, and every status it applies reaches you as a status document, the way a B2B customer's statuses arrive over Peppol: Chorus Pro addresses it to your Annuaire line, and it is imported and recorded against the invoice like any [received status](/guides/fr-pa-invoicing#receiving).
 
-| Answer | Meaning | Job |
-|---|---|---|
-| Receipt `500` | The deposit was readable and accepted for processing | Keeps waiting |
-| Receipt `501` | The deposit was *irrecevable*: a file Chorus Pro could not read. The invoice never entered a lifecycle | **KO** |
-| <Badge color="blue">202</Badge> Reçue | Chorus Pro has received the invoice | Keeps waiting |
-| <Badge color="blue">203</Badge> Mise à disposition | The invoice is available to the public entity | **OK** |
-| <Badge color="blue">204</Badge> Prise en charge, <Badge color="blue">205</Badge> Approuvée | The entity is processing or has approved it | **OK** |
-| <Badge color="yellow">208</Badge> Suspendue | The entity needs more information | Keeps waiting |
-| <Badge color="yellow">209</Badge> Complétée | The missing information was supplied | **OK** |
-| <Badge color="red">210</Badge> Refusée, <Badge color="red">213</Badge> Rejetée | Refused by the entity, or rejected by Chorus Pro's own checks | **KO** |
-| <Badge color="green">211</Badge> Mandatée, <Badge color="green">212</Badge> Mise en paiement | Payment ordered, then paid | **OK** |
+| Status | Meaning |
+|---|---|
+| <Badge color="blue">202</Badge> Reçue | Chorus Pro has received the invoice |
+| <Badge color="blue">203</Badge> Mise à disposition | The invoice is available to the public entity |
+| <Badge color="blue">204</Badge> Prise en charge, <Badge color="blue">205</Badge> Approuvée | The entity is processing or has approved it |
+| <Badge color="yellow">208</Badge> Suspendue | The entity needs more information |
+| <Badge color="yellow">209</Badge> Complétée | The missing information was supplied |
+| <Badge color="red">210</Badge> Refusée, <Badge color="red">213</Badge> Rejetée | Refused by the entity, or rejected by Chorus Pro's own checks |
+| <Badge color="green">211</Badge> Mandatée, <Badge color="green">212</Badge> Mise en paiement | Payment ordered, then paid |
 
-The job completes as soon as Chorus Pro has made the invoice available (`203`) or any later code arrives. Later statuses keep updating the invoice after the job has finished, and each is visible on the invoice in the [France dashboard](/guides/fr-pa-invoicing#reading-submitted-invoices). Chorus Pro does not always deliver statuses in the order it applied them, so the invoice keeps whichever carries the latest timestamp.
+Statuses from Chorus Pro run through the workflow selected as the **Chorus Pro workflow** in the France app's configuration, the same one that [receives invoices from public entities](#receiving-from-a-public-entity-g2b). It starts with **Receive document from Chorus Pro**, which imports the document, followed by the record step. Without it, Chorus Pro's statuses are not delivered to your workspace.
 
-A `213` from Chorus Pro names the rule that failed. If it is one of the [rules checked at record](#rules-checked-at-record), the invoice was flagged `b2g` after the fact; otherwise fix the field the rule names and send a new invoice.
+<Card iconType="duotone" title="PPF receive document (Chorus Pro)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-receive-chorus-pro" horizontal>
+  Add to my workspace →
+</Card>
+
+A `213` carries Chorus Pro's reasons on its lines, each naming the field at fault, for example a supplier SIRET Chorus Pro does not know or a service code the entity requires. If the reason is one of the [rules checked at record](#rules-checked-at-record), the invoice was flagged `b2g` after the fact; otherwise fix the field it names and send a new invoice.
 
 <Note>
 For an invoice you issued, the public entity drives the lifecycle through Chorus Pro. Statuses you build on such an invoice are not forwarded: Chorus Pro rules on the invoices it receives, and Invopop does not answer them. Statuses you send only travel to Chorus Pro for invoices a public entity sent **to you**, described next.
@@ -172,7 +174,7 @@ The path differs from a B2B invoice in where it comes from, not in what you do w
 
 1. The public entity submits the invoice to Chorus Pro, in UBL or Factur-X.
 2. Chorus Pro delivers it to Invopop, addressed to the Annuaire line your party is registered under. That line decides which workspace receives it, so the party must be [registered](/guides/fr-pa-registration) before any public entity can invoice it.
-3. **Receive document from Chorus Pro** converts it to GOBL and hands it to your [receive workflow](/guides/fr-pa-invoicing#receiving), which records it against your party with the same controls as an inbound Peppol invoice.
+3. Invopop starts the workflow selected as the **Chorus Pro workflow** in the France app's configuration, the [PPF receive document (Chorus Pro)](https://console.invopop.com/redirect/workflows/new?template=fr-pa-receive-chorus-pro) template. Its **Receive document from Chorus Pro** step converts the invoice to GOBL, and the record step records it against your party with the same controls as an inbound Peppol invoice.
 
 From there it behaves like any other received invoice: it appears in the France dashboard, and you answer with [status updates](/guides/fr-pa-status) as it is accepted, disputed or paid. Build each status as you would for a B2B invoice and run it through the send workflow. **Is B2G?** resolves it to the invoice it answers, and **Send to Chorus Pro** deposits it on the public circuit.
 
