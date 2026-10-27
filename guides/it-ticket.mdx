@@ -132,6 +132,40 @@ Receipts cannot be changed once the AdE has accepted them, so an amount reported
 
 Whether a later collection needs reporting depends on the operation: for goods, VAT is already chargeable at delivery regardless of collection; for services, it becomes chargeable when the payment is received. Which applies to your sales is a determination for you and your tax advisors.
 
+### Store address
+
+By default a receipt shows the address the supplier has registered with the AdE. A merchant with several stores under one tax ID can instead show the address of the store that made the sale by adding it as the first entry in `supplier.addresses`:
+
+```json
+"supplier": {
+  "name": "Example Shop S.r.l.",
+  "tax_id": { "country": "IT", "code": "12345678903" },
+  "addresses": [
+    {
+      "street": "Via Roma",
+      "num": "10",
+      "locality": "Roma",
+      "region": "RM",
+      "code": "00100"
+    }
+  ]
+}
+```
+
+| GOBL field | On the receipt | Required |
+| ---------- | -------------- | -------- |
+| `street`   | Street name    | Yes      |
+| `num`      | Street number  | No       |
+| `locality` | City           | Yes      |
+| `region`   | Province, as its two-letter code (`RM`, `MI`) | Yes |
+| `code`     | Postal code, five digits | Yes |
+
+A receipt is rejected at the validation step if the address is missing any of the required parts, or if the postal code and province don't have that shape, because the AdE would reject it. Only the first address is used; leave `supplier.addresses` out to keep the registered address.
+
+<Note>
+The store address is printed on the receipt, but the AdE does not group or total receipts by it: daily totals (_corrispettivi giornalieri_) are still reported for the tax ID as a whole. If you need per-store totals, keep them on your side.
+</Note>
+
 ### Refund an invoice
 
 Refund processing is handled through corrective invoices, which you can issue using the same workflow as regular invoices. See the "Corrective Invoice" accordion above for details and examples.
