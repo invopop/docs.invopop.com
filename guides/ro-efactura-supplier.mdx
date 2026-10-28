@@ -16,7 +16,11 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 [RO e-Factura](https://mfinante.gov.ro/ro/web/efactura) is Romania's mandatory national e-invoicing system, run by the Ministry of Finance and [ANAF](https://www.anaf.ro), the Romanian tax authority. Before you can send or receive invoices through RO e-Factura on behalf of a party (supplier), the party must authorize Invopop with ANAF.
 
-Authorization uses ANAF's OAuth flow. Invopop generates a link, and the person holding the company's SPV (_Spațiul Privat Virtual_) digital certificate opens it, signs in on ANAF's site with the certificate and approves the access. The certificate never leaves its owner: Invopop only receives the access ANAF grants, valid for one year.
+Authorization uses ANAF's OAuth flow. Invopop generates a link, and a person with rights for the company in SPV (_Spațiul Privat Virtual_), ANAF's online portal, opens it and signs in on ANAF's site with their qualified digital certificate. Certificates belong to people, not companies: ANAF grants the access that the certificate holder has in SPV. The certificate never leaves its owner: Invopop only receives the access ANAF grants, valid for one year.
+
+<Info>
+  The party doesn't need to register its own application with ANAF or provide a client ID and secret. Invopop connects through its own ANAF application, and the party only has to authorize it.
+</Info>
 
 In this guide you'll learn how to register a party using the [Romania app](/apps/romania). Once a party is registered, continue with the companion guides: [Romania: Issuing invoices](/guides/ro-efactura) and [Romania: Receiving invoices](/guides/ro-efactura-receiving).
 
@@ -30,7 +34,8 @@ In this guide you'll learn how to register a party using the [Romania app](/apps
 To register a party with RO e-Factura, you will need:
 
 - **The party's Romanian tax ID (CIF)**, entered as the party's `tax_id` with country `RO`.
-- **A qualified digital certificate** of a person registered in SPV as legal representative or authorized person of the company, installed in the browser used to open the registration link.
+- **A qualified digital certificate** of a person registered in SPV as legal representative, designated representative or authorized person (_împuternicit_) of the company, installed in the browser used to open the registration link.
+- **An active SPV enrolment for the company.** If the certificate holder isn't enrolled in SPV for the company yet, they must complete [ANAF's SPV registration](https://www.anaf.ro/anaf/internet/ANAF/servicii_online/inreg_inrol_pf_pj_SPV) first. ANAF can take several days to approve it.
 - **The Cron app**, if you want to receive invoices. The registration workflow subscribes the party to the periodic sync of received invoices.
 
 <Note>
@@ -69,10 +74,10 @@ The [Cron app](/apps/cron) runs the sync of received invoices at the interval yo
 
 This workflow registers a party with RO e-Factura, then subscribes it to the periodic sync of received invoices:
 
-1. **Set state** to `Processing`.
+1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
 2. **Register with ANAF** generates the ANAF authorization link and stores it in the party's **Meta** section.
 3. **Wait ANAF link registration** pauses the workflow until the certificate holder completes the authorization.
-4. **Set state** to `Registered`.
+4. **Set state** to <Badge size="sm" color="green" icon="square-small" iconType="solid">Registered</Badge>.
 5. **Subscribe to periodic execution** subscribes the party to the sync workflow through the Cron app.
 
 The **Subscribe to periodic execution** step needs the **RO Sync Received Invoices** workflow, created in the [receiving invoices guide](/guides/ro-efactura-receiving#setup). Select it in the step, along with how often the sync should run.
@@ -98,6 +103,7 @@ The **Subscribe to periodic execution** step needs the **RO Sync Received Invoic
 
 </Step>
 
+{/* Hidden until notifications before an ANAF authorization expires are available.
 <Step title="Configure the token validation workflow (in development)">
 
 <Warning>
@@ -128,6 +134,7 @@ The step also returns the expiry date as the `refresh_token_deadline` argument (
 </Tabs>
 
 </Step>
+*/}
 
 <Step title="Configure the party unregistration workflow">
 
@@ -147,6 +154,10 @@ This workflow unregisters the party from RO e-Factura, removes the ANAF credenti
 </Step>
 
 </Steps>
+
+<Info>
+  We will offer notifications before an ANAF authorization expires in the future. Until then, keep track of the one-year expiry and [renew the authorization](#renew-the-authorization) in time.
+</Info>
 
 ## Register a supplier
 
@@ -168,7 +179,7 @@ Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
 
 In the party entry, click <kbd>Select Workflow</kbd>, choose your **RO register party** workflow, and click <kbd>Run Workflow</kbd>.
 
-The party moves to <Badge color="yellow">Processing</Badge> and the job stops at the **Wait ANAF link registration** step until the authorization is complete.
+The party moves to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge> and the job stops at the **Wait ANAF link registration** step until the authorization is complete.
 
 <Frame>
   <img width="390" src="/assets/guides/ro-efactura-wait-step.png" alt="Registration job waiting for the ANAF authorization" />
@@ -249,7 +260,7 @@ The certificate holder opens the link in a browser where their digital certifica
 
 <Step title="Registration completes">
 
-Invopop stores the ANAF authorization and wakes the waiting job up. The registration link is removed from the party's meta, the party moves to <Badge color="purple">Registered</Badge> and, if the workflow includes it, the party is subscribed to the periodic sync of received invoices.
+Invopop stores the ANAF authorization and wakes the waiting job up. The registration link is removed from the party's meta, the party moves to <Badge size="sm" color="green" icon="square-small" iconType="solid">Registered</Badge> and, if the workflow includes it, the party is subscribed to the periodic sync of received invoices.
 
 <Frame>
   <img width="383" src="/assets/guides/ro-efactura-registered.png" alt="Party entry in Registered state, with the link removed from meta" />
