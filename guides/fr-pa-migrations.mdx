@@ -102,6 +102,27 @@ The Decision is your answer on an incoming request, or the old PA's answer on an
 | `RJCT` | Rejected. |
 | `PDNG` | On hold because of a dispute (outgoing only). |
 
+### Reading migrations through the API
+
+The same data is available through the France app's API, authenticated with the enrollment token like the other `/apps/gov-fr` endpoints:
+
+- [List migrations](/api-ref/apps/gov-fr/migrations-list) (`GET /apps/gov-fr/v1/migrations`) returns every migration in the workspace, newest first, in both roles.
+- [List a silo entry's migrations](/api-ref/apps/gov-fr/migrations-entry) (`GET /apps/gov-fr/v1/migrations/{silo_entry_id}`) returns the migrations for the address registered by one silo entry, with only that entry's line. Use it to find out whether an address has a request waiting for an answer.
+- [Answer a migration request](/api-ref/apps/gov-fr/migration-answer) (`POST /apps/gov-fr/v1/migrations/{silo_entry_id}`) accepts or refuses the request, like the takeover form.
+
+Both lists page with `offset` and `limit` and return a `next_offset` while more results remain. Each line's `decision` holds your answer on an incoming request; `response_lines` holds the old PA's answer on an outgoing one.
+
+## Testing incoming migrations in sandbox
+
+In a sandbox workspace you can trigger an incoming request yourself, to test the takeover form, the answer endpoint and your migration workflow end to end.
+
+1. In the France dashboard's **Parties** tab, click the party to open its side panel.
+2. Open the **⋯** menu on an active endpoint and choose **Simulate incoming migration**.
+
+Invopop creates a takeover request for that address from a made-up platform and handles it like a real one: it appears in the **Migrations** tab and the migrations API, and starts your migration workflow on the silo entry. Answer it with the form or the API as described in [Incoming requests](#incoming-requests). No email is sent to any platform for a simulated request.
+
+The option is only available in sandbox workspaces. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run.
+
 
 ## FAQ
 

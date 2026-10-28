@@ -1,7 +1,7 @@
 ---
 title: "Answer a migration request"
 description: "Accept or reject another Plateforme Agréée's request to take over the address registered by a silo entry."
-openapi: "POST /apps/gov-fr/v1/entry/{silo_entry_id}/migration"
+openapi: "POST /apps/gov-fr/v1/migrations/{silo_entry_id}"
 ---
 
 Answers the incoming takeover request currently in progress for the silo entry's address, the same one the takeover form shows. Use it instead of the form to answer from your own system. See [Moving parties between Plateformes Agréées](/guides/fr-pa-migrations#incoming-requests) for the full flow.
@@ -10,4 +10,10 @@ Answers the incoming takeover request currently in progress for the silo entry's
 - **Accept** with `effective_date` to agree on another date. The date must be at least 3 business days and 4 calendar days away, whichever is later.
 - **Reject** to refuse the takeover. Any `effective_date` is ignored.
 
+To check whether an address is waiting for an answer, call [List a silo entry's migrations](/api-ref/apps/gov-fr/migrations-entry) first.
+
 The answer wakes the workflow's **Wait for migration approval** step immediately. An address can only be answered once: a second call returns `400`.
+
+<Note>
+This endpoint used to live at `POST /apps/gov-fr/v1/entry/{silo_entry_id}/migration`. That path is deprecated but still accepts the same body and returns the same response.
+</Note>

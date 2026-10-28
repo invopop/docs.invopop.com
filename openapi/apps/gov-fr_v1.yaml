@@ -351,6 +351,301 @@ paths:
   /apps/gov-fr/v1/entry/{silo_entry_id}/migration:
     post:
       operationId: answerEntryMigration
+      summary: Answer an incoming migration request (deprecated)
+      deprecated: true
+      description: |-
+        **Deprecated:** use `POST /apps/gov-fr/v1/migrations/{silo_entry_id}`
+        instead. This path remains as an alias with the same body and
+        response.
+
+        Accepts or rejects the takeover request another Plateforme
+        Agréée sent for the address registered by this silo entry. It
+        answers the request currently in progress for the entry, the
+        same one the takeover form shows, and wakes the workflow's
+        **Wait for migration approval** step immediately.
+
+        - **Accept** without `effective_date` to use the date the new
+          PA requested (`ACCP`). If that date is too soon, the answer
+          becomes `ACWC` on the earliest possible date.
+        - **Accept** with `effective_date` to propose another date
+          (`ACWC`). The date must be at least 3 business days (Monday
+          to Friday) and 4 calendar days away, whichever is later.
+        - **Reject** to refuse the takeover (`RJCT`, motif
+          `REFUS_CLIENT`). Any `effective_date` is ignored.
+
+        Only workspaces with a migration workflow configured have
+        requests to answer. The 5-business-day deadline still applies:
+        an address left unanswered after it is accepted automatically.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MigrationAnswer"
+            examples:
+              accept:
+                summary: Accept on the requested date
+                value:
+                  action: "accept"
+              accept_on_date:
+                summary: Accept on another date
+                value:
+                  action: "accept"
+                  effective_date: "2026-11-16"
+              reject:
+                summary: Reject the takeover
+                value:
+                  action: "reject"
+      responses:
+        "200":
+          description: Answer recorded. Returns the decision that will be sent to the new PA.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationAnswerResponse"
+              examples:
+                accepted:
+                  summary: Accepted on the requested date
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "ACCP"
+                    effective_date: "2026-11-12"
+                accepted_on_date:
+                  summary: Accepted on another date
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "ACWC"
+                    effective_date: "2026-11-16"
+                rejected:
+                  summary: Rejected
+                  value:
+                    migration_id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                    request_number: "123456789_0999_20261023_01_101500"
+                    address: "123456789"
+                    status: "RJCT"
+        "400":
+          description: |-
+            The body is malformed, `action` is missing or not `accept` or
+            `reject`, `effective_date` is not a `YYYY-MM-DD` date or is too
+            soon, or the takeover request has already been answered (its
+            response is queued or sent).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_action:
+                  summary: Unknown action
+                  value:
+                    error: "action must be accept or reject"
+                too_soon:
+                  summary: Effective date too soon
+                  value:
+                    error: "the effective date 2026-11-02 is too soon; the earliest possible is 2026-11-05"
+                already_answered:
+                  summary: Request already answered
+                  value:
+                    error: "this takeover request has already been answered"
+        "401":
+          description: Missing or invalid enrollment token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    description: Human-readable description of the error.
+              example:
+                message: "access denied: missing auth token"
+        "404":
+          description: |-
+            No takeover request names the silo entry's address, or the
+            entry belongs to another workspace. When the latest request for
+            the entry has already been answered, the endpoint returns `400`
+            instead.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "no takeover request names this silo entry's address"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/migrations:
+    get:
+      operationId: listMigrations
+      summary: List migrations
+      description: |-
+        Returns the workspace's Plateforme Agréée mobility exchanges,
+        newest first (`created_at` descending). The list covers both
+        roles: `outgoing` exchanges, where Invopop takes over an
+        address from another PA, and `incoming` ones, where another PA
+        asks to take over an address registered through Invopop.
+
+        An incoming request can span addresses of several workspaces;
+        each workspace only sees its own lines.
+      parameters:
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of migrations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListMigrationsResponse"
+              examples:
+                page:
+                  summary: First page with more results available
+                  value:
+                    migrations:
+                      - id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                        role: "incoming"
+                        status: "responded"
+                        siren: "552100554"
+                        denomination: "Exemple Services SAS"
+                        new_pa:
+                          matricule: "0999"
+                          name: "Nouvelle Plateforme SAS"
+                        old_pa:
+                          matricule: "0998"
+                        num_mandat: "552100554_0999_20261023_01"
+                        request_number: "552100554_0999_20261023_01_101500"
+                        date_sig_mandat: "2026-10-23"
+                        date_effet_req: "2026-11-12"
+                        lines:
+                          - address: "552100554"
+                            mesh: "SIREN"
+                            siren: "552100554"
+                            silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+                            date_effet_req: "2026-11-12"
+                            decision:
+                              status: "ACWC"
+                              date_effet_app: "2026-11-16"
+                              at: "2026-10-26T09:30:00Z"
+                        created_at: "2026-10-23T10:15:00Z"
+                        updated_at: "2026-10-26T09:31:00Z"
+                      - id: "019a0f3e-1b2c-7d40-9e5f-6a7b8c9d0e1f"
+                        role: "outgoing"
+                        status: "completed"
+                        siren: "123456789"
+                        denomination: "Exemple Conseil SARL"
+                        new_pa:
+                          matricule: "0998"
+                        old_pa:
+                          matricule: "0997"
+                          name: "Ancienne Plateforme SA"
+                        num_mandat: "123456789_0998_20261020_01"
+                        request_number: "123456789_0998_20261020_01_000001"
+                        date_sig_mandat: "2026-10-20"
+                        date_effet_req: "2026-11-03"
+                        lines:
+                          - address: "123456789"
+                            inbox: "AB12CD34"
+                            mesh: "SIREN"
+                        response_lines:
+                          - address: "123456789"
+                            status: "ACCP"
+                            date_effet_app: "2026-11-03"
+                            code_mig_peppol: "NEANT"
+                        created_at: "2026-10-20T14:02:00Z"
+                        updated_at: "2026-10-24T08:45:00Z"
+                    next_offset: 50
+                empty:
+                  summary: No migrations
+                  value:
+                    migrations: []
+        "400":
+          description: The `offset` query parameter is negative.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "offset must be non-negative, got -1"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-fr/v1/migrations/{silo_entry_id}:
+    get:
+      operationId: listEntryMigrations
+      summary: List a silo entry's migrations
+      description: |-
+        Returns every mobility exchange with an address held through
+        the silo entry, open and closed, refused ones included, newest
+        first. Each exchange carries only that entry's line in `lines`,
+        and only the old PA's outcome for it in `response_lines`.
+
+        A silo entry has at most one open exchange at a time. An
+        unknown entry, or an entry of another workspace, returns an
+        empty list.
+      parameters:
+        - $ref: "#/components/parameters/MigrationSiloEntryID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of the entry's migrations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListMigrationsResponse"
+              examples:
+                waiting:
+                  summary: Incoming request waiting for an answer
+                  value:
+                    migrations:
+                      - id: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+                        role: "incoming"
+                        status: "received"
+                        siren: "552100554"
+                        denomination: "Exemple Services SAS"
+                        new_pa:
+                          matricule: "0999"
+                          name: "Nouvelle Plateforme SAS"
+                        old_pa:
+                          matricule: "0998"
+                        num_mandat: "552100554_0999_20261023_01"
+                        request_number: "552100554_0999_20261023_01_101500"
+                        date_sig_mandat: "2026-10-23"
+                        date_effet_req: "2026-11-12"
+                        lines:
+                          - address: "552100554"
+                            mesh: "SIREN"
+                            siren: "552100554"
+                            silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+                            date_effet_req: "2026-11-12"
+                        created_at: "2026-10-23T10:15:00Z"
+                        updated_at: "2026-10-23T10:15:00Z"
+                empty:
+                  summary: No migrations for the entry
+                  value:
+                    migrations: []
+        "400":
+          description: The `offset` query parameter is negative.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "offset must be non-negative, got -1"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      operationId: answerMigration
       summary: Answer an incoming migration request
       description: |-
         Accepts or rejects the takeover request another Plateforme
@@ -372,7 +667,7 @@ paths:
         requests to answer. The 5-business-day deadline still applies:
         an address left unanswered after it is accepted automatically.
       parameters:
-        - $ref: "#/components/parameters/SiloEntryID"
+        - $ref: "#/components/parameters/MigrationSiloEntryID"
       requestBody:
         required: true
         content:
@@ -729,6 +1024,15 @@ components:
       in: path
       required: true
       description: ID of the `org.Party` silo entry being onboarded.
+      schema:
+        type: string
+        example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
+    MigrationSiloEntryID:
+      name: silo_entry_id
+      in: path
+      required: true
+      description: ID of the `org.Party` silo entry that registered the address.
       schema:
         type: string
         example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
@@ -1121,6 +1425,250 @@ components:
           type: string
           description: Current status of the approval flow after finalisation.
           example: "submitted"
+
+    ListMigrationsResponse:
+      type: object
+      description: One page of migrations, newest first.
+      required: [migrations]
+      properties:
+        migrations:
+          type: array
+          description: The migrations on this page. Empty when there are none.
+          items:
+            $ref: "#/components/schemas/Migration"
+        next_offset:
+          type: integer
+          description: Offset to pass on the next call to fetch the following page. Omitted on the last page.
+          example: 50
+
+    Migration:
+      type: object
+      description: |-
+        One Plateforme Agréée mobility exchange: a `MOBILITY_REQUEST`
+        for one or more Annuaire addresses and the answers to it.
+      required: [id, role, status, lines, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          description: ID (UUIDv7) of the migration.
+          example: "019a1b2c-3d4e-7f50-8a1b-2c3d4e5f6a7b"
+        role:
+          type: string
+          description: |-
+            Which side of the exchange Invopop is on.
+
+              - `outgoing` - Invopop is the new PA, taking over an address
+                from another platform.
+              - `incoming` - Another platform asked to take over an address
+                registered through Invopop. Invopop is the old PA.
+          enum: ["outgoing", "incoming"]
+          example: "incoming"
+        status:
+          type: string
+          description: |-
+            Lifecycle of the whole exchange.
+
+              - `created` - Outgoing request built but not sent yet.
+              - `sent` - Outgoing request emailed to the old PA.
+              - `acked` - The old PA acknowledged the outgoing request.
+              - `received` - Incoming request waiting for answers.
+              - `responded` - Outgoing: the old PA agreed and the Peppol
+                migration code is still to follow. Incoming: a response
+                has been sent for some of the addresses.
+              - `completed` - Every address has a final answer, accepted
+                or rejected.
+              - `failed` - Outgoing request rejected, put on hold, or
+                unreadable, or its email could not be sent. A later valid
+                reply from the old PA can still revive it.
+          enum: ["created", "received", "sent", "acked", "responded", "completed", "failed"]
+          example: "received"
+        siren:
+          type: string
+          description: |-
+            SIREN of the company changing platform. Omitted when an incoming
+            request spans several companies and none of its addresses
+            belong to this workspace.
+          example: "552100554"
+        denomination:
+          type: string
+          description: Legal name of the company, as sent in the request.
+          example: "Exemple Services SAS"
+        new_pa:
+          $ref: "#/components/schemas/MigrationPlatform"
+          description: Platform taking the addresses over.
+        old_pa:
+          $ref: "#/components/schemas/MigrationPlatform"
+          description: Platform currently holding the addresses.
+        num_mandat:
+          type: string
+          description: |-
+            Mandate number, in the form
+            `<SIREN>_<new PA matricule>_<YYYYMMDD>_<NN>`.
+          example: "552100554_0999_20261023_01"
+        request_number:
+          type: string
+          description: |-
+            Request number carried by every message of the exchange: the
+            mandate number followed by a 6-character counter.
+          example: "552100554_0999_20261023_01_101500"
+        date_sig_mandat:
+          type: string
+          format: date
+          description: Date the company signed the formal agreement (`YYYY-MM-DD`).
+          example: "2026-10-23"
+        date_effet_req:
+          type: string
+          format: date
+          description: Effective date the new PA requested (`YYYY-MM-DD`).
+          example: "2026-11-12"
+        lines:
+          type: array
+          description: |-
+            Annuaire addresses requested in the exchange, one per line of
+            the mobility CSV. Lines of other workspaces are left out, and
+            the per-entry endpoint keeps only the entry's own line.
+          items:
+            $ref: "#/components/schemas/MigrationLine"
+        response_lines:
+          type: array
+          description: |-
+            The old PA's outcome for each address of an outgoing request.
+            Omitted until it answers.
+          items:
+            $ref: "#/components/schemas/MigrationResponseLine"
+        created_at:
+          type: string
+          format: date-time
+          description: When the exchange was created.
+          example: "2026-10-23T10:15:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the exchange last changed.
+          example: "2026-10-26T09:31:00Z"
+
+    MigrationPlatform:
+      type: object
+      description: A Plateforme Agréée taking part in a migration.
+      required: [matricule]
+      properties:
+        matricule:
+          type: string
+          description: 4-character platform registration number.
+          example: "0999"
+        name:
+          type: string
+          description: Legal name of the platform, when known.
+          example: "Nouvelle Plateforme SAS"
+
+    MigrationLine:
+      type: object
+      description: One Annuaire address of a migration.
+      required: [address]
+      properties:
+        address:
+          type: string
+          description: |-
+            Billing address being moved, as it appears in the PPF
+            Annuaire: the SIREN, optionally followed by a suffix.
+          example: "552100554"
+        inbox:
+          type: string
+          description: Invopop inbox code for the address, on outgoing requests.
+        mesh:
+          type: string
+          description: |-
+            Addressing level of the line (`Maille_adressage`).
+          enum: ["SIREN", "SIRET", "CR", "SUFFIXE"]
+          example: "SIREN"
+        siren:
+          type: string
+          description: Company the address belongs to, on incoming requests.
+          example: "552100554"
+        silo_entry_id:
+          type: string
+          description: |-
+            ID of the `org.Party` silo entry that registered the address,
+            on incoming requests. Pass it to
+            `POST /apps/gov-fr/v1/migrations/{silo_entry_id}` to answer.
+          example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+        date_effet_req:
+          type: string
+          format: date
+          description: Effective date requested for this address (`YYYY-MM-DD`).
+          example: "2026-11-12"
+        decision:
+          $ref: "#/components/schemas/MigrationDecision"
+
+    MigrationDecision:
+      type: object
+      description: |-
+        Invopop's answer for one address of an incoming request. Omitted
+        until the address is answered.
+      required: [status]
+      properties:
+        status:
+          type: string
+          description: |-
+            Answer sent to the new PA.
+
+              - `ACCP` - Accepted on the requested date.
+              - `ACSP` - Accepted; the Peppol migration code follows later.
+              - `ACWC` - Accepted on another effective date.
+              - `RJCT` - Rejected.
+          enum: ["ACCP", "ACSP", "ACWC", "RJCT"]
+          example: "ACWC"
+        motif:
+          type: string
+          description: Reason for a rejection, for example `REFUS_CLIENT`.
+          example: "REFUS_CLIENT"
+        date_effet_app:
+          type: string
+          format: date
+          description: Agreed effective date (`YYYY-MM-DD`).
+          example: "2026-11-16"
+        code:
+          type: string
+          description: Peppol migration code, or `NEANT` when no Peppol address migrates.
+          example: "NEANT"
+        at:
+          type: string
+          description: When the answer was recorded.
+          example: "2026-10-26T09:30:00Z"
+
+    MigrationResponseLine:
+      type: object
+      description: The old PA's outcome for one address of an outgoing request.
+      required: [address, status]
+      properties:
+        address:
+          type: string
+          description: Billing address the outcome refers to.
+          example: "123456789"
+        status:
+          type: string
+          description: |-
+            The old PA's answer (`Reponse_anc_PA`).
+
+              - `ACCP` - Accepted, with the Peppol migration code or `NEANT`.
+              - `ACSP` - Accepted; the Peppol migration code follows later.
+              - `ACWC` - Accepted on another effective date.
+              - `PDNG` - On hold because of a dispute.
+              - `RJCT` - Rejected.
+          enum: ["ACCP", "ACSP", "ACWC", "PDNG", "RJCT"]
+          example: "ACCP"
+        motif:
+          type: string
+          description: Reason for a rejection or dispute, when given.
+        date_effet_app:
+          type: string
+          format: date
+          description: Effective date the old PA applied (`YYYY-MM-DD`).
+          example: "2026-11-03"
+        code_mig_peppol:
+          type: string
+          description: Peppol migration code, `NEANT`, or omitted when not sent yet.
+          example: "NEANT"
 
     MigrationAnswer:
       type: object
