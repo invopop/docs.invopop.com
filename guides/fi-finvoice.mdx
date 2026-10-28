@@ -106,6 +106,33 @@ One more state you may meet is **`send-unconfirmed`**: the connection failed aft
 
 Once the operator accepts the invoice, that is the final programmatic signal: there is no delivery status to poll afterwards. If a receiving operator later rejects the invoice, the rejection arrives by email in production.
 
+### Attachments
+
+Supporting documents such as timesheets, specifications or delivery notes travel with the invoice as Finvoice attachments. Add them to the invoice's silo entry as files with category `attachment` before running the send workflow, with the [file upload API](/guides/file-uploads):
+
+```bash cURL
+curl -X POST 'https://api.invopop.com/silo/v1/entries/{entry_id}/files' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "timesheet.pdf",
+    "category": "attachment",
+    "mime": "application/pdf",
+    "data": "<base64-encoded file contents>"
+  }'
+```
+
+Every file on the entry with that category is sent. Finvoice sets the limits, and the send step checks them before anything leaves the platform; an invoice that breaks one fails the job with the limit it broke, and nothing is sent:
+
+- at most **10 files** (`attachments-too-many`);
+- **1 MB in total** (`attachments-too-large`);
+- only **PDF, JPEG or PNG** (`attachment-type`). PDFs should be PDF/A, which the receiving operator may check.
+
+Two things to know about delivery:
+
+- **An invoice with attachments carries its own PDF image.** The operator only forwards attachments next to an invoice image, so the send step takes the entry's file with key `pdf` (what a PDF step before Send produces) and sends it as the image. Without that file the job fails with `invoice-pdf-missing`: add a PDF step to the workflow before Send. To send your own image even without attachments, turn on **Attach invoice PDF** in the send step's settings.
+- **File names don't reach the receiver.** The operator renumbers the attachments on delivery (`_0`, `_1`, … in the order they were added), so name the documents inside the files themselves if the receiver needs to tell them apart.
+
 ### Invoicing the Finnish state
 
 Invoicing public bodies is the segment where e-invoicing is mandatory in Finland, and the state applies its own reference conventions: invoices that don't follow them are rejected by the receiving authority.
