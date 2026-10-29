@@ -512,25 +512,23 @@ paths:
                         role: "incoming"
                         status: "responded"
                         siren: "552100554"
-                        denomination: "Exemple Services SAS"
-                        new_pa:
-                          matricule: "0999"
+                        name: "Exemple Services SAS"
+                        new_platform:
+                          identifier: "0999"
                           name: "Nouvelle Plateforme SAS"
-                        old_pa:
-                          matricule: "0998"
-                        num_mandat: "552100554_0999_20261023_01"
+                        old_platform:
+                          identifier: "0998"
                         request_number: "552100554_0999_20261023_01_101500"
-                        date_sig_mandat: "2026-10-23"
-                        date_effet_req: "2026-11-12"
+                        effective_date: "2026-11-12"
                         lines:
                           - address: "552100554"
-                            mesh: "SIREN"
+                            mesh: "siren"
                             siren: "552100554"
                             silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
-                            date_effet_req: "2026-11-12"
+                            effective_date: "2026-11-12"
                             decision:
                               status: "ACWC"
-                              date_effet_app: "2026-11-16"
+                              effective_date: "2026-11-16"
                               at: "2026-10-26T09:30:00Z"
                         created_at: "2026-10-23T10:15:00Z"
                         updated_at: "2026-10-26T09:31:00Z"
@@ -538,25 +536,23 @@ paths:
                         role: "outgoing"
                         status: "completed"
                         siren: "123456789"
-                        denomination: "Exemple Conseil SARL"
-                        new_pa:
-                          matricule: "0998"
-                        old_pa:
-                          matricule: "0997"
+                        name: "Exemple Conseil SARL"
+                        new_platform:
+                          identifier: "0998"
+                        old_platform:
+                          identifier: "0997"
                           name: "Ancienne Plateforme SA"
-                        num_mandat: "123456789_0998_20261020_01"
                         request_number: "123456789_0998_20261020_01_000001"
-                        date_sig_mandat: "2026-10-20"
-                        date_effet_req: "2026-11-03"
+                        effective_date: "2026-11-03"
                         lines:
                           - address: "123456789"
                             inbox: "AB12CD34"
-                            mesh: "SIREN"
+                            mesh: "siren"
                         response_lines:
                           - address: "123456789"
                             status: "ACCP"
-                            date_effet_app: "2026-11-03"
-                            code_mig_peppol: "NEANT"
+                            effective_date: "2026-11-03"
+                            migration_code: "none"
                         created_at: "2026-10-20T14:02:00Z"
                         updated_at: "2026-10-24T08:45:00Z"
                     next_offset: 50
@@ -565,7 +561,7 @@ paths:
                   value:
                     migrations: []
         "400":
-          description: The `offset` query parameter is negative.
+          description: The `offset` or `limit` query parameter is not a number, or `offset` is negative.
           content:
             application/json:
               schema:
@@ -610,22 +606,20 @@ paths:
                         role: "incoming"
                         status: "received"
                         siren: "552100554"
-                        denomination: "Exemple Services SAS"
-                        new_pa:
-                          matricule: "0999"
+                        name: "Exemple Services SAS"
+                        new_platform:
+                          identifier: "0999"
                           name: "Nouvelle Plateforme SAS"
-                        old_pa:
-                          matricule: "0998"
-                        num_mandat: "552100554_0999_20261023_01"
+                        old_platform:
+                          identifier: "0998"
                         request_number: "552100554_0999_20261023_01_101500"
-                        date_sig_mandat: "2026-10-23"
-                        date_effet_req: "2026-11-12"
+                        effective_date: "2026-11-12"
                         lines:
                           - address: "552100554"
-                            mesh: "SIREN"
+                            mesh: "siren"
                             siren: "552100554"
                             silo_entry_id: "5b45453c-cdd0-11ed-afa1-0242ac120002"
-                            date_effet_req: "2026-11-12"
+                            effective_date: "2026-11-12"
                         created_at: "2026-10-23T10:15:00Z"
                         updated_at: "2026-10-23T10:15:00Z"
                 empty:
@@ -633,7 +627,7 @@ paths:
                   value:
                     migrations: []
         "400":
-          description: The `offset` query parameter is negative.
+          description: The `offset` or `limit` query parameter is not a number, or `offset` is negative.
           content:
             application/json:
               schema:
@@ -1489,34 +1483,24 @@ components:
             request spans several companies and none of its addresses
             belong to this workspace.
           example: "552100554"
-        denomination:
+        name:
           type: string
           description: Legal name of the company, as sent in the request.
           example: "Exemple Services SAS"
-        new_pa:
+        new_platform:
           $ref: "#/components/schemas/MigrationPlatform"
           description: Platform taking the addresses over.
-        old_pa:
+        old_platform:
           $ref: "#/components/schemas/MigrationPlatform"
           description: Platform currently holding the addresses.
-        num_mandat:
-          type: string
-          description: |-
-            Mandate number, in the form
-            `<SIREN>_<new PA matricule>_<YYYYMMDD>_<NN>`.
-          example: "552100554_0999_20261023_01"
         request_number:
           type: string
           description: |-
-            Request number carried by every message of the exchange: the
-            mandate number followed by a 6-character counter.
+            Request number carried by every message of the exchange, in
+            the form
+            `<SIREN>_<new platform identifier>_<YYYYMMDD>_<NN>_<counter>`.
           example: "552100554_0999_20261023_01_101500"
-        date_sig_mandat:
-          type: string
-          format: date
-          description: Date the company signed the formal agreement (`YYYY-MM-DD`).
-          example: "2026-10-23"
-        date_effet_req:
+        effective_date:
           type: string
           format: date
           description: Effective date the new PA requested (`YYYY-MM-DD`).
@@ -1550,11 +1534,11 @@ components:
     MigrationPlatform:
       type: object
       description: A Plateforme Agréée taking part in a migration.
-      required: [matricule]
+      required: [identifier]
       properties:
-        matricule:
+        identifier:
           type: string
-          description: 4-character platform registration number.
+          description: 4-character platform registration number (matricule).
           example: "0999"
         name:
           type: string
@@ -1578,9 +1562,14 @@ components:
         mesh:
           type: string
           description: |-
-            Addressing level of the line (`Maille_adressage`).
-          enum: ["SIREN", "SIRET", "CR", "SUFFIXE"]
-          example: "SIREN"
+            Addressing level of the line.
+
+              - `siren` - The whole company.
+              - `siret` - One establishment.
+              - `routing_code` - A routing code within an establishment.
+              - `suffix` - A suffix chosen by the company.
+          enum: ["siren", "siret", "routing_code", "suffix"]
+          example: "siren"
         siren:
           type: string
           description: Company the address belongs to, on incoming requests.
@@ -1592,7 +1581,7 @@ components:
             on incoming requests. Pass it to
             `POST /apps/gov-fr/v1/migrations/{silo_entry_id}` to answer.
           example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
-        date_effet_req:
+        effective_date:
           type: string
           format: date
           description: Effective date requested for this address (`YYYY-MM-DD`).
@@ -1618,19 +1607,19 @@ components:
               - `RJCT` - Rejected.
           enum: ["ACCP", "ACSP", "ACWC", "RJCT"]
           example: "ACWC"
-        motif:
+        reason:
           type: string
           description: Reason for a rejection, for example `REFUS_CLIENT`.
           example: "REFUS_CLIENT"
-        date_effet_app:
+        effective_date:
           type: string
           format: date
           description: Agreed effective date (`YYYY-MM-DD`).
           example: "2026-11-16"
         code:
           type: string
-          description: Peppol migration code, or `NEANT` when no Peppol address migrates.
-          example: "NEANT"
+          description: Peppol migration code, or `none` when no Peppol address migrates.
+          example: "none"
         at:
           type: string
           description: When the answer was recorded.
@@ -1648,27 +1637,29 @@ components:
         status:
           type: string
           description: |-
-            The old PA's answer (`Reponse_anc_PA`).
+            The old PA's answer.
 
-              - `ACCP` - Accepted, with the Peppol migration code or `NEANT`.
+              - `ACCP` - Accepted, with the Peppol migration code or `none`.
               - `ACSP` - Accepted; the Peppol migration code follows later.
               - `ACWC` - Accepted on another effective date.
               - `PDNG` - On hold because of a dispute.
               - `RJCT` - Rejected.
           enum: ["ACCP", "ACSP", "ACWC", "PDNG", "RJCT"]
           example: "ACCP"
-        motif:
+        reason:
           type: string
           description: Reason for a rejection or dispute, when given.
-        date_effet_app:
+        effective_date:
           type: string
           format: date
           description: Effective date the old PA applied (`YYYY-MM-DD`).
           example: "2026-11-03"
-        code_mig_peppol:
+        migration_code:
           type: string
-          description: Peppol migration code, `NEANT`, or omitted when not sent yet.
-          example: "NEANT"
+          description: |-
+            Peppol migration code, or `none` when no Peppol address
+            migrates. Omitted until the old PA sends it.
+          example: "none"
 
     MigrationAnswer:
       type: object
