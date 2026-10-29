@@ -24,6 +24,8 @@ import WorkDocumentMin from '/snippets/invoices/pt/at-work-document.min.mdx';
 import WorkDocument from '/snippets/invoices/pt/at-work-document.mdx';
 import InvoiceReceiptMin from '/snippets/invoices/pt/at-invoice-receipt.min.mdx';
 import InvoiceReceipt from '/snippets/invoices/pt/at-invoice-receipt.mdx';
+import SimplifiedInvoiceReceiptMin from '/snippets/invoices/pt/at-invoice-receipt-simplified.min.mdx';
+import SimplifiedInvoiceReceipt from '/snippets/invoices/pt/at-invoice-receipt-simplified.mdx';
 import ProformaMin from '/snippets/invoices/pt/at-proforma.min.mdx';
 import Proforma from '/snippets/invoices/pt/at-proforma.mdx';
 
@@ -118,18 +120,27 @@ import Proforma from '/snippets/invoices/pt/at-proforma.mdx';
 
 	<Accordion title="AT invoice-receipt (Fatura-Recibo)">
 
-		In this example, we're issuing an invoice-receipt (_Fatura-Recibo_): a standard or simplified invoice that is fully paid at the moment it is issued. The `payment.advances` entries cover the full document total, so the built document ends up with `totals.due` at `0.00`.
+		In these examples, we're issuing an invoice-receipt (_Fatura-Recibo_): an invoice that is fully paid at the moment it is issued. The `payment.advances` entries cover the full document total, so the built document ends up with `totals.due` at `0.00`. The first example is a standard invoice with an identified customer; the second is the simplified (retail) variant.
 
 		Notice:
 
 		- the `series` must use the `FR ` prefix (for example `FR SERIES-A`). Sending a fully paid invoice on an `FT` or `FS` series fails with `series format must be valid`; see [Series management → Naming](/guides/pt-at-supplier#naming),
 		- each entry in `payment.advances` is one payment. List several to record a mix of payment methods — here a card deposit followed by cash at checkout — and each one is shown on the PDF,
 		- when running `gobl build`, or uploading the file, the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon sets the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension to `FR` automatically once the advances cover the total, and sets the [`pt-saft-payment-means`](https://docs.gobl.org/addons/pt-saft-v1#payment-means) extension on each advance from its `key` (`card` → `CC`, `cash` → `NU`), and,
-		- the same works for simplified invoices: add the `simplified` tag, leave out the `customer`, and include the same `payment.advances` block.
+		- the simplified variant only differs by the `simplified` tag (`$tags: ["simplified"]`) and the missing `customer`; the `payment.advances` block is identical, and the series still uses the `FR ` prefix rather than `FS `.
+
+		**Standard invoice-receipt** (with customer):
 
 		<CodeGroup>
 			<InvoiceReceiptMin />
 			<InvoiceReceipt />
+		</CodeGroup>
+
+		**Simplified invoice-receipt** (no customer):
+
+		<CodeGroup>
+			<SimplifiedInvoiceReceiptMin />
+			<SimplifiedInvoiceReceipt />
 		</CodeGroup>
 	</Accordion>
 
