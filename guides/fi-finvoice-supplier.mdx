@@ -131,7 +131,7 @@ Once registration completes, a Finnish party can send and receive e-invoices, an
   A Finnish party's e-invoice address works from the moment registration completes, but the [national registry](https://verkkolaskuosoite.fi) counterparties look addresses up in is refreshed once a night. Expect the party to become findable there the following day.
 </Note>
 
-At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue. When a party leaves, see [Unregister a supplier](#unregister-a-supplier) below.
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue.
 
 ## Sign the agreement via the API
 
@@ -145,7 +145,7 @@ Integrators building their own onboarding UI can drive the signing step without 
 
 ## Unregister a supplier
 
-When a party stops invoicing through Invopop, unregister it so that its e-invoice address is no longer published through us and its inbox is no longer polled. Create the unregister workflow and run it on the party's silo entry.
+To offboard a party, create the unregister workflow and run it on the party's silo entry: it takes the e-invoice address off the party record, waits for anything still in the party's inbox at the operator to be imported (the job stays queued meanwhile), then removes the party's operator account and stops polling its inbox. A party that was never registered, or was already unregistered, completes with nothing to do.
 
 <Card iconType="duotone" title="Finvoice unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fi-finvoice-unregister" horizontal>
   Add to my workspace →
@@ -161,16 +161,8 @@ When a party stops invoicing through Invopop, unregister it so that its e-invoic
   </Tab>
 </Tabs>
 
-The unregister step reverses what registration set up, in this order:
-
-1. **The address is withdrawn.** The `0216` endpoint registration recorded on the party is removed, so invoices you issue for it no longer carry it.
-2. **The inbox is drained.** If a Finnish party still has invoices in its inbox at the operator that haven't been imported yet, the job stays queued and checks again every couple of minutes until they have been. Nothing is removed while it waits, so a document that arrives in the meantime is still imported.
-3. **The operator account is removed.** The party's account under Invopop's partner account is deleted, and with it the address the operator held for it; the national registry picks that up on its nightly refresh. Polling of its inbox stops.
-
-A party that was never registered, or was already unregistered, completes with nothing to do. Run the registration workflow again to bring the party back; it gets the same e-invoice address, since that is derived from its business ID.
-
 <Warning>
-  Tell the party's counterparties about its new address before unregistering it. An e-invoice sent to the old address after the account is removed is not delivered, and the operator does not notify anyone.
+  An unregistered party can no longer send or receive through the Finland app, and an e-invoice sent to its address after the account is removed is not delivered, so tell its counterparties before you unregister it. To operate on its behalf again, run the registration workflow again; a Finnish party gets the same e-invoice address back.
 </Warning>
 
 ## FAQ
