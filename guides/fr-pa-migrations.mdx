@@ -5,6 +5,8 @@ description: Answer another Plateforme Agréée's request to take over a party's
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import IncomingMigrationWorkflow, { frPaIncomingMigrationWorkflow } from '/snippets/workflows/fr/pa-incoming-migration.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-migrations.mdx';
 
 A company can change Plateforme Agréée (PA) at any time. The new PA sends a `MOBILITY_REQUEST` to the old one, and the old PA answers with a `MOBILITY_RESPONSE`: accepted, accepted on another date, or refused. Invopop handles both sides of this exchange:
@@ -16,11 +18,7 @@ A company can change Plateforme Agréée (PA) at any time. The new PA sends a `M
 
 ### Setup
 
-Add the **PPF incoming migration** template to your workspace, then select it as the migration workflow in the France app's configuration.
-
-<Card iconType="duotone" title="PPF incoming migration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-incoming-migration" horizontal>
-  Add to my workspace →
-</Card>
+Add the [PPF incoming migration workflow](#ppf-incoming-migration-workflow) to your workspace, then select it as the migration workflow in the France app's configuration.
 
 In the **Apps** view, open the **France** app, click **Configure**, and select the workflow under **Migration Workflow**.
 
@@ -30,7 +28,7 @@ Invopop only accepts a request when it comes from the requesting platform's regi
 
 ### Takeover form
 
-The **Start migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address.
+The **Respond to incoming migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address.
 
 The form shows the requesting platform and the address, and lets the user:
 
@@ -41,17 +39,32 @@ To answer from your own system instead of the form, call [Answer a migration req
 
 ### Answer deadline
 
-The company has **5 business days** from the request's arrival to answer. This deadline only applies to workspaces with a migration workflow configured (see [Setup](#setup)). The form shows the deadline. If the address is still unanswered after that, **Wait for migration approval** accepts it automatically.
+The company has **5 business days** from the request's arrival to answer. This deadline only applies to workspaces with a migration workflow configured (see [Setup](#setup)). The form shows the deadline. If the address is still unanswered after that, **Wait for migration response** accepts it automatically.
 
 ### Response
 
-**Complete migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
+**Complete incoming migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
 
 | Answer | Response status |
 |---|---|
 | Accepted on the requested date | `ACCP` |
 | Accepted on another date | `ACWC`, with the agreed effective date |
 | Refused | `RJCT`, with motif `REFUS_CLIENT` |
+
+## PPF incoming migration workflow
+
+<Card iconType="duotone" title="PPF incoming migration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-incoming-migration" horizontal>
+  Add to my workspace →
+</Card>
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaIncomingMigrationWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <IncomingMigrationWorkflow />
+  </Tab>
+</Tabs>
 
 ## Outgoing takeovers
 
@@ -133,13 +146,13 @@ In a sandbox workspace you can trigger an incoming request yourself, to test the
 
 ### Remove the Peppol migration steps
 
-Before simulating, remove the **Start Peppol migration** and **Wait for Peppol migration** actions from the migration workflow you test with.
+Before simulating, remove the **Start Peppol migration**, **Wait for Peppol migration** and **Unregister supplier from Peppol** actions from the migration workflow you test with.
 
 <Warning>
-  **Start Peppol migration** (`peppol.migrate`) hands the party's Peppol migration key to the new PA, which here is made up. **Wait for Peppol migration** stays queued until the Peppol network routes the participant to another provider's Access Point, which never happens for a simulated request, so the job would never finish.
+  **Start Peppol migration** (`peppol.migrate`) hands the party's Peppol migration key to the new PA, which here is made up. **Wait for Peppol migration** stays queued until the Peppol network routes the participant to another provider's Access Point, which never happens for a simulated request, so the job would never finish. **Unregister supplier from Peppol** (`peppol.unregister`) acts on the party's real Peppol registration, so don't run it for a simulated request either.
 </Warning>
 
-The rest of the workflow (**Wait for migration approval**, **Complete migration**) stays as it is.
+The rest of the workflow (**Wait for migration response**, **Complete incoming migration**) stays as it is.
 
 The request comes from a made-up platform and is handled like a real one. No email is ever sent to any platform for a simulated request.
 
