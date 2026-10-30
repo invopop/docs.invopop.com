@@ -1,0 +1,117 @@
+export const roSendWorkflow = {
+    "name": "RO generate & send",
+    "description": "Generate the RO e-Factura XML of an invoice and send it to ANAF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "94b53c83-d12c-11f1-a526-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "94b53cd6-d12c-11f1-baae-92000739e901",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · RO · 000001",
+            "config": {
+                "name": "RO",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "94b53d1b-d12c-11f1-895c-92000739e901",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "94b53d5b-d12c-11f1-a456-92000739e901",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "94b53d9a-d12c-11f1-8390-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "94b53de1-d12c-11f1-a374-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json RO generate & send workflow
+{
+    "name": "RO generate & send",
+    "description": "Generate the RO e-Factura XML of an invoice and send it to ANAF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "94b53c83-d12c-11f1-a526-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "94b53cd6-d12c-11f1-baae-92000739e901",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · RO · 000001",
+            "config": {
+                "name": "RO",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "94b53d1b-d12c-11f1-895c-92000739e901",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "94b53d5b-d12c-11f1-a456-92000739e901",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "94b53d9a-d12c-11f1-8390-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "94b53de1-d12c-11f1-a374-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

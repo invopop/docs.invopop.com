@@ -1,0 +1,201 @@
+---
+title: "Romania"
+description: "Register parties, send CIUS-RO invoices and import received invoices through Romania's RO e-Factura system."
+keywords: ['romania','ro','anaf','efactura','e-factura','spv','cius-ro','ubl']
+mode: wide
+---
+
+import RegisterWorkflow from '/snippets/workflows/ro/register.mdx';
+import UnregisterWorkflow from '/snippets/workflows/ro/unregister.mdx';
+import ValidateTokenWorkflow from '/snippets/workflows/ro/validate-token.mdx';
+import SendWorkflow from '/snippets/workflows/ro/send.mdx';
+import SyncWorkflow from '/snippets/workflows/ro/sync.mdx';
+import ImportWorkflow from '/snippets/workflows/ro/import.mdx';
+import ExampleAccordion from '/snippets/invoices/ro/accordion.mdx';
+import Supplier from '/snippets/parties/ro/supplier.mdx';
+import Customer from '/snippets/parties/ro/customer.mdx';
+import RomaniaResources from '/snippets/tables/romania-resources.mdx';
+import FAQ from '/snippets/faqs/ro/composers/app-efactura.mdx';
+
+<Tabs>
+	<Tab title="Description">
+		<Columns cols="2">
+			<div class="flex flex-col grow items-center justify-center">
+				<Card title="Register suppliers" icon="https://assets.invopop.com/flags/ro.svg"
+				  href="/guides/ro-efactura-supplier" horizontal>
+				  Supplier registration guide ›
+				</Card>
+				<Card title="Issue invoices" icon="https://assets.invopop.com/flags/ro.svg"
+				  href="/guides/ro-efactura" horizontal>
+				  Issuing guide ›
+				</Card>
+				<Card title="Receive invoices" icon="https://assets.invopop.com/flags/ro.svg"
+				  href="/guides/ro-efactura-receiving" horizontal>
+				  Receiving guide ›
+				</Card>
+			</div>
+
+				|           |                                        |
+				|-----------|----------------------------------------|
+				| Developer | [Invopop](https://invopop.com)         |
+				| Category  | Government                             |
+				| Scope     | B2B, B2C                               |
+				| Country   | [Romania](/compliance/romania)         |
+				| System    | RO e-Factura (ANAF)                    |
+		</Columns>
+
+		[RO e-Factura](https://mfinante.gov.ro/ro/web/efactura) is Romania's mandatory national e-invoicing system, run by the Ministry of Finance and the tax authority, [ANAF](https://www.anaf.ro) (_Agenția Națională de Administrare Fiscală_). Businesses reach it through the API or through SPV (_Spațiul Privat Virtual_), ANAF's online portal.
+
+		Electronic invoicing in Romania operates on a clearance model: every B2B invoice must be uploaded to RO e-Factura within 5 working days of issue, and B2C invoices are reported the same way. The platform validates each invoice, seals it with the Ministry of Finance signature and makes it available to the buyer in SPV. The sealed XML is the legal invoice.
+
+		Invoices are encoded in UBL 2.1 following CIUS-RO, the Romanian profile of EN 16931. Invopop authorizes on behalf of each party through ANAF's OAuth flow, so the party's digital certificate never leaves its owner.
+
+	**Key features**
+
+	* **Workflow automation:** Automated workflows for registering parties, sending invoices, and importing received invoices through RO e-Factura.
+	* **Party registration:** Register a party with its Romanian tax ID (CIF). The certificate holder accepts the terms and authorizes Invopop once on ANAF's site, from a link stored in the party's meta. Partners can show and accept the terms in their own interface through the API.
+	* **Authorization renewal:** ANAF authorizations last one year. Invopop renews access in the background during that year. Notifications before the party has to register again are in development.
+	* **CIUS-RO XML generation:** Compliant UBL 2.1 generation for invoices, credit notes, corrective, self-billed and accounting invoices, checked against the official ANAF schematron before upload.
+	* **Clearance tracking:** Invopop waits for ANAF's decision on each upload and attaches the official XML returned by ANAF to the invoice.
+	* **Automatic routing:** B2B, B2C, self-billed and enforcement uploads are picked from the invoice itself, with no configuration.
+	* **Invoice import & sync:** Periodically fetch invoices received in SPV and import them into Invopop in GOBL format.
+
+	<Note>
+	  **Sandbox and live environments**
+
+	  Invopop sandbox workspaces send every invoice to ANAF's test environment, where documents have no fiscal value. Live workspaces send to ANAF's production environment.
+	</Note>
+
+	Check out the guides below to get started:
+
+	- [Supplier registration](/guides/ro-efactura-supplier) · [Issuing invoices](/guides/ro-efactura) · [Receiving invoices](/guides/ro-efactura-receiving)
+
+	## FAQ
+
+	<FAQ />
+
+	More answers in our [Romania FAQ](/faq/romania) section
+
+	</Tab>
+	<Tab title="Limitations">
+		| Capability | Status | Notes |
+		|---|---|---|
+		| Party registration | <Badge color="green">Available</Badge> | |
+		| Sending invoices | <Badge color="green">Available</Badge> | |
+		| Receiving invoices | <Badge color="green">Available</Badge> | |
+		| Authorization expiry notifications | <Badge color="yellow">In development</Badge> | Soon configured through the app configuration |
+	</Tab>
+	<Tab title="Actions">
+		The following workflow actions will be available once you install and enable this app:
+
+		Registration
+
+		<Card title="Register with ANAF" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 100/mo</div>
+		 Start the registration of a party with RO e-Factura. Generates the registration link and stores it in the `meta` section of the party. The link shows the terms, then continues to ANAF.
+		</Card>
+		<Card title="Wait ANAF link registration" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+			Pause the workflow, without a time limit, until the holder of the party's SPV digital certificate opens the link stored in meta, accepts the terms and authorizes Invopop on ANAF's site.
+		</Card>
+		{/* Hidden until notifications before an ANAF authorization expires are available.
+		<Card title="Validate your ANAF refresh token" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+			<Badge color="yellow">In development</Badge> Not implemented yet, soon supported through the app configuration. Checks the party's ANAF authorization and continues on the `ok`, `warning` or `expired` branch, to notify the party before it has to register again.
+		</Card>
+		*/}
+		<Card title="Unregister from ANAF" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+			Completely unregister a party and clear the ANAF credentials stored in Invopop's database.
+		</Card>
+
+		Sending
+
+		<Card title="Generate e-Factura XML" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 1</div>
+		 Generate the CIUS-RO XML from a GOBL invoice that declares the `ro-efactura-v1` addon, and attach it to the invoice.
+		</Card>
+		<Card title="Send e-Factura XML to ANAF" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 2</div>
+		 Upload the attached XML to RO e-Factura and wait until ANAF accepts or rejects it. The official XML returned by ANAF is archived and attached to the invoice.
+		</Card>
+
+		Receiving
+
+		<Card title="Receive all new invoices from RO e-Factura" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+		 Fetch the invoices the party received in RO e-Factura since the last sync and create an import job for each one. Fired periodically by the [Cron app](/apps/cron).
+		</Card>
+		<Card title="Import a single invoice from RO e-Factura" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 3</div>
+		 Download one received invoice, archive it, convert it to GOBL and store it as a new invoice in the silo. Managed by the sync workflow, not run directly.
+		</Card>
+	</Tab>
+
+	<Tab title="Workflows">
+		Party workflows
+		<AccordionGroup>
+			<Accordion title="RO register party">
+			This workflow registers a party with RO e-Factura and subscribes it to the periodic sync of received invoices.
+				<RegisterWorkflow />
+			</Accordion>
+
+			<Accordion title="RO unregister party">
+			This workflow unregisters a party from RO e-Factura and stops the periodic sync.
+				<UnregisterWorkflow />
+			</Accordion>
+
+			{/* Hidden until notifications before an ANAF authorization expires are available.
+			<Accordion title="RO validate token">
+			<Badge color="yellow">In development</Badge> Not implemented yet, soon supported through the app configuration. This workflow will check the party's ANAF authorization and email you when it is about to expire or has expired.
+				<ValidateTokenWorkflow />
+			</Accordion>
+			*/}
+
+			<Accordion title="RO Sync Received Invoices">
+			This workflow fetches the invoices received by a party and creates an import job for each one. It is run by the Cron app.
+				<SyncWorkflow />
+			</Accordion>
+		</AccordionGroup>
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="RO generate & send">
+			This workflow generates the CIUS-RO XML of an invoice and sends it to RO e-Factura.
+				<SendWorkflow />
+			</Accordion>
+
+			<Accordion title="RO Import Invoice">
+			This workflow imports a single received invoice. It is run by the sync workflow.
+				<ImportWorkflow />
+			</Accordion>
+		</AccordionGroup>
+	</Tab>
+	<Tab title="Documents">
+		The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+		<AccordionGroup>
+			<Accordion title="RO e-Factura supplier">
+				A supplier with a Romanian CIF, used both for party registration and as the invoice issuer. The county goes in `state` and, in Bucharest, the sector in `locality`.
+				<Supplier />
+			</Accordion>
+			<Accordion title="RO e-Factura customer">
+				A business customer identified by its Romanian CIF.
+				<Customer />
+			</Accordion>
+		</AccordionGroup>
+
+		<ExampleAccordion />
+
+		For more examples and detailed documentation, visit the [Supplier registration](/guides/ro-efactura-supplier), [Issuing invoices](/guides/ro-efactura), and [Receiving invoices](/guides/ro-efactura-receiving) guides.
+	</Tab>
+</Tabs>
+
+---
+
+<RomaniaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about the Romania app →
+</Card>

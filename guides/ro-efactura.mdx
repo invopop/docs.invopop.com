@@ -1,0 +1,161 @@
+---
+title: "RO e-Factura issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: "Issue CIUS-RO invoices through Romania's RO e-Factura system."
+---
+
+import RomaniaResources from '/snippets/tables/romania-resources.mdx';
+import SendWorkflow, { roSendWorkflow } from '/snippets/workflows/ro/send.mdx';
+import ExampleAccordion from '/snippets/invoices/ro/accordion.mdx';
+import FAQ from '/snippets/faqs/ro/composers/guide-efactura-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+[RO e-Factura](https://mfinante.gov.ro/ro/web/efactura) is Romania's mandatory national e-invoicing system, run by the Ministry of Finance and [ANAF](https://www.anaf.ro). Every B2B invoice must be uploaded within 5 working days of issue, and B2C invoices are reported the same way. The platform validates each invoice and seals it with the Ministry of Finance signature: the sealed XML is the legal invoice.
+
+Invoices are encoded in UBL 2.1 following CIUS-RO, the Romanian profile of EN 16931. Invopop builds the XML from your GOBL invoice, checks it against the official ANAF schematron, uploads it and waits for ANAF's decision.
+
+This guide covers three key processes:
+
+- [Invoice issuance](#send-an-invoice): Creating and sending CIUS-RO invoices through RO e-Factura
+- [Corrections](#correct-an-invoice): Credit notes and corrective invoices for accepted invoices
+- [Special cases](#special-cases): B2C, self-billed and accounting invoices
+
+For registering parties (suppliers) with RO e-Factura, see the companion guide: [Romania: Supplier registration](/guides/ro-efactura-supplier).
+
+Invopop supports two use cases that require different configurations:
+
+- **Send only**: You issue invoices through RO e-Factura on behalf of your suppliers. This is the simplest setup and does not require the Cron app or the sync and import workflows.
+- **Send & receive**: In addition to sending, you also want to automatically import invoices received by your suppliers. This requires the Cron app to periodically check for new invoices.
+
+The table below summarizes which components are needed for each use case:
+
+| Component | Send only | Send & receive |
+|-----------|:---------:|:--------------:|
+| Romania app | ✓ | ✓ |
+| Cron app | — | ✓ |
+| Generate & send workflow | ✓ | ✓ |
+| Import invoice workflow | — | ✓ |
+| Sync received invoices workflow | — | ✓ |
+| Registration workflow | [Without the subscribe step](/guides/ro-efactura-supplier#setup) | [With the subscribe step](/guides/ro-efactura-supplier#setup) |
+
+| - | Sandbox | Live |
+|---|---|---|
+| **Supplier** | Registered party with a real CIF | Registered party with a real CIF |
+| **Environment** | ANAF test environment, documents have no fiscal value | ANAF production environment |
+
+## Prerequisites
+
+To issue invoices through RO e-Factura, you will need:
+
+- **A registered party (supplier)**: follow the [RO e-Factura supplier registration guide](/guides/ro-efactura-supplier) to connect the Romania app and register the party with ANAF before issuing.
+- **Customer details**, including their Romanian CIF for domestic B2B invoices, and their address with county.
+- **Line items** with quantities, prices, and applicable VAT rates.
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Info>
+  The Romania app must already be connected and the party registered with ANAF — both are covered in the [supplier registration guide](/guides/ro-efactura-supplier).
+</Info>
+
+<Steps>
+
+<Step title="Configure the invoice sending workflow">
+
+This workflow numbers the invoice, converts it to CIUS-RO XML and sends it to RO e-Factura:
+
+1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
+2. **Add sequential code** gives the invoice its number.
+3. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
+4. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml`.
+5. **Set state** to <Badge size="sm" color="blue" icon="square-small" iconType="solid">Sent</Badge>.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={roSendWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <SendWorkflow />
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Running
+
+In this section, we'll provide details on how to issue invoices on behalf of a registered party.
+
+### Send an invoice
+
+Once a party is registered, you can issue invoices on their behalf. The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+
+<Tip>
+  GOBL invoices sent to RO e-Factura must include the `ro-efactura-v1` addon in `$addons`, which applies the CIUS-RO rules on top of EN 16931.
+</Tip>
+
+<ExampleAccordion />
+
+After creating the invoice in the Console:
+1. Click **Build** to validate
+2. Click **Save** to store in the silo
+3. Click **Select workflow** and choose the **RO generate & send** workflow
+4. Click **Run workflow**
+
+<Frame>
+  <img width="391" src="/assets/guides/ro-efactura-sent-invoice.png" alt="Invoice in Sent state with the generated and the official ANAF XML" />
+</Frame>
+
+The job waits on the **Send e-Factura XML to ANAF** step until ANAF decides, which usually takes a few minutes:
+
+- ✓ **Accepted** (`ok`): the invoice moves to <Badge color="green">Sent</Badge> and carries the official XML returned by ANAF.
+- × **Rejected** (`nok`): the job fails with the errors ANAF returned. Correct the invoice and run the workflow again.
+
+<Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
+
+### Correct an invoice
+
+An invoice accepted by RO e-Factura cannot be cancelled. To correct it, issue a new document that references it, and process it with the same [generate & send workflow](#send-an-invoice):
+
+- **Credit note** (type code `381`): set `type` to `credit-note`. Use it to refund or reduce the amount of the original invoice.
+- **Corrective invoice** (type code `384`): set `type` to `corrective`. Use it to replace the original invoice.
+
+In both cases, reference the original invoice in the `preceding` array with its `series`, `code` and `issue_date`. As with every GOBL credit note, quantities and amounts are expressed as positive values. You can copy the **B2B credit note** and **B2B corrective invoice** examples from the accordion above as a starting point.
+
+### Special cases
+
+Invopop picks the right ANAF upload options from the invoice itself, so the same workflow handles every case:
+
+- **B2C invoices**: when the customer has no tax ID, the invoice is uploaded to ANAF's B2C endpoint. The `ro-efactura-v1` addon adds the thirteen zeros CNP that Romanian law requires for consumers without an identifier.
+- **Self-billed invoices** (_autofactură_, type code `389`): add the `self-billed` tag. The customer issues the invoice in the supplier's name, so the **customer** must be the registered party. The addon adds the `Autofactură` note, and the upload is flagged as self-billed.
+- **Invoices for accounting purposes** (type code `751`): add the `accounting` tag.
+- **Enforcement procedures**: add the `enforcement` tag and name the enforcement body as payee. The upload is made with the payee's CIF and flagged as enforcement.
+
+## GOBL addon reference
+
+Detailed information about the CIUS-RO rules, scenarios and tags can be found in the [`ro-efactura-v1` addon documentation](https://github.com/invopop/gobl.ro.anaf/tree/main/addon).
+
+## FAQ
+
+<FAQ />
+
+More available in our [Romania FAQ](/faq/romania) section
+
+---
+
+<RomaniaResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Romania →
+</Card>

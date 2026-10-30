@@ -76,7 +76,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | Germany | de | (uses `peppol` only) |
 | Finland | fi | `finvoice` (also uses `peppol`) |
 | Hungary | hu | (country scope only; NAV real-time reporting) |
-| Romania | ro | (country scope only; own RO e-Factura regime) |
+| Romania | ro | `efactura` |
 | Slovakia | sk | (country scope only; Peppol with eFaktúra tax data reporting) |
 | UAE | ae | (country scope only; own EIS / PINT AE regime) |
 | Spain | es | `verifactu`, `ticketbai`, `sii`, `noverifactu`, `facturae` |
@@ -116,6 +116,7 @@ Folder slugs are lowercase; subheadings in composers use the canonical brand spe
 | `ticket` | Smart Receipts |
 | `sat` | SAT/CFDI |
 | `ksef` | KSeF |
+| `efactura` | RO e-Factura |
 | `at` | AT (SAF-T) |
 | `zatca` | ZATCA |
 
@@ -416,6 +417,10 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/pt-at-supplier.mdx` | `pt/composers/guide-at-supplier.mdx` |
 | `faq/romania.mdx` | `ro/composers/page-faq.mdx` |
 | `compliance/romania.mdx` | `ro/composers/page-compliance.mdx` |
+| `apps/romania.mdx` | `ro/composers/app-efactura.mdx` |
+| `guides/ro-efactura.mdx` | `ro/composers/guide-efactura-invoicing.mdx` |
+| `guides/ro-efactura-supplier.mdx` | `ro/composers/guide-efactura-supplier.mdx` |
+| `guides/ro-efactura-receiving.mdx` | `ro/composers/guide-efactura-receiving.mdx` |
 | `faq/slovakia.mdx` | `sk/composers/page-faq.mdx` |
 | `compliance/slovakia.mdx` | `sk/composers/page-compliance.mdx` |
 | `faq/saudi-arabia.mdx` | `sa/composers/page-faq.mdx` |
