@@ -125,11 +125,21 @@ Both lists page with `offset` and `limit` (default `25`, maximum `200`), counted
 
 In a sandbox workspace you can trigger an incoming request yourself, to test the takeover form, the answer endpoint and your migration workflow end to end.
 
-1. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run.
+1. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run, without the Peppol migration steps ([see below](#remove-the-peppol-migration-steps)).
 2. In the France dashboard's **Parties** tab, click the party to open its side panel.
 3. On an active endpoint, open the **⋯** menu next to the copy button and choose **Simulate incoming migration**. A toast confirms "Simulated incoming migration for `<endpoint>`". Disabled endpoints don't show the menu.
 4. The request appears in the **Migrations** tab and in `GET /apps/gov-fr/v1/migrations/{silo_entry_id}` as an `incoming` item with `status` `pending`, and your migration workflow starts on the silo entry.
 5. Answer it with the takeover form or `POST /apps/gov-fr/v1/migrations/{silo_entry_id}`, as described in [Incoming requests](#incoming-requests).
+
+### Remove the Peppol migration steps
+
+Before simulating, remove the **Start Peppol migration** and **Wait for Peppol migration** actions from the migration workflow you test with.
+
+<Warning>
+  **Start Peppol migration** (`peppol.migrate`) hands the party's Peppol migration key to the new PA, which here is made up. **Wait for Peppol migration** stays queued until the Peppol network routes the participant to another provider's Access Point, which never happens for a simulated request, so the job would never finish.
+</Warning>
+
+The rest of the workflow (**Wait for migration approval**, **Complete migration**) stays as it is.
 
 The request comes from a made-up platform and is handled like a real one. No email is ever sent to any platform for a simulated request.
 
