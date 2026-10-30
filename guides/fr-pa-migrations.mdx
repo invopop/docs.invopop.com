@@ -119,15 +119,19 @@ Both lists page with `offset` and `limit` (default `25`, maximum `200`), counted
 
 ## Testing incoming migrations in sandbox
 
+<Note>
+  Simulating an incoming migration is only available in sandbox workspaces. The option isn't shown in live workspaces, and the request is refused there.
+</Note>
+
 In a sandbox workspace you can trigger an incoming request yourself, to test the takeover form, the answer endpoint and your migration workflow end to end.
 
-1. In the France dashboard's **Parties** tab, click the party to open its side panel.
-2. Open the **⋯** menu on an active endpoint and choose **Simulate incoming migration**.
+1. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run.
+2. In the France dashboard's **Parties** tab, click the party to open its side panel.
+3. On an active endpoint, open the **⋯** menu next to the copy button and choose **Simulate incoming migration**. A toast confirms "Simulated incoming migration for `<endpoint>`". Disabled endpoints don't show the menu.
+4. The request appears in the **Migrations** tab and in `GET /apps/gov-fr/v1/migrations/{silo_entry_id}` as an `incoming` item with `status` `pending`, and your migration workflow starts on the silo entry.
+5. Answer it with the takeover form or `POST /apps/gov-fr/v1/migrations/{silo_entry_id}`, as described in [Incoming requests](#incoming-requests).
 
-Invopop creates a takeover request for that address from a made-up platform and handles it like a real one: it appears in the **Migrations** tab and the migrations API, and starts your migration workflow on the silo entry. Answer it with the form or the API as described in [Incoming requests](#incoming-requests). No email is sent to any platform for a simulated request.
-
-The option is only available in sandbox workspaces. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run.
-
+The request comes from a made-up platform and is handled like a real one. No email is ever sent to any platform for a simulated request.
 
 ## FAQ
 
