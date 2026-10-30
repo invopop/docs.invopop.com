@@ -1,0 +1,161 @@
+# OpenAPI Romania v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you register parties with the Romania RO e-Factura app through the API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Romania Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-ro/v1/entry/{silo_entry_id}/terms:
+    get:
+      description: Fetch the RO e-Factura terms and conditions the party accepts before authorizing Invopop with ANAF, as a standalone HTML page carrying their version.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The terms and conditions as an HTML page.
+          content:
+            text/html:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      description: Accept the terms and conditions on behalf of the party and get the ANAF authorization link. The acceptance is recorded with the `api` channel and the accepted terms are stored on the party entry as a private agreement file. Accepting again returns the same answer.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: Terms accepted, the ANAF authorization link is ready to send to the certificate holder.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TermsAcceptance"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/entry/{silo_entry_id}/link:
+    get:
+      description: Fetch the ANAF authorization link of a party that has accepted the terms and conditions.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The ANAF authorization link.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  link:
+                    description: ANAF authorization link to send to the certificate holder.
+                    type: string
+                    example: "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  parameters:
+    SiloEntryID:
+      description: ID of the org.Party silo entry being registered.
+      in: path
+      name: silo_entry_id
+      required: true
+      schema:
+        description: ID of the org.Party silo entry being registered.
+        example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+        title: Silo Entry ID
+        type: string
+  schemas:
+    TermsAcceptance:
+      type: object
+      properties:
+        link:
+          description: ANAF authorization link to send to the certificate holder.
+          type: string
+          example: "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
+        accepted_at:
+          description: When the terms were accepted.
+          type: string
+          format: date-time
+          example: "2026-10-30T10:15:00Z"
+        version:
+          description: Version of the accepted terms.
+          type: string
+          example: "v1"
+    Error:
+      type: object
+      properties:
+        message:
+          description: Details of the error.
+          type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized - Missing or invalid token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not Found - The silo entry doesn't exist or belongs to another workspace.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflict - The **Register with ANAF** step hasn't run for the party (`registration not started`), or the terms haven't been accepted yet (`party has not accepted the terms and conditions`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Unprocessable Entity - The silo entry isn't a party, or the party has no Romanian tax ID.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal Server Error - The request could not be processed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+
+        Example: `Authorization: Bearer <token>`

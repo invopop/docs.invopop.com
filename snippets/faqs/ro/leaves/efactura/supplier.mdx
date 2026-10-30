@@ -1,5 +1,5 @@
   <Accordion title="What does a party need to register with RO e-Factura?">
-    A Romanian tax ID (CIF) and a qualified digital certificate of a person with access to the company's SPV (*Spațiul Privat Virtual*) as legal representative or authorized person. The certificate holder opens the registration link and authorizes Invopop on ANAF's site. Invopop never sees or stores the certificate.
+    A Romanian tax ID (CIF) and a qualified digital certificate of a person with access to the company's SPV (*Spațiul Privat Virtual*) as legal representative or authorized person. The certificate holder opens the registration link, accepts the terms and conditions and authorizes Invopop on ANAF's site. Invopop never sees or stores the certificate.
   </Accordion>
 
   <Accordion title="Can one person register several companies?">
@@ -7,7 +7,15 @@
   </Accordion>
 
   <Accordion title="Where do I find the registration link?">
-    After the **Register with ANAF** step runs, the link is stored in the **Meta** section of the party entry under the `link` key. The workflow waits on the **Wait ANAF link registration** step until the certificate holder completes the authorization, and the link is removed once the party is registered.
+    After the **Register with ANAF** step runs, the link is stored in the **Meta** section of the party entry under the `link` key. It opens the terms and conditions first and then continues to ANAF. The workflow waits on the **Wait ANAF link registration** step until the certificate holder completes the authorization, and the link is removed once the party is registered.
+  </Accordion>
+
+  <Accordion title="Can I accept the terms and conditions through the API?">
+    Yes. If you register parties for your own customers, fetch the terms with `GET /apps/gov-ro/v1/entry/{silo_entry_id}/terms`, show them in your own interface and accept them with `POST` on the same path. The response carries the ANAF link to send to the certificate holder. See the [white label registration](/guides/ro-efactura-supplier#white-label-registration) flow.
+  </Accordion>
+
+  <Accordion title="Where is the acceptance of the terms stored?">
+    On the party entry, as a private agreement file named `terms-and-conditions.html` holding the exact terms accepted. Its meta records the version, the acceptance time and whether they were accepted on the registration page or through the API.
   </Accordion>
 
   <Accordion title="Why did my party registration fail?">
@@ -16,6 +24,7 @@
     - **Wrong certificate**: the certificate chosen in the browser does not belong to a person with SPV rights for the company's CIF.
     - **SPV rights missing**: the certificate holder is not registered in SPV as legal representative or authorized person of the company.
     - **Party not Romanian**: the party's `tax_id` country must be `RO`.
+    - **Terms not accepted**: the ANAF authorization only goes through once the terms and conditions have been accepted.
 
     After fixing the cause, open the same registration link again.
 

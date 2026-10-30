@@ -16,7 +16,7 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 [RO e-Factura](https://mfinante.gov.ro/ro/web/efactura) is Romania's mandatory national e-invoicing system, run by the Ministry of Finance and [ANAF](https://www.anaf.ro), the Romanian tax authority. Before you can send or receive invoices through RO e-Factura on behalf of a party (supplier), the party must authorize Invopop with ANAF.
 
-Authorization uses ANAF's OAuth flow. Invopop generates a link, and a person with rights for the company in SPV (_Spațiul Privat Virtual_), ANAF's online portal, opens it and signs in on ANAF's site with their qualified digital certificate. Certificates belong to people, not companies: ANAF grants the access that the certificate holder has in SPV. The certificate never leaves its owner: Invopop only receives the access ANAF grants, valid for one year.
+Authorization uses ANAF's OAuth flow. Invopop generates a registration link, and a person with rights for the company in SPV (_Spațiul Privat Virtual_), ANAF's online portal, opens it, accepts the RO e-Factura terms and conditions and signs in on ANAF's site with their qualified digital certificate. Certificates belong to people, not companies: ANAF grants the access that the certificate holder has in SPV. The certificate never leaves its owner: Invopop only receives the access ANAF grants, valid for one year.
 
 <Info>
   The party doesn't need to register its own application with ANAF or provide a client ID and secret. Invopop connects through its own ANAF application, and the party only has to authorize it.
@@ -75,8 +75,8 @@ The [Cron app](/apps/cron) runs the sync of received invoices at the interval yo
 This workflow registers a party with RO e-Factura, then subscribes it to the periodic sync of received invoices:
 
 1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
-2. **Register with ANAF** generates the ANAF authorization link and stores it in the party's **Meta** section.
-3. **Wait ANAF link registration** pauses the workflow until the certificate holder completes the authorization.
+2. **Register with ANAF** generates the registration link and stores it in the party's **Meta** section.
+3. **Wait ANAF link registration** pauses the workflow until the certificate holder accepts the terms and completes the authorization.
 4. **Set state** to <Badge size="sm" color="purple" icon="square-small" iconType="solid">Registered</Badge>.
 5. **Subscribe to periodic execution** subscribes the party to the sync workflow through the Cron app.
 
@@ -185,7 +185,7 @@ The party moves to <Badge size="sm" color="yellow" icon="square-small" iconType=
   <img width="390" src="/assets/guides/ro-efactura-wait-step.png" alt="Registration job waiting for the ANAF authorization" />
 </Frame>
 
-The **Wait ANAF link registration** step waits indefinitely. It continues as soon as the authorization on ANAF's site ends with the **Registration Successful** page.
+The **Wait ANAF link registration** step waits indefinitely. It continues as soon as the terms are accepted and the authorization on ANAF's site ends with the **Registration Successful** page.
 
 - **To cancel the registration**, cancel the job.
 - **To restart the registration**, run the **RO register party** workflow again.
@@ -199,10 +199,10 @@ The **Wait ANAF link registration** step waits indefinitely. It continues as soo
 <Step title="Get the registration link">
 
 <Badge color="green">Your own company</Badge><br />
-In Console, go to the party entry → **Meta** tab → click the **link** entry to open ANAF's authorization page.
+In Console, go to the party entry → **Meta** tab → click the **link** entry to open the registration page.
 
 <Frame>
-  <img width="382" src="/assets/guides/ro-efactura-meta-link.png" alt="Party entry Meta tab with the ANAF registration link" />
+  <img width="382" src="/assets/guides/ro-efactura-meta-link.png" alt="Party entry Meta tab with the registration link" />
 </Frame>
 
 <Badge color="green">Third-party companies</Badge> (white label)<br />
@@ -217,14 +217,14 @@ Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get t
       {
         "src": "gov-ro",
         "key": "link",
-        "link_url": "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
+        "link_url": "https://gov-ro.invopop.com/reg/..."
       }
     ]
   }
 }
 ```
 
-Send the `link_url` to the certificate holder.
+Send the `link_url` to the certificate holder. To show the terms in your own interface instead, follow the [white label registration](#white-label-registration) flow.
 
 <Info>
   The link can be opened as many times as needed until the authorization succeeds, for example after choosing the wrong certificate.
@@ -232,9 +232,23 @@ Send the `link_url` to the certificate holder.
 
 </Step>
 
+<Step title="Accept the terms and conditions">
+
+The certificate holder opens the link. Before connecting to ANAF, Invopop shows the RO e-Factura terms and conditions, which cover what the authorization is used for, how long it lasts and how to withdraw it.
+
+Tick **I have read and accept the terms and conditions** and click <kbd>Connect to ANAF</kbd>.
+
+<Frame>
+  <img width="600" src="/assets/guides/ro-efactura-terms-and-conditions.png" alt="RO e-Factura registration page with the terms and conditions accepted" />
+</Frame>
+
+The accepted terms are stored on the party entry as a private agreement file, `terms-and-conditions.html`, with their version and the time they were accepted. Once accepted, opening the link again goes straight to ANAF.
+
+</Step>
+
 <Step title="Authorize Invopop on ANAF's site">
 
-The certificate holder opens the link in a browser where their digital certificate is installed:
+The certificate holder continues to ANAF in a browser where their digital certificate is installed:
 
 1. The browser asks which certificate to use. Choose the certificate registered in SPV for the company.
 
@@ -274,9 +288,77 @@ Invopop stores the ANAF authorization and wakes the waiting job up. The registra
 
 At this point, you're ready to start sending invoices on behalf of the party. Head over to the [RO e-Factura issuing invoices guide](/guides/ro-efactura) to continue.
 
+## White label registration
+
+If you register parties for your own customers, you can show the terms and conditions in your own interface and send the certificate holder straight to ANAF. Call the endpoints in this order, with your workspace's API token:
+
+<Steps>
+
+<Step title="Create the party">
+
+Store the supplier with the [Create an Entry endpoint](/api-ref/silo/entries/create-an-entry-post) and keep its silo entry ID.
+
+</Step>
+
+<Step title="Run the registration workflow">
+
+Run the **RO register party** workflow on the party with the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post). The **Register with ANAF** step prepares the registration and the job waits on **Wait ANAF link registration**.
+
+</Step>
+
+<Step title="Show the terms to your customer">
+
+Fetch the terms with [Fetch terms and conditions](/api-ref/apps/gov-ro/terms-fetch) and show them to your customer:
+
+```bash
+GET https://api.invopop.com/apps/gov-ro/v1/entry/{silo_entry_id}/terms
+```
+
+The response is an HTML page carrying the version of the terms.
+
+</Step>
+
+<Step title="Accept the terms">
+
+Once your customer agrees, accept the terms on their behalf with [Accept terms and conditions](/api-ref/apps/gov-ro/terms-accept):
+
+```bash
+POST https://api.invopop.com/apps/gov-ro/v1/entry/{silo_entry_id}/terms
+```
+
+```json
+{
+  "link": "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=...",
+  "accepted_at": "2026-10-30T10:15:00Z",
+  "version": "v1"
+}
+```
+
+The accepted terms are stored on the party entry, recorded as accepted through the API.
+
+</Step>
+
+<Step title="Send the ANAF link">
+
+Send the `link` to the certificate holder, who signs in on ANAF's site with their certificate. To fetch the link again later, use [Fetch ANAF link](/api-ref/apps/gov-ro/link-fetch).
+
+</Step>
+
+<Step title="Wait for the registration">
+
+The job continues once the authorization succeeds, and the party moves to <Badge size="sm" color="purple" icon="square-small" iconType="solid">Registered</Badge>. Add a webhook step at the end of the workflow, or [fetch the job](/api-ref/transform/jobs/fetch-a-job), to know when it is done.
+
+</Step>
+
+</Steps>
+
+<Note>
+  The terms endpoints answer `409` if the **Register with ANAF** step hasn't run for the party, and the link endpoint answers `409` until the terms are accepted.
+</Note>
+
 ## Renew the authorization
 
-ANAF authorizations last one year. To renew one, run the **RO register party** workflow again on the same party entry and complete the authorization with the certificate. The party keeps its history and received invoices continue from where they stopped.
+ANAF authorizations last one year. To renew one, run the **RO register party** workflow again on the same party entry and complete the authorization with the certificate. The party keeps its history and received invoices continue from where they stopped. Terms already accepted carry over, so the link goes straight to ANAF unless the terms have changed since.
 
 <Note>
   Notifications before an authorization expires are in development and will soon be supported through the app configuration.
@@ -287,7 +369,7 @@ ANAF authorizations last one year. To renew one, run the **RO register party** w
 Run the **RO unregister party** workflow on the party entry. The party moves to <Badge color="gray">Void</Badge>, the ANAF credentials are deleted from Invopop and the periodic sync stops.
 
 <Warning>
-  An unregistered party can no longer send or receive invoices through Invopop. To start again, run the registration workflow and complete the ANAF authorization again.
+  An unregistered party can no longer send or receive invoices through Invopop. To start again, run the registration workflow, accept the terms and complete the ANAF authorization again.
 </Warning>
 
 <Tip>
