@@ -1,11 +1,3 @@
-import ServiceInvoiceMin from '/snippets/invoices/br/dfe-service-invoice.min.mdx';
-import ServiceInvoice from '/snippets/invoices/br/dfe-service-invoice.mdx';
-import ServiceInvoiceRTCMin from '/snippets/invoices/br/dfe-service-invoice-rtc.min.mdx';
-import ServiceInvoiceRTC from '/snippets/invoices/br/dfe-service-invoice-rtc.mdx';
-import ConsumerInvoiceMin from '/snippets/invoices/br/dfe-consumer-invoice.min.mdx';
-import ConsumerInvoice from '/snippets/invoices/br/dfe-consumer-invoice.mdx';
-import ConsumerInvoiceSimplesMin from '/snippets/invoices/br/dfe-consumer-invoice-simples.min.mdx';
-import ConsumerInvoiceSimples from '/snippets/invoices/br/dfe-consumer-invoice-simples.mdx';
 import ProductInvoiceMin from '/snippets/invoices/br/dfe-product-invoice.min.mdx';
 import ProductInvoice from '/snippets/invoices/br/dfe-product-invoice.mdx';
 import ProductInvoiceSimplesMin from '/snippets/invoices/br/dfe-product-invoice-simples.min.mdx';
@@ -14,38 +6,6 @@ import CreditNoteMin from '/snippets/invoices/br/dfe-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 
 <AccordionGroup>
-	<Accordion title="Example B2B service invoice (NFS-e)">
-
-		In this example, we're issuing a simple service invoice (NFS-e) from a Brazilian supplier to another Brazilian business customer.
-
-		Notice:
-
-		- we've added the [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) addon; this ensures the document will be validated using the NFS-e rules built into the [GOBL](https://docs.gobl.org) library,
-		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-		- ISS percentage is provided explicitly as it varies depending on the municipality and type of service,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue service invoice (NFS-e)" workflow created during setup.
-
-		<CodeGroup>
-			<ServiceInvoiceMin />
-			<ServiceInvoice />
-		</CodeGroup>
-	</Accordion>
-
-	<Accordion title="Example B2B service invoice with RTC (NFS-e)">
-
-		In this example, we're issuing a simple service invoice (NFS-e) with the currently supported RTC (Tax Reform) fields.
-
-		Notice the differences from the previous example:
-
-		- we've set the [`br-nfse-operation`](https://docs.gobl.org/addons/br-nfse-v1#operation-indicator) extension, the [`br-nfse-tax-status`](https://docs.gobl.org/addons/br-nfse-v1#tax-status-code-cst) extension and the [`br-nfse-tax-class`](https://docs.gobl.org/addons/br-nfse-v1#tax-classification-code) extension at item level which will be used to determine the IBS and CBS taxes as part of the tax reform.
-
-		<CodeGroup>
-			<ServiceInvoiceRTCMin />
-			<ServiceInvoiceRTC />
-		</CodeGroup>
-	</Accordion>
-
 	<Accordion title="Example B2B product invoice (NF-e)">
 
 		In this example, we're issuing an extended product invoice (NF-e) from a Brazilian supplier to another Brazilian business customer.
@@ -113,47 +73,6 @@ import CreditNote from '/snippets/invoices/br/dfe-credit-note.mdx';
 		<CodeGroup>
 			<CreditNoteMin />
 			<CreditNote />
-		</CodeGroup>
-	</Accordion>
-
-	<Accordion title="Example B2C consumer invoice (NFC-e)">
-
-		In this example, we're issuing a simple consumer invoice (NFC-e) from a Brazilian supplier.
-
-		Notice:
-
-		- we've added the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) addon with the `simplified` tag; this sets the [`br-nfe-model`](https://docs.gobl.org/addons/br-nfe-v4#model) extension to `65` (NFC-e),
-		- the customer is optional and in this example we've omitted it,
-		- extensions (`ext`) and identities have been used in multiple locations for fields whose values cannot be determined any other way,
-		- each line must include a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension to classify the fiscal operation, just as on an NF-e,
-		- the payment instructions key is set to `card`, which causes the [`br-nfe-payment-means`](https://docs.gobl.org/addons/br-nfe-v4#payment-method) extension to be set automatically to `03` (cartão de crédito),
-		- tax percentages are provided explicitly as they vary depending on the state and type of goods,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
-
-		<CodeGroup>
-			<ConsumerInvoiceMin />
-			<ConsumerInvoice />
-		</CodeGroup>
-	</Accordion>
-
-	<Accordion title="Example B2C consumer invoice for a Simples Nacional issuer (NFC-e)">
-
-		In this example, we're issuing a consumer invoice (NFC-e) from a supplier enrolled in the _Simples Nacional_ tax regime.
-
-		Notice the differences from the previous example:
-
-		- the supplier declares its regime with the [`br-nfe-regime`](https://docs.gobl.org/addons/br-nfe-v4#tax-regime-code) extension set to `1` (_Simples Nacional_),
-		- ICMS carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension set to `102` (taxed without credit permission) with a `0%` percent,
-		- PIS and COFINS use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49` (other operations) at a `0%` rate,
-		- the line carries a [`br-nfe-cfop`](https://docs.gobl.org/addons/br-nfe-v4#cfop-fiscal-operations-and-services-code) extension set to `5102`,
-		- all of these fields must be set explicitly (i.e., you have them in the minimal example), since the automatic defaults are the normal-regime ones: an ICMS line that omits the CSOSN fails validation, while an omitted PIS or COFINS CST silently falls back to `01`,
-		- there are no totals or calculations; all these will be made automatically when uploading, and,
-		- make sure to process it with the "DF-e issue consumer invoice (NFC-e)" workflow created during setup.
-
-		<CodeGroup>
-			<ConsumerInvoiceSimplesMin />
-			<ConsumerInvoiceSimples />
 		</CodeGroup>
 	</Accordion>
 

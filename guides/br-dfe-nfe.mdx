@@ -1,0 +1,98 @@
+---
+title: "NF-e issuing guide"
+sidebarTitle: "NF-e"
+description: Issue product invoices (NF-e, model 55) in Brazil, return goods, and cancel invoices.
+---
+
+import ExampleAccordion from '/snippets/invoices/br/nfe-accordion.mdx'
+import NfceReturnMin from '/snippets/invoices/br/dfe-credit-note-nfce.min.mdx'
+import NfceReturn from '/snippets/invoices/br/dfe-credit-note-nfce.mdx'
+import BrazilResources from '/snippets/tables/brazil-resources.mdx';
+import FAQ from '/snippets/faqs/br/composers/guide-nfe-invoicing.mdx';
+
+## Introduction
+
+An NF-e (_Nota Fiscal Eletrônica_, model 55) is the electronic invoice for goods. The SEFAZ of the issuer's state authorizes it. It is also the document for a consumer sale that an [NFC-e](/guides/br-dfe-nfce) can't cover, and for any return of goods.
+
+The workflows, environments and cancel arguments are in the [DF-e overview](/guides/br-dfe). For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
+
+## Prerequisites
+
+To issue an NF-e, you will need:
+
+- A registered supplier: follow the [DF-e supplier registration guide](/guides/br-dfe-supplier) to connect the Documentos Fiscais Eletrônicos Brazil app and register the supplier's certificate before issuing.
+- The "DF-e issue product invoice (NF-e)" workflow, and the "DF-e cancel product invoice (NF-e)" workflow to cancel. Both are in the [DF-e overview setup](/guides/br-dfe#setup).
+- Customer details.
+- Details of the goods provided:
+  - quantity,
+  - price, and,
+  - applicable tax rates (ICMS, PIS, COFINS, etc.).
+- To have chosen an invoice series
+
+## Send invoices
+
+The following examples are of example [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the "DF-e issue product invoice (NF-e)" workflow created during setup over them.
+
+<Info>
+In the sandbox, every job attaches the same mock PDF and XML. See [Environments](/guides/br-dfe#environments).
+</Info>
+
+<ExampleAccordion />
+
+## Return of an NFC-e
+
+An NFC-e can't cite another document, so it has no credit note (MOC Annex I rule `BA01-10`, rejection `708`). A consumer return is an NF-e entry document that cites the NFC-e. Run it with the "DF-e issue product invoice (NF-e)" workflow.
+
+What changes from the [NFC-e in-person sale](/guides/br-dfe-nfce#in-person-sale):
+
+| Field | Value | Rule |
+|---|---|---|
+| `$tags` | No `simplified` tag. GOBL sets model `55` | [Model code](https://docs.gobl.org/addons/br-nfe-v4#fiscal-document-model-code) |
+| `type` | `credit-note` | |
+| `tax.ext.br-nfe-purpose` | `4`, goods return | [`INVOICE-26`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `tax.ext.br-nfe-operation-type` | `0`, inbound | [`INVOICE-26`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `preceding[0].stamps` | The NFC-e's `sefaz-key` stamp, its 44-digit access key | |
+| `customer` | The consumer's CPF, address and IBGE municipality code. An NF-e requires a customer with an address | [`INVOICE-12`, `13`, `22`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `lines[].ext.br-nfe-cfop` | `1202`, return of a resale in the same state | [`INVOICE-35`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `payment.instructions` | `key: other` with `br-nfe-payment-means` `90`, no payment | [Payment method](https://docs.gobl.org/addons/br-nfe-v4#payment-method) |
+| `notes[key=reason].text` | `Devolução de venda ao consumidor` | [`INVOICE-29`, `30`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+
+<CodeGroup>
+  <NfceReturnMin />
+  <NfceReturn />
+</CodeGroup>
+
+- The return CFOP follows the original sale. `1202` returns a resale bought from third parties. The supplier's tax advisor sets the CFOP for other operations.
+- No `br-nfe-credit-note-type` here: it applies to purpose `5` only, as in the [full goods return example](#send-invoices).
+- ⚠️ An NFC-e written as a credit note fails with `GOBL-BR-NFE-BILL-INVOICE-26`. No GOBL scenario fills its purpose and operation type.
+
+SEFAZ checks that GOBL doesn't run, from the [MOC 7.0 Annex I](https://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=J%20I%20v4eN00E=):
+
+| MOC rule | Rejection | Check |
+|---|---|---|
+| `I08-140` | `327` | A goods return takes a return CFOP |
+| `I08-20` | `519` | An inbound document can't use a CFOP starting with `5`, `6` or `7` |
+| `YA02-04` | `871` | A return takes payment means `90`, no payment |
+
+## Cancel an invoice
+
+Run the "DF-e cancel product invoice (NF-e)" workflow over the silo entry you want to cancel. On success, the entry will be set to `Void`. The optional job arguments are in [Cancel arguments](/guides/br-dfe#cancel-arguments).
+
+## FAQ
+
+<FAQ />
+
+More available in our [Brazil FAQ](/faq/brazil) section
+
+---
+
+<BrazilResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Brazil →
+</Card>
