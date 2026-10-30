@@ -20,12 +20,12 @@ security:
 paths:
   /apps/gov-ro/v1/entry/{silo_entry_id}/terms:
     get:
-      description: Fetch the RO e-Factura terms and conditions the party accepts before authorizing Invopop with ANAF, as a standalone HTML page carrying their version.
+      description: Fetch the RO e-Factura connection notice the party confirms before authorizing Invopop with ANAF, as a standalone HTML page carrying its version.
       parameters:
       - $ref: "#/components/parameters/SiloEntryID"
       responses:
         "200":
-          description: The terms and conditions as an HTML page.
+          description: The connection notice as an HTML page.
           content:
             text/html:
               schema:
@@ -37,12 +37,12 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
     post:
-      description: Accept the terms and conditions on behalf of the party and get the ANAF authorization link. The acceptance is recorded with the `api` channel and the accepted terms are stored on the party entry as a private agreement file. Accepting again returns the same answer.
+      description: Record that the party confirmed the connection notice and get the ANAF authorization link. The confirmation is recorded with the `api` channel and the confirmed notice is stored on the party entry as a private agreement file. Confirming again returns the same answer.
       parameters:
       - $ref: "#/components/parameters/SiloEntryID"
       responses:
         "200":
-          description: Terms accepted, the ANAF authorization link is ready to send to the certificate holder.
+          description: Notice confirmed, the ANAF authorization link is ready to send to the certificate holder.
           content:
             application/json:
               schema:
@@ -59,7 +59,7 @@ paths:
           $ref: "#/components/responses/InternalError"
   /apps/gov-ro/v1/entry/{silo_entry_id}/link:
     get:
-      description: Fetch the ANAF authorization link of a party that has accepted the terms and conditions.
+      description: Fetch the ANAF authorization link of a party that has confirmed the connection notice.
       parameters:
       - $ref: "#/components/parameters/SiloEntryID"
       responses:
@@ -105,12 +105,12 @@ components:
           type: string
           example: "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
         accepted_at:
-          description: When the terms were accepted.
+          description: When the notice was confirmed.
           type: string
           format: date-time
           example: "2026-10-30T10:15:00Z"
         version:
-          description: Version of the accepted terms.
+          description: Version of the confirmed notice.
           type: string
           example: "v1"
     Error:
@@ -133,7 +133,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Conflict:
-      description: Conflict - The **Register with ANAF** step hasn't run for the party (`registration not started`), or the terms haven't been accepted yet (`party has not accepted the terms and conditions`).
+      description: Conflict - The **Register with ANAF** step hasn't run for the party (`registration not started`), or the connection notice hasn't been confirmed yet (`party has not accepted the terms and conditions`).
       content:
         application/json:
           schema:
