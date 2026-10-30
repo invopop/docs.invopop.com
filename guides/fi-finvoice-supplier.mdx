@@ -5,6 +5,7 @@ description: "Register Finnish parties to send and receive e-invoices, and suppl
 ---
 
 import RegisterWorkflow, { fiFinvoiceRegisterWorkflow } from '/snippets/workflows/fi/finvoice-register.mdx';
+import UnregisterWorkflow, { fiFinvoiceUnregisterWorkflow } from '/snippets/workflows/fi/finvoice-unregister.mdx';
 import Supplier from '/snippets/parties/fi/supplier.mdx';
 import FinlandResources from '/snippets/tables/finland-resources.mdx';
 import FAQ from '/snippets/faqs/fi/composers/guide-finvoice-supplier.mdx';
@@ -130,11 +131,7 @@ Once registration completes, a Finnish party can send and receive e-invoices, an
   A Finnish party's e-invoice address works from the moment registration completes, but the [national registry](https://verkkolaskuosoite.fi) counterparties look addresses up in is refreshed once a night. Expect the party to become findable there the following day.
 </Note>
 
-<Warning>
-  There is no self-serve deregistration yet. To offboard a party, contact [support@invopop.com](mailto:support@invopop.com).
-</Warning>
-
-At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue.
+At this point, you're ready to start sending invoices on behalf of the supplier. Head over to the [Finvoice issuing invoices guide](/guides/fi-finvoice) to continue. When a party leaves, see [Unregister a supplier](#unregister-a-supplier) below.
 
 ## Sign the agreement via the API
 
@@ -145,6 +142,36 @@ Integrators building their own onboarding UI can drive the signing step without 
 | `GET /v1/entry/:silo_entry_id/agreement` | The agreement PDF to render on screen: the signed one once it exists, the unsigned document before that. |
 | `POST /v1/entry/:silo_entry_id/identity` | Upload the identity document as base64 images: `{"front": "...", "back": "..."}`; `back` is optional for single-page documents. |
 | `POST /v1/entry/:silo_entry_id/sign` | Sign the agreement and submit the authorization. Send `{"signature": "..."}` with a drawn PNG/JPEG to have it stamped, or an empty body to use the signer's typed name. Returns `{"status": "accepted" \| "awaiting"}`. |
+
+## Unregister a supplier
+
+When a party stops invoicing through Invopop, unregister it so that its e-invoice address is no longer published through us and its inbox is no longer polled. Create the unregister workflow and run it on the party's silo entry.
+
+<Card iconType="duotone" title="Finvoice unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fi-finvoice-unregister" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={fiFinvoiceUnregisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
+
+The unregister step reverses what registration set up, in this order:
+
+1. **The address is withdrawn.** The `0216` endpoint registration recorded on the party is removed, so invoices you issue for it no longer carry it.
+2. **The inbox is drained.** If a Finnish party still has invoices in its inbox at the operator that haven't been imported yet, the job stays queued and checks again every couple of minutes until they have been. Nothing is removed while it waits, so a document that arrives in the meantime is still imported.
+3. **The operator account is removed.** The party's account under Invopop's partner account is deleted, and with it the address the operator held for it; the national registry picks that up on its nightly refresh. Polling of its inbox stops.
+
+A party that was never registered, or was already unregistered, completes with nothing to do. Run the registration workflow again to bring the party back; it gets the same e-invoice address, since that is derived from its business ID.
+
+<Warning>
+  Tell the party's counterparties about its new address before unregistering it. An e-invoice sent to the old address after the account is removed is not delivered, and the operator does not notify anyone.
+</Warning>
 
 ## FAQ
 
