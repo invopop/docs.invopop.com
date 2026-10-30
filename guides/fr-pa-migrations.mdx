@@ -5,6 +5,8 @@ description: Answer another Plateforme Agréée's request to take over a party's
 ---
 
 import FranceResources from '/snippets/tables/france-resources.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import IncomingMigrationWorkflow, { frPaIncomingMigrationWorkflow } from '/snippets/workflows/fr/pa-incoming-migration.mdx';
 import FAQ from '/snippets/faqs/fr/composers/guide-pa-migrations.mdx';
 
 A company can change Plateforme Agréée (PA) at any time. The new PA sends a `MOBILITY_REQUEST` to the old one, and the old PA answers with a `MOBILITY_RESPONSE`: accepted, accepted on another date, or refused. Invopop handles both sides of this exchange:
@@ -16,11 +18,7 @@ A company can change Plateforme Agréée (PA) at any time. The new PA sends a `M
 
 ### Setup
 
-Add the **PPF incoming migration** template to your workspace, then select it as the migration workflow in the France app's configuration.
-
-<Card iconType="duotone" title="PPF incoming migration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-incoming-migration" horizontal>
-  Add to my workspace →
-</Card>
+Add the [PPF incoming migration workflow](#ppf-incoming-migration-workflow) to your workspace, then select it as the migration workflow in the France app's configuration.
 
 In the **Apps** view, open the **France** app, click **Configure**, and select the workflow under **Migration Workflow**.
 
@@ -30,7 +28,7 @@ Invopop only accepts a request when it comes from the requesting platform's regi
 
 ### Takeover form
 
-The **Start migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address.
+The **Respond to incoming migration** step publishes a `link_url` under the `migration-link` key in the silo entry meta. Each silo entry has one link, which always opens the latest request for its address.
 
 The form shows the requesting platform and the address, and lets the user:
 
@@ -41,17 +39,32 @@ To answer from your own system instead of the form, call [Answer a migration req
 
 ### Answer deadline
 
-The company has **5 business days** from the request's arrival to answer. This deadline only applies to workspaces with a migration workflow configured (see [Setup](#setup)). The form shows the deadline. If the address is still unanswered after that, **Wait for migration approval** accepts it automatically.
+The company has **5 business days** from the request's arrival to answer. This deadline only applies to workspaces with a migration workflow configured (see [Setup](#setup)). The form shows the deadline. If the address is still unanswered after that, **Wait for migration response** accepts it automatically.
 
 ### Response
 
-**Complete migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
+**Complete incoming migration** sends the `MOBILITY_RESPONSE` for the address to the new PA:
 
 | Answer | Response status |
 |---|---|
 | Accepted on the requested date | `ACCP` |
 | Accepted on another date | `ACWC`, with the agreed effective date |
 | Refused | `RJCT`, with motif `REFUS_CLIENT` |
+
+## PPF incoming migration workflow
+
+<Card iconType="duotone" title="PPF incoming migration" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-pa-incoming-migration" horizontal>
+  Add to my workspace →
+</Card>
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={frPaIncomingMigrationWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    <IncomingMigrationWorkflow />
+  </Tab>
+</Tabs>
 
 ## Outgoing takeovers
 
@@ -79,12 +92,12 @@ The Role tells you which side of the exchange Invopop is on:
 | <Badge color="gray">Created</Badge> | Outgoing | The request is built but not sent yet. |
 | <Badge color="blue">Sent</Badge> | Outgoing | The request was emailed to the old PA. |
 | <Badge color="blue">Acknowledged</Badge> | Outgoing | The old PA acknowledged the request. |
-| <Badge color="purple">Responded</Badge> | Outgoing | The old PA agreed; the Peppol migration code is still to follow. |
+| <Badge color="purple">Responded</Badge> | Outgoing, Incoming | Outgoing: the old PA agreed; the Peppol migration code is still to follow. Incoming: your answer has been sent to the new PA, but not every address has a final answer yet. |
 | <Badge color="blue">Received</Badge> | Incoming | The request is waiting for answers. |
 | <Badge color="green">Completed</Badge> | Outgoing, Incoming | The migration has been completed, either accepted or rejected. |
 | <Badge color="red">Failed</Badge> | Outgoing | The takeover failed, failure reason is logged in the launcher. |
 
-An outgoing takeover moves from **Created** to **Sent**, **Acknowledged**, **Responded** and **Completed**, or ends as **Failed**. An incoming request moves from **Received** to **Completed**. 
+An outgoing takeover moves from **Created** to **Sent**, **Acknowledged**, **Responded** and **Completed**, or ends as **Failed**. An incoming request moves from **Received** to **Responded** once your answer is sent, and to **Completed** once every address has a final answer. 
 
 The Failure reason explains why an outgoing takeover failed: for example, the old PA rejected it or put it on hold because of a dispute, accepted it without a migration code, sent a reply that couldn't be read, or the request email couldn't be sent. If the reason is unclear, contact Invopop support.
 
@@ -102,6 +115,46 @@ The Decision is your answer on an incoming request, or the old PA's answer on an
 | `RJCT` | Rejected. |
 | `PDNG` | On hold because of a dispute (outgoing only). |
 
+### Reading migrations through the API
+
+The same data is available through the France app's API, authenticated with the enrollment token like the other `/apps/gov-fr` endpoints:
+
+- [List migrations](/api-ref/apps/gov-fr/migrations-list) (`GET /apps/gov-fr/v1/migrations`) returns one item per address in every migration of the workspace, newest first, in both roles.
+- [List a silo entry's migrations](/api-ref/apps/gov-fr/migrations-entry) (`GET /apps/gov-fr/v1/migrations/{silo_entry_id}`) returns the items for the address registered by one silo entry. Use it to find out whether an address has a request waiting for an answer.
+- [Answer a migration request](/api-ref/apps/gov-fr/migration-answer) (`POST /apps/gov-fr/v1/migrations/{silo_entry_id}`) accepts or refuses the request, like the takeover form.
+
+Both lists page with `offset` and `limit` (default `25`, maximum `200`), counted in items, and return a `next_offset` while more results remain. Each item is one address of one request, with:
+
+- `identifier`: the directory address (endpoint) the item refers to, as it appears in the PPF Annuaire.
+- `status`: `pending` until the address has a final answer, then `accepted` or `rejected`. An outgoing request that fails without an agreement is `failed`.
+- `effective_date`: the agreed date once the address is answered, otherwise the requested one.
+- `decisions`: the answers given so far, with their response code (`ACCP`, `ACWC`, `RJCT`, ...) and Peppol migration code. On an incoming item they are your answers; on an outgoing one, the old PA's.
+
+## Testing incoming migrations in sandbox
+
+<Note>
+  Simulating an incoming migration is only available in sandbox workspaces. The option isn't shown in live workspaces, and the request is refused there.
+</Note>
+
+In a sandbox workspace you can trigger an incoming request yourself, to test the takeover form, the answer endpoint and your migration workflow end to end.
+
+1. Configure the migration workflow first (see [Setup](#setup)), so the simulated request has a workflow to run, without the Peppol migration steps ([see below](#remove-the-peppol-migration-steps)).
+2. In the France dashboard's **Parties** tab, click the party to open its side panel.
+3. On an active endpoint, open the **⋯** menu next to the copy button and choose **Simulate incoming migration**. A toast confirms "Simulated incoming migration for `<endpoint>`". Disabled endpoints don't show the menu.
+4. The request appears in the **Migrations** tab and in `GET /apps/gov-fr/v1/migrations/{silo_entry_id}` as an `incoming` item with `status` `pending`, and your migration workflow starts on the silo entry.
+5. Answer it with the takeover form or `POST /apps/gov-fr/v1/migrations/{silo_entry_id}`, as described in [Incoming requests](#incoming-requests).
+
+### Remove the Peppol migration steps
+
+Before simulating, remove the **Start Peppol migration**, **Wait for Peppol migration** and **Unregister supplier from Peppol** actions from the migration workflow you test with.
+
+<Warning>
+  **Start Peppol migration** (`peppol.migrate`) hands the party's Peppol migration key to the new PA, which here is made up. **Wait for Peppol migration** stays queued until the Peppol network routes the participant to another provider's Access Point, which never happens for a simulated request, so the job would never finish. **Unregister supplier from Peppol** (`peppol.unregister`) acts on the party's real Peppol registration, so don't run it for a simulated request either.
+</Warning>
+
+The rest of the workflow (**Wait for migration response**, **Complete incoming migration**) stays as it is.
+
+The request comes from a made-up platform and is handled like a real one. No email is ever sent to any platform for a simulated request.
 
 ## FAQ
 
