@@ -323,6 +323,9 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/documentos-fiscais-electronicos-brazil.mdx` | `br/composers/app-dfe.mdx` |
 | `guides/br-dfe.mdx` | `br/composers/guide-dfe-invoicing.mdx` |
 | `guides/br-dfe-supplier.mdx` | `br/composers/guide-dfe-supplier.mdx` |
+| `guides/br-dfe-nfe.mdx` | `br/composers/guide-nfe-invoicing.mdx` |
+| `guides/br-dfe-nfce.mdx` | `br/composers/guide-nfe-invoicing.mdx` |
+| `guides/br-dfe-nfse.mdx` | `br/composers/guide-nfse-invoicing.mdx` |
 | `faq/colombia.mdx` | `co/composers/page-faq.mdx` |
 | `compliance/colombia.mdx` | `co/composers/page-compliance.mdx` |
 | `apps/colombia.mdx` | `co/composers/app-colombia.mdx` |
