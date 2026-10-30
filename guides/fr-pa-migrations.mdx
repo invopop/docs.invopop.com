@@ -106,11 +106,16 @@ The Decision is your answer on an incoming request, or the old PA's answer on an
 
 The same data is available through the France app's API, authenticated with the enrollment token like the other `/apps/gov-fr` endpoints:
 
-- [List migrations](/api-ref/apps/gov-fr/migrations-list) (`GET /apps/gov-fr/v1/migrations`) returns every migration in the workspace, newest first, in both roles.
-- [List a silo entry's migrations](/api-ref/apps/gov-fr/migrations-entry) (`GET /apps/gov-fr/v1/migrations/{silo_entry_id}`) returns the migrations for the address registered by one silo entry, with only that entry's line. Use it to find out whether an address has a request waiting for an answer.
+- [List migrations](/api-ref/apps/gov-fr/migrations-list) (`GET /apps/gov-fr/v1/migrations`) returns one item per address in every migration of the workspace, newest first, in both roles.
+- [List a silo entry's migrations](/api-ref/apps/gov-fr/migrations-entry) (`GET /apps/gov-fr/v1/migrations/{silo_entry_id}`) returns the items for the address registered by one silo entry. Use it to find out whether an address has a request waiting for an answer.
 - [Answer a migration request](/api-ref/apps/gov-fr/migration-answer) (`POST /apps/gov-fr/v1/migrations/{silo_entry_id}`) accepts or refuses the request, like the takeover form.
 
-Both lists page with `offset` and `limit` and return a `next_offset` while more results remain. Each line's `decision` holds your answer on an incoming request; `response_lines` holds the old PA's answer on an outgoing one.
+Both lists page with `offset` and `limit` (default `25`, maximum `200`), counted in items, and return a `next_offset` while more results remain. Each item is one address of one request, with:
+
+- `identifier`: the directory address (endpoint) the item refers to, as it appears in the PPF Annuaire.
+- `status`: `pending` until the address has a final answer, then `accepted` or `rejected`. An outgoing request that fails without an agreement is `failed`.
+- `effective_date`: the agreed date once the address is answered, otherwise the requested one.
+- `decisions`: the answers given so far, with their response code (`ACCP`, `ACWC`, `RJCT`, ...) and Peppol migration code. On an incoming item they are your answers; on an outgoing one, the old PA's.
 
 ## Testing incoming migrations in sandbox
 
