@@ -76,7 +76,8 @@ This guide assumes that you already have a Chargebee site configured and using P
     - **Supplier:** The supplier that will issue the invoices. You can select the one you created earlier.
     - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
     - **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
-    - **Import payments:** If enabled, payments and refunds are imported too, as GOBL payments processed by the same workflow. See [Importing payments](#importing-payments) for what this requires.
+    - **Import payments:** If enabled, payments and refunds are imported too, as GOBL payments. See [Importing payments](#importing-payments) for what this requires.
+    - **Payment workflow:** The workflow that will process payments, shown when **Import payments** is enabled. Leave it empty to use the invoice workflow.
     - **Exclude customers by default:** If enabled, Invopop will not process a customer's invoices unless the `cf_invopop_include` custom field is present and set to `true` on that customer. This is the recommended way to allowlist a subset of customers — see [Controlling which customers are processed](#controlling-which-customers-are-processed) below.
 
     Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
@@ -154,10 +155,10 @@ Depending on where your customers are located, you'll need a different workflow 
 
 Some countries require you to report when an invoice is paid, not just when it is issued. To support this, the app can import Chargebee payments and refunds as [GOBL payments](https://docs.gobl.org/draft-0/bill/payment). This is off by default and needs two switches:
 
-1. Enable **Import payments** in the app's configuration.
+1. Enable **Import payments** in the app's configuration, and optionally choose a **Payment workflow**.
 2. Enable the "Payment Succeeded" and "Payment Refunded" events on your Chargebee webhook (already the case if it sends "All events").
 
-Payments are processed by the same workflow as invoices, so that workflow **must not be limited to invoices**: a workflow whose schema is `bill/invoice` stops payments with a `schema-mismatch` error right after they are imported. The app refuses to save the configuration with payments enabled and an invoice-only workflow. Workflows you assign to specific customers with the `cf_invopop_workflow` custom field must not be limited to invoices either; the app can't check those for you. Use a workflow without a schema and, where invoices and payments need different steps, branch on the document type with a `silo.if` step using the expression `doc['$schema'] endsWith 'bill/invoice'` and scope `env`.
+Payments are processed by the **Payment workflow** or, if you leave it empty, by the invoice workflow, including any assigned with the `cf_invopop_workflow` custom field. Whichever workflow processes payments must accept them: one whose schema is `bill/invoice` stops payments with a `schema-mismatch` error.
 
 How Chargebee payments become GOBL payments:
 
