@@ -1,7 +1,7 @@
 ---
 title: "Chargebee guide"
 sidebarTitle: "Overview"
-description: "Import and process invoices and credit notes from Chargebee"
+description: "Import and process invoices, credit notes and payments from Chargebee"
 ---
 
 import WorkflowExample from '/snippets/workflows/chargebee/cb-invoice.mdx'
@@ -12,7 +12,7 @@ import { chargebeeCbInvoiceWorkflow } from '/snippets/workflows/chargebee/cb-inv
 
 [Chargebee](https://www.chargebee.com/) is a subscription management and billing platform designed for businesses that rely on recurring revenue. It automates tasks like subscription billing, invoicing, payment processing, and revenue recognition.
 
-Invopop's Chargebee app lets you issue locally compliant electronic invoices and credit notes from Chargebee.
+Invopop's Chargebee app lets you issue locally compliant electronic invoices and credit notes from Chargebee, and optionally report the payments and refunds collected against them.
 
 ## How it works
 
@@ -30,7 +30,7 @@ The Invopop Chargebee app will subscribe to new incoming invoices and credit not
 
 Once an invoice or credit note is stored, the app will create a job on the configured workflow.
 
-Any updates and, importantly, error messages will be posted to Chargebee automatically, in the comment section of the invoice or credit note. We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
+Any updates and, importantly, error messages will be posted to Chargebee automatically, in the comment section of the invoice or credit note (or of the transaction, for [imported payments](#importing-payments)). We also recommend configuring workflows to send notifications via Slack or email to ensure any issues can be addressed quickly.
 
 <Frame caption="Invopop's output in Chargebee">
   <img src="/assets/guides/chargebee-invoice.png" alt="chargebee invoice" />
@@ -76,6 +76,7 @@ This guide assumes that you already have a Chargebee site configured and using P
     - **Supplier:** The supplier that will issue the invoices. You can select the one you created earlier.
     - **Workflow:** The workflow that will process the invoices. You can select the one you created earlier.
     - **Ignore Chargebee's invoice codes:** If `true`, the app will ignore the invoice numbers set by Chargebee and let the workflow assign them instead. In special cases, such as Portugal and Colombia, invoice codes are regulated, and this setting should be set to `true`.
+    - **Import payments:** If enabled, payments and refunds are imported too, as GOBL payments processed by the same workflow. See [Importing payments](#importing-payments) for what this requires.
     - **Exclude customers by default:** If enabled, Invopop will not process a customer's invoices unless the `cf_invopop_include` custom field is present and set to `true` on that customer. This is the recommended way to allowlist a subset of customers — see [Controlling which customers are processed](#controlling-which-customers-are-processed) below.
 
     Some countries require specific codes set on tax-exempt invoices. If you're in one of these countries, you'll see the following fields:
@@ -123,7 +124,7 @@ This guide assumes that you already have a Chargebee site configured and using P
       />
     </Frame>
     <Tip>
-      Currently, Invopop listens to the "Invoice Generated" and the "Credit Note Created" events. However, we recommend that you configure your webhook to send "All events" to ensure that the integration will work in the future if we need to listen to other events.
+      Currently, Invopop listens to the "Invoice Generated" and the "Credit Note Created" events, plus "Payment Succeeded" and "Payment Refunded" when **Import payments** is enabled. We recommend that you configure your webhook to send "All events" to ensure that the integration will work in the future if we need to listen to other events.
     </Tip>
   </Step>
 </Steps>
@@ -148,6 +149,26 @@ Depending on where your customers are located, you'll need a different workflow 
     Generate ZUGFeRD hybrid PDFs for B2B or XRechnung documents for B2G.
   </Card>
 </CardGroup>
+
+## Importing payments
+
+Some countries require you to report when an invoice is paid, not just when it is issued. To support this, the app can import Chargebee payments and refunds as [GOBL payments](https://docs.gobl.org/draft-0/bill/payment). This is off by default and needs two switches:
+
+1. Enable **Import payments** in the app's configuration.
+2. Enable the "Payment Succeeded" and "Payment Refunded" events on your Chargebee webhook (already the case if it sends "All events").
+
+Payments are processed by the same workflow as invoices, so that workflow **must not be limited to invoices**: a workflow whose schema is `bill/invoice` stops payments with a `schema-mismatch` error right after they are imported. The app refuses to save the configuration with payments enabled and an invoice-only workflow. Workflows you assign to specific customers with the `cf_invopop_workflow` custom field must not be limited to invoices either; the app can't check those for you. Use a workflow without a schema and, where invoices and payments need different steps, branch on the document type with a `silo.if` step using the expression `doc['$schema'] endsWith 'bill/invoice'` and scope `env`.
+
+How Chargebee payments become GOBL payments:
+
+- **One payment per document.** A Chargebee transaction that settles several invoices is imported as one payment for each invoice, each with the amount applied to it.
+- **Refunds** settle the credit note they were issued against, and are imported as a payment with the line marked as a refund.
+- **Link to the invoice.** The payment references the invoice it pays by UUID, series and number, and links to it in the Console, even if the payment is imported before the invoice. If you use **Ignore Chargebee's invoice codes** and the payment arrives before Invopop has numbered the invoice, the payment can't reference its number and the import fails; retry the job once the invoice has been processed.
+- **VAT split.** Chargebee doesn't split payments by tax rate, so the app splits each payment across the invoice's VAT rates in proportion to their weight in its total. Partial payments are split the same way.
+- **No PDF.** Chargebee doesn't generate PDFs for payments, so the **Download PDF from Chargebee** step skips them, as does **Update invoice details**.
+- **Comments.** Import results and errors are posted as comments on the Chargebee transaction rather than on the invoice.
+
+Payments only reach Invopop if the customer's invoices do: the same business entity and customer include/exclude rules apply.
 
 ### Controlling which customers are processed
 
