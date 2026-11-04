@@ -6,7 +6,7 @@ info:
     email: dev@invopop.com
     name: Invopop Developers
   description:
-    Set of end-points that help you register parties with the Romania RO e-Factura app through the API.
+    Set of end-points that help you register parties with the Romania RO e-Factura app and download the official ANAF archives of their invoices through the API.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -84,8 +84,54 @@ paths:
           $ref: "#/components/responses/Unprocessable"
         "500":
           $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/sent/{silo_entry_id}/archive:
+    get:
+      description: Download the official ANAF archive of an invoice sent to RO e-Factura, for the last time it was sent. The zip is signed by ANAF and holds the accepted invoice, or the errors of a rejection.
+      parameters:
+      - $ref: "#/components/parameters/InvoiceEntryID"
+      responses:
+        "200":
+          $ref: "#/components/responses/Archive"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not Found - The archive isn't available. The `message` says why, see the endpoint page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/received/{silo_entry_id}/archive:
+    get:
+      description: Download the official ANAF archive an invoice received through RO e-Factura was imported from. The zip is signed by ANAF and holds the invoice as the supplier sent it.
+      parameters:
+      - $ref: "#/components/parameters/InvoiceEntryID"
+      responses:
+        "200":
+          $ref: "#/components/responses/Archive"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not Found - The archive isn't available. The `message` says why, see the endpoint page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
 components:
   parameters:
+    InvoiceEntryID:
+      description: ID of the bill.Invoice silo entry.
+      in: path
+      name: silo_entry_id
+      required: true
+      schema:
+        description: ID of the bill.Invoice silo entry.
+        example: 0190c3a2-7b1e-7c4d-9f2a-3e5d8b6a1c40
+        title: Silo Entry ID
+        type: string
     SiloEntryID:
       description: ID of the org.Party silo entry being registered.
       in: path
@@ -120,6 +166,19 @@ components:
           description: Details of the error.
           type: string
   responses:
+    Archive:
+      description: The official ANAF archive, as a zip file.
+      headers:
+        Content-Disposition:
+          description: Suggested file name of the archive.
+          schema:
+            type: string
+            example: attachment; filename="5001234567.zip"
+      content:
+        application/zip:
+          schema:
+            type: string
+            format: binary
     Unauthorized:
       description: Unauthorized - Missing or invalid token.
       content:
