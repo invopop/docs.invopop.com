@@ -46,7 +46,13 @@ For Invopop to update the invoice in Chargebee and trigger Chargebee's own email
     <Card title="Chargebee ZUGFeRD" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-zugferd" horizontal>
       Add to my workspace →
     </Card>
-    The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. No per-customer configuration is required beyond having a valid German supplier set up in Invopop.
+    The ZUGFeRD workflow downloads the existing Chargebee PDF, generates the ZUGFeRD-compliant XML, and embeds the XML into the PDF to produce a single hybrid document. Chargebee then picks up the result and sends it to your customer. Beyond having a valid German supplier set up in Invopop, the template includes one additional step that addresses a specific requirement:
+
+    **1. Bank details**
+
+    When an invoice is paid by bank transfer, ZUGFeRD requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN and BIC/SWIFT code directly into the **Add bank details** workflow step. Both fields are required.
+
+    This only affects invoices paid outside of Chargebee, such as [offline payments](https://www.chargebee.com/docs/payments/2.0/offline-checkout/offline_payments). For these invoices, Chargebee has no information about the destination account, so the bank details need to be included manually in the workflow.
 
     <Tabs>
       <Tab title="Workflow">
