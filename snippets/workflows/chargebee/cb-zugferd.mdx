@@ -23,6 +23,34 @@ export const chargebeeCbZugferdWorkflow = {
             "provider": "chargebee.pdf.download"
         },
         {
+            "id": "7dad54c0-154a-11f0-8028-c1ed648b57b5",
+            "name": "Add bank details",
+            "provider": "silo.modify",
+            "notes": "Normalizes the payment key to SEPA credit transfer format",
+            "summary": "Add bank details",
+            "config": {
+                "allow_invalid_json": false,
+                "data": {
+                    "doc": {
+                        "payment": {
+                            "instructions": {
+                                "credit_transfer": [
+                                    {
+                                        "bic": "",
+                                        "iban": ""
+                                    }
+                                ],
+                                "key": "credit-transfer"
+                            }
+                        }
+                    }
+                },
+                "expr": "(doc?.payment?.instructions == nil || doc?.payment?.instructions?.key == \"credit-transfer\")\n&& doc?.payment?.terms?.due_dates != nil",
+                "merge_type": "application/merge-patch+json",
+                "sign": false
+            }
+        },
+        {
             "id": "18910b60-6624-11f0-9087-c716f49f1585",
             "name": "Modify silo entry",
             "provider": "silo.modify",
@@ -112,6 +140,34 @@ export const chargebeeCbZugferdWorkflow = {
             "id": "b913e860-1d43-11f1-a00f-9bd9990c5dfa",
             "name": "Download PDF from Chargebee",
             "provider": "chargebee.pdf.download"
+        },
+        {
+            "id": "7dad54c0-154a-11f0-8028-c1ed648b57b5",
+            "name": "Add bank details",
+            "provider": "silo.modify",
+            "notes": "Normalizes the payment key to SEPA credit transfer format",
+            "summary": "Add bank details",
+            "config": {
+                "allow_invalid_json": false,
+                "data": {
+                    "doc": {
+                        "payment": {
+                            "instructions": {
+                                "credit_transfer": [
+                                    {
+                                        "bic": "",
+                                        "iban": ""
+                                    }
+                                ],
+                                "key": "credit-transfer"
+                            }
+                        }
+                    }
+                },
+                "expr": "(doc?.payment?.instructions == nil || doc?.payment?.instructions?.key == \"credit-transfer\")\n&& doc?.payment?.terms?.due_dates != nil",
+                "merge_type": "application/merge-patch+json",
+                "sign": false
+            }
         },
         {
             "id": "18910b60-6624-11f0-9087-c716f49f1585",
