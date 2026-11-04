@@ -22,7 +22,13 @@ Authorization uses ANAF's OAuth flow. Invopop generates a registration link, and
   The party doesn't need to register its own application with ANAF or provide a client ID and secret. Invopop connects through its own ANAF application, and the party only has to authorize it.
 </Info>
 
-In this guide you'll learn how to register a party using the [Romania app](/apps/romania). Once a party is registered, continue with the companion guides: [Romania: Issuing invoices](/guides/ro-efactura) and [Romania: Receiving invoices](/guides/ro-efactura-receiving).
+This guide will...
+
+1. Walk you through the process of creating the workflows necessary to register your own company and/or your customers' parties (in a [white label setup](/guides/white-label)) using the [Romania app](/apps/romania),
+2. Explain how the certificate holder accepts the terms and authorizes Invopop on ANAF's site, and
+3. Explain how to renew or revoke the authorization.
+
+Once a party is registered, continue with the companion guides: [Romania: Issuing invoices](/guides/ro-efactura) and [Romania: Receiving invoices](/guides/ro-efactura-receiving).
 
 | - | Sandbox | Live |
 |---|---|---|
@@ -80,6 +86,8 @@ This workflow registers a party with RO e-Factura, then subscribes it to the per
 4. **Set state** to <Badge size="sm" color="purple" icon="square-small" iconType="solid">Registered</Badge>.
 5. **Subscribe to periodic execution** subscribes the party to the sync workflow through the Cron app.
 
+**Error flow:** if a step fails, for example because the party's `tax_id` isn't Romanian or ANAF turns the registration down, the job ends with a `KO` and the error branch runs **Set state** to `Error`. Fix the cause and run the workflow again: a party can be registered again at any time.
+
 The **Subscribe to periodic execution** step needs the **RO Sync Received Invoices** workflow, created in the [receiving invoices guide](/guides/ro-efactura-receiving#setup). Select it in the step, along with how often the sync should run.
 
 <Info>
@@ -136,23 +144,6 @@ The step also returns the expiry date as the `refresh_token_deadline` argument (
 </Step>
 */}
 
-<Step title="Configure the party unregistration workflow">
-
-This workflow unregisters the party from RO e-Factura, removes the ANAF credentials stored in Invopop and stops the periodic sync.
-
-<Tabs>
-  <Tab title="Workflow">
-    <WorkflowDiagram workflow={roUnregisterWorkflow} />
-  </Tab>
-  <Tab title="Code">
-    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
-
-    <UnregisterWorkflow />
-  </Tab>
-</Tabs>
-
-</Step>
-
 </Steps>
 
 <Info>
@@ -165,19 +156,20 @@ This workflow unregisters the party from RO e-Factura, removes the ANAF credenti
 
 <Step title="Create the party">
 
-In the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click <kbd>+ New Supplier</kbd>.
+Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a new [party](https://docs.gobl.org/draft-0/org/party), setting the `folder` to `suppliers` so it appears in that section. Or, in the [Invopop Console](https://console.invopop.com), navigate to **Parties** → **Suppliers** and click <kbd>+ New Supplier</kbd>.
 
 Use the company's Romanian CIF and address. The county goes in `state` as its ISO 3166-2:RO code (`B` for Bucharest) and, in Bucharest, the sector goes in `locality`:
 
 <Supplier />
 
-Click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>.
+In the Console, click <kbd>Build</kbd>, ensure there are no errors, and click <kbd>Save</kbd>. The party appears with an `Empty` state.
 
 </Step>
 
 <Step title="Run the workflow">
 
-In the party entry, click <kbd>Select Workflow</kbd>, choose your **RO register party** workflow, and click <kbd>Run Workflow</kbd>.
+* **Via API**: send the party to the registration workflow with the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint, using the IDs of the **silo entry** and the **RO register party** workflow.
+* **Via Console**: in the party entry, click <kbd>Select Workflow</kbd>, choose your **RO register party** workflow, and click <kbd>Run Workflow</kbd>.
 
 The party moves to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge> and the job stops at the **Wait ANAF link registration** step until the authorization is complete.
 
@@ -198,33 +190,36 @@ The **Wait ANAF link registration** step waits indefinitely. It continues as soo
 
 <Step title="Get the registration link">
 
-<Badge color="green">Your own company</Badge><br />
-In Console, go to the party entry → **Meta** tab → click the **link** entry to open the registration page.
+<Tabs>
+  <Tab title="Your own company">
+    In Console, go to the party entry → **Meta** tab → click the **link** entry to open the registration page.
 
-<Frame>
-  <img width="382" src="/assets/guides/ro-efactura-meta-link.png" alt="Party entry Meta tab with the registration link" />
-</Frame>
+    <Frame>
+      <img width="382" src="/assets/guides/ro-efactura-meta-link.png" alt="Party entry Meta tab with the registration link" />
+    </Frame>
+  </Tab>
+  <Tab title="Third-party companies">
+    If you issue invoices for third parties ([white label](/guides/white-label)), add a webhook after the **Register with ANAF** step to receive the `siloEntryId`.
 
-<Badge color="green">Third-party companies</Badge> (white label)<br />
-Add a webhook after the **Register with ANAF** step to receive the `siloEntryId`.
+    Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get the registration link from the `meta` object:
 
-Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get the registration link from the `meta` object:
-
-```json
-{
-  "data": {
-    "meta": [
-      {
-        "src": "gov-ro",
-        "key": "link",
-        "link_url": "https://gov-ro.invopop.com/reg/..."
+    ```json
+    {
+      "data": {
+        "meta": [
+          {
+            "src": "gov-ro",
+            "key": "link",
+            "link_url": "https://gov-ro.invopop.com/reg/..."
+          }
+        ]
       }
-    ]
-  }
-}
-```
+    }
+    ```
 
-Send the `link_url` to the certificate holder. To show the terms in your own interface instead, follow the [white label registration](#white-label-registration) flow.
+    Send the `link_url` to the certificate holder. To show the terms in your own interface instead, follow the [white label registration](#white-label-registration) flow.
+  </Tab>
+</Tabs>
 
 <Info>
   The link can be opened as many times as needed until the authorization succeeds, for example after choosing the wrong certificate.
@@ -290,7 +285,7 @@ At this point, you're ready to start sending invoices on behalf of the party. He
 
 ## White label registration
 
-If you register parties for your own customers, you can show the terms in your own interface and send the certificate holder straight to ANAF. Call the endpoints in this order, with your workspace's API token:
+If you register parties for your own customers ([white label](/guides/white-label)), you can show the terms in your own interface and send the certificate holder straight to ANAF. Call the endpoints in this order, with your workspace's API token:
 
 <Steps>
 
@@ -325,6 +320,8 @@ Once your customer accepts the terms, record it with [Accept terms](/api-ref/app
 ```bash
 POST https://api.invopop.com/apps/gov-ro/v1/entry/{silo_entry_id}/terms
 ```
+
+The response carries the ANAF link, the acceptance time and the version of the terms:
 
 ```json
 {
@@ -366,6 +363,19 @@ ANAF authorizations last one year. To renew one, run the **RO register party** w
 
 ## Unregister a supplier
 
+Unregistering a party revokes Invopop's access to ANAF on its behalf. You might need to do so because the party is no longer your customer or because of a change in their CIF. The following workflow unregisters the party from RO e-Factura, removes the ANAF credentials stored in Invopop and stops the periodic sync:
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={roUnregisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+    <UnregisterWorkflow />
+  </Tab>
+</Tabs>
+
 Run the **RO unregister party** workflow on the party entry. The party moves to <Badge color="gray">Void</Badge>, the ANAF credentials are deleted from Invopop and the periodic sync stops.
 
 <Warning>
@@ -375,6 +385,19 @@ Run the **RO unregister party** workflow on the party entry. The party moves to 
 <Tip>
   To stop receiving invoices without unregistering the party, create a workflow with only the **Unsubscribe from periodic execution** step of the Cron app and run it on the party.
 </Tip>
+
+## Legal information
+
+<AccordionGroup>
+  <Accordion title="RO e-Factura connection terms">
+    Before authorizing Invopop on ANAF's site, the certificate holder accepts the terms of the connection on the registration page: the company authorizes Invopop to connect it to the tax authority for invoicing, the person confirms they can act on its behalf, the company stays responsible for the data it provides, and Invopop may update the terms with prior notice.
+
+    The accepted terms are stored on the party entry as a private agreement file, `terms-and-conditions.html`, with their version and the time they were accepted. To read the current version before registering, or to show it in your own interface, use the [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) endpoint once the **Register with ANAF** step has run.
+  </Accordion>
+  <Accordion title="Who can authorize Invopop">
+    ANAF grants Invopop the access that the certificate holder has in SPV, so only a person registered in SPV for the company as legal representative, designated representative or authorized person (_împuternicit_) can complete the authorization. The certificate must be a qualified digital certificate accepted by ANAF for SPV, the same one the person uses to sign in to SPV. Invopop never receives the certificate: it only receives the access ANAF grants, which lasts one year.
+  </Accordion>
+</AccordionGroup>
 
 ## FAQ
 

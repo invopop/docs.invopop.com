@@ -65,13 +65,15 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Step title="Configure the invoice sending workflow">
 
-This workflow numbers the invoice, converts it to CIUS-RO XML and sends it to RO e-Factura:
+This workflow numbers and signs the invoice, converts it to CIUS-RO XML, sends it to RO e-Factura and renders a PDF:
 
 1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
 2. **Add sequential code** gives the invoice its number.
-3. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
-4. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml`.
-5. **Set state** to <Badge size="sm" color="blue" icon="square-small" iconType="solid">Sent</Badge>.
+3. **Sign envelope** seals the GOBL document so it can no longer change.
+4. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
+5. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml`.
+6. **Generate PDF** renders a PDF of the invoice to hand to your customer.
+7. **Set state** to <Badge size="sm" color="blue" icon="square-small" iconType="solid">Sent</Badge>.
 
 <Tabs>
   <Tab title="Workflow">
@@ -84,9 +86,15 @@ This workflow numbers the invoice, converts it to CIUS-RO XML and sends it to RO
   </Tab>
 </Tabs>
 
+Keep the **Workflow ID** at hand, you'll use it later.
+
 </Step>
 
 </Steps>
+
+<Prompt description="Have your agent issue an RO e-Factura invoice in your sandbox." icon="file-invoice" actions={["copy", "cursor"]}>
+Read https://docs.invopop.com/guides/ro-efactura.md, https://docs.invopop.com/guides/ro-efactura-supplier.md and https://github.com/invopop/gobl.ro.anaf/blob/main/addon/README.md. In my sandbox workspace, using the token in INVOPOP_TOKEN and the workflow ID I give you, create a bill/invoice entry with $addons containing ro-efactura-v1, the party I registered with ANAF as the supplier, a customer with a Romanian CIF and an address with its county in state, and the lines I describe with taxes as the VAT category plus a rate key. Do not write totals or percentages and do not invent extension codes; start from one of the example invoices in the guide. Run the workflow with wait=30, then fetch the entry and report its state, the stamps in the envelope header, the attached efactura.xml, anaf-efactura.xml and PDF, and any faults with the errors ANAF returned explained using https://docs.invopop.com/faq/romania.md.
+</Prompt>
 
 ## Running
 
@@ -94,41 +102,111 @@ In this section, we'll provide details on how to issue invoices on behalf of a r
 
 ### Send an invoice
 
-Once a party is registered, you can issue invoices on their behalf. The following examples show partial [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries.
+Once a party is registered, you can issue invoices on their behalf.
 
 <Tip>
   GOBL invoices sent to RO e-Factura must include the `ro-efactura-v1` addon in `$addons`, which applies the CIUS-RO rules on top of EN 16931.
 </Tip>
 
-<ExampleAccordion />
+<Steps>
+  <Step title="Upload an invoice">
+    Use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload the invoice details. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field with these required fields:
 
-After creating the invoice in the Console:
-1. Click **Build** to validate
-2. Click **Save** to store in the silo
-3. Click **Select workflow** and choose the **RO generate & send** workflow
-4. Click **Run workflow**
+    - `$addons`: include [`ro-efactura-v1`](https://github.com/invopop/gobl.ro.anaf/tree/main/addon)
+    - `supplier`: use the details of the party you've registered before
+    - `customer`: the Romanian CIF for domestic B2B invoices, and the address with its county in `state`
 
-<Frame>
-  <img width="391" src="/assets/guides/ro-efactura-sent-invoice.png" alt="Invoice in Sent state with the generated and the official ANAF XML" />
-</Frame>
+    You can copy one of the example invoices below as a reference. They are partial [GOBL](https://docs.gobl.org) documents you can also paste directly into the [Invopop Console](https://console.invopop.com), then click **Build** and **Save**.
 
-The job waits on the **Send e-Factura XML to ANAF** step until ANAF decides, which usually takes a few minutes:
+    <ExampleAccordion />
 
-- ✓ **Accepted** (`ok`): the invoice moves to <Badge color="green">Sent</Badge> and carries the official XML returned by ANAF.
-- × **Rejected** (`nok`): the job fails with the errors ANAF returned. Correct the invoice and run the workflow again.
+    After uploading you'll see the document in the **Invoices** section with status `Empty`.
+  </Step>
+  <Step title="Send the invoice to the RO generate & send workflow">
+    Send the invoice to the workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-<Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
+    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
 
-Once ANAF decides, download the official archive it signed with [Fetch sent archive](/api-ref/apps/gov-ro/sent-archive-fetch). It holds the accepted invoice, or the errors of a rejection.
+    From the Console, open the invoice, click **Select workflow**, choose **RO generate & send** and click **Run workflow**.
 
-### Correct an invoice
+    The job waits on the **Send e-Factura XML to ANAF** step until ANAF decides, which usually takes a few minutes:
 
-An invoice accepted by RO e-Factura cannot be cancelled. To correct it, issue a new document that references it, and process it with the same [generate & send workflow](#send-an-invoice):
+    - ✓ **Accepted** (`ok`): the invoice moves to <Badge color="blue">Sent</Badge> and carries the official XML returned by ANAF, next to the generated XML and the PDF.
+    - × **Rejected** (`nok`): the job fails with the errors ANAF returned. Correct the invoice and run the workflow again.
 
-- **Credit note** (type code `381`): set `type` to `credit-note`. Use it to refund or reduce the amount of the original invoice.
-- **Corrective invoice** (type code `384`): set `type` to `corrective`. Use it to replace the original invoice.
+    <Frame>
+      <img width="391" src="/assets/guides/ro-efactura-sent-invoice.png" alt="Invoice in Sent state with the generated and the official ANAF XML" />
+    </Frame>
 
-In both cases, reference the original invoice in the `preceding` array with its `series`, `code` and `issue_date`. As with every GOBL credit note, quantities and amounts are expressed as positive values. You can copy the **B2B credit note** and **B2B corrective invoice** examples from the accordion above as a starting point.
+    Once ANAF decides, download the official archive it signed with [Fetch sent archive](/api-ref/apps/gov-ro/sent-archive-fetch). It holds the accepted invoice, or the errors of a rejection.
+  </Step>
+</Steps>
+
+### Issue a credit note
+
+An invoice accepted by RO e-Factura cannot be cancelled. To correct it, issue a new document that references it. In Romania you can either:
+
+- Issue a **credit note** (type code `381`), which adjusts the value of the original invoice, or
+- Issue a **corrective invoice** (type code `384`), which replaces the original invoice entirely.
+
+For example, if you issued an invoice for 100 lei but later realized it should have been 80 lei, you can either issue a credit note for 20 lei, or a corrective invoice for 80 lei. Unless you have a specific requirement to replace the original invoice, we recommend only using credit notes. They're more widely supported across countries, while corrective invoices are specific to a few jurisdictions like Romania.
+
+<Steps>
+  <Step title="Upload a credit note">
+    A credit note in Invopop is an invoice of the type `credit-note`. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a credit note. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field, with these required fields:
+
+    - `$addons`: include `ro-efactura-v1`
+    - `supplier`: use the same supplier details as in the original invoice
+    - `type`: `credit-note`
+    - `preceding`: references the original invoice, within it, you must include:
+      - `uuid`: the UUID of the original invoice (optional but recommended)
+      - `issue_date`: the date of the original invoice
+      - `series`: the series of the original invoice
+      - `code`: the code of the original invoice
+
+    As with every GOBL credit note, quantities and amounts are expressed as positive values. You can copy the **B2B credit note** example above as a reference.
+
+    After successful upload, you'll see the credit note in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in `preceding`, you'll see a link to the credit note in the **Related** tab of the original invoice.
+  </Step>
+  <Step title="Send the credit note to the RO generate & send workflow">
+    Send the credit note to the same workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `silo_entry_id`: use the Silo Entry ID of the credit note you've just uploaded.
+
+    The credit note moves to <Badge color="blue">Sent</Badge> once ANAF accepts it.
+  </Step>
+</Steps>
+
+### Issue a corrective invoice
+
+<Steps>
+  <Step title="Upload a corrective invoice">
+    A corrective invoice in Invopop is an invoice of the type `corrective`. The process is very similar to uploading an invoice, use the [Create an entry](/api-ref/silo/entries/create-an-entry-put) endpoint to upload a corrective invoice. Include an [invoice](https://docs.gobl.org/draft-0/bill/invoice) object in the [data](/api-ref/silo/entries/create-an-entry-put#body-data) field, with these required fields:
+
+    - `$addons`: include `ro-efactura-v1`
+    - `supplier`: use the same supplier details as in the original invoice
+    - `type`: `corrective`
+    - `preceding`: references the original invoice, within it, you must include:
+      - `uuid`: the UUID of the original invoice (optional but recommended)
+      - `issue_date`: the date of the original invoice
+      - `series`: the series of the original invoice
+      - `code`: the code of the original invoice
+
+    The corrective invoice carries the full, corrected content of the original. You can copy the **B2B corrective invoice** example above as a reference.
+
+    After successful upload, you'll see the corrective invoice in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in `preceding`, you'll see a link to the corrective invoice in the **Related** tab of the original invoice.
+  </Step>
+  <Step title="Send the corrective invoice to the RO generate & send workflow">
+    Send the corrective invoice to the same workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
+
+    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `silo_entry_id`: use the Silo Entry ID of the corrective invoice you've just uploaded.
+
+    The corrective invoice moves to <Badge color="blue">Sent</Badge> once ANAF accepts it.
+  </Step>
+</Steps>
 
 ### Special cases
 
