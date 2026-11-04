@@ -65,15 +65,19 @@ All of the following steps must be carried out from the [Invopop Console](https:
 
 <Step title="Configure the invoice sending workflow">
 
-This workflow numbers and signs the invoice, converts it to CIUS-RO XML, sends it to RO e-Factura and renders a PDF:
+This workflow numbers the invoice, converts it to CIUS-RO XML, signs it, sends it to RO e-Factura and renders a PDF:
 
 1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
 2. **Add sequential code** gives the invoice its number.
-3. **Sign envelope** seals the GOBL document so it can no longer change.
-4. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
-5. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml`.
-6. **Generate PDF** renders a PDF of the invoice to hand to your customer.
+3. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
+4. **Sign envelope** seals the GOBL document so it can no longer change.
+5. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml` and the invoice is stamped with the ANAF upload ID and response date.
+6. **Generate PDF** renders a PDF of the invoice in Romanian to hand to your customer.
 7. **Set state** to <Badge size="sm" color="blue" icon="square-small" iconType="solid">Sent</Badge>.
+
+<Warning>
+  Keep **Sign envelope** before **Send e-Factura XML to ANAF**. Invopop stamps the invoice after sending it, and only a signed invoice can be stamped: the send step fails on an unsigned one.
+</Warning>
 
 <Tabs>
   <Tab title="Workflow">
@@ -132,7 +136,7 @@ Once a party is registered, you can issue invoices on their behalf.
 
     The job waits on the **Send e-Factura XML to ANAF** step until ANAF decides, which usually takes a few minutes:
 
-    - ✓ **Accepted** (`ok`): the invoice moves to <Badge color="blue">Sent</Badge> and carries the official XML returned by ANAF, next to the generated XML and the PDF.
+    - ✓ **Accepted** (`ok`): the invoice moves to <Badge color="blue">Sent</Badge> and carries the official XML returned by ANAF, next to the generated XML and the PDF. The invoice is stamped with the ANAF upload ID (`ro-anaf-upload-index`) and the date ANAF returned (`ro-anaf-upload-date`), shown in the **Headers** section of the invoice in the Console.
     - × **Rejected** (`nok`): the job fails with the errors ANAF returned. Correct the invoice and run the workflow again.
 
     <Frame>
