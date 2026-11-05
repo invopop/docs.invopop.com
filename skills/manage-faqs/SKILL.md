@@ -83,6 +83,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
 | Greece | gr | `mydata` |
 | Italy | it | `sdi`, `ticket` |
+| India | in | (country scope only; IRP clearance) |
 | Malaysia | my | (country scope only; MyInvois clearance) |
 | Mexico | mx | `sat` |
 | Norway | no | (uses `peppol` only) |
@@ -380,6 +381,8 @@ For single-regime countries, country-level operations or tech content goes into 
 | `apps/ilyda-greece.mdx` | `gr/composers/app-mydata.mdx` |
 | `guides/gr-iapr.mdx` | `gr/composers/guide-mydata-invoicing.mdx` |
 | `guides/gr-iapr-supplier.mdx` | `gr/composers/guide-mydata-supplier.mdx` |
+| `faq/india.mdx` | `in/composers/page-faq.mdx` |
+| `compliance/india.mdx` | `in/composers/page-compliance.mdx` |
 | `faq/italy.mdx` | `it/composers/page-faq.mdx` |
 | `compliance/italy.mdx` | `it/composers/page-compliance.mdx` |
 | `apps/italy.mdx` | `it/composers/app-italy.mdx` |
