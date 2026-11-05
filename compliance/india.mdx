@@ -1,7 +1,7 @@
 ---
 title: "Invoicing compliance in India"
 sidebarTitle: "Compliance"
-description: "India's GST e-invoicing: suppliers above Rs 5 crore turnover report B2B invoices to an Invoice Registration Portal (IRP) and get an Invoice Reference Number (IRN)"
+description: "India's GST e-invoicing: suppliers above Rs 5 crore turnover get an Invoice Reference Number (IRN) for each B2B invoice from an IRP"
 ---
 
 import IndiaResources from '/snippets/tables/india-resources.mdx';
@@ -24,10 +24,10 @@ India uses a clearance model for business invoices under the Goods and Services 
 
 The legal base is **rule 48(4) of the CGST Rules, 2017**. **Notification 13/2020-Central Tax**, as amended, sets who must comply:
 
-* **Who**: registered persons whose aggregate turnover exceeds **Rs 5 crore** in any financial year from 2017-18. The turnover counts all GST registrations (GSTINs) of the same PAN.
+* **Who**: registered persons whose aggregate turnover exceeds **Rs 5 crore** in any preceding financial year from 2017-18. The turnover counts all GST registrations (GSTINs) of the same PAN.
 * **Since**: 1 October 2020 for the largest businesses. The threshold came down in steps to Rs 5 crore on **1 August 2023**.
 * **What**: supplies to registered persons (B2B), supplies to government bodies that are registered for GST, and exports.
-* **From 1 January 2027**: the buyer must also get an IRN for its own reverse-charge self-invoices. This covers purchases from unregistered suppliers and imports of services.
+* **From 1 January 2027**: the buyer must also get an IRN for its own reverse-charge self-invoices. This covers purchases from unregistered suppliers and imports of services. GSTN has not yet announced the production date on the IRPs.
 * **Not in scope**: invoices to consumers (B2C). Large suppliers print a payment QR code on B2C invoices instead.
 
 The format is JSON in the **FORM GST INV-01** schema. Six IRPs are live. Reporting and IRN generation are free on all of them.
@@ -59,7 +59,7 @@ sequenceDiagram
     The IRP checks the data against the schema and the business rules. A central check stops the same document number from getting two IRNs.
   </Step>
   <Step title="IRN, signed invoice and QR code">
-    The IRP returns the IRN, an acknowledgement number and date, the signed invoice and a signed QR code.
+    The IRP returns the IRN, the signed invoice and a signed QR code.
   </Step>
   <Step title="Send the invoice">
     The supplier prints the QR code on the invoice and sends it to the buyer by any channel.
@@ -85,7 +85,7 @@ sequenceDiagram
   </Accordion>
 
   <Accordion title="Reverse-charge self-invoices (from 1 January 2027)">
-    From 1 January 2027 the buyer must get an IRN for the self-invoice it issues in two cases. The first is a purchase from an unregistered supplier where the buyer pays the tax under reverse charge (supply type `RCMDOM`). The second is an import of services from a supplier outside India (supply type `RCMIMP`). The buyer must issue the self-invoice within 30 days of receipt of the supply. The same Rs 5 crore turnover test applies to the buyer.
+    From 1 January 2027 the buyer must get an IRN for the self-invoice it issues in two cases. The first is a purchase from an unregistered supplier where the buyer pays the tax under reverse charge (supply type `RCMDOM`). The second is an import of services from a supplier outside India (supply type `RCMIMP`). For a purchase from an unregistered supplier, the buyer must issue the self-invoice within 30 days of receipt of the supply. The same Rs 5 crore turnover test applies to the buyer. The law applies from 1 January 2027, but gSTN has not yet announced the production date on the IRPs.
 
     |                     |                                                                        |
     | ------------------- | ---------------------------------------------------------------------- |
@@ -143,8 +143,8 @@ For goods, a separate document called the **e-way bill** is needed when the valu
 
   <Accordion title="Deadlines, cancellation and corrections">
     * **30-day limit**: since 1 April 2025, a supplier with turnover of Rs 10 crore or more cannot report a document older than 30 days. This applies to invoices, credit notes and debit notes.
-    * **Cancellation**: the supplier can cancel an IRN within 24 hours of generation. It cancels the whole document, never part of it. If an e-way bill exists for the IRN, the supplier cancels the e-way bill first.
-    * **Corrections**: after 24 hours, the supplier issues a credit note or a debit note, which also needs an IRN.
+    * **Cancellation**: according to the IRPs, the supplier can cancel an IRN within 24 hours of generation. It cancels the whole document, never part of it. If an e-way bill exists for the IRN, the supplier cancels the e-way bill first. The same document number cannot get a new IRN after cancellation.
+    * **Corrections**: according to the IRPs, after 24 hours the supplier issues a credit note or a debit note, which also needs an IRN.
   </Accordion>
 
   <Accordion title="Identifiers">
@@ -165,7 +165,7 @@ For goods, a separate document called the **e-way bill** is needed when the valu
     | IRP-5 | EY | [einvoice5.gst.gov.in](https://einvoice5.gst.gov.in) |
     | IRP-6 | IRIS | [einvoice6.gst.gov.in](https://einvoice6.gst.gov.in) |
 
-    A taxpayer reports on the IRP web portal, through the IRP API, or through a **GST Suvidha Provider (GSP)** or an ERP. On the NIC and Cygnet IRPs, direct API access is only for taxpayers with turnover of Rs 100 crore or more. The IRP digitally signs the e-invoice. Logins use multi-factor authentication.
+    A taxpayer reports on the IRP web portal, through the IRP API, or through a **GST Suvidha Provider (GSP)** or an ERP. On the NIC and Cygnet IRPs, direct API access is only for taxpayers with turnover of Rs 100 crore or more (GSTN, November 2023). The IRP digitally signs the e-invoice. Logins use multi-factor authentication.
   </Accordion>
 
   <Accordion title="Archiving">

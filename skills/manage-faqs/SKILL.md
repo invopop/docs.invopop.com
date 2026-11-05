@@ -83,7 +83,7 @@ The country scope only populates a task if the corresponding country-level flow 
 | France | fr | `pa`, `choruspro` (also uses `peppol`) |
 | Greece | gr | `mydata` |
 | Italy | it | `sdi`, `ticket` |
-| India | in | (country scope only; IRP clearance) |
+| India | in | (country scope only, IRP clearance) |
 | Malaysia | my | (country scope only; MyInvois clearance) |
 | Mexico | mx | `sat` |
 | Norway | no | (uses `peppol` only) |
