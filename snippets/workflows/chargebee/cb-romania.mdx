@@ -1,0 +1,219 @@
+export const chargebeeCbRomaniaWorkflow = {
+    "name": "Chargebee Romania send invoice",
+    "description": "Sync from Chargebee and send to ANAF through RO e-Factura",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "52f0f720-d90a-11f1-b5f5-4d19dab14584",
+            "name": "Import document from Chargebee",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "58bbf790-d90a-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dfc7df50-d938-11f1-81c9-116a7352f47d",
+            "name": "Modify silo entry",
+            "provider": "silo.modify",
+            "summary": "Add `ro-efactura-v1` addon",
+            "config": {
+                "addons": [
+                    "ro-efactura-v1"
+                ],
+                "sign": false
+            }
+        },
+        {
+            "id": "87923250-d937-11f1-9095-f17c7179b878",
+            "name": "Update exchange rates",
+            "provider": "forex.update",
+            "summary": "Invopop",
+            "config": {
+                "provider": "ecb"
+            }
+        },
+        {
+            "id": "065fdf10-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "08920150-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "0aafd840-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "0d7dec60-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Romanian · A4",
+            "config": {
+                "currency_template": "",
+                "date_format": "%Y-%m-%d",
+                "decimal_mark": "",
+                "duplicate": false,
+                "label": "",
+                "layout": "A4",
+                "locale": "ro",
+                "logo_height": 40,
+                "negative_template": "",
+                "scripting": false,
+                "thousands_separator": "",
+                "time_format": "%H:%M",
+                "watermark": ""
+            }
+        },
+        {
+            "id": "0fc82a80-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "2c412310-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "3197b6d0-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        },
+        {
+            "id": "363b7550-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+};
+
+```json Chargebee Romania send invoice workflow
+{
+    "name": "Chargebee Romania send invoice",
+    "description": "Sync from Chargebee and send to ANAF through RO e-Factura",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "52f0f720-d90a-11f1-b5f5-4d19dab14584",
+            "name": "Import document from Chargebee",
+            "provider": "chargebee.import"
+        },
+        {
+            "id": "58bbf790-d90a-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dfc7df50-d938-11f1-81c9-116a7352f47d",
+            "name": "Modify silo entry",
+            "provider": "silo.modify",
+            "summary": "Add `ro-efactura-v1` addon",
+            "config": {
+                "addons": [
+                    "ro-efactura-v1"
+                ],
+                "sign": false
+            }
+        },
+        {
+            "id": "87923250-d937-11f1-9095-f17c7179b878",
+            "name": "Update exchange rates",
+            "provider": "forex.update",
+            "summary": "Invopop",
+            "config": {
+                "provider": "ecb"
+            }
+        },
+        {
+            "id": "065fdf10-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "08920150-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "0aafd840-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "0d7dec60-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Romanian · A4",
+            "config": {
+                "currency_template": "",
+                "date_format": "%Y-%m-%d",
+                "decimal_mark": "",
+                "duplicate": false,
+                "label": "",
+                "layout": "A4",
+                "locale": "ro",
+                "logo_height": 40,
+                "negative_template": "",
+                "scripting": false,
+                "thousands_separator": "",
+                "time_format": "%H:%M",
+                "watermark": ""
+            }
+        },
+        {
+            "id": "0fc82a80-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        },
+        {
+            "id": "2c412310-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "3197b6d0-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        },
+        {
+            "id": "363b7550-d90b-11f1-b5f5-4d19dab14584",
+            "name": "Update Chargebee",
+            "provider": "chargebee"
+        }
+    ]
+}
+```
