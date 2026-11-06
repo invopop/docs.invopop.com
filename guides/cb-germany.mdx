@@ -33,11 +33,46 @@ This guide assumes you have already connected the Chargebee app and completed th
 
 ## Using Chargebee's email delivery
 
-For Invopop to update the invoice in Chargebee and trigger Chargebee's own email delivery to your customer, you will need a **Full Access API key**. Beyond that, the following conditions must be met in Chargebee — if any of these are not in place, Chargebee will not forward the generated PDF (or XML, in the case of XRechnung) to your customer:
+The Chargebee app does not email your customers. It posts links to the generated files on the Chargebee invoice, and Chargebee attaches those files (the ZUGFeRD PDF, or the XRechnung XML) to its own invoice email only if your site is set up for it.
 
-1. The `SEND_EINVOICE_NOTIFICATION` feature flag must be enabled on your Chargebee site. Contact your Chargebee representative to enable this.
-2. The `cf_invopop_include` custom field must be present and set to `true` on each customer you want to process.
-3. Invoice and credit note email notifications must be enabled on your Chargebee site.
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'actorBkg':'#e8f5ee','actorBorder':'#169958','actorTextColor':'#103830','actorLineColor':'#bcdccb','signalColor':'#0f7a45','signalTextColor':'#103830','noteBkgColor':'#ffffff','noteBorderColor':'#169958','noteTextColor':'#103830','labelBoxBkgColor':'#169958','labelBoxBorderColor':'#0f7a45','labelTextColor':'#ffffff','sequenceNumberColor':'#ffffff'}}}%%
+sequenceDiagram
+    participant IV as Invopop
+    participant CB as Chargebee
+    participant C as Customer
+    IV->>CB: Comment with links to the generated files
+    alt SEND_EINVOICE_NOTIFICATION enabled
+        CB->>C: Invoice email with the e-invoice attached
+    else Flag not enabled
+        CB-->>C: No e-invoice in the email
+    end
+```
+
+<Steps>
+  <Step title="Invopop posts the files">
+    When the workflow finishes, the **Update Chargebee** step posts a comment on the Chargebee invoice or credit note with links to the files the workflow generated. This happens with or without the flag, and needs a **Full Access API key**.
+  </Step>
+  <Step title="Chargebee emails the customer">
+    If the flag is enabled and the settings below are in place, Chargebee attaches the files from that comment to its invoice email. Otherwise the files are only available through the links in the comment.
+  </Step>
+</Steps>
+
+These must be in place in Chargebee:
+
+| Setting | Where | Who sets it |
+| ------- | ----- | ----------- |
+| `SEND_EINVOICE_NOTIFICATION` feature flag | Chargebee back office. It is **not** visible in your Chargebee settings or in Invopop | Chargebee support or your Chargebee account manager, on request |
+| `cf_invopop_include` set to `true` on the customer | Customer custom fields | You |
+| Invoice and credit note email notifications | Chargebee email notification settings | You |
+
+<Warning>
+  The feature flag is enabled per Chargebee site. Ask Chargebee to enable it on your test site and again on your live site. Chargebee may also apply other conditions, such as the countries of your site and your customers, so confirm with Chargebee that it covers the invoices you send.
+</Warning>
+
+<Tip>
+  A successful job means Invopop generated the files and posted them to Chargebee. It does not mean your customer received an email. If the files are in the invoice comments but not in the email, check the settings above with Chargebee.
+</Tip>
 
 ## Workflows
 
