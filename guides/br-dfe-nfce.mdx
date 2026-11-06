@@ -23,20 +23,36 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import { brDfeConsumerInvoiceWorkflow } from '/snippets/workflows/br/dfe-consumer-invoice.mdx';
 import { brDfeCancelNfceWorkflow } from '/snippets/workflows/br/dfe-cancel-nfce.mdx';
 
-| Section | Read it when |
-|---|---|
-| [Prerequisites](#prerequisites) and [Setup](#setup) | Before the first receipt |
-| [In-person sale](#in-person-sale) | The consumer pays and takes the goods. Also covers what you sell, the tax regime, payment means and edge cases |
-| [Identified consumer](#identified-consumer) | The consumer gives their CPF for the receipt |
-| [Home delivery](#home-delivery) | The goods go to the consumer's home, in the same state |
-| [Cancel a sale](#cancel-a-sale) | The sale is voided right after issue |
-| [Returns](#returns) | The consumer brings goods back, or exchanges them |
-| [SEFAZ checks not run by GOBL](#sefaz-checks-not-run-by-gobl) | Before going live |
-| [Test your integration](#test-your-integration) | Testing in the sandbox and in homologação |
+<Columns cols={2}>
+  <Card title="Prerequisites and setup" icon="list-check" href="#prerequisites">
+    Before the first receipt.
+  </Card>
+  <Card title="In-person sale" icon="store" href="#in-person-sale">
+    The consumer pays and takes the goods. Also what you sell, tax regime, payment means, edge cases.
+  </Card>
+  <Card title="Identified consumer" icon="id-card" href="#identified-consumer">
+    The consumer gives their CPF for the receipt.
+  </Card>
+  <Card title="Home delivery" icon="truck" href="#home-delivery">
+    The goods go to the consumer's home, in the same state.
+  </Card>
+  <Card title="Cancel a sale" icon="ban" href="#cancel-a-sale">
+    The sale is voided right after issue.
+  </Card>
+  <Card title="Returns" icon="rotate-left" href="#returns">
+    The consumer brings goods back, or exchanges them.
+  </Card>
+  <Card title="SEFAZ checks not run by GOBL" icon="shield-check" href="#sefaz-checks-not-run-by-gobl">
+    Before going live.
+  </Card>
+  <Card title="Test your integration" icon="flask" href="#test-your-integration">
+    Testing in the sandbox and in homologação.
+  </Card>
+</Columns>
 
 ## Introduction
 
-An NFC-e (_Nota Fiscal de Consumidor Eletrônica_, model 65) is the electronic receipt for a sale of goods to a final consumer. The SEFAZ of the establishment's state authorizes it.
+An NFC-e (_Nota Fiscal de Consumidor Eletrônica_, model 65) is the electronic receipt for a sale of goods to a final consumer. The <Tooltip headline="Secretaria da Fazenda" tip="The tax department of each state. It authorizes NF-e and NFC-e.">SEFAZ</Tooltip> of the establishment's state authorizes it.
 
 Every NFC-e has the same frame:
 
@@ -58,7 +74,7 @@ Which document to issue, how documents are checked and the environments are in t
 
 - **A registered supplier:** follow the [DF-e supplier registration guide](/guides/br-dfe-supplier) to register each establishment that issues receipts. The A1 certificate must match the establishment's CNPJ ([Brazil FAQ](/faq/brazil)).
 - **State accreditation:** some states, such as SP, RJ and MG, require an accreditation (_credenciamento_) before the first document ([Brazil FAQ](/faq/brazil)).
-- **Product data for each line:** the NCM product code, the CFOP and the tax codes and percentages. The supplier's tax advisor sets them per product.
+- **Product data for each line:** the <Tooltip headline="Nomenclatura Comum do Mercosul" tip="The 8-digit product classification code.">NCM</Tooltip> product code, the <Tooltip headline="Código Fiscal de Operações e Prestações" tip="The 4-digit code for the type of operation, such as a resale inside the state.">CFOP</Tooltip> and the tax codes and percentages. The supplier's tax advisor sets them per product.
 
 ## Setup
 
@@ -150,31 +166,32 @@ GOBL fills these fields when you upload the minimal version:
 
 In the tables below, the **Required** column says who rejects the document when the field is missing:
 
-- **Yes, GOBL:** the upload fails with the code in the **Rule** column.
-- **Yes, SEFAZ:** GOBL accepts the document. SEFAZ rejects it at authorization.
-- **No, GOBL fills:** GOBL sets the default shown when you leave the field out.
+- <Badge color="green">Yes, GOBL</Badge>: the upload fails with the code in the **Rule** column.
+- <Badge color="orange">Yes, SEFAZ</Badge>: GOBL accepts the document. SEFAZ rejects it at authorization.
+- <Badge color="gray">No, GOBL fills</Badge>: GOBL sets the default shown when you leave the field out.
+- <Badge color="gray">No</Badge>: the field is optional.
 
 **Header**
 
 | Field | Required | In this sale | Rule |
 |---|---|---|---|
-| `$addons` | Yes, GOBL | `["br-nfe-v4"]` | |
-| `$tags` | Yes, GOBL | `["simplified"]`. It sets model `65` | |
-| `series` | Yes, GOBL | `1`. GOBL accepts `0` to `999`. SEFAZ accepts up to `889` | [`INVOICE-23`, `24`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `code` | No | The workflow's "Add sequential code" step numbers the receipt. A `code` you set yourself is kept | |
-| `tax.ext.br-nfe-presence` | Yes, GOBL | `1`, in person | [`INVOICE-26`, `28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `notes[key=reason].text` | Yes, GOBL | The nature of the operation, 1 to 60 characters: `Venda de mercadoria` | [`INVOICE-29`, `30`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `$addons` | <Badge color="green">Yes, GOBL</Badge> | `["br-nfe-v4"]` | |
+| `$tags` | <Badge color="green">Yes, GOBL</Badge> | `["simplified"]`. It sets model `65` | |
+| `series` | <Badge color="green">Yes, GOBL</Badge> | `1`. GOBL accepts `0` to `999`. SEFAZ accepts up to `889` | [`INVOICE-23`, `24`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `code` | <Badge color="gray">No</Badge> | The workflow's "Add sequential code" step numbers the receipt. A `code` you set yourself is kept | |
+| `tax.ext.br-nfe-presence` | <Badge color="green">Yes, GOBL</Badge> | `1`, in person | [`INVOICE-26`, `28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `notes[key=reason].text` | <Badge color="green">Yes, GOBL</Badge> | The nature of the operation, 1 to 60 characters: `Venda de mercadoria` | [`INVOICE-29`, `30`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 **Supplier: the establishment**
 
 | Field | Required | In this sale | Rule |
 |---|---|---|---|
-| `name` | Yes, GOBL | The establishment's legal name | [`INVOICE-10`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `tax_id.code` | Yes, GOBL | The establishment's CNPJ, 14 digits | [`INVOICE-01`, `02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `identities[key=br-nfe-state-reg]` | Yes, SEFAZ | The establishment's state registration (IE) | |
-| `addresses[0]`: `street`, `num`, `locality`, `state`, `code` | Yes, GOBL | The establishment's address. `state` is the two-letter code, `SP` | [`INVOICE-03` to `08`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `ext.br-ibge-municipality` | Yes, GOBL | The 7-digit IBGE code, `3550308` for São Paulo | [`INVOICE-09`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `ext.br-nfe-regime` | No, GOBL fills `3` | See [Tax regime](#tax-regime-normal-or-simples-nacional) | [`INVOICE-39`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `name` | <Badge color="green">Yes, GOBL</Badge> | The establishment's legal name | [`INVOICE-10`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `tax_id.code` | <Badge color="green">Yes, GOBL</Badge> | The establishment's CNPJ, 14 digits | [`INVOICE-01`, `02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `identities[key=br-nfe-state-reg]` | <Badge color="orange">Yes, SEFAZ</Badge> | The establishment's state registration (IE) | |
+| `addresses[0]`: `street`, `num`, `locality`, `state`, `code` | <Badge color="green">Yes, GOBL</Badge> | The establishment's address. `state` is the two-letter code, `SP` | [`INVOICE-03` to `08`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `ext.br-ibge-municipality` | <Badge color="green">Yes, GOBL</Badge> | The 7-digit <Tooltip headline="Instituto Brasileiro de Geografia e Estatística" tip="Its 7-digit code identifies each municipality.">IBGE</Tooltip> code, `3550308` for São Paulo | [`INVOICE-09`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `ext.br-nfe-regime` | <Badge color="gray">No, GOBL fills 3</Badge> | See [Tax regime](#tax-regime-normal-or-simples-nacional) | [`INVOICE-39`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 **Customer:** leave it out. To print the consumer's CPF, see [Identified consumer](#identified-consumer).
 
@@ -182,20 +199,20 @@ In the tables below, the **Required** column says who rejects the document when 
 
 | Field | Required | In this sale | Rule |
 |---|---|---|---|
-| `quantity`, `item.name`, `item.price` | Yes, GOBL | The price the consumer pays, taxes included | |
-| `item.identities[key=ncm]` | Yes, SEFAZ | The 8-digit NCM product code, without dots. GOBL checks the format only | [`ORG-IDENTITY-02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `item.identities[key=gtin]` | No | The barcode, when the product has one | |
-| `ext.br-nfe-cfop` | Yes, GOBL | `5102`, resale of goods bought from third parties. See [What you sell](#what-you-sell-cfop-and-icms-code) | [`INVOICE-35`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `taxes[cat=ICMS]` | Yes, GOBL | The ICMS percent for the product in the establishment's state | [`LINE-01`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `taxes[cat=PIS]`, `taxes[cat=COFINS]` | Yes, GOBL | The percents for the company's regime | [`LINE-02`, `03`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| ICMS `ext.br-nfe-icms-cst` | No, GOBL fills `00` | Taxed in full. See [What you sell](#what-you-sell-cfop-and-icms-code) | [`TAX-COMBO-01`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| ICMS `ext.br-nfe-icms-origin` | No, GOBL fills `0` | National goods. Imported goods take another [origin code](https://docs.gobl.org/addons/br-nfe-v4#icms-goods-origin) | [`TAX-COMBO-02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `quantity`, `item.name`, `item.price` | <Badge color="green">Yes, GOBL</Badge> | The price the consumer pays, taxes included | |
+| `item.identities[key=ncm]` | <Badge color="orange">Yes, SEFAZ</Badge> | The 8-digit NCM product code, without dots. GOBL checks the format only | [`ORG-IDENTITY-02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `item.identities[key=gtin]` | <Badge color="gray">No</Badge> | The <Tooltip headline="Global Trade Item Number" tip="The product barcode number, such as an EAN-13.">GTIN</Tooltip> barcode, when the product has one | |
+| `ext.br-nfe-cfop` | <Badge color="green">Yes, GOBL</Badge> | `5102`, resale of goods bought from third parties. See [What you sell](#what-you-sell-cfop-and-icms-code) | [`INVOICE-35`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `taxes[cat=ICMS]` | <Badge color="green">Yes, GOBL</Badge> | The ICMS percent for the product in the establishment's state | [`LINE-01`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `taxes[cat=PIS]`, `taxes[cat=COFINS]` | <Badge color="green">Yes, GOBL</Badge> | The percents for the company's regime | [`LINE-02`, `03`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| ICMS `ext.br-nfe-icms-cst` | <Badge color="gray">No, GOBL fills 00</Badge> | Taxed in full. See [What you sell](#what-you-sell-cfop-and-icms-code) | [`TAX-COMBO-01`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| ICMS `ext.br-nfe-icms-origin` | <Badge color="gray">No, GOBL fills 0</Badge> | National goods. Imported goods take another [origin code](https://docs.gobl.org/addons/br-nfe-v4#icms-goods-origin) | [`TAX-COMBO-02`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 **Payment**
 
 | Field | Required | In this sale | Rule |
 |---|---|---|---|
-| `payment.instructions.key` | Yes, GOBL, when nothing is recorded as paid | `card` gives `03`, credit card. See [Payment means](#payment-means-cash-cards-pix-vouchers) | [`INVOICE-31`, `32`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `payment.instructions.key` | <Badge color="green">Yes, GOBL</Badge> when nothing is recorded as paid | `card` gives `03`, credit card. See [Payment means](#payment-means-cash-cards-pix-vouchers) | [`INVOICE-31`, `32`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 ### Variants
 
@@ -204,9 +221,9 @@ The CFOP, the tax codes and the tax percentages are tax decisions. The supplier'
 <AccordionGroup>
   <Accordion title="What you sell: CFOP and ICMS code">
 
-    The CFOP and the ICMS code go together on each line.
+    The CFOP and the <Tooltip headline="Imposto sobre Circulação de Mercadorias e Serviços" tip="The state tax on goods.">ICMS</Tooltip> code go together on each line.
 
-    | Operation | CFOP | ICMS CST, normal regime | ICMS CSOSN, Simples Nacional |
+    | Operation | CFOP | ICMS <Tooltip headline="Código de Situação Tributária" tip="The ICMS tax status code of normal-regime issuers.">CST</Tooltip>, normal regime | ICMS <Tooltip headline="Código de Situação da Operação no Simples Nacional" tip="The ICMS tax status code of Simples Nacional issuers.">CSOSN</Tooltip>, Simples Nacional |
     |---|---|---|---|
     | Resale of goods bought from third parties | `5102` | `00`, `20`, `40`, `41` | `102`, `103`, `300`, `400` |
     | Sale of own production | `5101` | Same | Same |
@@ -414,10 +431,10 @@ What changes from an [in-person sale](#in-person-sale):
 
 | Field | Required | Value | Rule |
 |---|---|---|---|
-| `customer.name` | No | The consumer's name | |
-| `customer.tax_id` | Yes, GOBL, when you send a customer | `{"country": "BR", "code": "39851726419"}`, the 11-digit CPF | [`INVOICE-36`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `customer.ext.br-nfe-state-reg-ind` | No, GOBL fills `9` | Non-taxpayer. An NFC-e takes no other value | [`INVOICE-53`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `payment.advances[]` | Yes, GOBL, when there are no payment instructions | One entry per tender: an `amount`, and a `key` for the means: `cash`, `card+debit` | [`INVOICE-31`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.name` | <Badge color="gray">No</Badge> | The consumer's name | |
+| `customer.tax_id` | <Badge color="green">Yes, GOBL</Badge> when you send a customer | `{"country": "BR", "code": "39851726419"}`, the 11-digit CPF | [`INVOICE-36`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.ext.br-nfe-state-reg-ind` | <Badge color="gray">No, GOBL fills 9</Badge> | Non-taxpayer. An NFC-e takes no other value | [`INVOICE-53`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `payment.advances[]` | <Badge color="green">Yes, GOBL</Badge> when there are no payment instructions | One entry per tender: an `amount`, and a `key` for the means: `cash`, `card+debit` | [`INVOICE-31`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 ```json Changes from the in-person sale
 {
@@ -461,10 +478,10 @@ What changes from an [in-person sale](#in-person-sale):
 
 | Field | Required | Value | Rule |
 |---|---|---|---|
-| `tax.ext.br-nfe-presence` | Yes, GOBL | `4`, NFC-e with home delivery | [`INVOICE-28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `customer.tax_id` | Yes, SEFAZ | The consumer's CPF | `E01-20`, rejection `787` |
-| `customer.addresses[0]` | Yes, SEFAZ | The delivery address. When sent, GOBL checks it like a supplier address | `E05-20`, rejection `788`. [`INVOICE-16` to `21`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
-| `customer.ext.br-ibge-municipality` | Yes, GOBL, when you send an address | The IBGE code of the delivery city | [`INVOICE-22`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `tax.ext.br-nfe-presence` | <Badge color="green">Yes, GOBL</Badge> | `4`, NFC-e with home delivery | [`INVOICE-28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.tax_id` | <Badge color="orange">Yes, SEFAZ</Badge> | The consumer's CPF | `E01-20`, rejection `787` |
+| `customer.addresses[0]` | <Badge color="orange">Yes, SEFAZ</Badge> | The delivery address. When sent, GOBL checks it like a supplier address | `E05-20`, rejection `788`. [`INVOICE-16` to `21`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.ext.br-ibge-municipality` | <Badge color="green">Yes, GOBL</Badge> when you send an address | The IBGE code of the delivery city | [`INVOICE-22`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
 ```json Changes from the in-person sale
 {
@@ -549,22 +566,22 @@ These pass GOBL and the sandbox, then fail at authorization in homologação or 
 
 | Scenario | SEFAZ check | MOC rule | Rejection |
 |---|---|---|---|
-| All | Issue date and time within 5 minutes of SEFAZ receipt. Run the job right after the sale | `B09-10`, `B09-40` | `703`, `704` |
-| All | Series `0` to `889` | `B26-10` | `244` |
-| All | NCM present and in the official table | `I05-10`, `I05-20` | `777`, `778` |
-| All | GTIN with a valid check digit, or `SEM GTIN` | `I03-10`, `I03-30` | `611`, `883` |
-| All | CFOP only `5101` to `5104`, `5115`, `5405`, `5656`, `5667` or `5933` | `I08-150` | `725` |
-| All | CST or CSOSN paired with the CFOP. See [What you sell](#what-you-sell-cfop-and-icms-code) | `N12-40`, `N12a-40` | `382`, `386` |
-| All | No IPI on an NFC-e | `O01-10` | `742` |
-| All | Above R$10,000, the consumer is identified | `W16-40` | `750` |
-| All | Payment means `90`, no payment, and `99`, other, refused | `YA02-40`, `YA02-50` | `899`, `436` |
-| Normal regime | CST only `00`, `20`, `40`, `41` or `60`. `90` is a state option | `N12-30` | `766` |
-| Simples Nacional | CSOSN only `102`, `103`, `300`, `400` or `500`. `900` is a state option | `N12a-20` | `383` |
-| Card payments | A card payment needs the card group | `YA04-10` | `391` |
-| Cash | A payment above the total needs the change amount | `YA09-10` | `869` |
-| Home delivery | The consumer's ID and address are present | `E01-20`, `E05-20` | `787`, `788` |
-| Home delivery | The state allows NFC-e with home delivery | `B25b-30` | `785` |
-| Home delivery | Presence `4` needs the intermediary flag | `B25c-10` | `434` |
+| <Badge color="gray">All</Badge> | Issue date and time within 5 minutes of SEFAZ receipt. Run the job right after the sale | `B09-10`, `B09-40` | `703`, `704` |
+| <Badge color="gray">All</Badge> | Series `0` to `889` | `B26-10` | `244` |
+| <Badge color="gray">All</Badge> | NCM present and in the official table | `I05-10`, `I05-20` | `777`, `778` |
+| <Badge color="gray">All</Badge> | GTIN with a valid check digit, or `SEM GTIN` | `I03-10`, `I03-30` | `611`, `883` |
+| <Badge color="gray">All</Badge> | CFOP only `5101` to `5104`, `5115`, `5405`, `5656`, `5667` or `5933` | `I08-150` | `725` |
+| <Badge color="gray">All</Badge> | CST or CSOSN paired with the CFOP. See [What you sell](#what-you-sell-cfop-and-icms-code) | `N12-40`, `N12a-40` | `382`, `386` |
+| <Badge color="gray">All</Badge> | No IPI on an NFC-e | `O01-10` | `742` |
+| <Badge color="gray">All</Badge> | Above R$10,000, the consumer is identified | `W16-40` | `750` |
+| <Badge color="gray">All</Badge> | Payment means `90`, no payment, and `99`, other, refused | `YA02-40`, `YA02-50` | `899`, `436` |
+| <Badge color="blue">Normal regime</Badge> | CST only `00`, `20`, `40`, `41` or `60`. `90` is a state option | `N12-30` | `766` |
+| <Badge color="purple">Simples Nacional</Badge> | CSOSN only `102`, `103`, `300`, `400` or `500`. `900` is a state option | `N12a-20` | `383` |
+| <Badge color="yellow">Card payments</Badge> | A card payment needs the card group | `YA04-10` | `391` |
+| <Badge color="yellow">Cash</Badge> | A payment above the total needs the change amount | `YA09-10` | `869` |
+| <Badge color="green">Home delivery</Badge> | The consumer's ID and address are present | `E01-20`, `E05-20` | `787`, `788` |
+| <Badge color="green">Home delivery</Badge> | The state allows NFC-e with home delivery | `B25b-30` | `785` |
+| <Badge color="green">Home delivery</Badge> | Presence `4` needs the intermediary flag | `B25c-10` | `434` |
 
 The checks for a return are in the NF-e guide: [Return of an NFC-e](/guides/br-dfe-nfe#return-of-an-nfc-e).
 

@@ -7,12 +7,20 @@ description: Issue Documentos Fiscais Eletrônicos in Brazil. Pick the document 
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
 import FAQ from '/snippets/faqs/br/composers/guide-dfe-invoicing.mdx';
 
-| Section | Read it when |
-|---|---|
-| [Which document for which flow](#which-document-for-which-flow) | You need to know which document a sale needs |
-| [Guides](#guides) | You know the document, and need its setup and examples |
-| [How documents are checked](#how-documents-are-checked) | You plan your tests before going live |
-| [Environments](#environments) | You move from the sandbox to homologação or produção |
+<Columns cols={2}>
+  <Card title="Which document for which flow" icon="route" href="#which-document-for-which-flow">
+    You need to know which document a sale needs.
+  </Card>
+  <Card title="Guides" icon="book" href="#guides">
+    You know the document, and need its setup and examples.
+  </Card>
+  <Card title="How documents are checked" icon="shield-check" href="#how-documents-are-checked">
+    You plan your tests before going live.
+  </Card>
+  <Card title="Environments" icon="server" href="#environments">
+    You move from the sandbox to homologação or produção.
+  </Card>
+</Columns>
 
 ## Introduction
 
@@ -26,6 +34,31 @@ For onboarding suppliers, see the companion guide: [DF-e supplier registration](
 
 - **AR, accounts receivable:** documents the supplier issues to its customers.
 - **AP, accounts payable:** documents the supplier receives from its own suppliers.
+
+```mermaid
+flowchart LR
+    A{"Sale or<br/>purchase?"} -->|Sale| B{"Goods or<br/>services?"}
+    A -->|Purchase| X["Not covered"]
+    B -->|Services| N["NFS-e"]
+    B -->|Goods| C{"Buyer?"}
+    C -->|"Business<br/>or foreign"| E["NF-e"]
+    C -->|Consumer| D{"At the till or<br/>home delivery,<br/>same state?"}
+    D -->|Yes| F["NFC-e"]
+    D -->|No| E
+
+    %% Invopop palette - skills/mermaid-style
+    classDef actor fill:#ffffff,stroke:#169958,stroke-width:1px,color:#103830
+    classDef system fill:#e8f5ee,stroke:#169958,stroke-width:1px,color:#103830
+    classDef authority fill:#169958,stroke:#0f7a45,stroke-width:1.5px,color:#ffffff
+    classDef decision fill:#f4faf6,stroke:#169958,stroke-width:1px,color:#103830
+    classDef muted fill:#f4f4f5,stroke:#9ca3af,stroke-width:1px,color:#4b5563
+    linkStyle default stroke:#94a3b8
+    class A,B,C,D decision
+    class N,E,F system
+    class X muted
+```
+
+A return of goods is always an NF-e, whatever the original document. The table gives every case with its link.
 
 | Flow | Buyer | Operation | Document |
 |---|---|---|---|
@@ -65,7 +98,7 @@ Each document goes through three checks, in this order:
 |---|---|---|---|
 | 1. Upload the entry | GOBL, with the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) or [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) add-on rules | The upload returns HTTP 422 with a `GOBL-BR-…` code | Yes |
 | 2. Run the issue workflow | Invopop and its partner PlugNotas build the XML and sign it with the supplier's A1 certificate | The job fails | No, the sandbox returns mock files |
-| 3. Authorization | SEFAZ for NF-e and NFC-e. The municipality for NFS-e | The job fails with the authority's rejection | No |
+| 3. Authorization | <Tooltip headline="Secretaria da Fazenda" tip="The tax department of each state. It authorizes NF-e and NFC-e.">SEFAZ</Tooltip> for NF-e and NFC-e. The municipality for NFS-e | The job fails with the authority's rejection | No |
 
 <Warning>
 The sandbox mocks steps 2 and 3. A document that passes in the sandbox can still fail in homologação. Before going live, check the [SEFAZ checks not run by GOBL](/guides/br-dfe-nfce#sefaz-checks-not-run-by-gobl).
