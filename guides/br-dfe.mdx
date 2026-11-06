@@ -1,24 +1,11 @@
 ---
 title: "DF-e issuing guide"
 sidebarTitle: "Overview"
-description: Issue Documentos Fiscais Eletrônicos in Brazil. Pick the document type, set up the workflows, and test before going live.
+description: Issue Documentos Fiscais Eletrônicos in Brazil. Pick the document for each flow, then follow its guide.
 ---
 
-import ServiceWorkflow from '/snippets/workflows/br/dfe-service-invoice.mdx'
-import ConsumerWorkflow from '/snippets/workflows/br/dfe-consumer-invoice.mdx'
-import ProductWorkflow from '/snippets/workflows/br/dfe-product-invoice.mdx'
-import CancelNFSeWorkflow from '/snippets/workflows/br/dfe-cancel-nfse.mdx'
-import CancelNFCeWorkflow from '/snippets/workflows/br/dfe-cancel-nfce.mdx'
-import CancelNFEWorkflow from '/snippets/workflows/br/dfe-cancel-nfe.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
 import FAQ from '/snippets/faqs/br/composers/guide-dfe-invoicing.mdx';
-import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { brDfeServiceInvoiceWorkflow } from '/snippets/workflows/br/dfe-service-invoice.mdx';
-import { brDfeConsumerInvoiceWorkflow } from '/snippets/workflows/br/dfe-consumer-invoice.mdx';
-import { brDfeProductInvoiceWorkflow } from '/snippets/workflows/br/dfe-product-invoice.mdx';
-import { brDfeCancelNfseWorkflow } from '/snippets/workflows/br/dfe-cancel-nfse.mdx';
-import { brDfeCancelNfceWorkflow } from '/snippets/workflows/br/dfe-cancel-nfce.mdx';
-import { brDfeCancelNfeWorkflow } from '/snippets/workflows/br/dfe-cancel-nfe.mdx';
 
 ## Introduction
 
@@ -26,17 +13,22 @@ Brazil has a variety of electronic tax documents that must be issued in differen
 
 Invopop's **Documentos Fiscais Eletrônicos** app provides a unified way to issue fiscal documents across all Brazilian states and over 2000 municipalities using GOBL. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
 
-This page holds what every document type shares: which document to issue, how it is checked, the environments, and the workflows. Each document type then has its own guide.
-
 For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
 
-## Which document for which sale
+## Which document for which flow
 
-| Document | Use it for | Authority | GOBL |
+- **AR, accounts receivable:** documents the supplier issues to its customers.
+- **AP, accounts payable:** documents the supplier receives from its own suppliers.
+
+| Flow | Buyer | Operation | Document |
 |---|---|---|---|
-| **NF-e**, model 55 | Goods sold to a business. Goods sold online or delivered to another state. Returns of goods | SEFAZ, the tax department of the issuer's state | [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) add-on |
-| **NFC-e**, model 65 | Goods sold to a final consumer, in person or with home delivery in the same state | SEFAZ of the issuer's state | [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) add-on with the `simplified` tag |
-| **NFS-e** | Services | The municipality of the issuer | [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) add-on |
+| AR | B2C | Goods sold in person, or with home delivery in the same state | [NFC-e](/guides/br-dfe-nfce), model 65 |
+| AR | B2C | Goods sold online, or delivered to another state | [NF-e](/guides/br-dfe-nfe), model 55 |
+| AR | B2B | Goods sold in Brazil | [NF-e](/guides/br-dfe-nfe), model 55 |
+| AR | B2B or B2C | Goods sold to a foreign customer | [NF-e](/guides/br-dfe-nfe), model 55 |
+| AR | B2B or B2C | Goods returned by the customer | [NF-e](/guides/br-dfe-nfe#return-of-an-nfc-e), model 55, entry document |
+| AR | B2B or B2C | Services | [NFS-e](/guides/br-dfe-nfse) |
+| AP | - | Documents received from suppliers | Not covered by these guides |
 
 An NFC-e only takes the in-person or home delivery presence codes ([`GOBL-BR-NFE-BILL-INVOICE-28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules)). Any other consumer sale of goods is an NF-e.
 
@@ -47,15 +39,15 @@ An NFC-e only takes the in-person or home delivery presence codes ([`GOBL-BR-NFE
 </Card>
 
 <Card title="NF-e" icon="file-invoice" href="/guides/br-dfe-nfe" horizontal>
-  Issue product invoices, and return a consumer sale.
+  Product invoices and returns. Authorized by the SEFAZ of the issuer's state.
 </Card>
 
 <Card title="NFC-e" icon="receipt" href="/guides/br-dfe-nfce" horizontal>
-  Issue consumer receipts at the till, with home delivery, and cancel them.
+  Consumer receipts at the till or with home delivery. Authorized by the SEFAZ of the issuer's state.
 </Card>
 
 <Card title="NFS-e" icon="file-lines" href="/guides/br-dfe-nfse" horizontal>
-  Issue and cancel service invoices.
+  Service invoices. Authorized by the issuer's municipality.
 </Card>
 
 ## How documents are checked
@@ -64,11 +56,13 @@ Each document goes through three checks, in this order:
 
 | Step | Who checks | When it fails | Runs in sandbox |
 |---|---|---|---|
-| 1. Upload the entry | GOBL, with the add-on rules | The upload returns HTTP 422 with a `GOBL-BR-…` code | Yes |
+| 1. Upload the entry | GOBL, with the [`br-nfe-v4`](https://docs.gobl.org/addons/br-nfe-v4) or [`br-nfse-v1`](https://docs.gobl.org/addons/br-nfse-v1) add-on rules | The upload returns HTTP 422 with a `GOBL-BR-…` code | Yes |
 | 2. Run the issue workflow | Invopop and its partner PlugNotas build the XML and sign it with the supplier's A1 certificate | The job fails | No, the sandbox returns mock files |
 | 3. Authorization | SEFAZ for NF-e and NFC-e. The municipality for NFS-e | The job fails with the authority's rejection | No |
 
-⚠️ A document that passes in the sandbox can still be rejected in homologação. GOBL doesn't run every authority rule. The [NFC-e guide](/guides/br-dfe-nfce#sefaz-checks-not-run-by-gobl) lists the SEFAZ checks to cover before you go live.
+<Warning>
+The sandbox mocks steps 2 and 3. A document that passes in the sandbox can still fail in homologação. Before going live, check the [SEFAZ checks not run by GOBL](/guides/br-dfe-nfce#sefaz-checks-not-run-by-gobl).
+</Warning>
 
 ## Environments
 
@@ -82,182 +76,6 @@ Each document goes through three checks, in this order:
 <Warning>
 In live workspaces, documents are sent to the environment — homologation or production — that the supplier is currently registered in. Documents sent to homologation are processed by the tax authority's test environment and have no fiscal validity. See [Switch between environments](/guides/br-dfe-supplier#switch-between-environments) for how to check and change a supplier's environment.
 </Warning>
-
-## Setup
-
-Prepare the invoicing workflows for the document types you want to issue and cancel.
-
-<Info>
- These instructions apply to both the sandbox and live environments. Please note that the sandbox environment is simulated, and most responses are mocked. The **Documentos Fiscais Eletrônicos Brazil** app must already be connected and configured — this is covered in the [supplier registration guide](/guides/br-dfe-supplier).
-</Info>
-
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
-
-<Steps>
-
-<Step title="Prepare NFS-e workflow">
-
-<Info>
-  You can skip this step if you're not interested in issuing NFS-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e issue service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-service-invoice" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeServiceInvoiceWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <ServiceWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-<Step title="Prepare NF-e workflow">
-
-<Info>
-  You can skip this step if you're not interested in issuing NF-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e issue product invoice (NF-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-product-invoice" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeProductInvoiceWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <ProductWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-<Step title="Prepare NFC-e workflow">
-
-<Info>
-  You can skip this step if you're not interested in issuing NFC-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e issue consumer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-consumer-invoice" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeConsumerInvoiceWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <ConsumerWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-<Step title="Prepare NFS-e cancel workflow">
-
-<Info>
-  You can skip this step if you're not interested in cancelling NFS-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e cancel service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfse" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeCancelNfseWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <CancelNFSeWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-<Step title="Prepare NF-e cancel workflow">
-
-<Info>
-  You can skip this step if you're not interested in cancelling NF-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e cancel product invoice (NF-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfe" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeCancelNfeWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <CancelNFEWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-<Step title="Prepare NFC-e cancel workflow">
-
-<Info>
-  You can skip this step if you're not interested in cancelling NFC-e documents.
-</Info>
-
-Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
-
-  <Card iconType="duotone" title="DF-e cancel consumer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfce" horizontal>
-    Add to my workspace →
-  </Card>
-  <Tabs>
-    <Tab title="Workflow">
-      <WorkflowDiagram workflow={brDfeCancelNfceWorkflow} />
-    </Tab>
-    <Tab title="Code">
-      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-      <CancelNFCeWorkflow />
-    </Tab>
-  </Tabs>
-</Step>
-
-</Steps>
-
-## Running
-
-As usual, the recommended approach for running jobs is to perform two steps; first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), second [create a job](/api-ref/transform/jobs/create-a-job-put).
-
-All operations can be performed manually via the Invopop Console, or programmatically via the API. The process is essentially the same in both cases. The example documents to upload are in each document type's guide.
-
-### Cancel arguments
-
-Run the cancel workflow of the document type over the silo entry you want to cancel. On success, the entry is set to `Void`.
-
-The cancel actions accept optional parameters that control the cancellation request. They can be set as a default on the workflow step (via the step's configuration page in the Console) or overridden per job by passing them as arguments when [creating the job via the API](/api-ref/transform/jobs/create-a-job-put).
-
-| Parameter | Job argument | Applies to | Notes |
-|---|---|---|---|
-| Cancellation reason | `nfe-br-cancel-reason` | NFS-e, NF-e, and NFC-e | Free-text reason for the cancellation. For NF-e and NFC-e, must be at least 15 characters if provided. Defaults to the system default when omitted. |
-| Cancellation code | `nfe-br-cancel-code` | NFS-e only | Municipality-specific cancellation code, for example `9` for "Outros" in the National NFS-e system. Defaults to the system default when omitted. |
-
-Job arguments take precedence over the step configuration. To pass them when creating a job via the API:
-
-```json
-{
-  "workflow_id": "...",
-  "silo_entry_id": "...",
-  "args": {
-    "nfe-br-cancel-reason": "Cancelamento a pedido do Prestador",
-    "nfe-br-cancel-code": "9"
-  }
-}
-```
 
 ## FAQ
 

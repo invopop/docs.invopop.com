@@ -4,22 +4,26 @@ sidebarTitle: "NFS-e"
 description: Issue and cancel service invoices (NFS-e) in Brazil.
 ---
 
+import ServiceWorkflow from '/snippets/workflows/br/dfe-service-invoice.mdx'
+import CancelNFSeWorkflow from '/snippets/workflows/br/dfe-cancel-nfse.mdx'
 import ExampleAccordion from '/snippets/invoices/br/nfse-accordion.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
 import FAQ from '/snippets/faqs/br/composers/guide-nfse-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { brDfeServiceInvoiceWorkflow } from '/snippets/workflows/br/dfe-service-invoice.mdx';
+import { brDfeCancelNfseWorkflow } from '/snippets/workflows/br/dfe-cancel-nfse.mdx';
 
 ## Introduction
 
 An NFS-e (_Nota Fiscal de Serviços Eletrônica_) is the electronic invoice for services. The issuer's municipality authorizes it, with its own rules. You can find [the full list of supported municipalities here](https://tecnospeed.com.br/plugdfe/nfse/#homologacao).
 
-The workflows, environments and cancel arguments are in the [DF-e overview](/guides/br-dfe). For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
+Which document to issue, how documents are checked and the environments are in the [DF-e overview](/guides/br-dfe). For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
 
 ## Prerequisites
 
 To issue an NFS-e, you will need:
 
 - A registered supplier: follow the [DF-e supplier registration guide](/guides/br-dfe-supplier) to connect the Documentos Fiscais Eletrônicos Brazil app and register the supplier's certificate before issuing.
-- The "DF-e issue service invoice (NFS-e)" workflow, and the "DF-e cancel service invoice (NFS-e)" workflow to cancel. Both are in the [DF-e overview setup](/guides/br-dfe#setup).
 - Customer details.
 - Details of the services provided:
   - quantity,
@@ -28,19 +32,87 @@ To issue an NFS-e, you will need:
   - service code (_Código Item Lista Serviço_) as defined by the municipality.
 - To have chosen an invoice series
 
+## Setup
+
+Prepare the NFS-e issue and cancel workflows.
+
+<Info>
+  These instructions apply to both the sandbox and live environments. The **Documentos Fiscais Eletrônicos Brazil** app must already be connected and configured. This is covered in the [supplier registration guide](/guides/br-dfe-supplier).
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Prepare NFS-e workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Card iconType="duotone" title="DF-e issue service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-service-invoice" horizontal>
+    Add to my workspace →
+  </Card>
+  <Tabs>
+    <Tab title="Workflow">
+      <WorkflowDiagram workflow={brDfeServiceInvoiceWorkflow} />
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <ServiceWorkflow />
+    </Tab>
+  </Tabs>
+</Step>
+
+<Step title="Prepare NFS-e cancel workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Card iconType="duotone" title="DF-e cancel service invoice (NFS-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfse" horizontal>
+    Add to my workspace →
+  </Card>
+  <Tabs>
+    <Tab title="Workflow">
+      <WorkflowDiagram workflow={brDfeCancelNfseWorkflow} />
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <CancelNFSeWorkflow />
+    </Tab>
+  </Tabs>
+</Step>
+
+</Steps>
+
 ## Send invoices
 
 The following examples are of example [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the "DF-e issue service invoice (NFS-e)" workflow created during setup over them.
 
 <Info>
-In the sandbox, every job attaches the same mock PDF and XML. See [Environments](/guides/br-dfe#environments).
+The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-put). In the sandbox, every job attaches the same mock PDF and XML: see [Environments](/guides/br-dfe#environments).
 </Info>
 
 <ExampleAccordion />
 
 ## Cancel an invoice
 
-Run the "DF-e cancel service invoice (NFS-e)" workflow over the silo entry you want to cancel. On success, the entry will be set to `Void`. The optional job arguments are in [Cancel arguments](/guides/br-dfe#cancel-arguments).
+Run the "DF-e cancel service invoice (NFS-e)" workflow over the silo entry you want to cancel. On success, the entry will be set to `Void`.
+
+The cancel action accepts optional parameters. Set them as a default on the workflow step, in the step's configuration page in the Console. Or pass them as job arguments when [creating the job via the API](/api-ref/transform/jobs/create-a-job-put). Job arguments take precedence over the step configuration.
+
+| Parameter | Job argument | Notes |
+|---|---|---|
+| Cancellation reason | `nfe-br-cancel-reason` | Free-text reason for the cancellation. Defaults to the system default when omitted. |
+| Cancellation code | `nfe-br-cancel-code` | Municipality-specific cancellation code, for example `9` for "Outros" in the National NFS-e system. Defaults to the system default when omitted. |
+
+```json
+{
+  "workflow_id": "...",
+  "silo_entry_id": "...",
+  "args": {
+    "nfe-br-cancel-reason": "Cancelamento a pedido do Prestador",
+    "nfe-br-cancel-code": "9"
+  }
+}
+```
 
 <Info>
   NFS-e cancellations are subject to the rules of each municipality. Some require a specific cancellation code.

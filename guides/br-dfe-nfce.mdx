@@ -4,6 +4,8 @@ sidebarTitle: "NFC-e"
 description: Issue consumer receipts (NFC-e, model 65) in Brazil, by what happens at the till. Examples, SEFAZ checks and test cases.
 ---
 
+import ConsumerWorkflow from '/snippets/workflows/br/dfe-consumer-invoice.mdx'
+import CancelNFCeWorkflow from '/snippets/workflows/br/dfe-cancel-nfce.mdx'
 import SaleMin from '/snippets/invoices/br/dfe-consumer-invoice.min.mdx'
 import Sale from '/snippets/invoices/br/dfe-consumer-invoice.mdx'
 import SimplesMin from '/snippets/invoices/br/dfe-consumer-invoice-simples.min.mdx'
@@ -18,6 +20,9 @@ import DeliveryMin from '/snippets/invoices/br/dfe-consumer-invoice-delivery.min
 import Delivery from '/snippets/invoices/br/dfe-consumer-invoice-delivery.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
 import FAQ from '/snippets/faqs/br/composers/guide-nfe-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { brDfeConsumerInvoiceWorkflow } from '/snippets/workflows/br/dfe-consumer-invoice.mdx';
+import { brDfeCancelNfceWorkflow } from '/snippets/workflows/br/dfe-cancel-nfce.mdx';
 
 ## Introduction
 
@@ -29,7 +34,7 @@ Every NFC-e has the same frame:
 - in person, presence `1`, or with home delivery, presence `4`,
 - inside the establishment's state.
 
-GOBL rejects any other presence code on an NFC-e ([`INVOICE-28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules)). Other sales are an NF-e: see [Which document for which sale](/guides/br-dfe#which-document-for-which-sale).
+GOBL rejects any other presence code on an NFC-e ([`INVOICE-28`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules)). Other sales are an NF-e: see [Which document for which flow](/guides/br-dfe#which-document-for-which-flow).
 
 | At the till | Document | Section |
 |---|---|---|
@@ -41,7 +46,7 @@ GOBL rejects any other presence code on an NFC-e ([`INVOICE-28`](https://docs.go
 | Exchange | Return, then a new sale | [Returns](#returns), then [In-person sale](#in-person-sale) |
 | Sold online, or delivered to another state | NF-e | [NF-e guide](/guides/br-dfe-nfe) |
 
-The workflows, environments and cancel arguments are in the [DF-e overview](/guides/br-dfe). For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
+Which document to issue, how documents are checked and the environments are in the [DF-e overview](/guides/br-dfe). For onboarding suppliers, see the companion guide: [DF-e supplier registration](/guides/br-dfe-supplier).
 
 | - | Sandbox | Live |
 |---|---|---|
@@ -52,14 +57,67 @@ The workflows, environments and cancel arguments are in the [DF-e overview](/gui
 
 - **A registered supplier:** follow the [DF-e supplier registration guide](/guides/br-dfe-supplier) to register each establishment that issues receipts. The A1 certificate must match the establishment's CNPJ ([Brazil FAQ](/faq/brazil)).
 - **State accreditation:** some states, such as SP, RJ and MG, require an accreditation (_credenciamento_) before the first document ([Brazil FAQ](/faq/brazil)).
-- **The NFC-e workflows:** "DF-e issue consumer invoice (NFC-e)" and "DF-e cancel consumer invoice (NFC-e)", from the [DF-e overview setup](/guides/br-dfe#setup).
 - **Product data for each line:** the NCM product code, the CFOP and the tax codes and percentages. The supplier's tax advisor sets them per product.
+
+## Setup
+
+Prepare the NFC-e issue and cancel workflows.
+
+<Info>
+  These instructions apply to both the sandbox and live environments. The **Documentos Fiscais Eletrônicos Brazil** app must already be connected and configured. This is covered in the [supplier registration guide](/guides/br-dfe-supplier).
+</Info>
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+
+<Step title="Prepare NFC-e workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Card iconType="duotone" title="DF-e issue consumer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-consumer-invoice" horizontal>
+    Add to my workspace →
+  </Card>
+  <Tabs>
+    <Tab title="Workflow">
+      <WorkflowDiagram workflow={brDfeConsumerInvoiceWorkflow} />
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <ConsumerWorkflow />
+    </Tab>
+  </Tabs>
+</Step>
+
+<Step title="Prepare NFC-e cancel workflow">
+
+Follow one of the methods below and ensure to **Save** and **Publish** the workflow:
+
+  <Card iconType="duotone" title="DF-e cancel consumer invoice (NFC-e)" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=br-dfe-cancel-nfce" horizontal>
+    Add to my workspace →
+  </Card>
+  <Tabs>
+    <Tab title="Workflow">
+      <WorkflowDiagram workflow={brDfeCancelNfceWorkflow} />
+    </Tab>
+    <Tab title="Code">
+      Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+      <CancelNFCeWorkflow />
+    </Tab>
+  </Tabs>
+</Step>
+
+</Steps>
 
 ## In-person sale
 
 The base case. A consumer pays in person and leaves with the goods. The receipt has no consumer data. The example is a store reselling goods, on the normal tax regime, paid by credit card. The [variants](#variants) cover other businesses.
 
-Upload the document, then run the "DF-e issue consumer invoice (NFC-e)" workflow over it.
+Upload the document, then run the "DF-e issue consumer invoice (NFC-e)" workflow created during [setup](#setup) over it.
+
+<Info>
+The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-put). In the sandbox, every job attaches the same mock PDF and XML: see [Environments](/guides/br-dfe#environments).
+</Info>
 
 <CodeGroup>
   <SaleMin />
@@ -179,7 +237,9 @@ The CFOP, the tax codes and the tax percentages are tax decisions. The supplier'
     - ICMS carries the [`br-nfe-icms-csosn`](https://docs.gobl.org/addons/br-nfe-v4#icms-simples-nacional-status-code-csosn) extension set to `102`, taxed without credit permission, at `0%`,
     - PIS and COFINS use the [`br-nfe-pis-cst`](https://docs.gobl.org/addons/br-nfe-v4#pis-tax-status-code-cst) and [`br-nfe-cofins-cst`](https://docs.gobl.org/addons/br-nfe-v4#cofins-tax-status-code-cst) extensions set to `49`, other operations, at `0%`.
 
-    ⚠️ Set these codes yourself. GOBL fills the normal-regime defaults. An ICMS line without a CSOSN fails with `INVOICE-43`. A PIS or COFINS line without a CST falls back to `01`.
+    <Warning>
+    Set these codes on every line. GOBL fills the normal-regime defaults. An ICMS line without a CSOSN fails with `INVOICE-43`. A PIS or COFINS line without a CST gets `01`.
+    </Warning>
 
     <CodeGroup>
       <SimplesMin />
@@ -201,9 +261,12 @@ The CFOP, the tax codes and the tax percentages are tax decisions. The supplier'
     | Food voucher, gift voucher, store credit | `key: other`, with `10`, `12` or `05` | `10`, `12`, `05` |
     | Digital wallet, cashback | `key: other`, with `18` or `19` | `18`, `19` |
 
-    - ⚠️ The key `card` always gives `03`, credit card, even when the extension says `04`. Use `card+debit` for a debit card.
     - **Refused by SEFAZ on an NFC-e:** `90`, no payment, and `99`, other. GOBL accepts both. See [SEFAZ checks](#sefaz-checks-not-run-by-gobl).
     - **Split tender:** one entry per tender in `payment.advances`. See [Identified consumer](#identified-consumer).
+
+    <Warning>
+    The key `card` always gives `03`, credit card, even when the extension says `04`. Use `card+debit` for a debit card.
+    </Warning>
 
     A PIX payment, recorded as paid:
 
@@ -232,7 +295,9 @@ What changes from an [in-person sale](#in-person-sale):
   <Identified />
 </CodeGroup>
 
-⚠️ The advances can't add up to more than the total: GOBL rejects the document with `INVOICE-33`. When the consumer pays cash and gets change, record the amount kept, not the amount handed over.
+<Warning>
+GOBL rejects advances above the total with `INVOICE-33`. When the consumer pays cash and gets change, record the amount kept.
+</Warning>
 
 ## Home delivery
 
@@ -256,11 +321,27 @@ Some states don't allow an NFC-e with home delivery. See [SEFAZ checks](#sefaz-c
 
 ## Cancel a sale
 
-A sale voided right after issue. No new document: run the "DF-e cancel consumer invoice (NFC-e)" workflow over the NFC-e's silo entry. On success, the entry is set to `Void`.
+A sale voided right after issue. No new document: run the "DF-e cancel consumer invoice (NFC-e)" workflow created during [setup](#setup) over the NFC-e's silo entry. On success, the entry is set to `Void`.
 
 - **Window:** request the cancellation within the window set by the establishment's state.
-- **Reason:** the optional `nfe-br-cancel-reason` job argument takes at least 15 characters. See [Cancel arguments](/guides/br-dfe#cancel-arguments).
+- **Reason:** the optional `nfe-br-cancel-reason` job argument, at least 15 characters. See the table below.
 - **After the window:** the sale stands. Goods coming back are a [return](#returns).
+
+The cancel action accepts optional parameters. Set them as a default on the workflow step, in the step's configuration page in the Console. Or pass them as job arguments when [creating the job via the API](/api-ref/transform/jobs/create-a-job-put). Job arguments take precedence over the step configuration.
+
+| Parameter | Job argument | Notes |
+|---|---|---|
+| Cancellation reason | `nfe-br-cancel-reason` | Free-text reason for the cancellation. At least 15 characters if provided. Defaults to the system default when omitted. |
+
+```json
+{
+  "workflow_id": "...",
+  "silo_entry_id": "...",
+  "args": {
+    "nfe-br-cancel-reason": "Cancelamento a pedido do Prestador"
+  }
+}
+```
 
 ## Returns
 
@@ -308,7 +389,9 @@ Run the cases below in a sandbox workspace first. The sandbox checks the GOBL ru
 | Cancel the first sale | [Cancel a sale](#cancel-a-sale) | Entry `void` | Cancelled, within the state's window |
 | Return of the first sale | [Return of an NFC-e](/guides/br-dfe-nfe#return-of-an-nfc-e) | Entry `sent` | Authorized, citing the real `sefaz-key` |
 
-⚠️ In the sandbox, the `sefaz-key` stamp is a mock value. For the return in homologação, copy the key of the receipt authorized in homologação.
+<Warning>
+In the sandbox, the `sefaz-key` stamp is a mock value. For the return in homologação, copy the key of the receipt authorized in homologação.
+</Warning>
 
 Negative cases. Each one fails at upload, in both environments:
 
