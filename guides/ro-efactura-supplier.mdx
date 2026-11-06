@@ -237,7 +237,7 @@ Tick **I have read this information and authorize the connection** and click <kb
   <img width="600" src="/assets/guides/ro-efactura-terms-and-conditions.png" alt="Registration page with the terms accepted" />
 </Frame>
 
-The accepted terms are stored on the party entry as a private agreement file, `terms-and-conditions.html`, with their version and the time they were accepted. Once accepted, opening the link again goes straight to ANAF.
+Invopop records the acceptance together with the exact terms accepted and when. The terms are accepted on every registration, including a renewal. Once accepted, opening the link again goes straight to ANAF.
 
 </Step>
 
@@ -309,7 +309,7 @@ Fetch the terms with [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) and show th
 GET https://api.invopop.com/apps/gov-ro/v1/entry/{silo_entry_id}/terms
 ```
 
-The response is an HTML page carrying the version of the terms.
+The response is the terms as Markdown.
 
 </Step>
 
@@ -321,17 +321,16 @@ Once your customer accepts the terms, record it with [Accept terms](/api-ref/app
 POST https://api.invopop.com/apps/gov-ro/v1/entry/{silo_entry_id}/terms
 ```
 
-The response carries the ANAF link, the acceptance time and the version of the terms:
+The response carries the ANAF link and the acceptance time:
 
 ```json
 {
   "link": "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=...",
-  "accepted_at": "2026-10-30T10:15:00Z",
-  "version": "v1"
+  "accepted_at": "2026-10-30T10:15:00Z"
 }
 ```
 
-The accepted terms are stored on the party entry, recorded as accepted through the API.
+Invopop records the acceptance together with the exact terms accepted.
 
 </Step>
 
@@ -392,7 +391,7 @@ Run the **RO unregister party** workflow on the party entry. The party moves to 
   <Accordion title="RO e-Factura connection terms">
     Before authorizing Invopop on ANAF's site, the certificate holder accepts the terms of the connection on the registration page: the company authorizes Invopop to connect it to the tax authority for invoicing, the person confirms they can act on its behalf, the company stays responsible for the data it provides, and Invopop may update the terms with prior notice.
 
-    The accepted terms are stored on the party entry as a private agreement file, `terms-and-conditions.html`, with their version and the time they were accepted. To read the current version before registering, or to show it in your own interface, use the [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) endpoint once the **Register with ANAF** step has run.
+    Invopop records the acceptance together with the exact terms accepted and when. The terms are accepted on every registration, including a renewal. To read them before registering, or to show them in your own interface, use the [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) endpoint once the **Register with ANAF** step has run.
   </Accordion>
   <Accordion title="Who can authorize Invopop">
     ANAF grants Invopop the access that the certificate holder has in SPV, so only a person registered in SPV for the company as legal representative, designated representative or authorized person (_împuternicit_) can complete the authorization. The certificate must be a qualified digital certificate accepted by ANAF for SPV, the same one the person uses to sign in to SPV. Invopop never receives the certificate: it only receives the access ANAF grants, which lasts one year.

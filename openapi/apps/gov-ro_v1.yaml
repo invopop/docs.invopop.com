@@ -20,14 +20,14 @@ security:
 paths:
   /apps/gov-ro/v1/entry/{silo_entry_id}/terms:
     get:
-      description: Fetch the terms the party accepts before authorizing Invopop with ANAF, as a standalone HTML page carrying their version.
+      description: Fetch the terms the party accepts before authorizing Invopop with ANAF, as Markdown.
       parameters:
       - $ref: "#/components/parameters/SiloEntryID"
       responses:
         "200":
-          description: The terms as an HTML page.
+          description: The terms as Markdown.
           content:
-            text/html:
+            text/markdown:
               schema:
                 type: string
         "401":
@@ -37,7 +37,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
     post:
-      description: Record that the party accepted the terms and get the ANAF authorization link. The acceptance is recorded with the `api` channel and the accepted terms are stored on the party entry as a private agreement file. Accepting again returns the same answer.
+      description: Record that the party accepted the terms and get the ANAF authorization link. Invopop records the acceptance together with the exact terms accepted. Accepting again returns the same answer.
       parameters:
       - $ref: "#/components/parameters/SiloEntryID"
       responses:
@@ -155,10 +155,6 @@ components:
           type: string
           format: date-time
           example: "2026-10-30T10:15:00Z"
-        version:
-          description: Version of the accepted terms.
-          type: string
-          example: "v1"
     Error:
       type: object
       properties:
@@ -198,7 +194,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Unprocessable:
-      description: Unprocessable Entity - The silo entry isn't a party, or the party has no Romanian tax ID.
+      description: Unprocessable Entity - The silo entry isn't a party, the party has no Romanian tax ID, or the registration expired and the **Register with ANAF** step has to run again (`registration expired, register the party again`).
       content:
         application/json:
           schema:
