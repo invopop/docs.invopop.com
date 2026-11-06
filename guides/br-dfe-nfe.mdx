@@ -1,12 +1,16 @@
 ---
 title: "NF-e issuing guide"
 sidebarTitle: "NF-e"
-description: Issue product invoices (NF-e, model 55) in Brazil, return goods, and cancel invoices.
+description: Issue product invoices (NF-e, model 55) in Brazil for B2B and B2C sales, return goods, and cancel invoices.
 ---
 
 import ProductWorkflow from '/snippets/workflows/br/dfe-product-invoice.mdx'
 import CancelNFEWorkflow from '/snippets/workflows/br/dfe-cancel-nfe.mdx'
 import ExampleAccordion from '/snippets/invoices/br/nfe-accordion.mdx'
+import OnlineMin from '/snippets/invoices/br/dfe-product-invoice-b2c-online.min.mdx'
+import Online from '/snippets/invoices/br/dfe-product-invoice-b2c-online.mdx'
+import InterstateMin from '/snippets/invoices/br/dfe-product-invoice-b2c-interstate.min.mdx'
+import Interstate from '/snippets/invoices/br/dfe-product-invoice-b2c-interstate.mdx'
 import NfceReturnMin from '/snippets/invoices/br/dfe-credit-note-nfce.min.mdx'
 import NfceReturn from '/snippets/invoices/br/dfe-credit-note-nfce.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
@@ -17,8 +21,9 @@ import { brDfeCancelNfeWorkflow } from '/snippets/workflows/br/dfe-cancel-nfe.md
 | Section | Read it when |
 |---|---|
 | [Prerequisites](#prerequisites) and [Setup](#setup) | Before the first invoice |
-| [Send invoices](#send-invoices) | B2B sales, Simples Nacional issuers, full goods returns. Also covers edge cases |
-| [Return of an NFC-e](#return-of-an-nfc-e) | A consumer brings back goods sold with an NFC-e |
+| [Send an NF-e](#send-an-nf-e) | Before any example: how to run the workflow, and what you get back |
+| [B2B sales](#b2b-sales) | The customer is a business: domestic sales, Simples Nacional issuers, full goods returns, foreign customers |
+| [B2C sales](#b2c-sales) | The customer is a consumer and an NFC-e doesn't fit: online sales, delivery to another state, returns of NFC-e sales |
 | [Cancel an invoice](#cancel-an-invoice) | An authorized invoice must be voided |
 
 ## Introduction
@@ -89,17 +94,21 @@ Follow one of the methods below and ensure to **Save** and **Publish** the workf
 
 </Steps>
 
-## Send invoices
+## Send an NF-e
 
-The following examples are of example [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the "DF-e issue product invoice (NF-e)" workflow created during setup over them.
+The examples below are [GOBL](https://docs.gobl.org) documents you can copy and paste directly into the [Invopop Console](https://console.invopop.com) or store via the API as silo entries. Then, you must run the "DF-e issue product invoice (NF-e)" workflow created during [setup](#setup) over them.
 
 <Info>
 The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-put). In the sandbox, every job attaches the same mock PDF and XML: see [Environments](/guides/br-dfe#environments).
 </Info>
 
-<ExampleAccordion />
-
 After authorization, the entry's `data.head.stamps` holds two stamps: `sefaz-key`, the 44-digit access key (_chave de acesso_), and `sefaz-auth`, the authorization protocol number.
+
+## B2B sales
+
+The customer is a business, identified by its CNPJ. These examples are sales between two Brazilian companies.
+
+<ExampleAccordion />
 
 ### Edge cases
 
@@ -134,7 +143,140 @@ After authorization, the entry's `data.head.stamps` holds two stamps: `sefaz-key
   </Accordion>
 </AccordionGroup>
 
-## Return of an NFC-e
+## B2C sales
+
+The customer is a final consumer, and the sale doesn't fit an [NFC-e](/guides/br-dfe-nfce): it was made online, the goods go to another state, or goods sold with an NFC-e come back. The examples reuse the NFC-e in-person sale, so you can compare them.
+
+An NF-e always needs a customer with an address. GOBL rejects it without one ([`INVOICE-12`, `13`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules)).
+
+### Online sale
+
+The consumer buys online, in the establishment's state.
+
+What changes from the [NFC-e in-person sale](/guides/br-dfe-nfce#in-person-sale):
+
+| Field | Value | Rule |
+|---|---|---|
+| `$tags` | No `simplified` tag. GOBL sets model `55` | [Model code](https://docs.gobl.org/addons/br-nfe-v4#fiscal-document-model-code) |
+| `tax.ext.br-nfe-presence` | `2`, internet sale | [Presence code](https://docs.gobl.org/addons/br-nfe-v4#buyer-presence-indicator) |
+| `customer` | The consumer's CPF, address and IBGE municipality code | [`INVOICE-12`, `13`, `22`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.ext.br-nfe-state-reg-ind` | GOBL fills `9`, non-taxpayer | [`INVOICE-50`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+
+```json Changes from the NFC-e in-person sale
+{
+  "tax": {
+    "ext": {
+      "br-nfe-presence": "2"
+    }
+  },
+  "customer": {
+    "name": "Ana Souza",
+    "tax_id": {
+      "country": "BR",
+      "code": "39851726419"
+    },
+    "addresses": [
+      {
+        "num": "45",
+        "street": "Rua Augusta",
+        "locality": "Consolação",
+        "state": "SP",
+        "code": "01305-000"
+      }
+    ],
+    "ext": {
+      "br-ibge-municipality": "3550308"
+    }
+  }
+}
+```
+
+<Accordion title="Full example: online sale" icon="code">
+  <CodeGroup>
+    <OnlineMin />
+    <Online />
+  </CodeGroup>
+</Accordion>
+
+### Delivery to another state
+
+The goods go to a consumer in another state. The example is sold in the store in São Paulo and delivered to Rio de Janeiro.
+
+What changes from the [online sale](#online-sale):
+
+| Field | Value | Rule |
+|---|---|---|
+| `tax.ext.br-nfe-presence` | `1` when sold in the store, `2` when sold online | [Presence code](https://docs.gobl.org/addons/br-nfe-v4#buyer-presence-indicator) |
+| `customer.addresses[0]` | The address in the other state, with its two-letter `state` | [`INVOICE-20`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `customer.ext.br-ibge-municipality` | The IBGE code of the delivery city, `3304557` for Rio de Janeiro | [`INVOICE-22`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| `lines[].ext.br-nfe-cfop` | `6108`, sale of goods bought from third parties to a non-taxpayer in another state | [`INVOICE-35`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+| ICMS `percent` | The interstate rate. The example uses `12%`. The supplier's tax advisor sets it | |
+| `notes[key=reason].text` | `Venda a não contribuinte` | [`INVOICE-29`, `30`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
+
+```json Changes from the online sale
+{
+  "tax": {
+    "ext": {
+      "br-nfe-presence": "1"
+    }
+  },
+  "customer": {
+    "name": "Bruno Lima",
+    "tax_id": {
+      "country": "BR",
+      "code": "71520463871"
+    },
+    "addresses": [
+      {
+        "num": "120",
+        "street": "Rua Barata Ribeiro",
+        "locality": "Copacabana",
+        "state": "RJ",
+        "code": "22040-002"
+      }
+    ],
+    "ext": {
+      "br-ibge-municipality": "3304557"
+    }
+  },
+  "lines": [
+    {
+      "…": "the same line",
+      "taxes": [
+        {
+          "cat": "ICMS",
+          "percent": "12%"
+        },
+        {
+          "…": "PIS and COFINS unchanged"
+        }
+      ],
+      "ext": {
+        "br-nfe-cfop": "6108"
+      }
+    }
+  ],
+  "notes": [
+    {
+      "key": "reason",
+      "text": "Venda a não contribuinte"
+    }
+  ]
+}
+```
+
+<Accordion title="Full example: delivery to another state" icon="code">
+  <CodeGroup>
+    <InterstateMin />
+    <Interstate />
+  </CodeGroup>
+</Accordion>
+
+<Warning>
+On a sale to a consumer in another state, part of the ICMS goes to the destination state (DIFAL). This example doesn't carry it. Contact Invopop support before you issue these sales in production.
+</Warning>
+
+### Return of an NFC-e
 
 An NFC-e can't cite another document, so it has no credit note (MOC Annex I rule `BA01-10`, rejection `708`). A consumer return is an NF-e entry document that cites the NFC-e. Run it with the "DF-e issue product invoice (NF-e)" workflow.
 
@@ -228,7 +370,7 @@ What changes from the [NFC-e in-person sale](/guides/br-dfe-nfce#in-person-sale)
 </Accordion>
 
 - The return CFOP follows the original sale. `1202` returns a resale bought from third parties. The supplier's tax advisor sets the CFOP for other operations.
-- No `br-nfe-credit-note-type` here: it applies to purpose `5` only, as in the [full goods return example](#send-invoices).
+- No `br-nfe-credit-note-type` here: it applies to purpose `5` only, as in the [full goods return example](#b2b-sales).
 
 <Warning>
 An NFC-e credit note fails with `GOBL-BR-NFE-BILL-INVOICE-26`. No GOBL scenario fills its purpose and operation type. Issue the return as an NF-e.
