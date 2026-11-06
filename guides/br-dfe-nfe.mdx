@@ -10,10 +10,16 @@ import ExampleAccordion from '/snippets/invoices/br/nfe-accordion.mdx'
 import NfceReturnMin from '/snippets/invoices/br/dfe-credit-note-nfce.min.mdx'
 import NfceReturn from '/snippets/invoices/br/dfe-credit-note-nfce.mdx'
 import BrazilResources from '/snippets/tables/brazil-resources.mdx';
-import FAQ from '/snippets/faqs/br/composers/guide-nfe-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 import { brDfeProductInvoiceWorkflow } from '/snippets/workflows/br/dfe-product-invoice.mdx';
 import { brDfeCancelNfeWorkflow } from '/snippets/workflows/br/dfe-cancel-nfe.mdx';
+
+| Section | Read it when |
+|---|---|
+| [Prerequisites](#prerequisites) and [Setup](#setup) | Before the first invoice |
+| [Send invoices](#send-invoices) | B2B sales, Simples Nacional issuers, full goods returns. Also covers edge cases |
+| [Return of an NFC-e](#return-of-an-nfc-e) | A consumer brings back goods sold with an NFC-e |
+| [Cancel an invoice](#cancel-an-invoice) | An authorized invoice must be voided |
 
 ## Introduction
 
@@ -93,6 +99,41 @@ The recommended approach for running jobs is to perform two steps: first upload 
 
 <ExampleAccordion />
 
+After authorization, the entry's `data.head.stamps` holds two stamps: `sefaz-key`, the 44-digit access key (_chave de acesso_), and `sefaz-auth`, the authorization protocol number.
+
+### Edge cases
+
+<AccordionGroup>
+  <Accordion title="The customer is foreign">
+    Identify the customer with a country-qualified `identity`, such as a passport, instead of a `tax_id`. The `identity.country` is an ISO country code other than `BR`.
+
+    - The customer address takes a `country` other than `BR`. GOBL fills it from the identity when you leave it out.
+    - The `state` field and the `br-ibge-municipality` extension only apply to Brazilian parties. Leave them out.
+
+    ```json Foreign customer
+    "customer": {
+      "name": "Acme International Inc.",
+      "identities": [
+        {
+          "key": "passport",
+          "country": "US",
+          "code": "US-FOREIGN-123"
+        }
+      ],
+      "addresses": [
+        {
+          "num": "500",
+          "street": "Market Street",
+          "locality": "San Francisco",
+          "code": "94105",
+          "country": "US"
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
 ## Return of an NFC-e
 
 An NFC-e can't cite another document, so it has no credit note (MOC Annex I rule `BA01-10`, rejection `708`). A consumer return is an NF-e entry document that cites the NFC-e. Run it with the "DF-e issue product invoice (NF-e)" workflow.
@@ -111,10 +152,80 @@ What changes from the [NFC-e in-person sale](/guides/br-dfe-nfce#in-person-sale)
 | `payment.instructions` | `key: other` with `br-nfe-payment-means` `90`, no payment | [Payment method](https://docs.gobl.org/addons/br-nfe-v4#payment-method) |
 | `notes[key=reason].text` | `Devolução de venda ao consumidor` | [`INVOICE-29`, `30`](https://docs.gobl.org/addons/br-nfe-v4#validation-rules) |
 
-<CodeGroup>
-  <NfceReturnMin />
-  <NfceReturn />
-</CodeGroup>
+```json Changes from the in-person sale
+{
+  "type": "credit-note",
+  "tax": {
+    "ext": {
+      "br-nfe-presence": "1",
+      "br-nfe-purpose": "4",
+      "br-nfe-operation-type": "0"
+    }
+  },
+  "preceding": [
+    {
+      "type": "standard",
+      "series": "1",
+      "code": "1",
+      "issue_date": "2026-10-28",
+      "stamps": [
+        {
+          "prv": "sefaz-key",
+          "val": "35261048219376000118650010000000011000000010"
+        }
+      ]
+    }
+  ],
+  "customer": {
+    "name": "Ana Souza",
+    "tax_id": {
+      "country": "BR",
+      "code": "39851726419"
+    },
+    "addresses": [
+      {
+        "num": "45",
+        "street": "Rua Augusta",
+        "locality": "Consolação",
+        "state": "SP",
+        "code": "01305-000"
+      }
+    ],
+    "ext": {
+      "br-ibge-municipality": "3550308"
+    }
+  },
+  "lines": [
+    {
+      "…": "the lines of the NFC-e",
+      "ext": {
+        "br-nfe-cfop": "1202"
+      }
+    }
+  ],
+  "payment": {
+    "instructions": {
+      "key": "other",
+      "ext": {
+        "br-nfe-payment-means": "90"
+      }
+    }
+  },
+  "notes": [
+    {
+      "key": "reason",
+      "text": "Devolução de venda ao consumidor"
+    }
+  ]
+}
+```
+
+<Accordion title="Full example: return of an NFC-e" icon="code">
+  <CodeGroup>
+    <NfceReturnMin />
+    <NfceReturn />
+  </CodeGroup>
+</Accordion>
 
 - The return CFOP follows the original sale. `1202` returns a resale bought from third parties. The supplier's tax advisor sets the CFOP for other operations.
 - No `br-nfe-credit-note-type` here: it applies to purpose `5` only, as in the [full goods return example](#send-invoices).
@@ -151,11 +262,7 @@ The cancel action accepts optional parameters. Set them as a default on the work
 }
 ```
 
-## FAQ
-
-<FAQ />
-
-More available in our [Brazil FAQ](/faq/brazil) section
+More questions are answered in the [Brazil FAQ](/faq/brazil).
 
 ---
 
