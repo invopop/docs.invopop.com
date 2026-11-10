@@ -22,6 +22,8 @@ export const WorkflowDiagram = ({ workflow }) => {
   const providerIcons = {
     // Core actions
     "silo.state": "https://silo.invopop.com/images/status.svg",
+    "silo.sign": "https://silo.invopop.com/images/check-badge.svg",
+    "silo.unsign": "https://silo.invopop.com/images/unsign.svg",
     "silo.close": "https://silo.invopop.com/images/check-badge.svg",
     "silo.if": "https://assets.invopop.com/apps/silo/if.svg",
     "silo.folder": "https://silo.invopop.com/images/folder.svg",
