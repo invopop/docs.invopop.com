@@ -46,7 +46,9 @@ Each window has a name, which is also the format of the [`window` argument](#tri
 | Monthly | The calendar month | `2026-SEP-1` |
 | Two-month | January–February, March–April, and so on to November–December | `2026-JAN-1`, `2026-MAR-1` (there is no `2026-AUG-1`) |
 
-A document goes into the window that is open when it is **recorded**, not the window of its issue or payment date. A late document, even one that is months old, is reported in the next report instead of being left out. 
+### Which window a document goes into
+
+A document goes into the window that holds the later of two dates: the moment it is recorded and its issue date. A late document, even one that is months old, is reported in the next report instead of being left out, while a future-dated one waits for the window of its issue date. Re-recording a document keeps the window it was first given.
 
 ## Recording workflow
 
@@ -115,24 +117,16 @@ The `key` must match the rate used on the line. Lines on `standard` or `zero` ra
 
 ### Correcting a recorded document
 
-You can correct a recorded document in two ways:
-
-| Action | How | Record | Window | Report already generated | When allowed |
-|---|---|---|---|---|---|
-| **Re-record** | Run the record workflow again on the same silo entry | Updated with the new data | Keeps its original window | The record leaves it; the next report for its window includes it | Any time, with no deadline, unless the report holding the document is <Badge color="blue">Submitted</Badge> (awaiting the PPF's answer) or <Badge color="green">Filed</Badge> (accepted) |
-| **Unrecord** | Run the `gov-fr.reporting.unrecord` action against the silo entry | Deleted | If recorded again later, goes into the window open then | Left out of the next report | Same as re-record |
-
-Whether you can do either depends on the [status](#reading-generated-reports) of the report holding the document:
+To correct a recorded document, **re-record** it by running the record workflow again on the same silo entry, which updates the record and keeps its window. To remove it, **unrecord** it with the `gov-fr.reporting.unrecord` action, which deletes the record. Whether you can do either depends on the [status](#reading-generated-reports) of the report holding the document:
 
 | Report holding the document | Re-record | Unrecord | How to fix |
 |---|---|---|---|
-| None yet | Yes | Yes | Re-record or unrecord. The window's report picks up the change when it is generated. |
-| <Badge color="gray">Generated</Badge>, not sent | Yes | Yes | Re-record or unrecord, then [generate the window's report again](#triggering-a-report-manually). |
+| <Badge color="gray">Generated</Badge> | Yes | Yes | Re-record or unrecord, then [generate the window's report again](#triggering-a-report-manually). |
 | <Badge color="red">Rejected</Badge> | Yes | Yes | Re-record or unrecord, then [generate the window's report again](#triggering-a-report-manually). |
-| <Badge color="blue">Submitted</Badge>, awaiting the PPF's answer | No | No | Wait for the answer. If the PPF rejects the report, fix it as above. |
-| <Badge color="green">Filed</Badge>, accepted by the PPF | No | No | Issue a credit note and record it. |
+| <Badge color="blue">Submitted</Badge> | No | No | Wait for the answer. If the PPF rejects the report, fix it as above. |
+| <Badge color="green">Filed</Badge> | No | No | Issue a credit note and record it. |
 
-A credit note for an accepted report is reported in the window open when it is recorded, as part of that window's normal report, not as a corrective of the original report.
+A credit note for an accepted report goes into its own window, picked [the same way as any document](#which-window-a-document-goes-into), and is reported as part of that window's normal report, not as a corrective of the original report.
 
 #### Examples
 
