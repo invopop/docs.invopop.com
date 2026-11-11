@@ -25,6 +25,28 @@ Each recorded document is classified into one of four sub-flows based on supplie
 | `10.3` | Domestic B2C invoices         |
 | `10.4` | Domestic B2C payments         |
 
+## Reporting windows
+
+Records are grouped into reporting windows, and each window gets one report. Reports are kept separate per declarant SIREN, per kind (transactions `tx` and payments `py`) and per role (seller or buyer). Windows follow Paris time.
+
+The cadence depends on the declarant's [VAT regime](#picking-a-vat-regime-at-supplier-registration):
+
+| VAT regime | Transactions | Payments |
+|---|---|---|
+| `real_normal_monthly` (default) | 10-day | Monthly |
+| `real_normal_quarterly` | Monthly | Monthly |
+| `simplified` | Monthly | Monthly |
+| `franchise` | Two-month | Two-month |
+
+Each window has a name, which is also the format of the [`window` argument](#triggering-a-report-manually):
+
+| Cadence | Windows | Names |
+|---|---|---|
+| 10-day | 1–10, 11–20, and 21 to the end of the month | `2026-SEP-1`, `2026-SEP-2`, `2026-SEP-3` |
+| Monthly | The calendar month | `2026-SEP-1` |
+| Two-month | January–February, March–April, and so on to November–December | `2026-JAN-1`, `2026-MAR-1` (there is no `2026-AUG-1`) |
+
+A document goes into the window that is open when it is **recorded**, not the window of its issue or payment date. A late document, even one that is months old, is reported in the next report instead of being left out. 
 
 ## Recording workflow
 
@@ -93,15 +115,47 @@ The `key` must match the rate used on the line. Lines on `standard` or `zero` ra
 
 ### Correcting a recorded document
 
-To fix a document after it was recorded, run the `gov-fr.reporting.unrecord` action against its silo entry. It removes the document from the pending records so you can correct it and run the record workflow again.
+You can correct a recorded document in two ways:
 
-- You can unrecord at any time until the window's filing deadline, whatever state its report is in. The next generation rebuilds the report without the document: as a replacement while the report never reached the PPF, or as a corrective filing when it was already submitted.
-- After the filing deadline a submitted or filed report stands, and its documents can no longer be unrecorded.
-- Unrecording a document that was never recorded is a no-op, so the action is safe to include in shared correction workflows.
+| Action | How | Record | Window | Report already generated | When allowed |
+|---|---|---|---|---|---|
+| **Re-record** | Run the record workflow again on the same silo entry | Updated with the new data | Keeps its original window | The record leaves it; the next report for its window includes it | Any time, with no deadline, unless the report holding the document is <Badge color="blue">Submitted</Badge> (awaiting the PPF's answer) or <Badge color="green">Filed</Badge> (accepted) |
+| **Unrecord** | Run the `gov-fr.reporting.unrecord` action against the silo entry | Deleted | If recorded again later, goes into the window open then | Left out of the next report | Same as re-record |
+
+Whether you can do either depends on the [status](#reading-generated-reports) of the report holding the document:
+
+| Report holding the document | Re-record | Unrecord | How to fix |
+|---|---|---|---|
+| None yet | Yes | Yes | Re-record or unrecord. The window's report picks up the change when it is generated. |
+| <Badge color="gray">Generated</Badge>, not sent | Yes | Yes | Re-record or unrecord, then [generate the window's report again](#triggering-a-report-manually). |
+| <Badge color="red">Rejected</Badge> | Yes | Yes | Re-record or unrecord, then [generate the window's report again](#triggering-a-report-manually). |
+| <Badge color="blue">Submitted</Badge>, awaiting the PPF's answer | No | No | Wait for the answer. If the PPF rejects the report, fix it as above. |
+| <Badge color="green">Filed</Badge>, accepted by the PPF | No | No | Issue a credit note and record it. |
+
+A credit note for an accepted report is reported in the window open when it is recorded, as part of that window's normal report, not as a corrective of the original report.
+
+#### Examples
+
+These examples use 10-day windows, so `2026-SEP-1` runs from 1 to 10 September and `2026-SEP-2` from 11 to 20 September.
+
+<AccordionGroup>
+  <Accordion title="The PPF rejected the report">
+    An invoice recorded on 4 September goes into `2026-SEP-1`. The window's report is generated and sent after 10 September, and the PPF rejects it because of an error on the invoice. Fix the invoice and run the record workflow again: the record keeps `2026-SEP-1` and leaves the rejected report. Then run the send workflow with `window` set to `2026-SEP-1` to generate and send a new initial report for the window.
+  </Accordion>
+  <Accordion title="The PPF accepted the report">
+    The `2026-SEP-1` report holding an invoice was accepted, and on 15 September you find a wrong amount on it. Re-recording or unrecording the invoice fails. Issue a credit note for the invoice (and a new invoice if needed) and record it: it goes into `2026-SEP-2` and is reported with that window's normal report.
+  </Accordion>
+  <Accordion title="A document was never recorded">
+    An invoice issued on 28 August was never recorded, and you notice on 14 September. Record it then: it goes into `2026-SEP-2`, the window open on 14 September, and is reported with that window.
+  </Accordion>
+  <Accordion title="Unrecord, then record again later">
+    An invoice recorded on 8 September goes into `2026-SEP-1`. On 9 September you unrecord it, so it isn't reported with that window. When you record it again on 12 September, it goes into `2026-SEP-2`. Had you re-recorded it on 9 September instead, it would have stayed in `2026-SEP-1`.
+  </Accordion>
+</AccordionGroup>
 
 ## Submitting reports
 
-A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically on the cadence set by the VAT regime — you do not need to trigger it. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
+A separate workflow bundles the records for a closed reporting window into a single Flux 10 report and sends it to the PPF. Invopop runs it automatically for each window, so you do not need to trigger it. The schedule won't generate a window again that already has a report: after a rejection, [trigger the report manually](#triggering-a-report-manually) for that window. Each scheduled run creates a job with **no silo entry**: the declarant SIREN and the stream being reported travel as job arguments.
 
 <Card iconType="duotone" title="PPF generate and send reporting document" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=fr-reporting-send" horizontal>
   Add to my workspace →
@@ -129,7 +183,7 @@ A separate workflow bundles the records for a closed reporting window into a sin
 
 ### Triggering a report manually
 
-You can also run the workflow yourself: useful for testing, or to bring a party up to date after onboarding. There are two ways to tell the workflow which declarant to report:
+You can also run the workflow yourself: useful for testing, to bring a party up to date after onboarding, or to generate a window's report again after a [correction](#correcting-a-recorded-document). There are two ways to tell the workflow which declarant to report:
 
 - **Job arguments** — create the job with no silo entry and pass the SIREN in `args`. This is what the scheduler does.
 - **A silo entry** — run the job against the registered party's silo entry, as any other workflow.
@@ -169,7 +223,7 @@ curl -X POST "https://api.invopop.com/transform/v1/jobs" \
 </CodeGroup>
 
 <Note>
-  `window` is for testing and recovery. Name it `YEAR-MONTH-STEP`: `2026-SEP-1` to `2026-SEP-3` for 10-day windows, `2026-SEP-1` for monthly ones, and `2026-JAN-1` (January–February) for two-month ones. The window must have closed. Forcing a window doesn't change the schedule.
+  `window` is for testing and recovery. Name it `YEAR-MONTH-STEP`, as listed under [reporting windows](#reporting-windows). Any window that has closed is accepted. 
 </Note>
 
 

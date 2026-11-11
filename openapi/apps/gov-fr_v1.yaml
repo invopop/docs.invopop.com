@@ -1198,9 +1198,10 @@ components:
     ReportingPeriod:
       type: object
       description: |-
-        One Flux 10 submission window for a `(kind, role)` tuple. Corrective
-        re-submissions of the same window are separate periods sharing the
-        window dates but with an incrementing `sequence`.
+        One Flux 10 submission window for a `(kind, role)` tuple. A report
+        generated again for the same window, for example after a PPF
+        rejection, is a separate period sharing the window dates but with an
+        incrementing `sequence`.
       required: [id, siren, flux_kind, role, period_start, period_end, sequence, status, created_at, updated_at]
       properties:
         id:
@@ -1241,12 +1242,15 @@ components:
         sequence:
           type: integer
           description: |-
-            Submission sequence for the window. `1` is the initial report;
-            higher values are corrective re-submissions.
+            Submission sequence for the window. `1` is the first report;
+            higher values are reports generated again for the same window.
           example: 1
         previous_period_id:
           type: string
-          description: ID of the prior sequence for the same window. Omitted for sequence 1.
+          description: |-
+            ID of the submitted or accepted report this one corrects. Omitted
+            when the report doesn't correct one, including a report generated
+            again after a rejection.
           example: ""
         status:
           type: string
