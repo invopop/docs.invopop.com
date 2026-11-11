@@ -31,6 +31,35 @@ This guide assumes you have already connected the Chargebee app and completed th
   loading="lazy"
 ></iframe>
 
+## Letting each customer choose a format
+
+Each Chargebee customer can receive a plain PDF, a ZUGFeRD invoice or an XRechnung invoice. You choose the format per customer with the `cf_invopop_workflow` custom field. Each format has its own workflow.
+
+<Steps>
+  <Step title="Add one workflow per format">
+    Add the workflows you need to your workspace: the [Chargebee PDF invoice](https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-invoice) workflow, and the ZUGFeRD and XRechnung workflows from [Workflows](#workflows) below. Give each one a short, distinct name. You will use these names as dropdown values in Chargebee.
+  </Step>
+  <Step title="Set the default workflow">
+    In the Chargebee app configuration, set **Workflow** to the format most of your customers need. ZUGFeRD suits most B2B customers.
+  </Step>
+  <Step title="Create the customer field in Chargebee">
+    In Chargebee, go to **Settings** → **Configure Chargebee** → **Custom Fields** and create a dropdown field on customers with the API name `cf_invopop_workflow`. Use your workflow names as the dropdown values. Set the field at signup, by hand or with [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html). A customer with an empty field uses the default workflow.
+  </Step>
+  <Step title="Set a payment workflow">
+    If **Import payments** is enabled, set a **Payment workflow** too. Otherwise payments follow the customer's workflow, and a `bill/invoice` workflow stops them with a `schema-mismatch` error. See [Importing payments](/guides/chargebee#importing-payments).
+  </Step>
+</Steps>
+
+The app matches the field value against the names of your workflows that start with the **Import document from Chargebee** step. The match ignores case. A workflow UUID also works. A value that matches no workflow fails the import with `No workflow called "NAME" was found`.
+
+<Warning>
+  A plain PDF is not an e-invoice. Invoices to businesses in Germany must be ZUGFeRD or XRechnung from 1 January 2027 if your prior-year turnover is above €800k, and from 1 January 2028 for every issuer. Use the PDF workflow for consumers and for buyers not established in Germany. See the [Germany FAQ](/faq/germany) for the transition rules.
+</Warning>
+
+<Note>
+  **Why not one workflow with an If/Else step:** the step's condition reads the GOBL invoice. The app copies only the keys listed in [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) into it. A condition on your own Chargebee field, such as `cf_invoice_format`, never sees its value.
+</Note>
+
 ## Using Chargebee's email delivery
 
 The Chargebee app does not email your customers. It posts links to the generated files on the Chargebee invoice, and Chargebee attaches those files (the ZUGFeRD PDF, or the XRechnung XML) to its own invoice email only if your site is set up for it.
@@ -87,7 +116,17 @@ These must be in place in Chargebee:
 
     When an invoice is paid by bank transfer, ZUGFeRD requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN and BIC/SWIFT code directly into the **Add bank details** workflow step. Both fields are required.
 
-    This only affects invoices paid outside of Chargebee, such as [offline payments](https://www.chargebee.com/docs/payments/2.0/offline-checkout/offline_payments). For these invoices, Chargebee has no information about the destination account, so the bank details need to be included manually in the workflow.
+    The step adds your bank details when the invoice has no payment method or is paid by bank transfer, such as [offline payments](https://www.chargebee.com/docs/payments/2.0/offline-checkout/offline_payments). For these invoices, Chargebee has no information about the destination account, so the bank details need to be included manually in the workflow.
+
+    The step also runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details. A ZUGFeRD credit note without bank details can fail validation with `CII-SR-470`.
+
+    <Warning>
+      If you issue credit notes, edit the condition of the **Add bank details** step and remove its last line:
+
+      ```
+      && doc?.payment?.terms?.due_dates != nil
+      ```
+    </Warning>
 
     <Tabs>
       <Tab title="Workflow">
@@ -102,13 +141,34 @@ These must be in place in Chargebee:
     <Card title="Chargebee XRechnung" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=chargebee-cb-xrechnung" horizontal>
       Add to my workspace →
     </Card>
-    XRechnung is used for invoicing German public authorities. The template includes a few additional steps compared to ZUGFeRD, each addressing a specific requirement:
+    XRechnung is used for invoicing German public authorities. It needs more data on your supplier than ZUGFeRD, and the template includes a few additional steps, each addressing a specific requirement:
 
-    **1. Bank details**
+    **1. Supplier contact and inbox**
 
-    XRechnung requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN (and optionally your BIC/SWIFT code) directly into the **Adding bank details** workflow step. The IBAN alone is sufficient.
+    XRechnung requires a contact person and an electronic address for the seller (BR-DE-5 and PEPPOL-EN16931-R020). Chargebee doesn't hold them, so add them to your supplier in the [console](https://console.invopop.com), under **Contacts** → **Suppliers**:
 
-    **2. Leitweg-ID as the buyer reference (ordering code)**
+    - **Person:** one contact person, with an email address and a telephone number. XRechnung also requires a seller email and telephone (BR-DE-6 and BR-DE-7). The person's are used when your Chargebee organization address has none.
+    - **Inbox:** the email address where you receive e-invoices, or your Peppol ID.
+
+    Without them, the first XRechnung job fails with `GOBL-DE-XRECHNUNG-BILL-INVOICE-04` (supplier people) and `GOBL-DE-XRECHNUNG-BILL-INVOICE-08` (supplier inboxes).
+
+    **2. Bank details**
+
+    XRechnung requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN (and optionally your BIC/SWIFT code) directly into the **Add bank details** workflow step. The IBAN alone is sufficient.
+
+    The step runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details and fail BR-DE-1 (`GOBL-DE-XRECHNUNG-BILL-INVOICE-17`).
+
+    <Warning>
+      Edit the condition of the **Add bank details** step and remove its last line:
+
+      ```
+      && doc?.payment?.terms?.due_dates != nil
+      ```
+
+      Do this in every XRechnung workflow. BR-DE-1 requires payment instructions on every invoice and credit note.
+    </Warning>
+
+    **3. Leitweg-ID as the buyer reference (ordering code)**
 
     Some German public sector customers require a **Leitweg-ID** to be present on the invoice as the buyer reference. This is typically entered as the PO number on the subscription in Chargebee. However, XRechnung expects this value in the buyer reference field, which Invopop maps to the ordering code — not the purchase order code. The **Map PO to ordering code** step handles this automatically, moving the value from the PO field into the correct place.
 
@@ -118,7 +178,9 @@ These must be in place in Chargebee:
     {"code": "991-12345678-06"}
     ```
 
-    **3. Customer inbox (delivery routing)**
+    Credit notes don't take the PO number from the original invoice. Keep the Leitweg-ID as the PO number on the subscription, or in `cf_gobl_ordering` on the customer, so credit notes carry it too. A Leitweg-ID set only on the invoice leaves the credit note without a buyer reference, and it fails BR-DE-15.
+
+    **4. Customer inbox (delivery routing)**
 
     Each public authority customer must have either a Peppol inbox or an email address configured so the invoice can be routed correctly. You can set these via custom fields on the customer in Chargebee:
 
@@ -133,7 +195,7 @@ These must be in place in Chargebee:
     </Tip>
 
     <Note>
-      The **Adding bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added manually to the workflow step. If you don't need to include payment instructions in your invoices, you can remove this step entirely.
+      The **Add bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added manually to the workflow step.
     </Note>
 
     <Note>
