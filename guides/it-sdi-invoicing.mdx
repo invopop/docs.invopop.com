@@ -187,6 +187,49 @@ SDI needs nothing else: the supplier doesn't register you with it, and no notice
 
 When the customer issues the document, as in the self-billed types TD16 to TD20, TD22, TD23 and TD28, the addon marks it as issued by the customer (`CC`) on its own. Don't add an `issuer` to those. TD21 and TD27 get no issuer type, because the supplier issues those itself.
 
+### Self-billed purchases (TD16 to TD19)
+
+When you buy under reverse charge, Italian rules make you, the buyer, issue the document yourself. It is an *integrazione* or an *autofattura*. In GOBL it is a `standard` invoice: the seller is the `supplier` and you are the `customer`.
+
+The tags pick the document type:
+
+| `$tags` | Type | When it applies |
+|---|---|---|
+| `self-billed`, `reverse-charge` | TD16 | Internal reverse charge on a purchase from an Italian supplier |
+| `self-billed`, `import` | TD17 | Services bought from a supplier outside Italy |
+| `self-billed`, `import`, `goods-eu` | TD18 | Goods bought from a supplier in another EU country |
+| `self-billed`, `import`, `goods` | TD19 | Goods located in Italy, bought from a non-resident supplier under art. 17 c.2 DPR 633/72 |
+
+The addon sets the issuer type to `CC` on all four. Don't add an `issuer`.
+
+#### Correcting a self-billed document
+
+When the supplier sends you a credit note, issue a new `standard` document with the same tags and negative amounts. Its `preceding` refers to the supplier's credit note, with that note's code and issue date. It does not refer to your original self-billed document.
+
+```json
+"$tags": ["self-billed", "import"],
+"type": "standard",
+"preceding": [
+  {
+    "code": "CN-2026-014",
+    "issue_date": "2026-11-05"
+  }
+],
+"lines": [
+  {
+    "quantity": "-1",
+    "item": { "name": "Consulting services", "price": "200.00" },
+    "taxes": [{ "cat": "VAT", "rate": "general" }]
+  }
+]
+```
+
+The addon gives the correction the same type as the original, TD17 in this example. The send step writes `preceding` to the file as `DatiFattureCollegate`. GOBL keeps the minus sign on the quantity: a negative price is moved to the quantity when the invoice is built.
+
+<Warning>
+Don't use the `credit-note` type for a self-billed purchase. The addon turns every credit note into TD04, whatever its tags, and drops the `CC` issuer type. TD04 is not valid for a self-billed purchase.
+</Warning>
+
 ## Invoice statuses
 
 SDI's verdict on an invoice arrives after the send step has finished, as a notification recorded against the invoice: delivered, rejected, undeliverable, or — for public administrations — accepted or refused by the buyer.
