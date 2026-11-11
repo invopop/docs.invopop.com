@@ -53,11 +53,11 @@ Each Chargebee customer can receive a plain PDF, a ZUGFeRD invoice or an XRechnu
 The app matches the field value against the names of your workflows that start with the **Import document from Chargebee** step. The match ignores case. A workflow UUID also works. A value that matches no workflow fails the import with `No workflow called "NAME" was found`.
 
 <Warning>
-  A plain PDF is not an e-invoice. Except for statutory exceptions such as small-amount invoices of €250 or less, invoices to businesses in Germany above €250 must be ZUGFeRD or XRechnung from 1 January 2027 if your prior-year turnover is above €800k, and from 1 January 2028 for every issuer. Use the PDF workflow for consumers and for buyers not established in Germany. See the [Germany FAQ](/faq/germany) for the transition rules and exceptions.
+  A plain PDF is not an e-invoice. When you and your business customer are both established in Germany, invoices must be EN 16931 e-invoices, such as ZUGFeRD or XRechnung. This applies from 1 January 2027 if your prior-year turnover is above €800k, and from 1 January 2028 for every issuer. Some invoices stay outside the rule, such as invoices of €250 or less. Use the PDF workflow for consumers and for buyers not established in Germany. See the [Germany FAQ](/faq/germany) for the transition rules and exceptions.
 </Warning>
 
 <Note>
-  **Why not one workflow with an If/Else step:** the step's condition reads the GOBL invoice. The app copies only the keys listed in [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) into it. A condition on your own Chargebee field, such as `cf_invoice_format`, never sees its value.
+  **Why not one workflow with an If/Else step:** the step's condition reads the GOBL invoice. The app copies only the `cf_gobl_` keys listed in [Custom fields & metadata](/guides/chargebee#custom-fields-metadata) into it. A condition on your own Chargebee field, such as `cf_invoice_format`, never sees its value.
 </Note>
 
 ## Using Chargebee's email delivery
@@ -116,9 +116,9 @@ These must be in place in Chargebee:
 
     When an invoice is paid by bank transfer, ZUGFeRD requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN and BIC/SWIFT code directly into the **Add bank details** workflow step. Both fields are required.
 
-    The step adds your bank details when the invoice has no payment method or is paid by bank transfer, such as [offline payments](https://www.chargebee.com/docs/payments/2.0/offline-checkout/offline_payments). For these invoices, Chargebee has no information about the destination account, so the bank details need to be included manually in the workflow.
+    The step adds your bank details when the invoice has no payment instructions, or has bank transfer as its payment means, such as [offline payments](https://www.chargebee.com/docs/payments/2.0/offline-checkout/offline_payments). For these invoices, Chargebee has no information about the destination account, so the bank details need to be included manually in the workflow.
 
-    The step also runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details. A ZUGFeRD credit note without bank details can fail validation with `CII-SR-470`.
+    The step also runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details. A ZUGFeRD credit note with bank transfer as its payment means but no IBAN fails validation with `CII-SR-470`.
 
     <Warning>
       If you issue credit notes, edit the condition of the **Add bank details** step and remove its last line:
@@ -145,18 +145,18 @@ These must be in place in Chargebee:
 
     **1. Supplier contact and inbox**
 
-    XRechnung requires a contact person and an electronic address for the seller (BR-DE-5 and PEPPOL-EN16931-R020). Chargebee doesn't hold them, so add them to your supplier in the [console](https://console.invopop.com), under **Contacts** → **Suppliers**:
+    XRechnung requires a contact person and an electronic address for the seller (BR-DE-5 and PEPPOL-EN16931-R020). Chargebee never sends an inbox, and sends a contact person only in some setups. Add both to your supplier in the [console](https://console.invopop.com), under **Contacts** → **Suppliers**:
 
-    - **Person:** one contact person, with an email address and a telephone number. XRechnung also requires a seller email and telephone (BR-DE-6 and BR-DE-7). The person's details are used when your Chargebee organization address has none.
+    - **Person:** one contact person, with an email address and a telephone number. XRechnung also requires a seller email and telephone (BR-DE-6 and BR-DE-7). The XML takes them from this person first.
     - **Inbox:** the email address where you receive e-invoices, or your Peppol ID.
 
-    Without them, the first XRechnung job fails with `GOBL-DE-XRECHNUNG-BILL-INVOICE-04` (supplier people) and `GOBL-DE-XRECHNUNG-BILL-INVOICE-08` (supplier inboxes).
+    Without them, the first XRechnung job fails with `GOBL-DE-XRECHNUNG-BILL-INVOICE-04` (supplier people) and `GOBL-DE-XRECHNUNG-BILL-INVOICE-08` (supplier inboxes). Credit notes copy the supplier from the original invoice, so add the person and inbox before you issue your first XRechnung invoice.
 
     **2. Bank details**
 
     XRechnung requires bank details to be present on the invoice. Chargebee typically includes this information in its PDF template, but it is not available via the API — so we cannot fetch it automatically. You will need to add your IBAN (and optionally your BIC/SWIFT code) directly into the **Add bank details** workflow step. The IBAN alone is sufficient.
 
-    The step runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details and fail BR-DE-1 (`GOBL-DE-XRECHNUNG-BILL-INVOICE-17`).
+    The step runs only on invoices with a due date. Paid invoices and credit notes have none, so they get no bank details. Without other payment instructions, they fail BR-DE-1 (`GOBL-DE-XRECHNUNG-BILL-INVOICE-17`).
 
     <Warning>
       Edit the condition of the **Add bank details** step and remove its last line:
