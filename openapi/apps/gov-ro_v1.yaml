@@ -1,0 +1,216 @@
+# OpenAPI Romania v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you register parties with the Romania RO e-Factura app and download the official ANAF archives of their invoices through the API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Romania Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-ro/v1/entry/{silo_entry_id}/terms:
+    get:
+      description: Fetch the terms the party accepts before authorizing Invopop with ANAF, as Markdown.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The terms as Markdown.
+          content:
+            text/markdown:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      description: Record that the party accepted the terms and get the ANAF authorization link. Invopop records the acceptance together with the exact terms accepted. Accepting again returns the same answer.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: Terms accepted, the ANAF authorization link is ready to send to the certificate holder.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TermsAcceptance"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/entry/{silo_entry_id}/link:
+    get:
+      description: Fetch the ANAF authorization link of a party that has accepted the terms.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The ANAF authorization link.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  link:
+                    description: ANAF authorization link to send to the certificate holder.
+                    type: string
+                    example: "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/sent/{silo_entry_id}/archive:
+    get:
+      description: Download the official ANAF archive of an invoice sent to RO e-Factura, for the last time it was sent. The zip is signed by ANAF and holds the accepted invoice, or the errors of a rejection.
+      parameters:
+      - $ref: "#/components/parameters/InvoiceEntryID"
+      responses:
+        "200":
+          $ref: "#/components/responses/Archive"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not Found - The archive isn't available. The `message` says why, see the endpoint page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /apps/gov-ro/v1/received/{silo_entry_id}/archive:
+    get:
+      description: Download the official ANAF archive an invoice received through RO e-Factura was imported from. The zip is signed by ANAF and holds the invoice as the supplier sent it.
+      parameters:
+      - $ref: "#/components/parameters/InvoiceEntryID"
+      responses:
+        "200":
+          $ref: "#/components/responses/Archive"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not Found - The archive isn't available. The `message` says why, see the endpoint page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  parameters:
+    InvoiceEntryID:
+      description: ID of the bill.Invoice silo entry.
+      in: path
+      name: silo_entry_id
+      required: true
+      schema:
+        description: ID of the bill.Invoice silo entry.
+        example: 0190c3a2-7b1e-7c4d-9f2a-3e5d8b6a1c40
+        title: Silo Entry ID
+        type: string
+    SiloEntryID:
+      description: ID of the org.Party silo entry being registered.
+      in: path
+      name: silo_entry_id
+      required: true
+      schema:
+        description: ID of the org.Party silo entry being registered.
+        example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+        title: Silo Entry ID
+        type: string
+  schemas:
+    TermsAcceptance:
+      type: object
+      properties:
+        link:
+          description: ANAF authorization link to send to the certificate holder.
+          type: string
+          example: "https://logincert.anaf.ro/anaf-oauth2/v1/authorize?response_type=code&client_id=...&state=..."
+        accepted_at:
+          description: When the terms were accepted.
+          type: string
+          format: date-time
+          example: "2026-10-30T10:15:00Z"
+    Error:
+      type: object
+      properties:
+        message:
+          description: Details of the error.
+          type: string
+  responses:
+    Archive:
+      description: The official ANAF archive, as a zip file.
+      headers:
+        Content-Disposition:
+          description: Suggested file name of the archive.
+          schema:
+            type: string
+            example: attachment; filename="5001234567.zip"
+      content:
+        application/zip:
+          schema:
+            type: string
+            format: binary
+    Unauthorized:
+      description: Unauthorized - Missing or invalid token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not Found - The silo entry doesn't exist or belongs to another workspace.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflict - The **Register with ANAF** step hasn't run for the party (`registration not started`), or the terms haven't been accepted yet (`party has not accepted the terms and conditions`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Unprocessable Entity - The silo entry isn't a party, the party has no Romanian tax ID, or the registration expired and the **Register with ANAF** step has to run again (`registration expired, register the party again`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal Server Error - The request could not be processed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+
+        Example: `Authorization: Bearer <token>`

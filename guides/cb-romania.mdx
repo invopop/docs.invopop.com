@@ -1,0 +1,78 @@
+---
+title: "Chargebee in Romania"
+sidebarTitle: "Romania"
+icon: "https://assets.invopop.com/flags/ro.svg"
+description: "Send RO e-Factura invoices from Chargebee to ANAF"
+---
+
+import RomaniaExample from '/snippets/workflows/chargebee/cb-romania.mdx'
+import FAQ from '/snippets/faqs/ro/composers/guide-efactura-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { chargebeeCbRomaniaWorkflow } from '/snippets/workflows/chargebee/cb-romania.mdx';
+
+Romania uses **RO e-Factura**, the national e-invoicing system run by ANAF. Every invoice is converted to UBL following CIUS-RO, the Romanian profile of EN 16931, and uploaded to ANAF, which validates it and seals it with the Ministry of Finance signature. The sealed XML is the legal invoice: Invopop attaches it to the invoice once ANAF accepts it.
+
+This guide assumes you have already connected the Chargebee app and completed the general setup — see the [Chargebee overview](/guides/chargebee) first if you haven't.
+
+**Required apps:** [Romania](/apps/romania), [Forex](/guides/update-exchange-rates)
+
+<Info>
+  Before processing any invoices, the supplier must be registered and authorized with ANAF through Invopop. See the [RO e-Factura supplier guide](/guides/ro-efactura-supplier) for the registration steps, and the [RO e-Factura guide](/guides/ro-efactura) for how invoices are sent.
+</Info>
+
+## Workflow
+
+The workflow imports the invoice from Chargebee, converts it to CIUS-RO XML, signs it and sends it to ANAF, then renders a PDF and updates Chargebee. The invoice keeps the number Chargebee gave it. Two steps prepare the invoice before it is converted:
+
+- **Modify silo entry** adds the `ro-efactura-v1` addon, which applies the CIUS-RO rules on top of EN 16931.
+- **Update exchange rates** sets the ECB rate to RON for the invoice date. ANAF requires the VAT of an invoice in another currency, such as EUR, to be stated in RON (`BR-RO-030`). Invoices in RON are left unchanged.
+
+Keep **Sign envelope** before **Send e-Factura XML to ANAF**: Invopop stamps the invoice with the ANAF upload ID and response date after sending it, and only a signed invoice can be stamped.
+
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={chargebeeCbRomaniaWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+    <RomaniaExample />
+  </Tab>
+</Tabs>
+
+## Chargebee setup
+
+ANAF validates every invoice against the CIUS-RO rules, so a few details have to be in place in Chargebee before the first invoice is created. Chargebee copies them into each invoice when it is created: changing them later does not update invoices that already exist.
+
+**1. Organization address**
+
+The supplier's name and address on the invoice come from your Chargebee organization address, under **Settings → Configure Chargebee → Business Profile**. Fill in the company name, street, city, post code and country, and the county in the state field.
+
+**2. Taxes**
+
+Enable taxes under **Settings → Configure Chargebee → Taxes** and add Romania as a tax region with its VAT rates. Make sure the customers and charges you invoice are not marked as tax-exempt: a line without VAT is rejected by ANAF (`BR-CO-18`, `BR-CO-04`).
+
+**3. Customer billing address**
+
+Each customer needs a billing address with street, city and country. For customers in Romania, the county goes in the state field. For business customers, set their CIF in the VAT number field; customers without one are sent as consumers.
+
+<Note>
+  Write counties by their Romanian name or code: `Cluj`, `CJ` or `RO-CJ`. For Bucharest, use `București` (or `B`) as the state and the sector as the city, for example `Sector 1`. The English name `Bucharest` is not recognized.
+</Note>
+
+## FAQ
+
+<FAQ />
+
+More available in our [Romania FAQ](/faq/romania) section
+
+---
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about your Chargebee integration →
+</Card>

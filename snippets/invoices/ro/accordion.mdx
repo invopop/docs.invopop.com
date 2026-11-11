@@ -1,0 +1,99 @@
+import StandardMin from '/snippets/invoices/ro/efactura-standard.min.mdx';
+import Standard from '/snippets/invoices/ro/efactura-standard.mdx';
+import B2CMin from '/snippets/invoices/ro/efactura-b2c.min.mdx';
+import B2C from '/snippets/invoices/ro/efactura-b2c.mdx';
+import CreditNoteMin from '/snippets/invoices/ro/efactura-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/ro/efactura-credit-note.mdx';
+import CorrectiveMin from '/snippets/invoices/ro/efactura-corrective.min.mdx';
+import Corrective from '/snippets/invoices/ro/efactura-corrective.mdx';
+import SelfBilledMin from '/snippets/invoices/ro/efactura-self-billed.min.mdx';
+import SelfBilled from '/snippets/invoices/ro/efactura-self-billed.mdx';
+
+<AccordionGroup>
+
+<Accordion title="B2B standard invoice">
+
+	In this example, we're issuing a standard B2B invoice from a Romanian supplier to another Romanian business customer.
+
+	Notice:
+
+	- the minimal version in the first tab contains only the essential fields required to create the invoice,
+	- the [`ro-efactura-v1`](https://github.com/invopop/gobl.ro.anaf/tree/main/addon) addon ensures the document is validated using the national CIUS-RO rules (BR-RO) on top of EN 16931,
+	- addresses in Romania carry the county as `state` (ISO 3166-2:RO code, `B` for Bucharest), and Bucharest addresses use the sector as `locality`,
+	- payment terms are required whenever an amount is due,
+	- the built version in the second tab shows the calculated totals and the `untdid-document-type` extension set to `380`, and,
+	- make sure to process it with the "RO generate & send" workflow created during setup.
+
+	<CodeGroup>
+		<StandardMin />
+		<Standard />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="B2C standard invoice">
+
+	In this example, the supplier issues an invoice to a consumer without a tax ID.
+
+	Notice:
+
+	- the customer has no `tax_id`, so Invopop uploads the invoice to ANAF's B2C endpoint,
+	- the built version adds the thirteen zeros CNP (`0000000000000`) that Romanian law requires for a consumer without an identifier, and,
+	- if the consumer gives you their CNP, add it as a `CNP` identity on the customer instead.
+
+	<CodeGroup>
+		<B2CMin />
+		<B2C />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="B2B credit note">
+
+	In this example, we're issuing a credit note (type code `381`) to refund part of a previous invoice.
+
+	Notice:
+
+	- the `type` field is set to `credit-note`,
+	- the `preceding` field references the original invoice by `series`, `code` and `issue_date`,
+	- quantities and amounts are expressed as positive values, as in every GOBL credit note, and,
+	- the built version shows the `untdid-document-type` extension set to `381`.
+
+	<CodeGroup>
+		<CreditNoteMin />
+		<CreditNote />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="B2B corrective invoice">
+
+	In this example, we're issuing a corrective invoice (type code `384`) that replaces a previous invoice.
+
+	Notice:
+
+	- the `type` field is set to `corrective`,
+	- the `preceding` field references the original invoice by `series`, `code` and `issue_date`, and,
+	- the built version shows the `untdid-document-type` extension set to `384`.
+
+	<CodeGroup>
+		<CorrectiveMin />
+		<Corrective />
+	</CodeGroup>
+</Accordion>
+
+<Accordion title="Self-billed invoice">
+
+	In this example, the customer issues the invoice in the supplier's name (_autofactură_, type code `389`).
+
+	Notice:
+
+	- the `$tags` field includes `self-billed`,
+	- the registered party issuing the invoice is the **customer**, so the customer's CIF is the one used to upload it to ANAF,
+	- the built version adds the mandatory `Autofactură` note and sets the `untdid-document-type` extension to `389`, and,
+	- Invopop flags the upload as self-billed (`autofactura=DA`) automatically.
+
+	<CodeGroup>
+		<SelfBilledMin />
+		<SelfBilled />
+	</CodeGroup>
+</Accordion>
+
+</AccordionGroup>
