@@ -132,6 +132,29 @@ This guide assumes that you already have a Chargebee site configured and using P
 
 You are now ready to start importing invoices and credit notes from Chargebee. The app will automatically create GOBL invoices and add them to your Invopop account. The invoices will then be processed using the workflow you set up.
 
+## Tax names
+
+The app reads the GOBL tax category of each invoice from the **Tax name** configured in Chargebee. Chargebee sends it as the `name` of the invoice's taxes:
+
+```json
+"taxes": [
+  {
+    "object": "tax",
+    "name": "MwSt",
+    "description": "MwSt @ 19 %",
+    "amount": 380
+  }
+]
+```
+
+If the tax name matches the code of a category in the supplier's [GOBL tax regime](https://docs.gobl.org/regimes), such as `VAT`, `GST`, or `HST`, the app uses that category. Otherwise, it uses the regime's main category, which is `VAT` in countries with VAT. You can keep a local name such as `MwSt`, `USt`, `BTW`, or `TVA` in Chargebee, and your customers will keep seeing it on their invoices.
+
+<Warning>
+  In regimes with more than one tax category, such as Canada or Brazil, a tax with an unrecognized name is imported under the regime's main category. Name each tax in Chargebee after its exact category code so it's imported under the right one.
+</Warning>
+
+By default, the app uses the tax category of your account's country, but the tax name can be modified in Chargebee at **Settings** → **Configure Chargebee** → **Taxes**: select the country and edit the tax, or change the `tax1_name` column if you uploaded your taxes as a CSV. See Chargebee's [Configuring Taxes](https://www.chargebee.com/docs/billing/2.0/taxes/tax) guide for details.
+
 ## Country guides
 
 Depending on where your customers are located, you'll need a different workflow to comply with local e-invoicing requirements. Each country guide covers the recommended workflow template, video walkthrough, and key custom fields:
