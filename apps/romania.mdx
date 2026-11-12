@@ -54,7 +54,7 @@ import FAQ from '/snippets/faqs/ro/composers/app-efactura.mdx';
 
 	* **Workflow automation:** Automated workflows for registering parties, sending invoices, and importing received invoices through RO e-Factura.
 	* **Party registration:** Register a party with its Romanian tax ID (CIF). The certificate holder accepts the terms and authorizes Invopop once on ANAF's site, from a link stored in the party's meta. Partners can show and accept the terms in their own interface through the API.
-	* **Authorization renewal:** ANAF authorizations last one year. Invopop renews access in the background during that year. Notifications before the party has to register again are in development.
+	* **Authorization renewal:** ANAF authorizations last one year. Invopop renews access in the background during that year, and runs the token workflow picked in the app configuration on a party a week before its authorization expires and again once it has expired, so it can register again in time.
 	* **CIUS-RO XML generation:** Compliant UBL 2.1 generation for invoices, credit notes, corrective, self-billed and accounting invoices, checked against the official ANAF schematron before upload.
 	* **Clearance tracking:** Invopop waits for ANAF's decision on each upload and attaches the official XML returned by ANAF to the invoice.
 	* **Automatic routing:** B2B, B2C, self-billed and enforcement uploads are picked from the invoice itself, with no configuration.
@@ -83,7 +83,7 @@ import FAQ from '/snippets/faqs/ro/composers/app-efactura.mdx';
 		| Party registration | <Badge color="green">Available</Badge> | |
 		| Sending invoices | <Badge color="green">Available</Badge> | |
 		| Receiving invoices | <Badge color="green">Available</Badge> | |
-		| Authorization expiry notifications | <Badge color="yellow">In development</Badge> | Soon configured through the app configuration |
+		| Authorization expiry notifications | <Badge color="green">Available</Badge> | Pick the token workflow in the app configuration |
 	</Tab>
 	<Tab title="Actions">
 		The following workflow actions will be available once you install and enable this app:
@@ -97,11 +97,9 @@ import FAQ from '/snippets/faqs/ro/composers/app-efactura.mdx';
 		<Card title="Wait ANAF link registration" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
 			Pause the workflow, without a time limit, until the holder of the party's SPV digital certificate opens the link stored in meta, accepts the terms and authorizes Invopop on ANAF's site.
 		</Card>
-		{/* Hidden until notifications before an ANAF authorization expires are available.
 		<Card title="Validate your ANAF refresh token" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
-			<Badge color="yellow">In development</Badge> Not implemented yet, soon supported through the app configuration. Checks the party's ANAF authorization and continues on the `ok`, `warning` or `expired` branch, to notify the party before it has to register again.
+			Check the party's ANAF authorization and continue on the `warning` branch when it is about to expire, or on the `expired` branch once it has. An authorization still valid skips the step. Run by the app on the token workflow picked in the app configuration.
 		</Card>
-		*/}
 		<Card title="Unregister from ANAF" icon="https://assets.invopop.com/flags/ro.svg" horizontal>
 			Completely unregister a party and clear the ANAF credentials stored in Invopop's database.
 		</Card>
@@ -143,13 +141,11 @@ import FAQ from '/snippets/faqs/ro/composers/app-efactura.mdx';
 				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=ro-unregister)
 			</Accordion>
 
-			{/* Hidden until notifications before an ANAF authorization expires are available.
 			<Accordion title="RO validate token">
-			<Badge color="yellow">In development</Badge> Not implemented yet, soon supported through the app configuration. This workflow will check the party's ANAF authorization and email you when it is about to expire or has expired.
+			This workflow checks the party's ANAF authorization and emails you when it is about to expire or has expired. Pick it as the token workflow in the app configuration, and Invopop runs it on each party a week before its authorization expires and again once it has expired.
 				<ValidateTokenWorkflow />
 				[Add to my workspace →](https://console.invopop.com/redirect/workflows/new?template=ro-validate-token)
 			</Accordion>
-			*/}
 
 			<Accordion title="RO sync received invoices">
 			This workflow fetches the invoices received by a party and creates an import job for each one. It is run by the Cron app.

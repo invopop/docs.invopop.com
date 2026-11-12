@@ -114,24 +114,16 @@ The **Subscribe to periodic execution** step needs the **RO sync received invoic
 
 </Step>
 
-{/* Hidden until notifications before an ANAF authorization expires are available.
-<Step title="Configure the token validation workflow (in development)">
+<Step title="Configure the token validation workflow">
 
-<Warning>
-  Not implemented yet. Notifications before an ANAF authorization expires are in development and will soon be supported through the app configuration. The workflow below shows how they will work.
-</Warning>
+ANAF authorizations last one year, after which the party has to complete the registration again. This workflow checks the party's authorization and continues on one of two branches:
 
-ANAF authorizations last one year, after which the party has to complete the registration again. This workflow checks the party's authorization and continues on one of three branches:
-
-- **ok**: the authorization is valid, nothing to do.
 - **warning**: the authorization expires soon. The template sends you an email with the **Notify via email** step.
 - **expired**: the authorization has expired and sending or receiving fails until the party registers again. The template sends you an email.
 
 The step also returns the expiry date as the `refresh_token_deadline` argument (`DD/MM/YYYY`), which you can use in the email.
 
-<Frame>
-  <img width="600" src="/assets/guides/ro-efactura-validate-token.png" alt="RO validate token workflow with its ok, warning and expired branches" />
-</Frame>
+Add the workflow to your workspace, then pick it as the **Token Workflow** in the RO e-Factura app configuration (**Settings → Apps**, then **Configure** on the app). Invopop checks the parties once a day and runs the workflow on a party a week before its authorization expires, and once more after it has expired. A party renewed in between is skipped. Without a token workflow, parties are not notified.
 
 <Card iconType="duotone" title="RO validate token workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-validate-token" horizontal>
   Add to my workspace →
@@ -148,13 +140,8 @@ The step also returns the expiry date as the `refresh_token_deadline` argument (
 </Tabs>
 
 </Step>
-*/}
 
 </Steps>
-
-<Info>
-  We will offer notifications before an ANAF authorization expires in the future. Until then, keep track of the one-year expiry and [renew the authorization](#renew-the-authorization) in time.
-</Info>
 
 ## Register a supplier
 
@@ -363,7 +350,7 @@ The job continues once the authorization succeeds, and the party moves to <Badge
 ANAF authorizations last one year. To renew one, run the **RO register party** workflow again on the same party entry and complete the authorization with the certificate. The party keeps its history and received invoices continue from where they stopped. Terms already accepted carry over, so the link goes straight to ANAF unless the terms have changed since.
 
 <Note>
-  Notifications before an authorization expires are in development and will soon be supported through the app configuration.
+  With the token validation workflow configured in the app (see the setup steps above), you are notified a week before an authorization expires and again once it has expired.
 </Note>
 
 ## Unregister a supplier
