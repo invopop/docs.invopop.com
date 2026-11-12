@@ -81,24 +81,24 @@ The [Cron app](/apps/cron) runs the sync of received invoices at the interval yo
 This workflow registers a party with RO e-Factura, then subscribes it to the periodic sync of received invoices:
 
 1. **Set state** to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge>.
-2. **Register with ANAF** generates the registration link and stores it in the party's **Meta** section.
-3. **Wait ANAF link registration** pauses the workflow until the certificate holder accepts the terms and completes the authorization.
+2. **Register supplier with ANAF** generates the registration link and stores it in the party's **Meta** section.
+3. **Wait for ANAF authentication** pauses the workflow until the certificate holder accepts the terms and completes the authorization.
 4. **Set state** to <Badge size="sm" color="purple" icon="square-small" iconType="solid">Registered</Badge>.
 5. **Subscribe to periodic execution** subscribes the party to the sync workflow through the Cron app.
 
 **Error flow:** if a step fails, for example because the party's `tax_id` isn't Romanian or ANAF turns the registration down, the job ends with a `KO` and the error branch runs **Set state** to `Error`. Fix the cause and run the workflow again: a party can be registered again at any time.
 
-The **Subscribe to periodic execution** step needs the **RO sync received invoices** workflow, created in the [receiving invoices guide](/guides/ro-efactura-receiving#setup). Select it in the step, along with how often the sync should run.
+The **Subscribe to periodic execution** step needs the **e-Factura sync received invoices** workflow, created in the [receiving invoices guide](/guides/ro-efactura-receiving#setup). Select it in the step, along with how often the sync should run.
 
 <Info>
   If you only want to send invoices, remove the **Subscribe to periodic execution** step. You don't need the Cron app or the sync workflow then.
 </Info>
 
 <Frame>
-  <img width="600" src="/assets/guides/ro-efactura-subscribe-config.png" alt="RO register party workflow subscribing the party to the sync workflow" />
+  <img width="600" src="/assets/guides/ro-efactura-subscribe-config.png" alt="e-Factura register party workflow subscribing the party to the sync workflow" />
 </Frame>
 
-<Card iconType="duotone" title="RO register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-register" horizontal>
+<Card iconType="duotone" title="e-Factura register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-register" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -130,10 +130,10 @@ ANAF authorizations last one year, after which the party has to complete the reg
 The step also returns the expiry date as the `refresh_token_deadline` argument (`DD/MM/YYYY`), which you can use in the email.
 
 <Frame>
-  <img width="600" src="/assets/guides/ro-efactura-validate-token.png" alt="RO validate token workflow with its ok, warning and expired branches" />
+  <img width="600" src="/assets/guides/ro-efactura-validate-token.png" alt="e-Factura validate token workflow with its ok, warning and expired branches" />
 </Frame>
 
-<Card iconType="duotone" title="RO validate token workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-validate-token" horizontal>
+<Card iconType="duotone" title="e-Factura validate token workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-validate-token" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -174,22 +174,22 @@ In the Console, click <kbd>Build</kbd>, ensure there are no errors, and click <k
 
 <Step title="Run the workflow">
 
-* **Via API**: send the party to the registration workflow with the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint, using the IDs of the **silo entry** and the **RO register party** workflow.
-* **Via Console**: in the party entry, click <kbd>Select Workflow</kbd>, choose your **RO register party** workflow, and click <kbd>Run Workflow</kbd>.
+* **Via API**: send the party to the registration workflow with the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint, using the IDs of the **silo entry** and the **e-Factura register party** workflow.
+* **Via Console**: in the party entry, click <kbd>Select Workflow</kbd>, choose your **e-Factura register party** workflow, and click <kbd>Run Workflow</kbd>.
 
-The party moves to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge> and the job stops at the **Wait ANAF link registration** step until the authorization is complete.
+The party moves to <Badge size="sm" color="yellow" icon="square-small" iconType="solid">Processing</Badge> and the job stops at the **Wait for ANAF authentication** step until the authorization is complete.
 
 <Frame>
   <img width="390" src="/assets/guides/ro-efactura-wait-step.png" alt="Registration job waiting for the ANAF authorization" />
 </Frame>
 
-The **Wait ANAF link registration** step waits indefinitely. It continues as soon as the terms are accepted and the authorization on ANAF's site ends with the **Registration Successful** page.
+The **Wait for ANAF authentication** step waits indefinitely. It continues as soon as the terms are accepted and the authorization on ANAF's site ends with the **Registration Successful** page.
 
 - **To cancel the registration**, cancel the job.
-- **To restart the registration**, run the **RO register party** workflow again.
+- **To restart the registration**, run the **e-Factura register party** workflow again.
 
 <Warning>
-  Make sure the job is waiting on the **Wait ANAF link registration** step before completing the authorization on ANAF's site.
+  Make sure the job is waiting on the **Wait for ANAF authentication** step before completing the authorization on ANAF's site.
 </Warning>
 
 </Step>
@@ -205,7 +205,7 @@ The **Wait ANAF link registration** step waits indefinitely. It continues as soo
     </Frame>
   </Tab>
   <Tab title="Third-party companies">
-    If you issue invoices for third parties ([white label](/guides/white-label)), add a webhook after the **Register with ANAF** step to receive the `siloEntryId`.
+    If you issue invoices for third parties ([white label](/guides/white-label)), add a webhook after the **Register supplier with ANAF** step to receive the `siloEntryId`.
 
     Use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) to get the registration link from the `meta` object:
 
@@ -303,7 +303,7 @@ Store the supplier with the [Create an Entry endpoint](/api-ref/silo/entries/cre
 
 <Step title="Run the registration workflow">
 
-Run the **RO register party** workflow on the party with the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post). The **Register with ANAF** step prepares the registration and the job waits on **Wait ANAF link registration**.
+Run the **e-Factura register party** workflow on the party with the [Create a Job endpoint](/api-ref/transform/jobs/create-a-job-post). The **Register supplier with ANAF** step prepares the registration and the job waits on **Wait for ANAF authentication**.
 
 </Step>
 
@@ -355,12 +355,12 @@ The job continues once the authorization succeeds, and the party moves to <Badge
 </Steps>
 
 <Note>
-  The `/terms` endpoints answer `409` if the **Register with ANAF** step hasn't run for the party, and the link endpoint answers `409` until the terms are accepted.
+  The `/terms` endpoints answer `409` if the **Register supplier with ANAF** step hasn't run for the party, and the link endpoint answers `409` until the terms are accepted.
 </Note>
 
 ## Renew the authorization
 
-ANAF authorizations last one year. To renew one, run the **RO register party** workflow again on the same party entry and complete the authorization with the certificate. The party keeps its history and received invoices continue from where they stopped. Terms already accepted carry over, so the link goes straight to ANAF unless the terms have changed since.
+ANAF authorizations last one year. To renew one, run the **e-Factura register party** workflow again on the same party entry and complete the authorization with the certificate. The party keeps its history and received invoices continue from where they stopped. Terms already accepted carry over, so the link goes straight to ANAF unless the terms have changed since.
 
 <Note>
   Notifications before an authorization expires are in development and will soon be supported through the app configuration.
@@ -370,7 +370,7 @@ ANAF authorizations last one year. To renew one, run the **RO register party** w
 
 Unregistering a party revokes Invopop's access to ANAF on its behalf. You might need to do so because the party is no longer your customer or because of a change in their CIF. The following workflow unregisters the party from RO e-Factura, removes the ANAF credentials stored in Invopop and stops the periodic sync:
 
-<Card iconType="duotone" title="RO unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-unregister" horizontal>
+<Card iconType="duotone" title="e-Factura unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-unregister" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -384,7 +384,7 @@ Unregistering a party revokes Invopop's access to ANAF on its behalf. You might 
   </Tab>
 </Tabs>
 
-Run the **RO unregister party** workflow on the party entry. The party moves to <Badge color="gray">Void</Badge>, the ANAF credentials are deleted from Invopop and the periodic sync stops.
+Run the **e-Factura unregister party** workflow on the party entry. The party moves to <Badge color="gray">Void</Badge>, the ANAF credentials are deleted from Invopop and the periodic sync stops.
 
 <Warning>
   An unregistered party can no longer send or receive invoices through Invopop. To start again, run the registration workflow, accept the terms and complete the ANAF authorization again.
@@ -400,7 +400,7 @@ Run the **RO unregister party** workflow on the party entry. The party moves to 
   <Accordion title="RO e-Factura connection terms">
     Before authorizing Invopop on ANAF's site, the certificate holder accepts the terms of the connection on the registration page: the company authorizes Invopop to connect it to the tax authority for invoicing, the person confirms they can act on its behalf, the company stays responsible for the data it provides, and Invopop may update the terms with prior notice.
 
-    Invopop records the acceptance together with the exact terms accepted and when. The terms are accepted on every registration, including a renewal. To read them before registering, or to show them in your own interface, use the [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) endpoint once the **Register with ANAF** step has run.
+    Invopop records the acceptance together with the exact terms accepted and when. The terms are accepted on every registration, including a renewal. To read them before registering, or to show them in your own interface, use the [Fetch terms](/api-ref/apps/gov-ro/terms-fetch) endpoint once the **Register supplier with ANAF** step has run.
   </Accordion>
   <Accordion title="Who can authorize Invopop">
     ANAF grants Invopop the access that the certificate holder has in SPV, so only a person registered in SPV for the company as legal representative, designated representative or authorized person (_împuternicit_) can complete the authorization. The certificate must be a qualified digital certificate accepted by ANAF for SPV, the same one the person uses to sign in to SPV. Invopop never receives the certificate: it only receives the access ANAF grants, which lasts one year.
