@@ -71,15 +71,15 @@ This workflow numbers the invoice, converts it to CIUS-RO XML, signs it, sends i
 2. **Add sequential code** gives the invoice its number.
 3. **Generate e-Factura XML** converts the GOBL invoice to CIUS-RO, checks it against the ANAF schematron and attaches it as `efactura.xml`.
 4. **Sign envelope** seals the GOBL document so it can no longer change.
-5. **Send e-Factura XML to ANAF** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml` and the invoice is stamped with the ANAF upload ID and response date.
+5. **Send invoice to e-Factura** uploads the XML and waits until ANAF accepts or rejects it. On acceptance, the official XML returned by ANAF is attached as `anaf-efactura.xml` and the invoice is stamped with the ANAF upload ID and response date.
 6. **Generate PDF** renders a PDF of the invoice in Romanian to hand to your customer.
 7. **Set state** to <Badge size="sm" color="blue" icon="square-small" iconType="solid">Sent</Badge>.
 
 <Warning>
-  Keep **Sign envelope** before **Send e-Factura XML to ANAF**. Invopop stamps the invoice after sending it, and only a signed invoice can be stamped: the send step fails on an unsigned one.
+  Keep **Sign envelope** before **Send invoice to e-Factura**. Invopop stamps the invoice after sending it, and only a signed invoice can be stamped: the send step fails on an unsigned one.
 </Warning>
 
-<Card iconType="duotone" title="RO generate & send workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-send" horizontal>
+<Card iconType="duotone" title="e-Factura issue invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=ro-send" horizontal>
   Add to my workspace →
 </Card>
 <Tabs>
@@ -129,15 +129,15 @@ Once a party is registered, you can issue invoices on their behalf.
 
     After uploading you'll see the document in the **Invoices** section with status `Empty`.
   </Step>
-  <Step title="Send the invoice to the RO generate & send workflow">
+  <Step title="Issue the invoice">
     Send the invoice to the workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the **e-Factura issue invoice** workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
 
-    From the Console, open the invoice, click **Select workflow**, choose **RO generate & send** and click **Run workflow**.
+    From the Console, open the invoice, click **Select workflow**, choose **e-Factura issue invoice** and click **Run workflow**.
 
-    The job waits on the **Send e-Factura XML to ANAF** step until ANAF decides, which usually takes a few minutes:
+    The job waits on the **Send invoice to e-Factura** step until ANAF decides, which usually takes a few minutes:
 
     - ✓ **Accepted** (`ok`): the invoice moves to <Badge color="blue">Sent</Badge> and carries the official XML returned by ANAF, next to the generated XML and the PDF. The invoice is stamped with the ANAF upload ID (`ro-anaf-upload-index`) and the date ANAF returned (`ro-anaf-upload-date`), shown in the **Headers** section of the invoice in the Console.
     - × **Rejected** (`nok`): the job fails with the errors ANAF returned. Correct the invoice and run the workflow again.
@@ -176,10 +176,10 @@ For example, if you issued an invoice for 100 lei but later realized it should h
 
     After successful upload, you'll see the credit note in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in `preceding`, you'll see a link to the credit note in the **Related** tab of the original invoice.
   </Step>
-  <Step title="Send the credit note to the RO generate & send workflow">
+  <Step title="Issue the credit note">
     Send the credit note to the same workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the **e-Factura issue invoice** workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the credit note you've just uploaded.
 
     The credit note moves to <Badge color="blue">Sent</Badge> once ANAF accepts it.
@@ -205,10 +205,10 @@ For example, if you issued an invoice for 100 lei but later realized it should h
 
     After successful upload, you'll see the corrective invoice in the **Invoices** section with status `Empty`. If you've included the `uuid` of the invoice in `preceding`, you'll see a link to the corrective invoice in the **Related** tab of the original invoice.
   </Step>
-  <Step title="Send the corrective invoice to the RO generate & send workflow">
+  <Step title="Issue the corrective invoice">
     Send the corrective invoice to the same workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint. Use:
 
-    - `workflow_id`: use the Workflow ID of the **RO generate & send** workflow we created during setup
+    - `workflow_id`: use the Workflow ID of the **e-Factura issue invoice** workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the corrective invoice you've just uploaded.
 
     The corrective invoice moves to <Badge color="blue">Sent</Badge> once ANAF accepts it.
