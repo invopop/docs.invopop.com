@@ -25,9 +25,18 @@ In this guide you'll learn how to register a supplier using the [Smart Receipts 
 
 To register a supplier for Smart Receipts, you will need:
 
-- An Italian tax ID (Partita IVA) for the supplier.
-- The supplier's _codice fiscale_.
-- The supplier's [AdE portal](https://ivaservizi.agenziaentrate.gov.it/portale/) credentials (password and PIN).
+- The supplier's Italian tax ID (Partita IVA). This identifies the business the receipts are filed under.
+- The Fisconline login of a person authorised to act for the supplier on the [AdE portal](https://ivaservizi.agenziaentrate.gov.it/portale/): their personal _codice fiscale_, password and PIN. These are the same three values that person types to log in to the portal.
+
+A company always acts on the AdE portal through a person, so the _codice fiscale_ is that person's own 16-character code, not the company's. The person doesn't need to be the owner or the legal representative:
+
+- **Accepted:** anyone the company has appointed in AdE as _incaricato_, either _gestore incaricato_ or _operatore incaricato_ (for example the legal representative, an employee or the company's accountant).
+- **Not accepted:** a _delega_ (delegation to an intermediary). Smart Receipts can't be used through a _delega_, so an accountant needs to be appointed as _incaricato_ instead.
+- **Not supported:** SPID and CIE logins. The person needs Fisconline credentials (password and PIN).
+
+<Tip>
+  Before submitting the credentials, have the person log in to _Fatture e Corrispettivi_ with them, choose **Incaricato**, select the company and check they can open the _Corrispettivi_ section. If the appointment isn't active yet, the registration form is still accepted but receipts fail with `invalid-credentials` until the credentials are submitted again once it's active.
+</Tip>
 
 ## Setup
 
@@ -133,7 +142,7 @@ Here's an example using test data (only valid for sandbox environments):
 }
 ```
 <Info>
-  You may notice that we included the Italian fiscal code in the supplier, this is not necessary at the moment but will be asked for, if not provided, during the registration process.
+  The `it-fiscal-code` identity is optional and only pre-fills the _Codice Fiscale_ field of the registration form. If included, it must be the personal _codice fiscale_ of the person whose Fisconline credentials will be submitted (see [Prerequisites](#prerequisites)), not the company's Partita IVA. The Partita IVA `48220010093` above is test data and only works in sandbox.
 </Info>
 </Accordion>
 
@@ -212,10 +221,10 @@ The whole registration process can also be completed programmatically. This is u
 
     | Field | Required | Description |
     | --- | --- | --- |
-    | `fiscal_id` | Yes | The supplier's Partita IVA, without the `IT` country prefix. |
-    | `codice_fiscale` | Yes | The supplier's _codice fiscale_. It will be stored in the supplier party for future use. |
-    | `password` | Yes | The supplier's AdE portal password. |
-    | `pin` | Yes | The supplier's AdE portal PIN. |
+    | `fiscal_id` | Yes | The supplier's Partita IVA, without the `IT` country prefix. It must match the `tax_id` of the party in the silo entry. |
+    | `codice_fiscale` | Yes | The personal _codice fiscale_ of the person whose Fisconline credentials are submitted (see [Prerequisites](#prerequisites)). It will be stored in the supplier party for future use. |
+    | `password` | Yes | That person's Fisconline password. |
+    | `pin` | Yes | That person's Fisconline PIN. |
     | `email` | No | Email address to receive AdE notifications. Updates the supplier party if changed. |
 
     A `200` response means the registration is complete and the post-registration workflow configured in the app will be launched. Errors are returned as `{"error": "<message>"}` with a `400` status for client errors (invalid or expired link, missing fields) or `500` for server errors.
