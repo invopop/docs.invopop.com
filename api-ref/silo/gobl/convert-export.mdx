@@ -1,0 +1,53 @@
+---
+title: "Export GOBL to a format"
+sidebarTitle: "Export to format"
+tag: "NEW"
+openapi: "POST /silo/v1/gobl/convert/export"
+---
+
+Convert a [GOBL Envelope](https://docs.gobl.org/draft-0/envelope) or [GOBL Invoice](https://docs.gobl.org/draft-0/bill/invoice) into an external format, such as UBL or CII, without storing anything. The response is the converted document itself, with its content type and file name set according to the format.
+
+Choose formats by their `key` from the [conversion formats](/api-ref/silo/gobl/convert-formats) endpoint, filtered by `direction=export`. List several in order of preference and the first that accepts the document is used. The `GOBL-Convert-Format` response header names the format chosen. Use specific keys such as `ubl+en16931-v2017` or `ubl+peppol+bis-v3`: generic keys such as `ubl` and `cii` are only used to recognise documents on import, and cannot be exported to.
+
+To export an invoice that is already stored, use [export an entry](/api-ref/silo/entries/export-an-entry) instead.
+
+## JSON requests
+
+Send the document in `data`, as with the other GOBL endpoints. Formats go in `formats`, or in the `format` query parameter. Any attachments to embed, such as a PDF copy of the invoice, are included with their contents base64 encoded:
+
+```json
+{
+  "formats": ["ubl+peppol+bis-v3"],
+  "data": {
+    "$schema": "https://gobl.org/draft-0/bill/invoice",
+    "...": "..."
+  },
+  "attachments": [
+    {
+      "id": "INV-1",
+      "name": "invoice.pdf",
+      "desc": "PDF copy of the invoice",
+      "mime": "application/pdf",
+      "data": "JVBERi0xLjcK..."
+    }
+  ]
+}
+```
+
+The attachment `id` is used as the document reference in the exported file, such as a UBL or CII additional document reference. The `mime` type is detected from the data when omitted.
+
+JSON requests are limited to 8MB.
+
+## Multipart requests
+
+For larger documents or attachments, send a `multipart/form-data` form instead, which is streamed and accepted up to 100MB. The first part must be named `data` and hold the GOBL JSON, followed by one `attachment` part per file. The format keys go in the `format` query parameter, escaping each `+` as `%2B`:
+
+```bash
+curl -X POST "https://api.invopop.com/silo/v1/gobl/convert/export?format=ubl%2Bpeppol%2Bbis-v3" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -F "data=@invoice.json;type=application/json" \
+  -F "attachment=@invoice.pdf;type=application/pdf;headers=\"Content-ID: INV-1\";headers=\"Content-Description: PDF copy of the invoice\"" \
+  -o invoice.xml
+```
+
+An attachment's ID and description go in the standard `Content-ID` and `Content-Description` part headers, which are optional.

@@ -1,0 +1,18 @@
+---
+title: "Export an entry to a format"
+sidebarTitle: "Export entry"
+tag: "NEW"
+openapi: "GET /silo/v1/entries/{id}/export"
+---
+
+Convert a silo entry's GOBL envelope into an external format, such as UBL or CII, and download the result. Nothing is stored: to keep the converted document as one of the entry's files, use the `silo.export` workflow action instead.
+
+Choose formats by their `key` from the [conversion formats](/api-ref/silo/gobl/convert-formats) endpoint, escaping each `+` as `%2B`. List several in order of preference and the first that accepts the document is used. The `GOBL-Convert-Format` response header names the format chosen.
+
+To embed the entry's files in the exported document, set `attachments` to `all`, or to a single file category: `format` or `attachment`. Use `mime` to limit them to particular types:
+
+```bash
+curl "https://api.invopop.com/silo/v1/entries/$ENTRY_ID/export?format=ubl%2Bpeppol%2Bbis-v3&attachments=all&mime=application/pdf" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -o invoice.xml
+```
