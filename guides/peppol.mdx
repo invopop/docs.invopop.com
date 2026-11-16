@@ -204,7 +204,27 @@ All fields are required for identity validation and proof of ownership verificat
 
 Click <kbd>Build</kbd> to validate the document, then <kbd>Save</kbd>.
 
+#### Configure the registration step
 
+The **Register party on Peppol** step decides what the party's capabilities in the Peppol network are. Choose one of two options:
+
+- **Send only**: the party can send documents through Invopop.
+- **Send and receive**: the party is published on the SMP for the document groups chosen by the mode below.
+
+For **Send and receive**, pick a `mode`:
+
+- **Automatic**: registers the document groups of the party's country, plus those its participant scheme requires.
+- **Manual**: you tick whole document groups in `doc_groups`. Billing groups come first (UBL invoices, UBL self-billing, CII invoices), followed by country groups (France documents, France CDAR, Germany XRechnung, Germany ZUGFeRD). A French sender that needs lifecycle statuses must pick **France CDAR**.
+
+In automatic mode, the groups are picked as follows:
+
+| Matches | Document groups registered |
+|---|---|
+| Country BE, DK, FI, GR, HR, NL, NO, PL or DE | Peppol BIS UBL invoices, BIS UBL self-billing, BIS CII and invoice responses |
+| Country FR | France documents |
+| Scheme `0225` | France documents and France CDAR |
+| Scheme `9958` or `0204` | Germany XRechnung |
+| Scheme `9930` or `0246` | Germany ZUGFeRD |
 
 #### Send to the registration workflow
 
@@ -375,14 +395,8 @@ Please contact the [Invopop support team](mailto:support@invopop.com) if you hav
 
 <AccordionGroup>
 
-<Accordion title="What visibility do I need to have in my Peppol Party?">
-The visibility of your Peppol Party determines what documents you can send and receive.
-
-- `smp`: Only SMP, should be used for testing
-- `smp+sml`: SMP and SML, useful when you want to send documents but not receive them
-- `smp+sml+peppol`: SMP, SML, and Peppol Directory, recommended for both sending and receiving documents as you will be visible in the Peppol Directory
-
-In general, you should use the highest visibility available.
+<Accordion title="How do I register a party that only sends documents?">
+Set the **Register party on Peppol** step to **Send only** (`sending_only: true`). Nothing is published on the SMP, so the party can send but not receive, and the Peppol Directory option doesn't apply. For parties that also receive, use **Send and receive** and set `directory` to list them in the Peppol Directory. See [Configure the registration step](#configure-the-registration-step).
 
 </Accordion>
 
