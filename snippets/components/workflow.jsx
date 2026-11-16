@@ -64,7 +64,7 @@ export const WorkflowDiagram = ({ workflow }) => {
     chargebee: "https://assets.invopop.com/apps/chargebee/icon.svg",
     stripe: "https://assets.invopop.com/apps/stripe/icon.svg",
     email: "https://assets.invopop.com/apps/email/icon.svg",
-    connect: "https://assets.invopop.com/apps/connect/icon.svg",
+    connect: "https://assets.invopop.com/icons/connect.svg",
     cron: "https://assets.invopop.com/apps/cron/icon.svg",
     tables: "https://assets.invopop.com/apps/tables/icon.svg",
     ilyda: "https://assets.invopop.com/apps/ilyda/icon.svg",
