@@ -304,7 +304,7 @@ Never invent an extension value. Extension codes come from official code lists. 
 
 ### 8. Tax IDs are normalised and checksum-checked
 
-A `tax_id` has a `country` and a `code`. Build strips prefixes and punctuation, so `es-b-986.026.42` becomes `B98602642`, then validates the format and checksum. An invalid identity fails the build with codes such as `GOBL-GB-TAX-IDENTITY-03`, and on the Invopop API becomes a `422` whose `fields` object points at the property. Use real, valid identities from the country's sandbox guide when testing, never made-up digits.
+A `tax_id` has a `country` and a `code`. Build strips prefixes and punctuation, so `es-b-986.026.42` becomes `B98602642`, then validates the format and checksum. An invalid identity fails the build with codes such as `GOBL-GB-TAX-IDENTITY-03`, and on the Invopop API becomes a `422` whose `fields` object points at the property. When testing, use the supplier data the country's row in [Testing in sandbox](/workspace/sandbox-testing) names, never made-up digits or IDs copied from examples: some steps check tax IDs against live registries, and shared test environments already hold the example IDs.
 
 ### 9. Never edit an issued invoice, correct it
 
@@ -342,7 +342,7 @@ The API sits behind Cloudflare, which rejects some default HTTP client signature
 
 ### 2. Sandbox and live share one API
 
-There is no separate sandbox host. `https://api.invopop.com` serves every workspace and the token decides which one you are in. `GET /access/v1/workspace` tells you which: it returns the workspace `name`, `slug`, `country` and `sandbox: true` or `false`. Check it before you create anything. Start in a sandbox workspace, where government apps run against test environments and most countries ship a pre-enabled test supplier. Going live means a paid subscription, a live workspace and [registering each real supplier](/guides/how-to-go-live).
+There is no separate sandbox host. `https://api.invopop.com` serves every workspace and the token decides which one you are in. `GET /access/v1/workspace` tells you which: it returns the workspace `name`, `slug`, `country` and `sandbox: true` or `false`. Check it before you create anything. Start in a sandbox workspace, where government apps submit documents only to test environments or simulations, never production. Some steps still check data against live registries, some test environments are shared by every tester, and only a few countries have a pre-enabled test supplier; [Testing in sandbox](/workspace/sandbox-testing) lists the data each country accepts. Going live means a paid subscription, a live workspace and [registering each real supplier](/guides/how-to-go-live).
 
 ### 3. Every create is idempotent if you let it be
 
@@ -379,7 +379,7 @@ An entry's `state` (`empty`, `processing`, `sent`, `error`, `paid`, `void`) is s
 
 ### 8. Apps must be enabled, suppliers must be registered
 
-A fresh workspace has no apps enabled. Enable the ones your workflows need under **Configuration → Apps**. Government apps additionally need the supplier registered with the authority before its first invoice: upload an `org/party` entry and run the country's registration workflow, which leaves it in the `registered` state. Sandbox test suppliers skip this. Every country has a supplier registration guide next to its invoicing guide under [Guides](/guides/index).
+A fresh workspace has no apps enabled. Enable the ones your workflows need under **Configuration → Apps**. Government apps additionally need the supplier registered with the authority before its first invoice: upload an `org/party` entry and run the country's registration workflow, which leaves it in the `registered` state. Only the pre-enabled test suppliers that a few countries provide in sandbox, such as Greece's, skip this. Every country has a supplier registration guide next to its invoicing guide under [Guides](/guides/index).
 
 ### 9. Files live on the entry
 

@@ -41,8 +41,13 @@ This guide walks you through the steps to register a company in Invopop and then
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier approval** | Automatically approved | Invopop validates company identity and ownership (up to 72 hours) |
-| **Network** | Peppol Test Network | Peppol Production Network |
+| **Supplier approval** | Approved automatically, without review, once the registration form is completed and a proof-of-ownership document is uploaded | Invopop validates company identity and ownership (up to 72 hours) |
+| **Network** | Peppol Test Network, shared with every Peppol access point | Peppol Production Network |
+| **Participant IDs** | IDs of companies you represent. Other testers can look them up and send documents to them. | The supplier's own IDs |
+
+<Note>
+  Sandbox and live registrations are kept apart, so registering your own company in sandbox doesn't stop you registering it in live. On the test network, though, a participant ID can be held by only one access point at a time: registering a company you don't represent blocks it from testing with its own provider until you unregister it. See [Testing in sandbox](/workspace/sandbox-testing).
+</Note>
 
 <Prompt description="Have your agent send a first invoice over the Peppol test network." icon="paper-plane" actions={["copy", "cursor"]}>
 Read https://docs.invopop.com/guides/peppol.md and https://docs.invopop.com/llms.md. In my sandbox workspace, using the token in INVOPOP_TOKEN: check whether the Peppol app is enabled and tell me if it is not; register the supplier I give you by creating an org/party entry and running the registration workflow ID I provide; then create a bill/invoice entry for that supplier addressed to a customer on the Peppol test network, including the customer's Peppol participant identity as the guide describes, and run the issuance workflow ID I provide with wait=30. Report the entry state, the job's per-step statuses and faults, and the files attached. If the customer cannot be found on the network, use the participant lookup endpoint documented in the guide and explain what to fix.
@@ -403,7 +408,10 @@ Note that some countries support multiple schemes. For example, Belgium uses `02
 </Accordion>
 
 <Accordion title="When registering a supplier we get an error: 'XXXX:XXXXXXXXX is already registered' on the Register party on Peppol step">
-This is because a supplier with the stated participant ID has already been registered in your workspace.
+The end of the message says who holds the participant ID:
+
+- **`… is already registered in this environment`**: another entry holds it in Invopop, in your workspace or in another Invopop workspace of the same type (sandbox or live). Run the [unregister workflow](#unregistering-a-participant) on the entry that holds it, or register a different participant ID.
+- **`… is already registered in the Peppol Network`**: another access point holds it on the network. In live, move the participant to Invopop with a [migration key](#migrating-a-participant-from-another-provider) from its current provider. In sandbox, the test network is shared by every provider, so use a participant ID of a company you represent.
 </Accordion>
 
 <Accordion title="Should I set the $regime in Peppol?">

@@ -43,7 +43,7 @@ Invopop issues, receives and processes business documents in compliance with loc
 - A supplier country without a GOBL regime needs an explicit `currency` and explicit tax `percent` values; the error otherwise is `currency: missing or invalid`.
 - Never invent addon extension codes. Read `https://docs.gobl.org/addons/<key>.md`.
 - Leave `code` empty when the workflow has an "Add sequential code" step. `code` is required only to sign.
-- Use valid tax identities from the country guides. Checksums are enforced.
+- Never invent tax IDs or copy them from examples. Checksums are enforced, and in sandbox some steps also check live registries and some test environments are shared by every tester: use the supplier data that https://docs.invopop.com/workspace/sandbox-testing.md gives for the country.
 - Three UUIDs: silo entry `id` (API handle), envelope `head.uuid`, document `uuid` (used in `preceding`). Generate entry and job IDs yourself with `PUT` for idempotency; time-based versions for invoices, random for parties.
 - Workflows must be published and match the document schema. Apps must be enabled per workspace. Government apps need the supplier registered first.
 - Send a `User-Agent` header; Cloudflare answers `403 error code: 1010` to some default clients (Python `urllib`).

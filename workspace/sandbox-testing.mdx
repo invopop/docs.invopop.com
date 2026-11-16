@@ -1,0 +1,118 @@
+---
+title: "Testing in sandbox"
+description: "What a sandbox workspace can and can't affect, which supplier data works in each country, and what to do when a step fails on example data."
+sidebarTitle: "Testing in sandbox"
+icon: "flask"
+---
+
+A sandbox workspace runs the same apps and workflows as a live one, but no government app or network files a document with a production system. Nothing you issue in sandbox is legally binding or billed, so you can create, correct and retry documents as often as you need.
+
+Three things can still catch you out:
+
+- **The examples in these docs aren't test data.** The names and tax IDs in the guides show the structure a document needs. Replace them with the supplier data that [Test data by country](#test-data-by-country) gives for your country.
+- **Some steps check data against live registries.** Spain's tax ID check, for example, queries the tax agency's live taxpayer census even from a sandbox workspace, so invented tax IDs fail there.
+- **Some test environments are shared.** Everyone testing with them, through Invopop or through another provider, uses the same registry. What you register there stays registered until you unregister it, and can collide with other testers.
+
+If a step has already failed, start with [Errors that usually mean test data](#errors-that-usually-mean-test-data).
+
+## What sandbox affects
+
+Sandbox never affects:
+
+- **Tax authorities' production systems.** From a sandbox workspace, none of the government apps in [Test data by country](#test-data-by-country) files a document with a production system. Some steps still read from live services, such as the tax ID checks in [Steps that check live registries](#steps-that-check-live-registries).
+- **Your live workspace.** Sandbox and live workspaces have separate entries, workflows, series, API keys and app configuration. A supplier registered in sandbox has to be registered again from the live workspace. See [Replicate a sandbox workspace in live](/workspace/sandbox-to-live).
+- **Your bill.** Sandbox usage is never billed. It counts against a free monthly allowance of pops in your organization's sandbox billing account. If the allowance runs out, jobs stop with `insufficient pops` until [support](mailto:support@invopop.com) extends it. See [Billing accounts](/admin/billing-account).
+- **Your customers' and suppliers' inboxes, unless you add them.** In sandbox the Email app doesn't send to the document's customer or supplier. It only sends to the addresses you set on the step or the job, with `[Invopop Test]` in the subject. See [Email](/guides/email).
+
+Two things can outlast a test:
+
+- **Registrations on shared test environments**, until you unregister them. See [Shared test environments](#shared-test-environments).
+- **A merchant registered in Italy's Smart Receipts.** A Partita IVA can be registered in only one Invopop workspace, sandbox and live included, so a real merchant registered in sandbox can't be registered in live until you [unregister it](/guides/it-ticket-supplier#unregister-a-supplier) from the sandbox.
+
+## Test data by country
+
+Each government app picks its test environment from the workspace type. The last column says which supplier data each one accepts, starting with one of these:
+
+- **Real**: a real company's identity, because the test environment or a live registry checks it. Your own company is the simplest choice.
+- **Generated**: a random, checksum-valid ID of your own, so that you don't collide with other testers.
+- **Test ID**: only an identity issued for testing works.
+- **Any**: the data isn't checked against a registry.
+
+Test identities only exist in test environments, so never use them in a live workspace.
+
+| Country and app | Sandbox talks to | Supplier data |
+|---|---|---|
+| Peppol countries, such as Belgium, Germany and the Netherlands · [Peppol](/guides/peppol) | The Peppol Test Network | **Real.** Identifiers of companies you represent. |
+| Argentina · [ARCA](/guides/ar-arca-suppliers) | ARCA's test environment, with an ARCA sandbox certificate | **Real.** A real company and its CUIT. Any point of sale number. |
+| Brazil · [DFe](/guides/br-dfe-supplier) | A simulation: responses are mocked | **Any.** Certificates and passwords don't need to be valid. |
+| Colombia · [DIAN](/guides/co-dian-registration) | DIAN's test environment | **Test ID.** Alegra's test NIT `9005590882`, with series `SETP` and codes `990000000`–`995000000`. |
+| Denmark · [NemHandel](/guides/dk-nemhandel-supplier) | eCourier's test environment | A party registered against eCourier's test environment. |
+| Finland · [Finvoice](/guides/fi-finvoice-supplier) | The operator's test environment | A party registered against the operator's test environment. The identity check is skipped. |
+| France · [Plateforme Agréée](/guides/fr-pa-registration) | The Peppol Test Network. The Annuaire registration and the exchanges with the PPF are simulated by Invopop. | **Generated.** A checksum-valid [generated SIREN](https://www.onsubmit.io/french-siret-siren-generator/), registered with a `SIREN_suffix` address of your own. |
+| France · [Chorus Pro](/guides/fr-chorus-pro-supplier) | Chorus Pro's qualification environment | **Test ID.** A test account from the Chorus Pro qualification portal. |
+| Greece · [myDATA](/guides/gr-iapr-supplier) | myDATA's test environment | **Test ID.** The pre-enabled test supplier, tax ID `177472438`. |
+| Italy · [SDI](/guides/it-sdi-invoicing) | A simulation: no invoice reaches SDI | **Any.** Any valid party. |
+| Italy · [Smart Receipts](/guides/it-ticket-supplier) | The test environment of Invopop's local partner | **Generated.** A Partita IVA nobody else has registered. Never a real merchant's: it would block the merchant's live registration. |
+| Mexico · [SAT](/guides/mx-sat-supplier) | SW Sapien's test environment | **Test ID** or **real.** One of SW Sapien's published test companies and CSDs, or your own. |
+| Poland · [KSeF](/guides/pl-ksef-supplier) | KSeF's test environment (test mode) or demo environment (demo mode) | Test mode: **generated**, a random NIP. Demo mode: **real**, a NIP with access to the KSeF demo portal. |
+| Portugal · [AT](/guides/pt-at-supplier) | AT's test web services, with a training (`F`) series that has no fiscal effect | **Real.** A real company or self-employed person, with access to their AT account. |
+| Romania · [e-Factura](/guides/ro-efactura-supplier) | ANAF's test environment. Documents have no fiscal value. | **Real.** A real CIF and a certificate with SPV access: ANAF signs in with the same certificate in sandbox and live. |
+| Saudi Arabia · [ZATCA](/guides/sa-zatca-registration) | ZATCA's developer portal or simulation portal | Developer portal: **test ID**, any party and a dummy OTP, but invoices only from test VAT number `399999999900003`. Simulation portal: **real**, an OTP from the supplier's FATOORA simulation account. |
+| Spain · [VERI\*FACTU](/guides/es-verifactu-supplier) | AEAT's pre-production environment | **Real.** A real NIF with the name AEAT has on record for it, such as your own company's. |
+| Spain · [TicketBAI](/guides/es-ticketbai) | TicketBAI's test environment | **Test ID.** The test name `HFPn5yhXZ9tdD4pHRbvwymaVPrGZQr` and NIF `A99805194`. |
+
+## Errors that usually mean test data
+
+Building a document only checks its structure and checksums. These errors come from steps that also check the data itself, so a tax ID with a valid checksum can still fail them.
+
+| Message | Where | What to do |
+|---|---|---|
+| `party not identified by AEAT` | Verify Spanish Tax ID step | Use a real NIF with the name AEAT has on record for it. The step checks the live census, also in sandbox. |
+| AEAT codes `4104` or `1110` | VERI\*FACTU invoice, step `KO` | `1110`: a NIF on the invoice isn't in AEAT's census. `4104`: the issuer's NIF isn't identified, or its name doesn't match. See the [VERI\*FACTU FAQ](/faq/spain). |
+| AEAT code `2001` | VERI\*FACTU invoice, step `OK` | AEAT accepted the record with errors: the customer's NIF isn't in its census. |
+| `not-found` | Validate Tax IDs step (Lookup app) | The register that issues the tax ID doesn't know it. Use a real tax ID. |
+| `… is already registered in this environment` | Register party on Peppol | Another Invopop sandbox workspace, or another entry in yours, holds this participant ID. Use an ID of your own. |
+| `… is already registered in the Peppol Network` | Register party on Peppol | Another access point holds this participant ID on the test network. Use an ID of your own. |
+| `… has already been registered in the sandbox environment` | Register party in Directory (France) | Another sandbox workspace holds this address, possibly another one of yours. Unregister it there, or register a `SIREN_suffix` address with a suffix of your own. |
+| `supplier already registered in a different workspace or with a different entry`, or `409: duplicate ref` | Smart Receipts supplier registration | The Partita IVA is registered in another workspace, sandbox or live. Unregister it there, or use another Partita IVA in sandbox. |
+| `insufficient pops` | Any job | Your sandbox's monthly pops allowance is used up. Ask [support](mailto:support@invopop.com) to extend it. |
+
+## Steps that check live registries
+
+A few steps look data up in a live public registry, even in sandbox. They only read: nothing is registered or filed. But they can't recognise invented data, so test them with real tax IDs.
+
+- **Verify Spanish Tax ID** and **Verify & correct tax details** (Spain app) check the NIF and name against AEAT's live census, and so does the [AEAT lookup endpoint](/api-ref/apps/gov-es/lookup). The VERI\*FACTU supplier registration template starts with this step, so a supplier with an invented NIF stops there with `party not identified by AEAT`. Use a real NIF with the name AEAT has on record for it. See the [AEAT lookup guide](/guides/es-lookup).
+- **Validate Tax IDs** (Lookup app) asks the register that issues the tax ID, such as VIES for EU VAT numbers, in the same way in sandbox and live. An invented VAT number with a valid checksum returns `not-found`. See the [Lookup guide](/guides/lookup).
+
+AEAT's pre-production environment, where sandbox VERI\*FACTU invoices go, may also reject a NIF it doesn't know, with an AEAT error such as `4104` or `1110`.
+
+## Shared test environments
+
+Registering a party in sandbox registers it in that country's test environment only, never in production. But when the test environment is shared, the registration is visible to everyone else testing there, and it stays until you unregister it.
+
+- **Peppol Test Network** (Peppol in every country, and France's Plateforme Agréée). The test network is shared by every Peppol access point, and anyone on it can look up a registered participant and send documents to it. A participant ID can be registered by one access point at a time, and by one Invopop workspace at a time. Don't register a company you don't represent: it blocks that company from testing with its own provider until you unregister it. In France, always register a `SIREN_suffix` address with a suffix of your own, as described in [Choosing the electronic address](/guides/fr-pa-registration#choosing-the-electronic-address).
+- **KSeF test environment** (Poland). Anyone can send invoices to any NIP there. A NIP from an example, or any easy-to-guess number, also collects other testers' invoices. Generate a random NIP for each test supplier.
+- **DIAN numbering range** (Colombia). The `SETP` range is shared by everyone testing with Alegra's NIT, so pick codes that are unlikely to collide.
+- **Smart Receipts** (Italy). A Partita IVA can be registered in only one Invopop workspace, sandbox and live included. The example Partita IVA in the guide is therefore most likely taken. If you registered a real merchant in sandbox, [unregister it](/guides/it-ticket-supplier#unregister-a-supplier) there before registering it in live, and contact support if the live registration still fails.
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="Can I test with my own company's real data?">
+Yes. In sandbox, documents only go to test environments or simulations, so testing with your own company's data files nothing for real. Several countries need real data even in sandbox: see [Test data by country](#test-data-by-country). The one thing to plan for is Italy's Smart Receipts, described in the next question.
+</Accordion>
+
+<Accordion title="Will a sandbox registration stop me registering the same company in live?">
+Not for Peppol, France's Plateforme Agréée or VERI\*FACTU. They keep sandbox and live registrations apart, so you register the company again from the live workspace as usual. Italy's Smart Receipts is the exception: a Partita IVA can be registered in only one Invopop workspace, sandbox and live included, so [unregister the merchant](/guides/it-ticket-supplier#unregister-a-supplier) from the sandbox first.
+</Accordion>
+
+<Accordion title="How do I remove a test registration?">
+Run the unregister workflow from the country's supplier guide on the party, in the sandbox workspace where you registered it.
+</Accordion>
+</AccordionGroup>
+
+## Related resources
+
+|    |    |
+|-----------|------------|
+|  Related Guides | <Icon icon="book" /> [Replicate a sandbox workspace in live](/workspace/sandbox-to-live)<br /><Icon icon="book" /> [How to go live](/guides/how-to-go-live)<br /><Icon icon="book" /> [Create & configure workspaces](/admin/workspace-configure)<br /><Icon icon="book" /> [AEAT lookup guide](/guides/es-lookup)<br /><Icon icon="book" /> [Peppol guide](/guides/peppol) |
