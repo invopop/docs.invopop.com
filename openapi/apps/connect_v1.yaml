@@ -1,0 +1,733 @@
+# OpenAPI Connect v1 Specification
+# Generated from invopop/connect internal/interfaces/web/openapi.json: edit it there.
+openapi: 3.1.0
+info:
+  title: Invopop Connect configuration API
+  version: 1.0.0
+  description: >-
+    Configure how Connect receives and imports a workspace's invoices: rules (short instructions for
+    the AI that reads PDFs and images), profiles (ordered groups of rules a workflow's import step
+    uses) and endpoints (HTTP upload URLs and email addresses that receive documents). Documents
+    give what an import recorded for a silo entry.
+
+
+    Call it through Invopop's API at https://api.invopop.com/apps/connect with a workspace token:
+    `Authorization: Bearer <token>`. The workspace must have the Connect app enabled.
+
+
+    Typical setup:
+
+    1. Create rules: `POST /v1/rules {"text": "Use the de-xrechnung-v3 addon"}`. Each gets a
+    `number`.
+
+    2. Create a profile from them: `POST /v1/profiles {"name": "Germany", "rules": [1, 2]}`, and
+    keep its `id`.
+
+    3. In the workflow's "Import document" step, choose that profile (its config is `{"profile_id":
+    "<id>"}`).
+
+    4. Create an endpoint that runs the workflow: `POST /v1/endpoints {"channel": "http", "slug":
+    "suppliers", "workflow_id": "<workflow id>", "config": {"security": {"type": "bearer", "token":
+    "<secret>"}}}`. Send documents to its `uri`.
+
+
+    Errors answer `{"status": "error", "message": "..."}`: 401 bad token or Connect not enabled, 404
+    not found, 422 invalid request (the message says which field and why).
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/connect/v1/rules:
+    get:
+      operationId: listRules
+      summary: List the workspace's rules, oldest first; archived ones only with archived=true
+      responses:
+        '200':
+          description: The rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rule'
+        '401':
+          $ref: '#/components/responses/Error'
+      parameters:
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+          description: Include archived rules
+    post:
+      operationId: createRule
+      summary: Create a rule; it gets the next number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleInput'
+      responses:
+        '201':
+          description: The new rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '422':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/rules/{number}:
+    parameters:
+      - name: number
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+        description: The rule's number
+    get:
+      operationId: getRule
+      summary: Get a rule, archived or not
+      responses:
+        '200':
+          description: The rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateRule
+      summary: >-
+        Change a rule's text; every profile using it gets the new text. Archived rules can't be
+        changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleInput'
+      responses:
+        '200':
+          description: The rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: archiveRule
+      summary: >-
+        Archive a rule. Rules are never deleted, so numbers are never reused: an archived rule is
+        hidden, keeps its number and can't be added to a profile.
+      parameters:
+        - name: force
+          in: query
+          schema:
+            type: boolean
+          description: >-
+            A rule profiles use is refused (422, naming them) unless force=true, which takes it out
+            of them first.
+      responses:
+        '200':
+          description: The archived rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/profiles:
+    get:
+      operationId: listProfiles
+      summary: List the workspace's profiles
+      responses:
+        '200':
+          description: The profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+    post:
+      operationId: createProfile
+      summary: Create a profile from rules, by number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileInput'
+      responses:
+        '201':
+          description: The new profile, with its id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '422':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/profiles/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The profile's id
+    get:
+      operationId: getProfile
+      summary: Get a profile
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateProfile
+      summary: Replace a profile's name, description and rules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileInput'
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteProfile
+      summary: Delete a profile; workflow steps using it then fail until another is chosen
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/endpoints:
+    get:
+      operationId: listEndpoints
+      summary: List the workspace's endpoints
+      responses:
+        '200':
+          description: The endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Endpoint'
+    post:
+      operationId: createEndpoint
+      summary: Create an endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndpointInput'
+      responses:
+        '201':
+          description: The new endpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Endpoint'
+        '422':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/endpoints/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The endpoint's id
+    get:
+      operationId: getEndpoint
+      summary: Get an endpoint
+      responses:
+        '200':
+          description: The endpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Endpoint'
+        '404':
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateEndpoint
+      summary: Replace an endpoint's settings; secrets left empty keep the stored ones
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndpointInput'
+      responses:
+        '200':
+          description: The endpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Endpoint'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteEndpoint
+      summary: Delete an endpoint; it stops receiving at once
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/rules/{number}/restore:
+    parameters:
+      - name: number
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+        description: The rule's number
+    post:
+      operationId: restoreRule
+      summary: Bring an archived rule back
+      responses:
+        '200':
+          description: The rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /apps/connect/v1/documents/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The silo entry's ID
+    get:
+      operationId: getDocument
+      summary: >-
+        Get what Connect's import recorded for a silo entry: the job's confidence and summary, and
+        what needs review with its GOBL paths
+      responses:
+        '200':
+          description: The document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          $ref: '#/components/responses/Error'
+components:
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      description: A workspace token in the `Bearer` scheme. The workspace must have the Connect app enabled.
+  responses:
+    Error:
+      description: An error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                const: error
+              message:
+                type: string
+  schemas:
+    RuleInput:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 200
+          description: >-
+            One short instruction for the AI that reads PDFs and images, e.g. "Supplier numbers go
+            in the order reference". It can't change the output format. To set a GOBL addon, name it
+            with the word addon: "Use the es-verifactu-v1 addon" (a profile can use one addon). A
+            workspace can have up to 1000 rules.
+          examples:
+            - Use the de-xrechnung-v3 addon
+    Rule:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: >-
+            Identifies the rule in its workspace for good: numbers are never reused. Profiles list
+            rules by number.
+        id:
+          type: string
+        text:
+          type: string
+        addon:
+          type: string
+          description: The GOBL addon the rule names, if any
+        profiles:
+          type: array
+          items:
+            type: string
+          description: Ids of the profiles using the rule
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        archived_at:
+          type: string
+          format: date-time
+          description: Set on an archived rule
+    ProfileInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          examples:
+            - Germany
+        description:
+          type: string
+        rules:
+          type: array
+          items:
+            type: integer
+          maxItems: 10
+          description: >-
+            Rule numbers, in the order the AI gets them. Archived rules can't be used. At most one
+            may name an addon.
+          examples:
+            - - 1
+              - 2
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'Choose it in a workflow''s import step: {"profile_id": "<id>"}'
+        name:
+          type: string
+        description:
+          type: string
+        rules:
+          type: array
+          items:
+            type: object
+            properties:
+              number:
+                type: integer
+              text:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EndpointInput:
+      type: object
+      required:
+        - channel
+        - slug
+        - workflow_id
+      description: A workspace can have up to 20 endpoints.
+      properties:
+        channel:
+          type: string
+          enum:
+            - http
+            - email
+          description: >-
+            http: documents are POSTed to the endpoint's uri. email: documents arrive as email
+            attachments. Each channel has its own config.
+        slug:
+          type: string
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: >-
+            Unique in the workspace; part of the url, and the default name of an Invopop email
+            address
+          examples:
+            - suppliers
+        workflow_id:
+          type: string
+          description: >-
+            The workflow each received invoice runs; it should include Connect's "Import document"
+            step
+        accept:
+          type: array
+          items:
+            type: string
+            enum:
+              - application/json
+              - application/xml
+              - text/xml
+              - application/pdf
+              - text/csv
+              - application/octet-stream
+              - image/jpeg
+              - image/png
+              - image/webp
+              - image/tiff
+              - image/heic
+          description: 'Content types accepted; empty accepts any (email: PDF, XML and JSON)'
+        disabled:
+          type: boolean
+          description: Stop receiving without deleting the endpoint
+        config:
+          description: >-
+            The channel's own settings: HTTPConfig for http, EmailConfig for email. A secret left
+            out on update keeps the stored one.
+          oneOf:
+            - $ref: '#/components/schemas/HTTPConfig'
+            - $ref: '#/components/schemas/EmailConfig'
+    Endpoint:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        channel:
+          type: string
+          enum:
+            - http
+            - email
+        workflow_id:
+          type: string
+        uri:
+          type: string
+          description: >-
+            Where senders reach the endpoint: the URL to POST documents to (http), or the address
+            documents are sent to (email)
+        accept:
+          type: array
+          items:
+            type: string
+        disabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        config:
+          description: The channel's config as given, without secrets
+          oneOf:
+            - $ref: '#/components/schemas/HTTPConfig'
+            - $ref: '#/components/schemas/EmailConfig'
+    HTTPConfig:
+      type: object
+      description: >-
+        The http channel's config: how uploads authenticate. Secrets are stored encrypted and never
+        returned.
+      properties:
+        security:
+          type: object
+          description: >-
+            How an http endpoint authenticates uploads. Secrets are stored encrypted and never
+            returned.
+          required:
+            - type
+          properties:
+            type:
+              type: string
+              enum:
+                - none
+                - bearer
+                - basic
+                - hmac
+              description: >-
+                none: anyone with the url. bearer: `Authorization: Bearer <token>`. basic: HTTP
+                Basic with user and pass. hmac: `X-Signature` holds the hex HMAC-SHA256 of the body
+                keyed with secret.
+            token:
+              type: string
+              description: For bearer
+            user:
+              type: string
+              description: For basic
+            pass:
+              type: string
+              description: For basic
+            secret:
+              type: string
+              description: For hmac
+    EmailConfig:
+      type: object
+      description: >-
+        The email channel's config: how messages reach the endpoint. Passwords and API keys are
+        stored encrypted and never returned.
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - invopop
+            - imap
+            - resend
+          description: >-
+            invopop: an address on Invopop's receiving domain (address is its name, before the @;
+            empty uses the slug). imap: Connect reads a folder of your mailbox. resend: mail your
+            own Resend account receives.
+        address:
+          type: string
+          description: 'For invopop: the address name'
+        imap:
+          type: object
+          description: For imap
+          required:
+            - host
+            - username
+            - password
+          properties:
+            host:
+              type: string
+            port:
+              type: integer
+              description: Default 993
+            security:
+              type: string
+              enum:
+                - tls
+                - starttls
+            username:
+              type: string
+            password:
+              type: string
+              description: Empty on update keeps the stored one
+            folder:
+              type: string
+              description: Default INBOX
+            after_read:
+              type: string
+              enum:
+                - none
+                - seen
+                - move
+              description: What to do with a message once read
+            move_to:
+              type: string
+              description: For after_read move
+        resend:
+          type: object
+          description: For resend
+          required:
+            - api_key
+            - recipient
+          properties:
+            api_key:
+              type: string
+              description: A full access key (Connect creates its webhook with it)
+            recipient:
+              type: string
+              description: The address that receives the documents
+        allowed_senders:
+          type: array
+          items:
+            type: string
+          description: Addresses or domains ("supplier.com") allowed to send; empty allows anyone
+    Document:
+      type: object
+      properties:
+        silo_entry_id:
+          type: string
+        job_id:
+          type: string
+          description: The job that first imported the entry; a re-run updates the document and keeps it
+        message_id:
+          type: string
+          description: The message the invoice came in
+        profile:
+          type: string
+          description: The import step's profile
+        rules:
+          type: array
+          items:
+            type: integer
+          description: The numbers of the profile's rules the import used
+        confidence:
+          type: string
+          enum:
+            - high
+            - medium
+            - low
+          description: >-
+            The job's code: high, nothing to check; medium, the entry doesn't validate or the import
+            has doubts; low, an AI reading with low confidence
+        format:
+          type: string
+          description: 'How it was read: gobl, an XML format (e.g. ubl, cii), or ai'
+        summary:
+          type: string
+          description: What the import did
+        review:
+          type: array
+          description: What needs review, up to 50
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+              brief:
+                type: string
+                description: The field and, for a doubt, what about it, e.g. "supplier.vat_id (missing)"
+              paths:
+                type: array
+                items:
+                  type: string
+                description: Where it is in the envelope, e.g. $.doc.supplier.tax_id.code
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
