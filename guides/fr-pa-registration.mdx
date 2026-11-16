@@ -12,11 +12,11 @@ import FAQ from '/snippets/faqs/fr/composers/guide-pa-supplier.mdx';
 import Supplier from '/snippets/parties/fr/supplier.mdx';
 
   
-Registration on the French Directory is required for any SIREN that will issue, report or receive invoices through Invopop as its Plateforme Agréée. Each SIREN is registered once. The workflow collects a signed agreement, registers the party in the French Annuaire, publishes it on the Peppol network and registers for Reporting. After registration is completed, the party can both send and receive invoices as well as report transactions. For parties that only issue invoices through Invopop, see [Sending only](#sending-only). For parties that only need to receive invoices for now, see [Registering without e-reporting](#registering-without-e-reporting).
+Registration on the French Directory is required for any SIREN that will issue, report or receive invoices through Invopop as its Plateforme Agréée. Each SIREN is registered once. The workflow collects the representative's acceptance of Invopop's general terms, registers the party in the French Annuaire, publishes it on the Peppol network and registers for Reporting. After registration is completed, the party can both send and receive invoices as well as report transactions. For parties that only issue invoices through Invopop, see [Sending only](#sending-only). For parties that only need to receive invoices for now, see [Registering without e-reporting](#registering-without-e-reporting).
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Use a checksum valid [generated SIREN](https://www.onsubmit.io/french-siret-siren-generator/) | Requires a valid SIREN and the signature of the company representative. |
+| **Supplier** | Use a checksum valid [generated SIREN](https://www.onsubmit.io/french-siret-siren-generator/) | Requires a valid SIREN and the company representative's acceptance of the general terms. |
 | **Approval** | Automatic | Automatic, but can be flagged for human review |
 | **Registration** | Peppol SMK  and PPF's _environnement de qualification_| Peppol SML and Annuaire production |
 
@@ -28,7 +28,7 @@ A single SIREN registered in the Annuaire can have several directory entries, re
       This example shows a French supplier party. Key points to note:
     * The `tax_id` contains the French TVA number without the `FR` prefix: a 2-digit control key followed by the company's 9-digit SIREN.
     * The `SIREN` identity uses the `iso-scheme-id` extension `0002` (SIRENE), and must match the last 9 digits of the TVA number.
-    * The person in `people` is the company representative required to sign the *mandat de facturation* (billing mandate), including their `role`.
+    * The person in `people` is the company representative who accepts the general terms and on whose behalf the *mandat de facturation* (billing mandate) is issued, including their `role`.
     * The `peppol` inbox uses scheme `0225` (French CTC electronic address). A single SIREN registered in the Annuaire can have several directory entries, registered under the same or different Plateformes Agréées. Each entry has its own electronic address, mapped to the Peppol inbox's `code`, in one of the forms `SIREN`, `SIREN_SIRET`, or `SIREN_suffix`. Addresses with a routing code (`SIREN_SIRET_routingcode`) aren't supported.
       * If no inbox is specified, the Register for Peppol step assigns one automatically, using scheme `0225` with the supplier's bare SIREN as the code, ignoring any SIRET present in the supplier's identities.
       * To register a specific directory entry instead, set the inbox explicitly, for example:
@@ -56,7 +56,7 @@ The address you register decides which invoices Invopop receives for the company
 - **The bare SIREN is the company's main address.** With no inbox set, the workflow registers `SIREN`. Senders that address the company by its SIREN deliver there, so only register it if Invopop should receive *all* of the company's incoming invoices.
 - **Use a dedicated address when you only issue on the company's behalf**, or when it already has, or will have, another PA. Set the inbox explicitly to a `SIREN_suffix` address such as `526018155_PLATFORMNAME`, as in the [example above](#example-of-french-supplier). The company's other addresses stay with its own PA.
 - **Statuses come back to the sending address.** Lifecycle statuses on invoices you send from an address are delivered to that address, so a dedicated address still receives the statuses for the invoices you issue.
-- **Companies with several establishments** need only one registration per SIREN, with a single mandate signature. Put each establishment's SIRET on its invoices, in the supplier's identities; it's independent of the directory address. Register one suffix per establishment only if you need statuses delivered to separate addresses: each address is a separate party entry and registration.
+- **Companies with several establishments** need only one registration per SIREN: the representative accepts the general terms once, and Invopop generates the mandate automatically. Put each establishment's SIRET on its invoices, in the supplier's identities; it's independent of the directory address. Register one suffix per establishment only if you need statuses delivered to separate addresses: each address is a separate party entry and registration, and gets its own mandate without the representative accepting the terms again.
 - **Pick a suffix with a clear meaning.** The DGFiP recommends suffixes that make their purpose obvious and that don't look like a SIRET. A 14-digit suffix that starts with the SIREN is read as a SIRET.
 - **If another PA already holds the address**, registration fails; see [Outgoing takeovers](/guides/fr-pa-migrations#outgoing-takeovers).
 
@@ -76,7 +76,9 @@ The address you register decides which invoices Invopop receives for the company
 
 ## Agreement signing
 
-The `gov-fr.agreement.sign` step generates the mandate and publishes a `link_url` under the `approval-link` key in the silo entry meta. Each silo entry registers one Annuaire address, so the step fails on a silo entry that already has an active registration; use a new silo entry for each additional address. The party representative can complete signing through the registration wizard, or platforms that want full control can use the [entry API](#entry-api) directly.
+The `gov-fr.agreement.sign` step opens the party's onboarding and publishes a `link_url` under the `approval-link` key in the silo entry meta. The party representative accepts Invopop's general terms and verifies their identity; no mandate is signed at this stage. Each silo entry registers one Annuaire address, so the step fails on a silo entry that already has an active registration; use a new silo entry for each additional address. The representative can complete onboarding through the registration wizard, or platforms that want full control can use the [entry API](#entry-api) directly.
+
+The *mandat de facturation* (billing mandate) is issued when the party is registered in the Annuaire: Invopop generates it and signs it on the representative's behalf, unless the customer uploaded their own pre-signed mandate.
 
 ### Registration wizard
 
@@ -102,13 +104,13 @@ The wizard walks the representative through each step:
 
 <Steps>
   <Step title="Party details">
-    Review and confirm the pre-filled company and signer information.
+    Review and confirm the pre-filled company and representative information.
+  </Step>
+  <Step title="General terms">
+    Read and accept Invopop's general terms.
   </Step>
   <Step title="Identity document">
-    Upload a photo of the signer's ID card (front and back) or passport page.
-  </Step>
-  <Step title="Sign mandate">
-    Sign the pre-filled mandate directly in the browser, or upload a pre-signed PDF.
+    Upload a photo of the representative's ID card (front and back) or passport page.
   </Step>
   <Step title="Confirm">
     Submit for Invopop review. The party status moves to `submitted` until a decision is made.
@@ -117,46 +119,26 @@ The wizard walks the representative through each step:
 
 ### Entry API
 
-For platforms that want to drive the signing process programmatically, use the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required on both paths.
+For platforms that want to drive onboarding programmatically, use the entry API (all endpoints under `/apps/gov-fr/v1/entry/{silo_entry_id}/`). Identity verification is required in every case.
 
-<Tabs>
-  <Tab title="In-app signing">
-    The customer signs the mandate directly. Invopop stamps the signature and verifies identity.
+<Steps>
+  <Step title="Read the general terms">
+    `GET /terms` returns Invopop's general terms as Markdown, for you to show the representative.
+  </Step>
+  <Step title="Accept the general terms">
+    `POST /sign` records the representative's acceptance and returns `204`. The body is optional, and calling it again once accepted has no effect.
+  </Step>
+  <Step title="Upload identity document">
+    `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
+  </Step>
+  <Step title="Confirm">
+    `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
+  </Step>
+</Steps>
 
-    <Steps>
-      <Step title="Download mandate">
-        `GET /agreement` returns the mandate PDF pre-filled with the party's details. Fails with `422` if any required signer field is missing.
-      </Step>
-      <Step title="Upload identity document">
-        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
-      </Step>
-      <Step title="Sign the mandate">
-        `POST /sign` stamps the signature. Pass a drawn PNG or JPEG image in `signature` (≤ 4 MB), or omit it to render the signer's name as a typed signature.
-      </Step>
-      <Step title="Confirm">
-        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
-      </Step>
-    </Steps>
-  </Tab>
-  <Tab title="Pre-signed PDF">
-    The customer signs the mandate externally and uploads the result.
-
-    <Steps>
-      <Step title="Download mandate">
-        `GET /agreement` returns the pre-filled mandate PDF for the customer to sign externally.
-      </Step>
-      <Step title="Upload identity document">
-        `POST /identity` uploads one face at a time: `front` + `back` for an ID card, or `page` for a passport.
-      </Step>
-      <Step title="Upload signed PDF">
-        `POST /agreement` stores the signed PDF (≤ 4 MB).
-      </Step>
-      <Step title="Confirm">
-        `POST /confirm` finalises the submission and returns a `status` field. `submitted` means the party is under approval review before registration continues.
-      </Step>
-    </Steps>
-  </Tab>
-</Tabs>
+<Note>
+  If the customer already has a mandate signed outside Invopop, upload it with `POST /agreement` (PDF, ≤ 4 MB) instead of calling `POST /sign`. The upload also accepts the general terms, and the uploaded PDF is used as the party's mandate instead of the one Invopop generates at registration. `GET /agreement` returns the party's mandate once it has been uploaded or issued at registration; until then it returns the pre-filled mandate to sign, and fails with `400` if any required representative field is missing.
+</Note>
 
 ## Registering without e-reporting
 
@@ -179,7 +161,7 @@ The default template registers the party for everything, including reporting. To
 When a party's e-reporting obligations begin — for example when the September 2027 mandate reaches SMEs and micro-businesses — complete its registration by running the **Register party for reporting** step against the party's silo entry: create a workflow containing just that step and run it on the already-registered party. The [VAT regime](/guides/fr-pa-reporting#picking-a-vat-regime-at-supplier-registration) is picked the same way as in the full registration.
 
 <Note>
-  A party registered without the reporting step is not on any reporting cadence: Invopop only generates and files Flux 10 reports for parties registered for reporting. The signed agreement is the same in both cases, so no new mandate is needed when reporting is added later.
+  A party registered without the reporting step is not on any reporting cadence: Invopop only generates and files Flux 10 reports for parties registered for reporting. The mandate is the same in both cases, so no new mandate is needed when reporting is added later.
 </Note>
 
 ## Sending only
@@ -219,8 +201,8 @@ Each row carries the party's Name, its number of Annuaire entries, the SIREN, th
 
 | State | Meaning |
 |---|---|
-| <Badge color="yellow">Pending</Badge> | The registration workflow has started but the signed mandate has not been submitted yet. |
-| <Badge color="blue">Submitted</Badge> | The mandate and identity document are under approval review. |
+| <Badge color="yellow">Pending</Badge> | The registration workflow has started but the representative has not submitted the onboarding yet. |
+| <Badge color="blue">Submitted</Badge> | The accepted terms and identity document are under approval review. |
 | <Badge color="green">Approved</Badge> | The party is registered: its Annuaire line is live and published on Peppol. |
 | <Badge color="red">Rejected</Badge> | The submission was declined during review. |
 
