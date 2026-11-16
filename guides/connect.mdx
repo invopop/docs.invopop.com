@@ -1,97 +1,192 @@
 ---
 title: "Connect guide"
 sidebarTitle: "Connect"
-description: "Receive documents from external systems at public endpoints that trigger your workflows."
+description: "Receive invoices by HTTP or email and import them into GOBL, reading PDFs and images with AI."
 icon: "https://assets.invopop.com/apps/connect/icon.svg"
 ---
 
-Invopop's [Connect app](/apps/connect) gives your workspace public endpoints where external systems can deliver documents over HTTP. Every file posted to an endpoint such a GOBL invoice or an XML document is validated, stored, and handed to the workflow of your choice, allowing you to ingest documents into your workflows without any polling or custom integration code.
+import ConnectImportWorkflow from '/snippets/workflows/connect/import-supplier-invoices.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import { connectImportSupplierInvoicesWorkflow } from '/snippets/workflows/connect/import-supplier-invoices.mdx';
 
-Each endpoint pairs a URL of the form `https://connect.invopop.app/{workspace-id}/{slug}` with a workflow. When a document arrives, Connect logs it and starts a workflow job that receives a link to the stored file.
+## Introduction
 
+Invopop's [Connect app](/apps/connect) receives the invoices your suppliers and systems send you and imports them into your workspace as GOBL invoices. You create **endpoints**: an HTTP address other systems post files to, or an email address suppliers send invoices to. Each file an endpoint receives starts a job in a workflow you choose, and the workflow's **Import document** step does the import:
 
-To get started you simply need at least one [workflow](/guides/workflows) to process incoming documents.
+- **GOBL, UBL and CII** documents, and PDFs that carry one (Factur-X, ZUGFeRD), are converted as they are.
+- **Other PDFs and images** are read with AI, which checks the amounts and notes anything it was unsure of.
 
-## How to use
+Every import is graded, so your workflow can hold back the invoices a person should check and let the rest through.
+
+This guide sets up a workflow, an endpoint for each channel, and the optional rules that guide the AI, then follows three invoices through.
+
+## Set up
 
 <Steps>
   <Step title="Enable the Connect app">
-    In the Console, open the apps directory by clicking the icon next to **Apps** in the sidebar. Find **Connect** in the list of available apps and click `Connect` to enable it in your workspace.
+    In the Console, open the apps directory with the icon next to **Apps** in the sidebar, find **Connect** and click `Connect`. The app then appears in the sidebar under **Apps**.
 
-    <Frame caption="The Connect app in the apps directory"><img src="/assets/guides/connect-app-card.png" width="450" alt="Connect app card in the apps directory" /></Frame>
+    <Frame caption="The Connect app in the apps directory"><img src="/assets/guides/connect-app-card.png" width="368" alt="Connect app card in the apps directory, with its Connect button" /></Frame>
   </Step>
 
-  <Step title="Launch the app">
-    Once enabled, **Connect** appears in the sidebar under **Apps**. Click it to open the app, which has two tabs:
+  <Step title="Create the import workflow">
+    Create an empty invoice workflow and paste the workflow below into its code view. Its **Import document** step imports each file, and the step's result decides what happens next:
 
-    - **Endpoints**: the URLs your workspace listens on.
-    - **Documents**: a log of everything received.
+    - `low`: something to check before the invoice is used. The AI was unsure of a field, the amounts didn't add up, or the invoice doesn't validate. The entry is set to `processing` so someone can look at it.
+    - `high`: read with AI, with nothing to check. The entry is set to `received`.
+    - `parsed`: a GOBL, UBL or CII document converted as it was. The entry is set to `received`.
+
+    If the step fails (the file isn't an invoice, or it can't be read), the workflow's error branch sets the entry to `error`.
+
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={connectImportSupplierInvoicesWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <ConnectImportWorkflow />
+      </Tab>
+    </Tabs>
+
+    <Frame caption="The workflow in the editor, with a branch for each result"><img src="/assets/guides/connect-workflow.png" width="600" alt="Workflow editor showing the Import document step and its low, high and parsed branches, each setting the entry's state" /></Frame>
+
+    Replace the `Set state` steps with whatever your process needs: a webhook to your ERP for the `high` and `parsed` branches, for example, or an email to whoever checks the `low` ones. Each import costs 10 pops; imports that fail aren't charged.
+
+    Publish the workflow. Endpoints can only use workflows that have an **Import document** step.
   </Step>
 
-  <Step title="Create an endpoint">
-    Click `New endpoint` and fill in the form:
+  <Step title="Choose a profile (optional)">
+    Click the **Import document** step to see its settings. A **profile** gives the AI a set of rules about your documents (see [Rules and profiles](#rules-and-profiles) below). Rules only apply to PDFs and images read with AI. GOBL, UBL and CII documents are converted without AI.
 
-    - **Slug**: the last segment of the endpoint's URL, unique within your workspace (lowercase letters, numbers, and hyphens). For example, `invoices`.
-    - **Workflow**: the workflow to run for each document received at this endpoint.
-    - **Security**: how senders must authenticate: `None`, `Bearer token`, `Basic auth`, or `HMAC signature`. Anything other than `None` is strongly recommended for endpoints that receive real data.
-    - **Accepted content types**: optionally restrict the endpoint to specific formats (for example, only JSON). Leave empty to accept any content type.
-
-    <Frame caption="Creating an endpoint"><img src="/assets/guides/connect-new-endpoint.png" width="500" alt="New endpoint form with the slug, workflow, security and accepted content types fields" /></Frame>
-
-    Click `Save endpoint` to finish.
-  </Step>
-
-  <Step title="Copy the endpoint URL">
-    The new endpoint appears in the list with an `Active` status. Use the copy button in the **URL** column to grab its address, or open the endpoint to see the full **Ingest URL** and update its settings at any time.
-
-    <Frame caption="The endpoint, live and ready to receive documents"><img src="/assets/guides/connect-endpoint-created.png" alt="Endpoints tab listing the new invoices endpoint with an Active status and its URL" /></Frame>
-
-  </Step>
-
-  <Step title="Send a document">
-    Any system that can make an HTTP request can now deliver documents to your workspace. Send a `POST` request to the endpoint URL with the file as the request body — for example, with a GOBL invoice saved as `invoice.json`:
-
-    ```bash
-    curl -X POST "https://connect.invopop.app/{workspace-id}/invoices" \
-      -H "Authorization: Bearer example-secret-token" \
-      -H "Content-Type: application/json" \
-      --data-binary @invoice.json
-    ```
-
-    On success, Connect stores the document, triggers the endpoint's workflow, and replies with the IDs of both the stored document and the workflow job:
-
-    ```json
-    {
-      "id": "019fcd4a-77c3-7bb7-a307-63e8850d9fc9",
-      "job_id": "019fcd4a-77ee-7759-af4a-0481110625e0"
-    }
-    ```
-
-    If something is wrong with the request, the response says so: `401` when authentication fails, `415` when the content type isn't accepted, `413` when the file is too large, and `422` when the payload is malformed.
-
-    <Tip>
-      Sending a binary file, like a PDF? Encode the body in base64 and add `?encoding=base64` to the URL. You can also add `?filename=` to give the stored file a download name.
-    </Tip>
-  </Step>
-
-  <Step title="Track received documents">
-    Every delivery shows up in the **Documents** tab, with its status, endpoint, content type, size, and the workflow job it triggered:
-
-    - <Badge color="green">Done</Badge> — the document was stored and its workflow job created.
-    - <Badge color="orange">Pending</Badge> — the document was stored and is about to trigger its workflow.
-    - <Badge color="red">Fault</Badge> — the workflow could not be triggered; open the document to see the error.
-
-    <Frame caption="The document log after the first delivery"><img src="/assets/guides/connect-documents.png" alt="Documents tab listing a received JSON document with a Done status, its endpoint, size and job" /></Frame>
-
-    Click a document to inspect it: the details panel shows the request headers (credentials are redacted), a preview of the payload, and a `Download` button to retrieve the original file.
-
-    <Frame caption="Document details with the payload preview"><img src="/assets/guides/connect-document-detail.png" width="550" alt="Document details panel showing the delivery metadata and a preview of the payload body" /></Frame>
+    <Frame caption="The Import document step's settings"><img src="/assets/guides/connect-import-step.png" width="400" alt="Import document step settings, with the Supplier invoices profile selected and the step's cost of 10 pops" /></Frame>
   </Step>
 </Steps>
 
-## Managing endpoints
+## Receive documents
 
-Use the `⋯` menu at the end of each endpoint row to disable, re-enable, or delete an endpoint. A disabled endpoint rejects new deliveries, but its document history remains available in the log.
+Open **Connect** from the sidebar and go to the **Endpoints** tab. Click `New`, choose the channel, and give the endpoint a **slug**, a short name unique in your workspace (lowercase letters, digits and hyphens), and the workflow to run.
+
+<Tabs>
+  <Tab title="HTTP">
+    An HTTP endpoint has an address that other systems post files to, one file per request.
+
+    - **Authentication**: how senders prove who they are: `Bearer token`, `Basic auth` or `HMAC signature` (a hex HMAC-SHA256 of the body in the `X-Signature` header). Use one for any endpoint that receives real documents. Secrets are stored encrypted and never shown again.
+    - **Accepted content types**: optionally limit the endpoint to some types, such as PDF and XML. Leave it empty to accept any.
+
+    <Frame caption="A new HTTP endpoint"><img src="/assets/guides/connect-new-http-endpoint.png" width="400" alt="New endpoint form for the HTTP channel, with the slug supplier-uploads, the Import supplier invoices workflow and bearer token authentication" /></Frame>
+
+    Save the endpoint, then open it to copy its address and a sample `curl` command. Send each file as the request body, with its content type:
+
+    ```bash
+    curl "https://connect.invopop.app/in/{workspace-id}/supplier-uploads" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/pdf" \
+      --data-binary @invoice.pdf
+    ```
+
+    Connect answers `202` once the file is stored, with the message ID to follow it by:
+
+    ```json
+    {
+      "message_id": "01a1e59f-d36e-7c0e-9a8e-6d1b48449f7b",
+      "received_at": "2026-11-16T18:30:10Z"
+    }
+    ```
+
+    A request that can't be taken gets `401` (authentication failed), `404` (no such endpoint), `413` (larger than 25 MB), `415` (content type not accepted) or `422` (malformed body).
+
+    <Tip>
+      Add an `Idempotency-Key` header to make a retried upload count once, and `?filename=` to name the stored file. If you can only send text, base64-encode the body and add `?encoding=base64`.
+    </Tip>
+
+    To follow a delivery, `GET` the same address with `/messages/{message_id}` at the end, using the same authentication. The answer has the message's state and the IDs of the jobs it started.
+  </Tab>
+  <Tab title="Email">
+    An email endpoint takes the attachments of the emails it receives. Choose how emails reach it with the **Provider**:
+
+    - **Invopop address**: an address on `invopop.email`, ready to use. It follows the slug as you type, and you can change it. It must not be taken by another workspace.
+    - **Resend**: an address on your own domain, received by your Resend account. Give Connect a full access API key; it creates the webhook in your account when you save, and removes it when you delete the endpoint.
+    - **SendGrid**: a hostname on your own domain, received by SendGrid's Inbound Parse. Connect creates the Inbound Parse setting when you save.
+    - **IMAP**: a folder of an existing mailbox that Connect checks regularly, for when invoices already arrive at an address you can't change.
+
+    <Frame caption="A new email endpoint with an Invopop address"><img src="/assets/guides/connect-new-email-endpoint.png" width="400" alt="New endpoint form for the email channel, with the slug acme-ap and the Invopop address acme-ap@invopop.email" /></Frame>
+
+    <AccordionGroup>
+      <Accordion title="Resend settings">
+        <Frame><img src="/assets/guides/connect-email-resend.png" width="400" alt="Resend provider settings: API key, Load receiving domains button and receiving address" /></Frame>
+      </Accordion>
+      <Accordion title="SendGrid settings">
+        Use a hostname only for this, with an MX record pointing at `mx.sendgrid.net` (priority 10).
+        <Frame><img src="/assets/guides/connect-email-sendgrid.png" width="400" alt="SendGrid provider settings: API key, account region, receiving hostname and receiving address" /></Frame>
+      </Accordion>
+      <Accordion title="IMAP settings">
+        Use an app password if your provider offers them, and `Test connection` to check the settings and choose the folder.
+        <Frame><img src="/assets/guides/connect-email-imap.png" width="400" alt="IMAP provider settings: server, port, connection security, username, password and folder" /></Frame>
+      </Accordion>
+    </AccordionGroup>
+
+    Under **Security**, **Allowed senders** limits the endpoint to some addresses or domains (`supplier.com, ap@other.com`). A sender's address can be forged, so a message from an allowed sender is only taken when its domain is proven (DMARC, or a DKIM signature from the sender's domain). Leave it empty to take every message.
+
+    How attachments become invoices:
+
+    - Each PDF, XML, JSON or image attachment is an invoice with its own job. Images are only taken when attached and at least 30 KB, which leaves out logos and signatures.
+    - An XML invoice and its PDF are one invoice: the XML is imported and the PDF attached to the same entry.
+    - A PDF with several invoices is split, and each invoice's pages are imported on their own. Pages that aren't an invoice, such as terms or a delivery note, are attached to every invoice of the email.
+  </Tab>
+</Tabs>
+
+The endpoints list shows each endpoint's channel, workflow and status. Use the `⋯` menu at the end of a row to disable, enable or delete an endpoint; a disabled endpoint refuses new documents.
+
+<Frame caption="An email and an HTTP endpoint"><img src="/assets/guides/connect-endpoints.png" alt="Endpoints tab listing the acme-invoices email endpoint and the purchases HTTP endpoint, both active and running the Import supplier invoices workflow" /></Frame>
+
+## Follow what arrives
+
+The **Messages** tab lists everything your endpoints received: an upload or an email, the endpoint, how many jobs it started and its status. A message from a sender who isn't allowed, or with nothing to import, is listed as skipped, with the reason.
+
+<Frame caption="Messages received at the purchases endpoint"><img src="/assets/guides/connect-messages.png" alt="Messages tab with four messages received at the purchases endpoint, each with one job and a done status" /></Frame>
+
+Click a message to see the jobs it started and download the files it brought.
+
+<Frame caption="A message's jobs and files"><img src="/assets/guides/connect-message-detail.png" width="550" alt="Message panel showing its job, a done status, the endpoint and message ID, and the received PNG file" /></Frame>
+
+## Review the results
+
+Each job shows up in **Job history** with the 10 pops it cost.
+
+<Frame caption="Three imports in the job history"><img src="/assets/guides/connect-job-history.png" alt="Job history listing three completed Import supplier invoices jobs, each charged 10 pops" /></Frame>
+
+Open a job and click the **Import document** step to read its result. The message says how the document was read, the invoice's number, supplier and total, and after **Check:** what needs a look, with the GOBL field and why. The scan below had its amounts partly hidden, so the AI wasn't sure of the line totals and had to infer the currency:
+
+<Frame caption="An import graded low, with what to check"><img src="/assets/guides/connect-job-low.png" width="500" alt="Job detail with the Import document step's log: OK, read with AI with low confidence, invoice INV-2024-0837 from Northwind Trading Co., check currency (inferred) and lines.line_total (unsure)" /></Frame>
+
+The imported invoices are in **Invoices**, in the state your workflow gave them:
+
+<Frame caption="Three imports, one of them waiting for a check"><img src="/assets/guides/connect-invoices.png" alt="Invoices list: Northwind Trading Co. in Processing with a warning, and Blue Harbor Office Supplies and Redwood Cleaning Services in Received" /></Frame>
+
+Each entry has the original file attached. An invoice that doesn't validate is still stored, with its faults, so you can fix it: here the supplier's VAT number failed its check.
+
+<Frame caption="The entry to check, with its fault and original file"><img src="/assets/guides/connect-low-invoice.png" width="400" alt="Invoice details in Processing, with the fault GOBL-GB-TAX-IDENTITY-03 (UK VAT identity checksum mismatch) and the original PNG under Files" /></Frame>
+
+Fix the entry with `Edit`, or ask the supplier for a corrected invoice. Running the workflow again on the same entry imports the file again and updates that entry, instead of creating another.
+
+## Rules and profiles
+
+Rules tell the AI what it can't know from the page: how your purchase order numbers look, which tax applies to a supplier's invoices, which GOBL addon to use. Each rule is one short instruction of up to 200 characters. Add them in the **Rules** tab.
+
+<Frame caption="Two rules"><img src="/assets/guides/connect-rules.png" alt="Rules tab listing two rules, both used by the Supplier invoices profile" /></Frame>
+
+A **profile** groups up to 10 rules, given to the AI in the profile's order. Create it in the **Profiles** tab, then choose it in the **Import document** step of your workflow. Different workflows can use different profiles.
+
+<Frame caption="A profile with two rules"><img src="/assets/guides/connect-profile.png" width="550" alt="Profile Supplier invoices with its description and two rules" /></Frame>
+
+A rule that names a GOBL addon sets it on the import, such as `Use the es-verifactu-v1 addon` or `Apply the VERI*FACTU addon`. A profile's rules can name one addon.
+
+## Good to know
+
+- **Limits**: files up to 25 MB, and up to 20 pages for a PDF read with AI. An email's first 20 attachments are read.
+- **Not an invoice**: a document the AI finds isn't an invoice, such as a delivery note or a letter, fails the job with the reason and isn't charged.
+- **Tampering**: text hidden in a PDF that disagrees with what's visible, or instructions addressed to the AI, make the import `low` and are quoted in the message, starting "Possibly tampered".
+- **API**: endpoints, rules and profiles can also be managed with a workspace token at `https://api.invopop.com/apps/connect/v1/`. Its full description, every field and limit included, is at `https://api.invopop.com/apps/connect/v1/openapi.json`.
 
 <Card title="Participate in our community"
   icon="forumbee"
