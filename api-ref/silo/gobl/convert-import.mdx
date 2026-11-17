@@ -1,0 +1,21 @@
+---
+title: "Import a format to GOBL"
+sidebarTitle: "Import from format"
+tag: "NEW"
+openapi: "POST /silo/v1/gobl/convert/import"
+---
+
+Convert a document in an external format, such as a UBL or CII invoice, into a [GOBL Envelope](https://docs.gobl.org/draft-0/envelope) without storing anything. Send the raw document as the request body. Its format is detected automatically, and the response says which one was used.
+
+Any files embedded in the document, such as a PDF copy of the invoice, are returned in `attachments` with their contents base64 encoded.
+
+```bash
+curl -X POST "https://api.invopop.com/silo/v1/gobl/convert/import" \
+  -H "Authorization: Bearer $INVOPOP_TOKEN" \
+  -H "Content-Type: application/xml" \
+  --data-binary @invoice.xml
+```
+
+To limit detection to particular formats, pass their keys from the [conversion formats](/api-ref/silo/gobl/convert-formats) endpoint in the `format` query parameter.
+
+To store the result as a new silo entry, use [import an entry](/api-ref/silo/entries/import-an-entry-post) instead, which also keeps the original document and its attachments as files of the entry.
