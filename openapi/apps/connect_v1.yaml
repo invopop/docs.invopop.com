@@ -257,7 +257,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EndpointInput'
+              $ref: '#/components/schemas/EndpointCreate'
       responses:
         '201':
           description: The new endpoint
@@ -539,6 +539,83 @@ components:
               const: email
             config:
               $ref: '#/components/schemas/EmailConfig'
+    EndpointCreate:
+      description: >-
+        An endpoint as created: like EndpointInput, with the credentials its security or
+        provider needs, which an update can leave out to keep the stored ones.
+      allOf:
+        - $ref: '#/components/schemas/EndpointInput'
+        - if:
+            required:
+              - channel
+            properties:
+              channel:
+                const: http
+          then:
+            properties:
+              config:
+                properties:
+                  security:
+                    allOf:
+                      - if:
+                          properties:
+                            type:
+                              const: bearer
+                        then:
+                          required:
+                            - token
+                      - if:
+                          properties:
+                            type:
+                              const: basic
+                        then:
+                          required:
+                            - user
+                            - pass
+                      - if:
+                          properties:
+                            type:
+                              const: hmac
+                        then:
+                          required:
+                            - secret
+        - if:
+            required:
+              - channel
+            properties:
+              channel:
+                const: email
+          then:
+            properties:
+              config:
+                allOf:
+                  - if:
+                      properties:
+                        provider:
+                          const: imap
+                    then:
+                      properties:
+                        imap:
+                          required:
+                            - password
+                  - if:
+                      properties:
+                        provider:
+                          const: resend
+                    then:
+                      properties:
+                        resend:
+                          required:
+                            - api_key
+                  - if:
+                      properties:
+                        provider:
+                          const: sendgrid
+                    then:
+                      properties:
+                        sendgrid:
+                          required:
+                            - api_key
     Endpoint:
       type: object
       properties:
