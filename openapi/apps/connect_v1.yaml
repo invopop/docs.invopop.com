@@ -524,9 +524,21 @@ components:
           description: >-
             The channel's own settings: HTTPConfig for http, EmailConfig for email. A secret left
             out on update keeps the stored one.
-          anyOf:
-            - $ref: '#/components/schemas/HTTPConfig'
-            - $ref: '#/components/schemas/EmailConfig'
+      oneOf:
+        - title: HTTP endpoint
+          properties:
+            channel:
+              const: http
+            config:
+              $ref: '#/components/schemas/HTTPConfig'
+        - title: Email endpoint
+          required:
+            - config
+          properties:
+            channel:
+              const: email
+            config:
+              $ref: '#/components/schemas/EmailConfig'
     Endpoint:
       type: object
       properties:
@@ -629,7 +641,6 @@ components:
           required:
             - host
             - username
-            - password
           properties:
             host:
               type: string
@@ -645,7 +656,7 @@ components:
               type: string
             password:
               type: string
-              description: Empty on update keeps the stored one
+              description: Required when creating; empty on update keeps the stored one
             folder:
               type: string
               description: Default INBOX
@@ -663,12 +674,13 @@ components:
           type: object
           description: For resend
           required:
-            - api_key
             - recipient
           properties:
             api_key:
               type: string
-              description: A full access key (Connect creates its webhook with it)
+              description: >-
+                A full access key (Connect creates its webhook with it); required when creating,
+                left out on update keeps the stored one
             recipient:
               type: string
               description: The address that receives the documents
@@ -676,12 +688,13 @@ components:
           type: object
           description: For sendgrid
           required:
-            - api_key
             - hostname
           properties:
             api_key:
               type: string
-              description: A key allowed to manage Inbound Parse settings (Connect creates the setting with it)
+              description: >-
+                A key allowed to manage Inbound Parse settings (Connect creates the setting with
+                it); required when creating, left out on update keeps the stored one
             region:
               type: string
               enum:
@@ -700,6 +713,29 @@ components:
           items:
             type: string
           description: Addresses or domains ("supplier.com") allowed to send; empty allows anyone
+      oneOf:
+        - title: Invopop address
+          properties:
+            provider:
+              const: invopop
+        - title: IMAP mailbox
+          required:
+            - imap
+          properties:
+            provider:
+              const: imap
+        - title: Resend
+          required:
+            - resend
+          properties:
+            provider:
+              const: resend
+        - title: SendGrid
+          required:
+            - sendgrid
+          properties:
+            provider:
+              const: sendgrid
     Document:
       type: object
       properties:
