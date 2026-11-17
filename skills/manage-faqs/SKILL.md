@@ -338,7 +338,9 @@ For single-regime countries, country-level operations or tech content goes into 
 | `guides/cb-denmark.mdx` | `dk/composers/guide-peppol-invoicing.mdx` |
 | `faq/germany.mdx` | `de/composers/page-faq.mdx` |
 | `compliance/germany.mdx` | `de/composers/page-compliance.mdx` |
-| `guides/de-ubl.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
+| `apps/germany.mdx` | `de/composers/app-germany.mdx` |
+| `guides/de-invoicing.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
+| `guides/de-registration.mdx` | `de/composers/guide-peppol-supplier.mdx` |
 | `guides/cb-germany.mdx` | `de/composers/guide-peppol-invoicing.mdx` |
 | `faq/finland.mdx` | `fi/composers/page-faq.mdx` |
 | `compliance/finland.mdx` | `fi/composers/page-compliance.mdx` |

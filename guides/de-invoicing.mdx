@@ -1,20 +1,15 @@
 ---
-title: "XRechnung & ZUGFeRD guide"
-sidebarTitle: "XRechnung & ZUGFeRD"
-description: Generate compliant electronic invoices in Germany.
+title: "Invoicing in Germany"
+sidebarTitle: "Invoicing"
+description: Issue XRechnung and ZUGFeRD invoices in Germany.
 ---
 
-import XrechnungWorkflow from '/snippets/workflows/de/xrechnung.mdx'
-import ZugferdWorkflow from '/snippets/workflows/de/zugferd.mdx'
-import XRechnungB2BInvoiceMin from '/snippets/invoices/de/peppol-xrechnung-b2b.min.mdx'
-import XRechnungB2BInvoice from '/snippets/invoices/de/peppol-xrechnung-b2b.mdx'
-import ZugferdB2BAdditionalMin from '/snippets/invoices/de/zugferd-b2b-additional.min.mdx'
-import ZugferdB2BAdditional from '/snippets/invoices/de/zugferd-b2b-additional.mdx'
+import XrechnungWorkflow, { deXrechnungWorkflow } from '/snippets/workflows/de/xrechnung.mdx';
+import ZugferdWorkflow, { deZugferdWorkflow } from '/snippets/workflows/de/zugferd.mdx';
+import ExampleAccordion from '/snippets/invoices/de/accordion.mdx';
 import GermanyResources from '/snippets/tables/germany-resources.mdx';
 import FAQ from '/snippets/faqs/de/composers/guide-peppol-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
-import { deXrechnungWorkflow } from '/snippets/workflows/de/xrechnung.mdx';
-import { deZugferdWorkflow } from '/snippets/workflows/de/zugferd.mdx';
 
 ## Introduction
 
@@ -42,32 +37,27 @@ ZUGFeRD is fully aligned with the European Norm `EN 16931` and it is worth notin
     To implement the semantic models, there are two syntaxes approved by the EU: UN/CEFACT Cross Industry Invoice ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) and OASIS Universal Business Language ([UBL](https://docs.OASIS-open.org/ubl/UBL-2.1.html)).
 </Tip>
 
+To send invoices through Peppol, register the supplier first with the companion guide: [Supplier registration in Germany](/guides/de-registration).
+
 ## Prerequisites
 
-To convert invoices to XRechnung or ZUGFeRD format, ensure you have:
-
+- **A supplier**: a German company with its tax ID. To send invoices through Peppol, follow the [supplier registration guide](/guides/de-registration) first.
 - A valid API key and a basic understanding of the [workflow engine](/guides/workflows) and [API](/api-ref/introduction).
 - An invoice with:
+  - The [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) addon for XRechnung, or the [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2) addon for ZUGFeRD. The addon applies the rules of the format.
   - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) regime for specifics.
   - Line items with name, price, and applicable taxes.
 
 ## Setup
 
-To issue XRechnung or ZUGFeRD invoices, follow these instructions in the [Invopop Console](https://console.invopop.com):
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+The **Export document** step converts the invoice to XRechnung or ZUGFeRD and stores the XML as a file of the invoice. It is available in every workspace.
 
 ### XRechnung setup
 
 <Steps>
-  <Step title="Connect the OASIS UBL app">
-
-    1. Navigate to **Configuration** → **Apps**.
-    2. Locate **OASIS UBL** in the app discovery list.
-    3. Click **Connect** to activate.
-
-    No additional configuration is needed.
-  </Step>
-  <Step title="Configure invoice workflow">
-
+  <Step title="Configure the invoice workflow">
     <Card iconType="duotone" title="XRechnung invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-xrechnung" horizontal>
       Add to my workspace →
     </Card>
@@ -77,26 +67,24 @@ To issue XRechnung or ZUGFeRD invoices, follow these instructions in the [Invopo
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
         <XrechnungWorkflow />
       </Tab>
     </Tabs>
 
+    The workflow exports the invoice in the UBL syntax. For the CII syntax, choose **CII XRechnung 3** in the **Export document** step.
   </Step>
 </Steps>
 
 ### ZUGFeRD setup
 
 <Steps>
-  <Step title="Connect the UN/CEFACT CII app">
-
+  <Step title="Connect the Germany app">
     1. Navigate to **Configuration** → **Apps**.
-    2. Locate **UN/CEFACT CII** in the app discovery list.
+    2. Find **Germany** in the app discovery list.
     3. Click **Connect** to activate.
-
-    No additional configuration is needed.
   </Step>
-  <Step title="Configure invoice workflow">
-
+  <Step title="Configure the invoice workflow">
     <Card iconType="duotone" title="ZUGFeRD invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-zugferd" horizontal>
       Add to my workspace →
     </Card>
@@ -106,67 +94,36 @@ To issue XRechnung or ZUGFeRD invoices, follow these instructions in the [Invopo
       </Tab>
       <Tab title="Code">
         Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
         <ZugferdWorkflow />
       </Tab>
     </Tabs>
 
+    The workflow generates the PDF and exports the ZUGFeRD XML. The **Embed XML into PDF** step then embeds the XML into the PDF. The **Export document** step also offers the ZUGFeRD BASIC and EXTENDED profiles.
   </Step>
 </Steps>
 
 ## Running
 
+<Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
+
 Invopop uses the [GOBL](https://gobl.org) library to process conversions. GOBL's implementation validates [national business rules](https://www.xoev.de/sixcms/media.php/13/XRechnung-EnglishSummary-v220-final.pdf) in addition to the rules defined in `EN 16931-1`.
 
-Some example invoices are provided below, along with example workflows to send the invoices to. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+Set the `regime` field to `DE` in your invoices and include the addon of the format. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
 
-### XRechnung examples
+## Example invoices
 
-Be sure to set the `regime` field to `DE` in your invoices and include the [XRechnung](https://docs.gobl.org/addons/de-xrechnung-v3) addon. This will add extra validations to ensure the document is compliant with the standard.
-
-<AccordionGroup>
-  <Accordion title="XRechnung B2B Invoice">
-    Standard XRechnung invoice for business-to-business transactions using the UBL format.
-
-    <CodeGroup>
-      <XRechnungB2BInvoiceMin />
-      <XRechnungB2BInvoice />
-    </CodeGroup>
-  </Accordion>
-</AccordionGroup>
-
-<Info>
-  In your invoice data, make sure to include the [XRechnung addon](https://docs.gobl.org/addons/de-xrechnung-v3) and set the regime as `DE`.
-</Info>
-
-
-### ZUGFeRD examples
-
-Be sure to set the `regime` field to `DE` in your invoices and include the [ZUGFeRD](https://docs.gobl.org/addons/de-zugferd-v2) addon. This will add extra validations to ensure the document is compliant with the standard.
-
-<AccordionGroup>
-  <Accordion title="ZUGFeRD B2B Invoice with Additional Fields">
-    Comprehensive ZUGFeRD invoice demonstrating additional optional fields such as ordering information, payment terms, delivery details, and discounts.
-
-    <CodeGroup>
-      <ZugferdB2BAdditionalMin />
-      <ZugferdB2BAdditional />
-    </CodeGroup>
-  </Accordion>
-</AccordionGroup>
-<Info>
-  In your invoice data, make sure to include the [ZUGFeRD addon](https://docs.gobl.org/addons/de-zugferd-v2) and set the regime as `DE`.
-</Info>
-
-
----
-
-<GermanyResources />
+<ExampleAccordion />
 
 ## FAQ
 
 <FAQ />
 
 More available in our [Germany FAQ](/faq/germany) section
+
+---
+
+<GermanyResources />
 
 <Card title="Participate in our community"
   icon="forumbee"
