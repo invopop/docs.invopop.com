@@ -516,7 +516,7 @@ components:
               - image/webp
               - image/tiff
               - image/heic
-          description: 'Content types accepted; empty accepts any (email: PDF, XML and JSON)'
+          description: 'Content types accepted; empty accepts any (email: PDF, XML, JSON and images)'
         disabled:
           type: boolean
           description: Stop receiving without deleting the endpoint
@@ -524,7 +524,7 @@ components:
           description: >-
             The channel's own settings: HTTPConfig for http, EmailConfig for email. A secret left
             out on update keeps the stored one.
-          oneOf:
+          anyOf:
             - $ref: '#/components/schemas/HTTPConfig'
             - $ref: '#/components/schemas/EmailConfig'
     Endpoint:
@@ -560,7 +560,7 @@ components:
           format: date-time
         config:
           description: The channel's config as given, without secrets
-          oneOf:
+          anyOf:
             - $ref: '#/components/schemas/HTTPConfig'
             - $ref: '#/components/schemas/EmailConfig'
     HTTPConfig:
@@ -614,10 +614,12 @@ components:
             - invopop
             - imap
             - resend
+            - sendgrid
           description: >-
             invopop: an address on Invopop's receiving domain (address is its name, before the @;
             empty uses the slug). imap: Connect reads a folder of your mailbox. resend: mail your
-            own Resend account receives.
+            own Resend account receives. sendgrid: mail a hostname of your own SendGrid account
+            receives through Inbound Parse.
         address:
           type: string
           description: 'For invopop: the address name'
@@ -670,6 +672,29 @@ components:
             recipient:
               type: string
               description: The address that receives the documents
+        sendgrid:
+          type: object
+          description: For sendgrid
+          required:
+            - api_key
+            - hostname
+          properties:
+            api_key:
+              type: string
+              description: A key allowed to manage Inbound Parse settings (Connect creates the setting with it)
+            region:
+              type: string
+              enum:
+                - global
+                - eu
+              description: The account's API region; default global
+            hostname:
+              type: string
+              description: >-
+                The hostname that receives the documents; its MX record points at mx.sendgrid.net
+            recipient:
+              type: string
+              description: One address on the hostname to take; empty takes every address
         allowed_senders:
           type: array
           items:
@@ -697,12 +722,13 @@ components:
         confidence:
           type: string
           enum:
+            - parsed
             - high
-            - medium
             - low
           description: >-
-            The job's code: high, nothing to check; medium, the entry doesn't validate or the import
-            has doubts; low, an AI reading with low confidence
+            How sure the reading is: parsed, converted as it was; high or low, read with AI. The
+            job's code can still be low with high confidence, when the entry doesn't validate or
+            the import has doubts (listed in review)
         format:
           type: string
           description: 'How it was read: gobl, an XML format (e.g. ubl, cii), or ai'
