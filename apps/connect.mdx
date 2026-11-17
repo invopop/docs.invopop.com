@@ -1,15 +1,17 @@
 ---
 title: "Connect"
-description: "Create incoming and outgoing connections via multiple channels."
-keywords: ['connect', 'endpoints', 'http', 'webhook', 'ingest', 'channels', 'incoming']
+description: "Receive documents by HTTP or email and import them into GOBL, reading PDFs and images with AI."
+keywords: ['connect', 'endpoints', 'http', 'email', 'inbound', 'import', 'ai', 'ocr', 'pdf', 'ubl', 'cii', 'receive']
 mode: wide
 ---
+
+import ConnectImportWorkflow from '/snippets/workflows/connect/import-supplier-invoices.mdx';
 
 <Tabs>
 	<Tab title="Description">
 		<Columns cols="2">
 			<div class="flex flex-col grow items-center justify-center">
-				<Card title="Receive documents" icon="https://assets.invopop.com/apps/connect/icon.svg"
+				<Card title="Receive documents" icon="https://assets.invopop.com/icons/connect.svg"
 				  href="/guides/connect" horizontal>
 				  View implementation guide ›
 				</Card>
@@ -21,30 +23,44 @@ mode: wide
 				| Category  | Automation                             |
 		</Columns>
 
-	The Connect app links your workspace to external document exchange channels, so other systems can deliver documents to Invopop without polling or custom integration code. Connect currently supports incoming HTTP connections, with further channels and directions on the way.
+	The Connect app brings the documents your suppliers and systems send you into Invopop. Each **endpoint** receives documents on one channel, either an HTTP address that other systems post files to, or an email address that suppliers send invoices to. Every invoice an endpoint receives starts a job in the workflow you choose for it.
 
-	Each **endpoint** pairs a public URL of the form `https://connect.invopop.app/{workspace-id}/{slug}` with a workflow of your choice. Any file posted to the endpoint — a GOBL invoice from your billing tool, an XML document from a partner, or any other payload — is validated, stored, and handed to that workflow, which receives a link to the stored file.
+	The workflow's **Import document** step turns the file into a GOBL invoice in your workspace. GOBL, UBL and CII documents, including PDFs that carry them (Factur-X, ZUGFeRD), are converted as they are. Other PDFs and images are read with AI. The step grades every import, so the workflow can send the invoices that need a person's check one way and the rest another.
 
-	Every delivery is recorded in a document log inside the app, where you can check its status, inspect the request, preview the payload, and download the original file.
+	Everything an endpoint receives is listed in the app, with the jobs it started and the original files.
 
 	#### Key features
 
-	* **Workflow automation:** Every document delivered to an endpoint automatically starts the workflow you choose for it.
-	* **Public endpoints:** Create one URL per document flow, with a slug you control, unique within your workspace.
-	* **Sender authentication:** Protect each endpoint with a bearer token, basic credentials, or an HMAC-SHA256 signature.
-	* **Content validation:** Restrict the content types an endpoint accepts; malformed or oversized payloads are rejected before they reach your workflows.
-	* **Binary support:** Receive PDFs and other binary files as base64-encoded bodies, with an optional filename for download.
-	* **Document log:** Review every delivery with its status, request headers, payload preview, and original file download.
+	* **Workflow automation:** Every invoice an endpoint receives starts a job in the workflow you choose.
+	* **HTTP endpoints:** Post files to an endpoint's address, protected with a bearer token, basic credentials or an HMAC signature.
+	* **Email endpoints:** Use an `@invopop.email` address, or receive on your own domain through Resend, SendGrid or an IMAP mailbox. Only senders you allow, with a proven domain, are taken.
+	* **One job per invoice:** An email with several invoices, or a PDF holding several, starts one job for each. An XML invoice and its PDF stay together.
+	* **AI reading:** PDFs and images without embedded data are read with AI, which checks the amounts and lists what it was unsure of.
+	* **Graded results:** Each import ends as `low` (check it first), `high` (read with AI, nothing to check) or `parsed` (converted as it was).
+	* **Rules for the AI:** Short instructions, grouped in profiles, tell the AI about your suppliers and documents, and can set the GOBL addon.
 
-	Check out the [Connect guide](/guides/connect) to create your first endpoint and deliver a document to it.
+	Check out the [Connect guide](/guides/connect) to set up your first endpoint and import a document.
 
 	</Tab>
 	<Tab title="Actions">
-		Connect works in the opposite direction to most apps: rather than adding steps to your workflows, it starts them. The app adds no actions to the workflow step picker.
+		The following workflow actions will be available once you install and enable this app:
 
-		Each endpoint is bound to one of your workflows. When a document arrives, Connect validates and stores it, then creates a job for that workflow with a `url` argument pointing at the stored file. The sender receives the IDs of both the stored document and the workflow job in the response, so external systems can track processing end to end.
+		<Card title="Import document" icon="https://assets.invopop.com/icons/connect.svg" horizontal>
+		 <div class="pop-count"><Icon icon="https://assets.invopop.com/icons/pops.svg" /> 10</div>
+		 Convert a document received by Connect into a GOBL invoice in the silo, with the original file attached. GOBL, UBL and CII are converted as they are; PDFs and images without embedded data are read with AI. The step ends OK with a code to branch on: `low` when the entry needs checking (low confidence, doubts, or it doesn't validate), `high` when it was read with AI with nothing to check, and `parsed` when it was converted as it was. The message says what to check. Settings: an optional profile, whose rules are given to the AI.
+		</Card>
 
-		The workflow itself is built like any other — see the [Connect guide](/guides/connect) for a walkthrough of creating an endpoint and sending the first document.
+		Only imports that end OK are charged. A document that isn't an invoice, or that can't be read, ends KO.
+	</Tab>
+	<Tab title="Workflows">
+		The [Connect guide](/guides/connect) explains this workflow. Paste it into a new empty invoice workflow's code view, and change the steps in each branch to suit your process.
+
+		Invoice workflows
+		<AccordionGroup>
+			<Accordion title="Connect import supplier invoices">
+				<ConnectImportWorkflow />
+			</Accordion>
+		</AccordionGroup>
 	</Tab>
 </Tabs>
 
