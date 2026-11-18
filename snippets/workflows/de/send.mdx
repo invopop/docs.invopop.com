@@ -1,0 +1,233 @@
+export const deSendWorkflow = {
+    "name": "Germany send invoice",
+    "description": "Send an XRechnung invoice through Peppol, or by email when the customer is not on Peppol",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "dc92ffff-e373-11f1-901e-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dc9300cb-e373-11f1-807a-42010a0a0006",
+            "name": "Modify silo entry",
+            "provider": "silo.modify",
+            "summary": "Add `de-xrechnung-v3` addon",
+            "config": {
+                "addons": [
+                    "de-xrechnung-v3"
+                ],
+                "sign": false
+            }
+        },
+        {
+            "id": "dc93013d-e373-11f1-ab7a-42010a0a0006",
+            "name": "Lookup Peppol participant",
+            "provider": "peppol.lookup",
+            "summary": "Lookup customer",
+            "notes": "Adds the customer's Peppol ID when its VAT ID is on Peppol. A customer not on Peppol continues to the email",
+            "config": {
+                "party": "customer"
+            },
+            "next": [
+                {
+                    "status": "KO",
+                    "code": "not-found",
+                    "step_id": "dc8e9333-e373-11f1-b699-42010a0a0006"
+                }
+            ]
+        },
+        {
+            "id": "dc8e9333-e373-11f1-b699-42010a0a0006",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "dc9301ae-e373-11f1-85c6-42010a0a0006",
+            "name": "Generate UBL document",
+            "provider": "ubl.generate",
+            "summary": "XRechnung UBL 3",
+            "config": {
+                "doc_type": "xrechnung-invoice-v2",
+                "private": false,
+                "validate_ubl": true
+            }
+        },
+        {
+            "id": "dc930203-e373-11f1-a61e-42010a0a0006",
+            "name": "Verify document can be sent",
+            "provider": "peppol.validate.endpoint",
+            "notes": "Sends through Peppol when the customer accepts XRechnung there, or else by email",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "dc930245-e373-11f1-80c8-42010a0a0006",
+                            "name": "Send Peppol document",
+                            "provider": "peppol.send"
+                        }
+                    ]
+                },
+                {
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "dc93028d-e373-11f1-be08-42010a0a0006",
+                            "name": "Send email",
+                            "provider": "email.send",
+                            "summary": "To invoice customers",
+                            "config": {
+                                "add_invoice_customer": true,
+                                "attach": "xml",
+                                "connection_id": "default"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "dc9302db-e373-11f1-be39-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "dc930319-e373-11f1-9458-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json Germany send invoice workflow
+{
+    "name": "Germany send invoice",
+    "description": "Send an XRechnung invoice through Peppol, or by email when the customer is not on Peppol",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "dc92ffff-e373-11f1-901e-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "dc9300cb-e373-11f1-807a-42010a0a0006",
+            "name": "Modify silo entry",
+            "provider": "silo.modify",
+            "summary": "Add `de-xrechnung-v3` addon",
+            "config": {
+                "addons": [
+                    "de-xrechnung-v3"
+                ],
+                "sign": false
+            }
+        },
+        {
+            "id": "dc93013d-e373-11f1-ab7a-42010a0a0006",
+            "name": "Lookup Peppol participant",
+            "provider": "peppol.lookup",
+            "summary": "Lookup customer",
+            "notes": "Adds the customer's Peppol ID when its VAT ID is on Peppol. A customer not on Peppol continues to the email",
+            "config": {
+                "party": "customer"
+            },
+            "next": [
+                {
+                    "status": "KO",
+                    "code": "not-found",
+                    "step_id": "dc8e9333-e373-11f1-b699-42010a0a0006"
+                }
+            ]
+        },
+        {
+            "id": "dc8e9333-e373-11f1-b699-42010a0a0006",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "dc9301ae-e373-11f1-85c6-42010a0a0006",
+            "name": "Generate UBL document",
+            "provider": "ubl.generate",
+            "summary": "XRechnung UBL 3",
+            "config": {
+                "doc_type": "xrechnung-invoice-v2",
+                "private": false,
+                "validate_ubl": true
+            }
+        },
+        {
+            "id": "dc930203-e373-11f1-a61e-42010a0a0006",
+            "name": "Verify document can be sent",
+            "provider": "peppol.validate.endpoint",
+            "notes": "Sends through Peppol when the customer accepts XRechnung there, or else by email",
+            "next": [
+                {
+                    "code": "true",
+                    "steps": [
+                        {
+                            "id": "dc930245-e373-11f1-80c8-42010a0a0006",
+                            "name": "Send Peppol document",
+                            "provider": "peppol.send"
+                        }
+                    ]
+                },
+                {
+                    "code": "false",
+                    "steps": [
+                        {
+                            "id": "dc93028d-e373-11f1-be08-42010a0a0006",
+                            "name": "Send email",
+                            "provider": "email.send",
+                            "summary": "To invoice customers",
+                            "config": {
+                                "add_invoice_customer": true,
+                                "attach": "xml",
+                                "connection_id": "default"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "dc9302db-e373-11f1-be39-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "dc930319-e373-11f1-9458-42010a0a0006",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

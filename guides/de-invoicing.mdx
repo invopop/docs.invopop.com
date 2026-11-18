@@ -4,11 +4,9 @@ sidebarTitle: "Invoicing"
 description: Issue XRechnung and ZUGFeRD invoices in Germany, and send them by email or through Peppol.
 ---
 
-import XrechnungWorkflow, { deXrechnungWorkflow } from '/snippets/workflows/de/xrechnung.mdx';
+import SendWorkflow, { deSendWorkflow } from '/snippets/workflows/de/send.mdx';
 import ZugferdWorkflow, { deZugferdWorkflow } from '/snippets/workflows/de/zugferd.mdx';
-import PeppolSendWorkflow, { peppolSendWorkflow } from '/snippets/workflows/peppol/send.mdx';
 import ExampleAccordion from '/snippets/invoices/de/accordion.mdx';
-import PeppolExampleAccordion from '/snippets/invoices/de/peppol-accordion.mdx';
 import GermanyResources from '/snippets/tables/germany-resources.mdx';
 import FAQ from '/snippets/faqs/de/composers/guide-peppol-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
@@ -41,99 +39,78 @@ ZUGFeRD is fully aligned with the European Norm `EN 16931` and it is worth notin
 
 ### Channels
 
-Germany has no central platform. Businesses send e-invoices to each other directly, on one of two channels:
+Germany has no central platform. Businesses send e-invoices to each other directly, by email or through the [Peppol](/apps/peppol) network.
 
-- **Email**: Invopop sends the XRechnung XML, or the ZUGFeRD PDF, to the customer's email address.
-- **Peppol**: Invopop sends the invoice through the Peppol network, in the format of the workflow's **Generate UBL document** step. The template uses Peppol BIS Billing 3.0. For public authorities, set the step to XRechnung.
+The **Germany send invoice** workflow chooses the channel for each invoice. It sends the XRechnung through Peppol when the customer is on the network and accepts XRechnung there. Otherwise, it sends the XRechnung XML to the customer's email address. For customers that want a PDF, the **ZUGFeRD email invoice** workflow sends a ZUGFeRD PDF by email.
 
 Register the supplier first, on both channels. See the companion guide: [Supplier registration in Germany](/guides/de-registration). For receiving invoices, see [Receiving invoices in Germany](/guides/de-receiving).
 
 ## Prerequisites
 
 - A valid API key and a basic understanding of the [workflow engine](/guides/workflows) and [API](/api-ref/introduction).
+- A registered supplier. Follow the [supplier registration guide](/guides/de-registration) first.
 - An invoice with:
   - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) regime for specifics.
   - Line items with name, price, and applicable taxes.
-  - For email, the addon of its format: [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) for XRechnung, or [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2) for ZUGFeRD.
-- A registered supplier. Follow the [supplier registration guide](/guides/de-registration) first.
+  - The customer's email address, for invoices sent by email.
+  - For ZUGFeRD, the [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2) addon. The Germany send invoice workflow adds the [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) addon itself.
 
 ## Setup
 
-All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com). Choose the channel:
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
-<Tabs>
-  <Tab title="Email">
-    <Steps>
-      <Step title="Connect the apps">
-        1. Navigate to **Configuration** → **Apps**.
-        2. Find **Email** in the app discovery list, and click **Connect** to activate.
-        3. For ZUGFeRD, also find **Germany**, and click **Connect** to activate.
-      </Step>
-      <Step title="Configure the XRechnung workflow">
-        <Info>You can skip this step if you don't plan to send XRechnung invoices.</Info>
+<Steps>
+  <Step title="Connect the apps">
+    1. Navigate to **Configuration** → **Apps**.
+    2. Find **Email** in the app discovery list, and click **Connect** to activate.
+    3. Check that the **Germany** and **Peppol** apps are connected. The [supplier registration guide](/guides/de-registration) connects them.
+  </Step>
+  <Step title="Configure the invoice workflow">
+    <Card iconType="duotone" title="Germany send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-send" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={deSendWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
-        <Card iconType="duotone" title="XRechnung email invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-xrechnung" horizontal>
-          Add to my workspace →
-        </Card>
-        <Tabs>
-          <Tab title="Workflow">
-            <WorkflowDiagram workflow={deXrechnungWorkflow} />
-          </Tab>
-          <Tab title="Code">
-            Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+        <SendWorkflow />
+      </Tab>
+    </Tabs>
 
-            <XrechnungWorkflow />
-          </Tab>
-        </Tabs>
+    The workflow runs these steps:
 
-        The **Export document** step converts the invoice to XRechnung in the UBL syntax. For the CII syntax, choose **CII XRechnung 3** in the step. The **Send email** step sends the XML to the email address of the invoice's customer.
-      </Step>
-      <Step title="Configure the ZUGFeRD workflow">
-        <Info>You can skip this step if you don't plan to send ZUGFeRD invoices.</Info>
+    1. **Modify silo entry** adds the `de-xrechnung-v3` addon to the invoice.
+    2. **Lookup Peppol participant** adds the customer's Peppol ID when its VAT ID is on Peppol. A customer that is not on Peppol continues to the email.
+    3. **Generate UBL document** converts the invoice to XRechnung in the UBL syntax, and validates it.
+    4. **Verify document can be sent** checks that the customer is on Peppol and accepts XRechnung there. If it does, **Send Peppol document** sends the XRechnung through Peppol. If not, **Send email** sends the XML to the customer's email address.
 
-        <Card iconType="duotone" title="ZUGFeRD email invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-zugferd" horizontal>
-          Add to my workspace →
-        </Card>
-        <Tabs>
-          <Tab title="Workflow">
-            <WorkflowDiagram workflow={deZugferdWorkflow} />
-          </Tab>
-          <Tab title="Code">
-            Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <Info>For a public authority, set its Leitweg-ID as the customer's Peppol ID (scheme `0204`) and as the invoice's ordering code. The lookup finds Peppol IDs by VAT ID only.</Info>
 
-            <ZugferdWorkflow />
-          </Tab>
-        </Tabs>
+    To always send by email, use the [XRechnung email invoice workflow](https://console.invopop.com/redirect/workflows/new?template=de-xrechnung) instead.
+  </Step>
+  <Step title="Configure the ZUGFeRD workflow">
+    <Info>You can skip this step if your customers don't want ZUGFeRD PDFs.</Info>
 
-        The workflow generates the PDF, exports the ZUGFeRD XML and embeds it into the PDF with the **Embed XML into PDF** step. The **Send email** step sends the PDF to the email address of the invoice's customer. The **Export document** step also offers the ZUGFeRD BASIC and EXTENDED profiles.
-      </Step>
-    </Steps>
-  </Tab>
-  <Tab title="Peppol">
-    <Steps>
-      <Step title="Register the supplier">
-        Follow the [supplier registration guide](/guides/de-registration). It approves the supplier and registers it on Peppol.
-      </Step>
-      <Step title="Configure the invoice workflow">
-        <Card iconType="duotone" title="Peppol send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=peppol-send" horizontal>
-          Add to my workspace →
-        </Card>
-        <Tabs>
-          <Tab title="Workflow">
-            <WorkflowDiagram workflow={peppolSendWorkflow} />
-          </Tab>
-          <Tab title="Code">
-            Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+    <Card iconType="duotone" title="ZUGFeRD email invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-zugferd" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={deZugferdWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
 
-            <PeppolSendWorkflow />
-          </Tab>
-        </Tabs>
+        <ZugferdWorkflow />
+      </Tab>
+    </Tabs>
 
-        The workflow converts the invoice to Peppol BIS Billing 3.0 and sends it to the customer's Peppol ID, so the customer needs a Peppol inbox on the invoice. See [Sending invoices](/guides/peppol#sending-invoices) in the Peppol guide for the details.
-      </Step>
-    </Steps>
-  </Tab>
-</Tabs>
+    The workflow generates the PDF, exports the ZUGFeRD XML and embeds it into the PDF with the **Embed XML into PDF** step. The **Send email** step sends the PDF to the email address of the invoice's customer. The **Export document** step also offers the ZUGFeRD BASIC and EXTENDED profiles.
+  </Step>
+</Steps>
 
 ## Running
 
@@ -145,14 +122,7 @@ Set the `regime` field to `DE` in your invoices. We also recommend using the [GO
 
 ## Example invoices
 
-<Tabs>
-  <Tab title="Email">
-    <ExampleAccordion />
-  </Tab>
-  <Tab title="Peppol">
-    <PeppolExampleAccordion />
-  </Tab>
-</Tabs>
+<ExampleAccordion />
 
 ## FAQ
 
