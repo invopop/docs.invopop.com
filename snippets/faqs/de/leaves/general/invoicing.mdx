@@ -1,11 +1,11 @@
   <Accordion title="How do I configure my workspace for German invoicing?">
-    Pick a format based on the recipient: XRechnung (UBL or CII) for B2G via Peppol, ZUGFeRD/Factur-X for B2B where a human-readable PDF is also wanted. Both are EN 16931-compliant — Invopop generates either from the same GOBL invoice.
+    Pick a format based on the recipient: XRechnung (UBL or CII) for B2G via Peppol, ZUGFeRD/Factur-X for B2B where a human-readable PDF is also wanted. Both are EN 16931-compliant, and Invopop generates either from the same GOBL invoice.
   </Accordion>
   <Accordion title="Can I send German e-invoices by email?">
-    Yes. The XRechnung and ZUGFeRD workflows end with a **Send email** step, which sends the XML or the ZUGFeRD PDF to the customer's email address. Sending by email needs no registration. See the [invoicing guide](/guides/de-invoicing).
+    Yes. The XRechnung and ZUGFeRD workflows end with a **Send email** step, which sends the XML or the ZUGFeRD PDF to the customer's email address. [Register the supplier](/guides/de-registration) first, as for Peppol. See the [invoicing guide](/guides/de-invoicing).
   </Accordion>
   <Accordion title="What's the workflow for issuing Peppol invoices in Germany?">
-    [Register the supplier](/guides/de-registration), then run the [Peppol](/guides/peppol) send workflow. It converts the invoice to Peppol BIS Billing 3.0 and delivers it to the recipient's access point. Peppol BIS Billing includes the German national rules, so it can also be used to invoice public authorities.
+    [Register the supplier](/guides/de-registration), then run the [Peppol](/guides/peppol) send workflow. Its **Generate UBL document** step sets the format: the template uses Peppol BIS Billing 3.0. To invoice a public authority, set the step to XRechnung. ZUGFeRD invoices go by email.
   </Accordion>
 
     <Accordion title="Which XRechnung syntax should I choose, UBL or CII?">
@@ -21,5 +21,13 @@
 
 
   <Accordion title="Where do I find Germany-specific GOBL documentation?">
-    See the [Germany tax regime in GOBL](https://docs.gobl.org/regimes/de) for tax categories and identifiers. The XRechnung rules live in [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) and the ZUGFeRD rules in [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2).
+    See the [Germany tax regime in GOBL](https://docs.gobl.org/regimes/de) for tax categories and identifiers. The XRechnung rules live in [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) and the ZUGFeRD rules in [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2). For Peppol, see the [`eu-en16931-v2017`](https://docs.gobl.org/addons/eu-en16931-v2017) addon and the [Peppol app reference](/apps/peppol).
+  </Accordion>
+
+  <Accordion title="What if the customer is not on the Peppol network?">
+    Send the invoice by email, with the XRechnung or ZUGFeRD email workflow. Peppol is not mandatory in Germany, but the invoice must still be an EN 16931 e-invoice. See the [invoicing guide](/guides/de-invoicing).
+  </Accordion>
+
+  <Accordion title="How do I handle 'Receiver Not Found' errors?">
+    A job fails with `KO` and `receiver not found in the peppol network` when the customer's Peppol ID is not on the network. Check the customer's Peppol ID, or send the invoice by email. To find the Peppol ID from the customer's VAT ID, add the **Lookup Peppol participant** step before **Generate UBL document**, as the Stripe and Chargebee Peppol templates do.
   </Accordion>

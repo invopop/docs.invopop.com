@@ -252,6 +252,8 @@ If the guide spans several tasks, use the same task-organised shape as `app-<reg
 
 In BE, DE, FR, NO composers, Peppol acts as another scope alongside the country scope and any country-specific regimes:
 
+Germany imports only the Peppol `compliance` and `receiving` leaves. German suppliers register through the Germany app, not Peppol's own registration, so the shared `supplier` leaf does not apply, and the German `invoicing` leaf holds its own Peppol answers.
+
 ```mdx
 import PepCompliance from '/snippets/faqs/peppol/leaves/compliance.mdx';
 import PepInv from '/snippets/faqs/peppol/leaves/invoicing.mdx';
