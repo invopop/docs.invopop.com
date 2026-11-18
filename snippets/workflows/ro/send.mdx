@@ -1,0 +1,169 @@
+export const roSendWorkflow = {
+    "name": "RO generate & send",
+    "description": "Generate the RO e-Factura XML of an invoice and send it to ANAF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ee1c73d0-bcc4-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "f3508b70-bcc4-11f1-bf89-fb0eed7855a8",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · E-Factura · 000001",
+            "config": {
+                "name": "E-Factura",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "2cd5d320-d875-11f1-b91e-5f8b984fb663",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "13ae7af0-d893-11f1-a9c3-b52662ba5583",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "03dfe4e0-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "9380fe70-d86f-11f1-bad9-0977cf1b74dd",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Romanian · A4",
+            "config": {
+                "currency_template": "",
+                "date_format": "%Y-%m-%d",
+                "decimal_mark": "",
+                "duplicate": false,
+                "label": "",
+                "layout": "A4",
+                "locale": "ro",
+                "logo_height": 40,
+                "negative_template": "",
+                "scripting": false,
+                "thousands_separator": "",
+                "time_format": "%H:%M",
+                "watermark": ""
+            }
+        },
+        {
+            "id": "0779d480-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "0b90bc50-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json RO generate & send workflow
+{
+    "name": "RO generate & send",
+    "description": "Generate the RO e-Factura XML of an invoice and send it to ANAF",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "ee1c73d0-bcc4-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "f3508b70-bcc4-11f1-bf89-fb0eed7855a8",
+            "name": "Add sequential code",
+            "provider": "sequence.enumerate",
+            "summary": "Dynamic · E-Factura · 000001",
+            "config": {
+                "name": "E-Factura",
+                "padding": 6,
+                "start": 1
+            }
+        },
+        {
+            "id": "2cd5d320-d875-11f1-b91e-5f8b984fb663",
+            "name": "Generate e-Factura XML",
+            "provider": "gov-ro.generate"
+        },
+        {
+            "id": "13ae7af0-d893-11f1-a9c3-b52662ba5583",
+            "name": "Sign envelope",
+            "provider": "silo.sign"
+        },
+        {
+            "id": "03dfe4e0-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Send e-Factura XML to ANAF",
+            "provider": "gov-ro.send"
+        },
+        {
+            "id": "9380fe70-d86f-11f1-bad9-0977cf1b74dd",
+            "name": "Generate PDF",
+            "provider": "pdf",
+            "summary": "Romanian · A4",
+            "config": {
+                "currency_template": "",
+                "date_format": "%Y-%m-%d",
+                "decimal_mark": "",
+                "duplicate": false,
+                "label": "",
+                "layout": "A4",
+                "locale": "ro",
+                "logo_height": 40,
+                "negative_template": "",
+                "scripting": false,
+                "thousands_separator": "",
+                "time_format": "%H:%M",
+                "watermark": ""
+            }
+        },
+        {
+            "id": "0779d480-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `sent`{.state .sent}",
+            "config": {
+                "state": "sent"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "0b90bc50-bcc5-11f1-bf89-fb0eed7855a8",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

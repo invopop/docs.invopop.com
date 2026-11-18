@@ -1,0 +1,22 @@
+---
+title: "Fetch sent archive"
+openapi: "GET /apps/gov-ro/v1/sent/{silo_entry_id}/archive"
+---
+
+Returns the official ANAF archive of an invoice sent with the **Send e-Factura XML to ANAF** step, as a zip file signed by ANAF. Keep it as proof of what ANAF received and decided.
+
+The archive always belongs to the last time the invoice was sent. If ANAF rejected it and it was sent again, the archive of the rejection is replaced by the new one once ANAF decides.
+
+| Situation | Status | Answer |
+|---|---|---|
+| ANAF accepted the invoice | `200` | Zip holding the invoice and ANAF's signature |
+| ANAF rejected the invoice | `200` | Zip holding the errors ANAF found and ANAF's signature |
+| ANAF is still processing the invoice, also when it was sent again after a rejection | `404` | `anaf archive is not available yet` |
+| The invoice was never sent to ANAF | `404` | `sent entry was not found` |
+| The invoice belongs to another workspace | `404` | `party belongs to a different workspace` |
+
+The zip is named after the upload index ANAF assigned to the invoice, the same value as the invoice's `ro-anaf-upload-index` stamp (for example `5001234567.zip`).
+
+<Note>
+  ANAF usually decides within a few minutes. While it is processing the invoice, try again later.
+</Note>

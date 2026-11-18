@@ -1,0 +1,145 @@
+export const connectImportSupplierInvoicesWorkflow = {
+    "name": "Import supplier invoices",
+    "description": "Import what Connect receives; entries to check stay in processing",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "6f1d2a10-c2f1-11f1-9a00-0242ac120002",
+            "name": "Import document",
+            "provider": "connect.import",
+            "next": [
+                {
+                    "status": "OK",
+                    "code": "low",
+                    "steps": [
+                        {
+                            "id": "6f1d2a11-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `processing`{.state .processing}",
+                            "notes": "Someone checks the entry before it's used",
+                            "config": {
+                                "state": "processing"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "OK",
+                    "code": "high",
+                    "steps": [
+                        {
+                            "id": "6f1d2a12-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `received`{.state .received}",
+                            "config": {
+                                "state": "received"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "OK",
+                    "code": "parsed",
+                    "steps": [
+                        {
+                            "id": "6f1d2a13-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `received`{.state .received}",
+                            "config": {
+                                "state": "received"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "rescue": [
+        {
+            "id": "6f1d2a14-c2f1-11f1-9a00-0242ac120002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+
+```json Import supplier invoices workflow
+{
+    "name": "Import supplier invoices",
+    "description": "Import what Connect receives; entries to check stay in processing",
+    "schema": "bill/invoice",
+    "steps": [
+        {
+            "id": "6f1d2a10-c2f1-11f1-9a00-0242ac120002",
+            "name": "Import document",
+            "provider": "connect.import",
+            "next": [
+                {
+                    "status": "OK",
+                    "code": "low",
+                    "steps": [
+                        {
+                            "id": "6f1d2a11-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `processing`{.state .processing}",
+                            "notes": "Someone checks the entry before it's used",
+                            "config": {
+                                "state": "processing"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "OK",
+                    "code": "high",
+                    "steps": [
+                        {
+                            "id": "6f1d2a12-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `received`{.state .received}",
+                            "config": {
+                                "state": "received"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "status": "OK",
+                    "code": "parsed",
+                    "steps": [
+                        {
+                            "id": "6f1d2a13-c2f1-11f1-9a00-0242ac120002",
+                            "name": "Set state",
+                            "provider": "silo.state",
+                            "summary": "Set state to `received`{.state .received}",
+                            "config": {
+                                "state": "received"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "rescue": [
+        {
+            "id": "6f1d2a14-c2f1-11f1-9a00-0242ac120002",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```
