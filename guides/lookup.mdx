@@ -127,6 +127,36 @@ Nothing is written when the check does not pass, when the register gives no name
 
 The correction never changes the result code or the message. A corrected document still returns `found`, `found-name-mismatch` or its warning code.
 
+## Register of the result
+
+When a register answers, the step publishes the register under the `lookup-source` key in the silo entry meta: `vies`, `aeat`, `dgfip` or `sirene`. A result from the cache names the register that gave the first answer.
+
+In the Console, you find it in the **Meta** tab in the right sidebar of the entry. Through the API, use the [Fetch an Entry endpoint](/api-ref/silo/entries/fetch-an-entry) and read the `meta` property:
+
+<Accordion title="Example Lookup meta">
+```
+data: {
+  ...
+  "meta": [
+    {
+      "id": "...",
+      "created_at": "2026-11-18T09:30:48.829Z",
+      "updated_at": "2026-11-18T09:30:48.829Z",
+      "owner_id": "...",
+      "entry_id": "...",
+      "src": "lookup",
+      "key": "lookup-source",
+      "value": "vies"
+    }
+  ]
+}
+```
+</Accordion>
+
+- **French parties:** the value is `dgfip` for a party with a VAT number, and `sirene` for a party with only a SIREN.
+- **One value per entry:** a workflow that checks the customer and the supplier keeps the register of the last step.
+- A step that is skipped, or whose register does not answer, writes nothing, and the value of an earlier run stays.
+
 ## Spanish tax IDs
 
 Lookup checks Spanish tax IDs (NIF) in the census of AEAT, the Spanish tax agency. AEAT holds every NIF, not only the NIFs registered for intra-EU trade, and gives the registered name.
