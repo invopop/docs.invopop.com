@@ -10,6 +10,9 @@
 <Accordion title="What happens if I run the send workflow twice on the same invoice?">
   Nothing bad. A later run that finds the entry already delivered skips with a `Duplicated Invoice` result instead of resubmitting, so the receiver never gets the document twice.
 </Accordion>
+<Accordion title="Why does the OIOUBL step report a missing customer Contact or Contact ID?">
+  OIOUBL requires a contact with an identifier on the customer of every invoice (its rules F-INV046 and F-INV051), a reference to the person or department the invoice is for. Give the customer an email in `emails`, or a person in `people` with a name and an identity `code`: the person's code is written as the contact identifier when present, and the first email otherwise. A customer with neither is rejected when the invoice is built, before anything is sent.
+</Accordion>
 <Accordion title="Can I generate the OIOUBL file without sending it?">
   Yes. The convert step works on its own: it converts the GOBL invoice to OIOUBL 2.1, validates it against the official schematron, and stores the XML as an attachment on the silo entry under the `oioubl` file key. A workflow that only converts lets you inspect or download the file without submitting anything to the network.
 </Accordion>
