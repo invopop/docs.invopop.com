@@ -76,6 +76,10 @@ X-Webhook-Signature: sha256=<hex_digest>
 - Signing is independent of the authentication type. It proves the body comes from a sender that knows the secret and was not changed in transit.
 - The signature has no timestamp. Use the payload `id` to ignore a delivery you already processed.
 
+<Note>
+Signing is an extra check, not the main protection. The payload carries IDs and never the document itself. If your receiver uses only the IDs and reads the entry or job from the Invopop API with your own token, a forged call cannot inject data. The secret is saved in the step configuration and loaded back into the form when the step is edited. Anyone who can edit the workflow can read it.
+</Note>
+
 Compute the expected value from the raw body and compare it in constant time:
 
 <CodeGroup>
