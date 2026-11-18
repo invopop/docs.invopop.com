@@ -1,0 +1,107 @@
+export const roRegisterWorkflow = {
+    "name": "RO register party",
+    "description": "Register a party with RO e-Factura (ANAF)",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "94ab9ba5-d12c-11f1-9d7a-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "94b535f3-d12c-11f1-a18c-92000739e901",
+            "name": "Register with ANAF",
+            "provider": "gov-ro.register"
+        },
+        {
+            "id": "94b536fa-d12c-11f1-8d76-92000739e901",
+            "name": "Wait ANAF link registration",
+            "provider": "gov-ro.wait.register"
+        },
+        {
+            "id": "94b53785-d12c-11f1-b646-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "94b537f3-d12c-11f1-b146-92000739e901",
+            "name": "Subscribe to periodic execution",
+            "provider": "cron.subscribe",
+            "summary": "Periodic RO e-Factura sync"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "94b53867-d12c-11f1-a89c-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json RO register party workflow
+{
+    "name": "RO register party",
+    "description": "Register a party with RO e-Factura (ANAF)",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "94ab9ba5-d12c-11f1-9d7a-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "94b535f3-d12c-11f1-a18c-92000739e901",
+            "name": "Register with ANAF",
+            "provider": "gov-ro.register"
+        },
+        {
+            "id": "94b536fa-d12c-11f1-8d76-92000739e901",
+            "name": "Wait ANAF link registration",
+            "provider": "gov-ro.wait.register"
+        },
+        {
+            "id": "94b53785-d12c-11f1-b646-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        },
+        {
+            "id": "94b537f3-d12c-11f1-b146-92000739e901",
+            "name": "Subscribe to periodic execution",
+            "provider": "cron.subscribe",
+            "summary": "Periodic RO e-Factura sync"
+        }
+    ],
+    "rescue": [
+        {
+            "id": "94b53867-d12c-11f1-a89c-92000739e901",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

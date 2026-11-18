@@ -1,0 +1,14 @@
+---
+title: "Fetch received archive"
+openapi: "GET /apps/gov-ro/v1/received/{silo_entry_id}/archive"
+---
+
+Returns the official ANAF archive an invoice received through RO e-Factura was imported from, as a zip file signed by ANAF. It holds the invoice exactly as the supplier sent it, before it was converted to GOBL.
+
+| Situation | Status | Answer |
+|---|---|---|
+| The invoice was imported from RO e-Factura | `200` | Zip holding the supplier's invoice and ANAF's signature |
+| The silo entry wasn't imported from RO e-Factura | `404` | `received entry was not found` |
+| The invoice belongs to another workspace | `404` | `party belongs to a different workspace` |
+
+The zip is named after the ID of the ANAF message the invoice arrived in, the same value as the invoice's `download-id` meta (for example `3001234567.zip`).

@@ -1,7 +1,7 @@
 ---
 title: "Lookup"
 description: "Validate tax IDs against official registers and correct parties with the registered data."
-keywords: ['lookup', 'tax id', 'vat', 'vies', 'aeat', 'nif', 'validation', 'tin', 'register', 'eu', 'spain', 'france', 'dgfip', 'sirene', 'italy']
+keywords: ['lookup', 'tax id', 'vat', 'vies', 'aeat', 'nif', 'validation', 'tin', 'register', 'eu', 'spain', 'france', 'dgfip', 'sirene', 'siren', 'italy']
 mode: wide
 ---
 
@@ -34,6 +34,7 @@ import PartyValidate from '/snippets/workflows/lookup/party-validate.mdx';
 	* **Workflow automation:** Validate the customer or supplier of every invoice, or a party document, before you sign, send or register it.
 	* **Correction from the register:** Write the registered name into the document, so invoices carry the legal name of the party.
 	* **Name mismatch detection:** Report when the document's name differs from the registered name, with a result code that a workflow can branch on.
+	* **Register of the result:** Record in the entry meta which register gave the result.
 	* **Shared cache:** Reuse an earlier answer for the same tax ID, up to the age that the step allows, or always ask the register live.
 	* **Result codes:** Every outcome carries a code such as `found`, `not-found` or `not-supported`, so you can handle each case in your workflow.
 
@@ -44,12 +45,13 @@ import PartyValidate from '/snippets/workflows/lookup/party-validate.mdx';
 		|---|---|---|
 		| VIES (EU VAT numbers) | <Badge color="green">Available</Badge> | All EU member states, `EL` for Greece and `XI` for Northern Ireland |
 		| AEAT (Spain) | <Badge color="green">Available</Badge> | Spanish NIFs of companies and natural persons. A natural person needs a name. |
-		| DGFiP (France) | <Badge color="green">Available</Badge> | French VAT numbers, and the SIREN of businesses without a VAT number, with the name and the structured address from Sirene. |
+		| DGFiP (France) | <Badge color="green">Available</Badge> | French VAT numbers. Validity only, with no name or address. |
+		| Sirene (France) | <Badge color="green">Available</Badge> | French SIRENs in `identities`, with the name and the address of the head office. |
 		| HMRC (United Kingdom) | <Badge color="yellow">In development</Badge> | |
 
-		- Only the party's `tax_id` is checked. Entries in `identities` are not checked.
+		- The party's `tax_id` is checked, and a French SIREN in `identities`. Other identities are not checked.
 		- Some member states, such as Germany, do not disclose the trader's name or address through VIES. The tax ID is validated, but there is no name to compare or write. Spanish tax IDs go to AEAT, which gives the registered name.
-		- VIES gives the address as free text. The app writes it only for Italy, where its shape is regular. French addresses come from Sirene. Only structured addresses are written.
+		- The registered address is written into the party as a structured address for Austria, Bulgaria, France (with a SIREN), Italy, the Netherlands, Poland and Portugal. Parties from other countries get no address.
 		- A signed document is validated, but never corrected.
 	</Tab>
 	<Tab title="Actions">
