@@ -41,7 +41,7 @@ ZUGFeRD is fully aligned with the European Norm `EN 16931` and it is worth notin
 
 Germany has no central platform. Businesses send e-invoices to each other directly, by email or through the [Peppol](/apps/peppol) network.
 
-The **Germany send invoice** workflow chooses the channel for each invoice. It sends the XRechnung through Peppol when the customer is on the network and accepts XRechnung there. Otherwise, it sends the XRechnung XML to the customer's email address. For customers that want a PDF, the **ZUGFeRD email invoice** workflow sends a ZUGFeRD PDF by email.
+The **Germany send invoice** workflow chooses the channel for each invoice. It sends the XRechnung through Peppol when the invoice has the customer's Peppol ID, and the customer accepts XRechnung there. Otherwise, it sends the XRechnung XML to the customer's email address. For customers that want a PDF, the **ZUGFeRD email invoice** workflow sends a ZUGFeRD PDF by email.
 
 Register the supplier first, on both channels. See the companion guide: [Supplier registration in Germany](/guides/de-registration). For receiving invoices, see [Receiving invoices in Germany](/guides/de-receiving).
 
@@ -52,6 +52,7 @@ Register the supplier first, on both channels. See the companion guide: [Supplie
 - An invoice with:
   - Supplier details (company name and required identities). Check the [German](https://docs.gobl.org/regimes/de) regime for specifics.
   - Line items with name, price, and applicable taxes.
+  - The customer's Peppol ID, for invoices sent through Peppol. Without it, the invoice goes by email.
   - The customer's email address, for invoices sent by email.
   - For ZUGFeRD, the [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2) addon. The Germany send invoice workflow adds the [`de-xrechnung-v3`](https://docs.gobl.org/addons/de-xrechnung-v3) addon itself.
 
@@ -83,11 +84,10 @@ All of the following steps must be carried out from the [Invopop Console](https:
     The workflow runs these steps:
 
     1. **Modify silo entry** adds the `de-xrechnung-v3` addon to the invoice.
-    2. **Lookup Peppol participant** adds the customer's Peppol ID when its VAT ID is on Peppol. A customer that is not on Peppol continues to the email.
-    3. **Generate UBL document** converts the invoice to XRechnung in the UBL syntax, and validates it.
-    4. **Verify document can be sent** checks that the customer is on Peppol and accepts XRechnung there. If it does, **Send Peppol document** sends the XRechnung through Peppol. If not, **Send email** sends the XML to the customer's email address.
+    2. **Generate UBL document** converts the invoice to XRechnung in the UBL syntax, and validates it.
+    3. **Verify document can be sent** checks the customer's Peppol ID on the invoice: it must be on Peppol and accept XRechnung there. If it does, **Send Peppol document** sends the XRechnung through Peppol. If not, or if the invoice has no Peppol ID for the customer, **Send email** sends the XML to the customer's email address.
 
-    <Info>For a public authority, set its Leitweg-ID as the customer's Peppol ID (scheme `0204`) and as the invoice's ordering code. The lookup finds Peppol IDs by VAT ID only.</Info>
+    <Info>For a public authority, set its Leitweg-ID as the customer's Peppol ID (scheme `0204`) and as the invoice's ordering code.</Info>
 
     To always send by email, use the [XRechnung email invoice workflow](https://console.invopop.com/redirect/workflows/new?template=de-xrechnung) instead.
   </Step>
