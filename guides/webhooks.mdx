@@ -37,10 +37,32 @@ The endpoint that will receive the `POST` request.
 **Event (optional)**<br />
 Specify a custom event name such as `success`, `error`, or `invoice_sent`. This will appear under the `event` field in the JSON payload.
 
-**Authentication Bearer Token (optional)**<br />
-If your endpoint requires authorization, include a token here. The request will include a header: `Authorization: Bearer <your_token>`. Invopop does not recommend whitelisting IPs for security as the static IP is likely to change in the future.
+**Authentication**<br />
+Choose how the request authenticates with your endpoint. Only the selected type is saved.
 
-<Warning>Never expose sensitive credentials directly in the webhook URL. Always use Bearer Tokens or custom headers for secure authentication.</Warning>
+- **None**: requests are sent without credentials.
+- **Bearer token**: a static token. Each request carries the header `Authorization: Bearer <your_token>`.
+- **OAuth 2.0**: Invopop requests a short-lived token from your authorization server with the client credentials grant. Each request carries the header `Authorization: Bearer <access_token>`.
+
+Invopop does not recommend whitelisting IPs for security as the static IP is likely to change in the future.
+
+**OAuth 2.0 client credentials**<br />
+Use OAuth 2.0 when your endpoint or API gateway only accepts short-lived tokens. Fill in these fields:
+
+- **Token URL**: the token endpoint of your authorization server. It must use HTTPS.
+- **Client ID**: the client identifier issued by your authorization server.
+- **Client secret**: the secret for that client. It is not shown again after saving. Leave the field empty to keep the saved secret, or type a new one to replace it.
+- **Scope (optional)**: the scopes to request, separated by spaces. Leave it empty if your server needs none.
+
+How Invopop gets and refreshes the token:
+
+- It calls the token URL with `grant_type=client_credentials`. The client ID and secret go in the HTTP Basic header first. If the server answers `400` or `401`, Invopop tries once with the credentials in the form body, then keeps the style that worked.
+- It reuses the token until 30 seconds before `expires_in`. For tokens that last less than a minute, it refreshes at half the lifetime.
+- If your endpoint answers `401`, Invopop drops the token and the attempt fails. The next [retry](#retries) requests a new token. There is no retry inside the same attempt.
+
+<Note>Each Invopop server keeps its own token. Several valid tokens can exist at the same time for one webhook configuration. Your authorization server must allow several active tokens per client.</Note>
+
+<Warning>Never expose sensitive credentials directly in the webhook URL. Always use a bearer token, OAuth 2.0 or custom headers for secure authentication.</Warning>
 
 **Custom Headers (optional)**<br />
 Add one or more HTTP headers. This is useful for services that require API keys, content types, or verification signatures.
@@ -76,7 +98,7 @@ These are the faults of the job identified by `transform_job_id`, and together w
 <Info> The webhook will expect a `200` or `204` response code. Any other response will be treated as an error and will be automatically retried after a delay. </Info>
 
 <Prompt description="Have your agent build a webhook receiver for job results." icon="webhook" actions={["copy", "cursor"]}>
-Read https://docs.invopop.com/guides/webhooks.md and https://docs.invopop.com/llms.md. Implement an HTTPS endpoint in this project that receives Invopop's Send Webhook POST requests. Verify the bearer token or custom header I configure in the workflow step. Parse the JSON body fields id, event, transform_job_id, silo_entry_id, key, args and faults, and treat deliveries as idempotent using id and key. Respond 200 quickly and process asynchronously. On success events fetch the silo entry from the Invopop API and store its state and attachment URLs. On error events store the faults from the payload and fetch the job for the per-step trace. Return a non-200 status only when Invopop should retry, and document the retry schedule from the guide in a code comment.
+Read https://docs.invopop.com/guides/webhooks.md and https://docs.invopop.com/llms.md. Implement an HTTPS endpoint in this project that receives Invopop's Send Webhook POST requests. Verify the bearer token, the OAuth 2.0 bearer token or the custom header I configure in the workflow step. Parse the JSON body fields id, event, transform_job_id, silo_entry_id, key, args and faults, and treat deliveries as idempotent using id and key. Respond 200 quickly and process asynchronously. On success events fetch the silo entry from the Invopop API and store its state and attachment URLs. On error events store the faults from the payload and fetch the job for the per-step trace. Return a non-200 status only when Invopop should retry, and document the retry schedule from the guide in a code comment.
 </Prompt>
 
 ## Retries
@@ -109,7 +131,7 @@ If you wish to change this behavior, include a `retry_in` field in your response
         Yes. You can add multiple **Send Webhook** actions in the same workflow, each targeting a different endpoint or event.
     </Accordion>
     <Accordion title="What security options are available?">
-        You can authenticate using Bearer Tokens or custom headers (e.g. `X-Signature`, `X-API-Key`). It’s recommended to use HTTPS and verify the token or header server-side.
+        You can authenticate using a static bearer token, OAuth 2.0 client credentials or custom headers (e.g. `X-Signature`, `X-API-Key`). See [Setup and configuration](#setup-and-configuration) for the OAuth 2.0 fields. It’s recommended to use HTTPS and verify the token or header server-side.
     </Accordion>
     <Accordion title="What content type do webhooks use?">
         All webhook requests are sent with `Content-Type: application/json`.
