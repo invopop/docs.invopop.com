@@ -22,12 +22,12 @@ Each **Validate Tax IDs** step checks one party:
 - In an `invoice` workflow, the step checks the customer or the supplier, as configured.
 - In a `party` workflow, the step checks the party document itself.
 
-The step checks the party's `tax_id`. Entries in `identities` are not checked. A tax ID that no register covers is skipped and costs nothing.
+The step checks the party's `tax_id`, and a French SIREN in `identities`. Other identities are not checked. A tax ID that no register covers is skipped and costs nothing.
 
 The step asks the register that issues the tax ID:
 
 - **Spanish tax IDs** go to the AEAT census. See [Spanish tax IDs](#spanish-tax-ids).
-- **French tax IDs** go to the DGFiP. See [French tax IDs](#french-tax-ids).
+- **French VAT numbers** go to the DGFiP, and **French SIRENs** go to Sirene. See [French tax IDs](#french-tax-ids).
 - **Other EU VAT numbers** go to VIES.
 
 ## Set up the step
@@ -80,9 +80,8 @@ The step returns `OK`:
 - **`found-name-mismatch`**: the register confirms the tax ID, but the name in the document is different.
 - **`found-inactive`**: the register confirms the tax ID, but holds the party as inactive.
 - **`found-dissolved`**: the register confirms the tax ID, but holds the party as dissolved.
-- **`found-not-vat-registered`**: the tax ID belongs to an active business that is not registered for VAT, such as a French micro-entrepreneur under the franchise en base. The business exists, but has no VAT number.
 
-`found-inactive`, `found-dissolved` and `found-not-vat-registered` are warnings: the workflow continues, and the correction still runs.
+`found-inactive` and `found-dissolved` are warnings: the workflow continues, and the correction still runs.
 
 ### The tax ID is not valid
 
@@ -90,13 +89,13 @@ The step returns `KO`:
 
 - **`not-found`**: the register does not hold the tax ID. Check the tax ID with your customer. To reject these invoices automatically, see [Stop on an unregistered customer](#stop-on-an-unregistered-customer).
 - **`revoked`**: the register identifies the party, but the tax authority revoked the tax ID, so it has no legal effect. Ask your customer for a valid tax ID.
-- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again. The step also returns this code when the party lacks data that the register needs, for example `AEAT needs the name of a natural person to check a DNI or NIE`. Add the name to the party and run the job again.
+- **`input`**: the register rejects the tax ID as badly formed, for example a code with the wrong length. Correct the tax ID in the document and run the job again. The step also returns this code when the party lacks data that the register needs, for example `AEAT needs the name of a natural person to check a DNI or NIE`. Add the name to the party and run the job again. A French party whose SIREN does not match its VAT number also returns `input`. Correct the SIREN or the VAT number.
 
 ### The step is skipped
 
 The step returns `SKIP`, and the workflow continues:
 
-- **`no-identifiers`**: the party has no tax ID, as is common for a consumer. To handle these documents differently, add a condition with the status **Any** on this code.
+- **`no-identifiers`**: the party has no tax ID or SIREN, as is common for a consumer. To handle these documents differently, add a condition with the status **Any** on this code.
 - **`missing-party`**: the invoice has no party to check, such as a simplified invoice without a customer.
 - **`not-supported`**: no register covers the tax ID.
 
@@ -138,11 +137,12 @@ Lookup checks Spanish tax IDs (NIF) in the census of AEAT, the Spanish tax agenc
 
 ## French tax IDs
 
-Lookup checks French VAT numbers with the DGFiP, the French tax administration, which publishes every active French VAT number.
+- **VAT numbers** go to the DGFiP, the French tax administration, which publishes every active French VAT number. The DGFiP gives no name and no address, so nothing is written. A number that the DGFiP does not hold returns `not-found`.
+- **Businesses without a VAT number**, such as micro-entrepreneurs under the franchise en base, leave the tax ID empty and add their SIREN to `identities`, with the type `SIREN`.
+- **SIRENs** go to Sirene, the French business register, which gives the registered name and the address of the head office. A sole trader gets the person's name. A closed company returns `found-dissolved`, and a SIREN that Sirene does not list returns `not-found`.
+- **A VAT number and a SIREN** are both checked. The SIREN must be the last 9 digits of the VAT number, or the step returns `input`.
 
-- **Businesses without a VAT number**, such as micro-entrepreneurs under the franchise en base, use their SIREN as tax ID. When the SIREN belongs to an active business in Sirene, the French business register, the step returns `found-not-vat-registered`.
-- **Name and address:** the registered name and the structured address of the head office come from Sirene. A sole trader gets the person's name. With **Correct the party** on, both are written into the document.
-- **Closed companies** return `found-inactive` while their VAT number is active, and `not-found` otherwise.
+To get the name and the address of a French party, add its SIREN to `identities`.
 
 ## Workflow examples
 
