@@ -22,18 +22,24 @@
     Each invoice or lifecycle status sent through France PA costs **5 pops**: 1 pop for the conversion to UBL/CII, 2 pops to send it over Peppol, 1 pop to forward it to the PPF, and 1 pop for the silo entry. See [Pops & pricing](/get-started/pricing) for how pops work.
   </Accordion>
 
-  <Accordion title="What does the record document step check against the Annuaire?">
-    Before an invoice is recorded, the record step (**Record outgoing document for e-invoicing** when sending, **Record incoming document for e-invoicing** when receiving) looks up both the supplier and the customer SIREN in the Annuaire. What each party must satisfy depends on the workflow's role:
+  <Accordion title="What does the record document step check before recording an invoice?">
+    Before an invoice is recorded, the record step (**Record outgoing document for e-invoicing** when sending, **Record incoming document for e-invoicing** when receiving) validates both parties. Which checks apply depends on the party's role in the workflow.
 
-    | Role | Annuaire state | Outcome |
+    Your party is the one the workflow acts for: the supplier when sending, the customer when receiving, swapped on a self-billed invoice. It is not looked up in the Annuaire. It must be registered with Invopop through the France app and approved, otherwise the invoice is **Rejected**.
+
+    The other party is checked against the Annuaire:
+
+    | Workflow | Annuaire state | Outcome |
     |---|---|---|
-    | Both | The SIREN has no effective entry | **Rejected** |
-    | Receiving | The SIREN has at least one effective entry | **Accepted** |
+    | Receiving | The SIREN is unknown to the Annuaire | **Rejected** |
+    | Receiving | The SIREN has a record in the Annuaire | **Accepted** |
+    | Sending | The SIREN has no entry of its own, and the Annuaire doesn't know the SIREN | **Rejected** |
+    | Sending | The SIREN has no entry of its own, but the Annuaire knows the SIREN | **Accepted** |
     | Sending | The SIREN's only entry is the PPF's default line (matricule `9998`) | **Accepted** |
     | Sending | The party's `0225` peppol endpoint matches one of the SIREN's entries | **Accepted** |
     | Sending | The party's `0225` peppol endpoint matches none of the SIREN's entries | **Rejected** |
 
-    Sandbox invoices skip the Annuaire check entirely.
+    Sandbox invoices skip the Annuaire check on the other party.
   </Accordion>
 
   <Accordion title="What should I do if the customer isn't registered in the Annuaire?">
