@@ -57,6 +57,25 @@ For invoices, the **Forward document to PPF** step stays queued until the PPF ha
 Both branches of the template, Peppol delivery and *déposée – non transmise*, end in the same **Set state** step, so a `completed` entry doesn't tell you whether the invoice was delivered to the buyer. To tell them apart in your system, replace that final step with a distinct state at the end of each branch (for example `sent` after **Send Peppol document** and `registered` after the not-transmitted forward), or add a [Send Webhook](/guides/webhooks) step to the `false` branch. The `NON_TRANSMISE` reason isn't exposed as an API field, and [states](/console/doc-states) are labels only: they have no impact on delivery or government validation.
 </Note>
 
+#### When a send fails
+
+What to do next depends on where the send stopped.
+
+| Where the send stops | What to do |
+|---|---|
+| **Record outgoing document for e-invoicing** step. For example, the buyer's SIREN or Peppol address isn't in the Annuaire, or your party isn't registered. | Nothing is recorded or sent, and there is no <Badge color="gray">213</Badge>. The job's [faults](/api-ref/transform/jobs/fetch-a-job#response-faults) carry the reasons. Fix the data on the same entry and run the workflow again. The invoice number stays free. |
+| **Forward document to PPF** step. The PPF rejects the F1 copy or the `200` status. | The invoice stays recorded. Fix the data and run the workflow again on the **same** entry. The record step clears the rejection, and the forward step sends again. A new entry with the same number is refused with "already recorded … re-record from that entry". |
+| After delivery. The buyer's platform returns a <Badge color="gray">213</Badge> *Rejetée*, or the buyer a <Badge color="red">210</Badge> *Refusée*. | The status arrives through your [receive workflow](#receiving). Reverse the invoice in your accounts with an internal credit note (*avoir interne*). It is never sent and creates no F1. Then issue a new invoice with a new number. |
+
+A PPF rejection of the invoice number itself is an exception. Examples are a duplicate number or a number that is too long. A re-run sends the same number again, so the PPF rejects it again. Contact support before you issue a new invoice.
+
+Once the PPF has accepted the invoice, a re-run is refused with "cannot re-record".
+
+**Fixing a signed entry:** remove its signatures before you correct it.
+
+* **Console:** open the entry, click **Edit**, remove the signatures, correct the document, then **Build** and **Save**. Then run the workflow. See [Editing documents](/console/doc-edit).
+* **API:** [update the entry](/api-ref/silo/entries/update-an-entry) with a `PATCH` that removes `sigs` and `head.stamps`. Then send the corrected document with `sign: true`. Then create a new job with the same `silo_entry_id`.
+
 ### Receiving
 
 The receive workflow detects the inbound format, imports it into a GOBL document, and records it against your registered party. The same workflow handles UBL, CII, and Factur-X — the format-detection branch routes each payload to the correct importer.
