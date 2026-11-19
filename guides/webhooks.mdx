@@ -64,6 +64,69 @@ How Invopop gets and refreshes the token:
 
 <Warning>Never expose sensitive credentials directly in the webhook URL. Always use a bearer token, OAuth 2.0 or custom headers for secure authentication.</Warning>
 
+**Request signing**<br />
+Set an **HMAC secret (optional)** to sign every request. Use a long random string and store the same value on your server. Invopop then computes an HMAC-SHA256 of the request body with this secret and adds this header:
+
+```http
+X-Webhook-Signature: sha256=<hex_digest>
+```
+
+- The digest is lowercase hex.
+- It covers the raw body bytes exactly as sent. Verify it before you parse the JSON. Re-serialized JSON can differ from the original bytes and fail the check.
+- Signing is independent of the authentication type. It proves the body comes from a sender that knows the secret and was not changed in transit.
+- The signature has no timestamp. Use the payload `id` to ignore a delivery you already processed.
+
+<Note>
+Signing is an extra check, not the main protection. The payload carries IDs and never the document itself. If your receiver uses only the IDs and reads the entry or job from the Invopop API with your own token, a forged call cannot inject data. The secret is saved in the step configuration and loaded back into the form when the step is edited. Anyone who can edit the workflow can read it.
+</Note>
+
+Compute the expected value from the raw body and compare it in constant time:
+
+<CodeGroup>
+```javascript Node.js (Express)
+import crypto from "node:crypto";
+import express from "express";
+
+const app = express();
+const secret = process.env.INVOPOP_WEBHOOK_SECRET;
+
+// express.raw keeps the body as a Buffer, byte for byte.
+app.post("/webhooks/invopop", express.raw({ type: "application/json" }), (req, res) => {
+  const expected = "sha256=" + crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+  const a = Buffer.from(expected);
+  const b = Buffer.from(req.get("X-Webhook-Signature") ?? "");
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.sendStatus(401);
+  }
+  const event = JSON.parse(req.body);
+  // Queue the event for processing, then answer quickly.
+  res.sendStatus(200);
+});
+```
+
+```python Python (Flask)
+import hashlib
+import hmac
+import os
+
+from flask import Flask, abort, request
+
+app = Flask(__name__)
+SECRET = os.environ["INVOPOP_WEBHOOK_SECRET"].encode()
+
+@app.post("/webhooks/invopop")
+def invopop_webhook():
+    body = request.get_data()  # raw bytes, before any parsing
+    expected = "sha256=" + hmac.new(SECRET, body, hashlib.sha256).hexdigest()
+    received = request.headers.get("X-Webhook-Signature", "")
+    if not hmac.compare_digest(expected, received):
+        abort(401)
+    event = request.get_json()
+    # Queue the event for processing, then answer quickly.
+    return "", 200
+```
+</CodeGroup>
+
 **Custom Headers (optional)**<br />
 Add one or more HTTP headers. This is useful for services that require API keys, content types, or verification signatures.
 
@@ -98,7 +161,7 @@ These are the faults of the job identified by `transform_job_id`, and together w
 <Info> The webhook will expect a `200` or `204` response code. Any other response will be treated as an error and will be automatically retried after a delay. </Info>
 
 <Prompt description="Have your agent build a webhook receiver for job results." icon="webhook" actions={["copy", "cursor"]}>
-Read https://docs.invopop.com/guides/webhooks.md and https://docs.invopop.com/llms.md. Implement an HTTPS endpoint in this project that receives Invopop's Send Webhook POST requests. Verify the bearer token, the OAuth 2.0 bearer token or the custom header I configure in the workflow step. Parse the JSON body fields id, event, transform_job_id, silo_entry_id, key, args and faults, and treat deliveries as idempotent using id and key. Respond 200 quickly and process asynchronously. On success events fetch the silo entry from the Invopop API and store its state and attachment URLs. On error events store the faults from the payload and fetch the job for the per-step trace. Return a non-200 status only when Invopop should retry, and document the retry schedule from the guide in a code comment.
+Read https://docs.invopop.com/guides/webhooks.md and https://docs.invopop.com/llms.md. Implement an HTTPS endpoint in this project that receives Invopop's Send Webhook POST requests. Verify the bearer token, the OAuth 2.0 bearer token or the custom header I configure in the workflow step. If I set an HMAC secret, read it from the INVOPOP_WEBHOOK_SECRET env var and verify the X-Webhook-Signature header against the raw request body before parsing: it is sha256= followed by the lowercase hex HMAC-SHA256 of the body, and the comparison must run in constant time. Parse the JSON body fields id, event, transform_job_id, silo_entry_id, key, args and faults, and treat deliveries as idempotent using id and key. Respond 200 quickly and process asynchronously. On success events fetch the silo entry from the Invopop API and store its state and attachment URLs. On error events store the faults from the payload and fetch the job for the per-step trace. Return a non-200 status only when Invopop should retry, and document the retry schedule from the guide in a code comment.
 </Prompt>
 
 ## Retries
@@ -131,7 +194,7 @@ If you wish to change this behavior, include a `retry_in` field in your response
         Yes. You can add multiple **Send Webhook** actions in the same workflow, each targeting a different endpoint or event.
     </Accordion>
     <Accordion title="What security options are available?">
-        You can authenticate using a static bearer token, OAuth 2.0 client credentials or custom headers (e.g. `X-Signature`, `X-API-Key`). See [Setup and configuration](#setup-and-configuration) for the OAuth 2.0 fields. It’s recommended to use HTTPS and verify the token or header server-side.
+        You can authenticate using a static bearer token, OAuth 2.0 client credentials or custom headers such as `X-API-Key`. To prove the body was not changed, also set an HMAC secret. Each request then carries an `X-Webhook-Signature` header with the HMAC-SHA256 of the body. See [Setup and configuration](#setup-and-configuration) for the OAuth 2.0 fields and a signature check in Node.js and Python. It’s recommended to use HTTPS and verify the token, header or signature server-side.
     </Accordion>
     <Accordion title="What content type do webhooks use?">
         All webhook requests are sent with `Content-Type: application/json`.
