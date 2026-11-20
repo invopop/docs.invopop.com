@@ -186,9 +186,9 @@ These must be in place in Chargebee:
     {"code": "991-12345678-06"}
     ```
 
-    Use the Leitweg-ID that the authority gives you for its invoices. It can differ from the authority's Peppol ID, so ask the authority for both. Do not enter the Leitweg-ID as the PO number of a subscription. A PO number can change at renewal, and the Leitweg-ID must stay the same on every invoice.
+    Use the Leitweg-ID that the authority gives you. It can differ from the authority's Peppol ID. Do not use the PO number of a subscription for it, because a PO number can change at renewal.
 
-    The **Map PO to ordering code** step fills the ordering code with the PO number when the invoice has none. XRechnung requires a buyer reference on every invoice (BR-DE-15), so B2B invoices get their PO number. The step skips customers with a Peppol inbox of scheme `0204`: an invoice to such a customer without `cf_gobl_ordering` fails with BR-DE-15. The step keeps a buyer reference that is already set, and the PO number stays on the invoice as the purchase order reference.
+    When the invoice has no buyer reference, the **Map PO to ordering code** step uses the PO number, because XRechnung requires one (BR-DE-15). The step skips customers with a `0204` Peppol inbox, so an invoice to such a customer without `cf_gobl_ordering` fails.
 
     Set `cf_gobl_ordering` also for a public authority that receives its invoices by email. It has no `0204` inbox, so without `cf_gobl_ordering` the step uses the PO number. Credit notes take the PO number from the subscription, not from the original invoice. A B2B credit note whose subscription has no PO number needs `cf_gobl_ordering` on the customer, or it fails BR-DE-15.
 
@@ -198,7 +198,7 @@ These must be in place in Chargebee:
 
     | Field | Metadata key | Custom field key | Example |
     | ----- | ------------ | ---------------- | ------- |
-    | Peppol ID (Peppol inbox) | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0204:991-12345678-06` |
+    | Leitweg-ID (Peppol inbox) | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0204:991-12345678-06` |
     | E-invoice email | `gobl-customer-inbox-email` | `cf_gobl_customer_inbox_email` | `einvoice@behoerde.de` |
     | Leitweg-ID (ordering code) | `gobl-ordering` | `cf_gobl_ordering` | `{"code": "991-12345678-06"}` |
 
