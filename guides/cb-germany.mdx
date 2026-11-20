@@ -180,15 +180,20 @@ These must be in place in Chargebee:
 
     **3. Leitweg-ID as the buyer reference (ordering code)**
 
-    Some German public sector customers require a **Leitweg-ID** to be present on the invoice as the buyer reference. This is typically entered as the PO number on the subscription in Chargebee. However, XRechnung expects this value in the buyer reference field, which Invopop maps to the ordering code — not the purchase order code. The **Map PO to ordering code** step handles this automatically, moving the value from the PO field into the correct place.
+    German public sector customers require their **Leitweg-ID** as the buyer reference on the invoice. Invopop maps the buyer reference to the ordering code. The Leitweg-ID identifies the customer, so set it on the customer in Chargebee, not as the PO number of a subscription. A PO number can change at renewal, and the Leitweg-ID must stay the same on every invoice.
 
-    If you prefer not to use the PO number for this, or if you need to set it independently, you can use the `cf_gobl_ordering` custom field instead, providing the value as JSON:
+    The **Set buyer reference** step fills the ordering code when the invoice has none:
+
+    1. With the Leitweg-ID of the customer's Peppol inbox, scheme `0204`. See the customer inbox fields below.
+    2. Otherwise, with the PO number. XRechnung requires a buyer reference on every invoice, so a B2B invoice gets its PO number.
+
+    The step keeps a buyer reference that is already set, and the PO number stays on the invoice as the purchase order reference. To set the buyer reference yourself, use the `cf_gobl_ordering` custom field on the customer:
 
     ```json
     {"code": "991-12345678-06"}
     ```
 
-    Credit notes don't take the PO number from the original invoice. Keep the Leitweg-ID as the PO number on the subscription, or in `cf_gobl_ordering` on the customer, so credit notes carry it too. A Leitweg-ID set only on the invoice leaves the credit note without a buyer reference, and it fails BR-DE-15.
+    Use `cf_gobl_ordering` for a public authority that receives its invoices by email, because it has no Peppol inbox. Credit notes take the PO number from the subscription, not from the original invoice. A B2B credit note whose subscription has no PO number needs `cf_gobl_ordering` on the customer, or it fails BR-DE-15.
 
     **4. Customer inbox (delivery routing)**
 
@@ -198,19 +203,16 @@ These must be in place in Chargebee:
     | ----- | ------------ | ---------------- | ------- |
     | Leitweg-ID (Peppol inbox) | `gobl-customer-inbox-peppol` | `cf_gobl_customer_inbox_peppol` | `0204:991-12345678-06` |
     | E-invoice email | `gobl-customer-inbox-email` | `cf_gobl_customer_inbox_email` | `einvoice@behoerde.de` |
-    | Leitweg-ID (ordering code) | `gobl-ordering` | `cf_gobl_ordering` | `{"code": "991-12345678-06"}` |
+    | Buyer reference (ordering code), optional | `gobl-ordering` | `cf_gobl_ordering` | `{"code": "991-12345678-06"}` |
 
     <Tip>
-      Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate the inbox and ordering code fields across all your public sector customers before going live.
+      Use Chargebee's [bulk operations](https://www.chargebee.com/docs/2.0/bulk-operations.html) to back-populate the inbox fields across all your public sector customers before going live.
     </Tip>
 
     <Note>
       The **Add bank details** step includes placeholder `bic` and `iban` fields that you must fill in with your own banking details. Note that Chargebee typically includes bank details directly in their PDF template, meaning this information is not available via the API for us to fetch automatically. As a result, bank details need to be added manually to the workflow step.
     </Note>
 
-    <Note>
-      The **Map PO to ordering code** step maps the first purchase order code from Chargebee into the `ordering.code` field that XRechnung requires as a buyer reference. This is particularly relevant when invoicing public entities (B2G), where a Leitweg-ID or PO number is mandatory. If the invoice has no purchase order code, the step is safely skipped. If you are not invoicing public entities and do not use ordering references, you can remove this step.
-    </Note>
     <Tabs>
       <Tab title="Workflow">
         <WorkflowDiagram workflow={chargebeeCbXrechnungWorkflow} />
