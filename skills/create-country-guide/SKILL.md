@@ -17,7 +17,7 @@ Flat files in `guides/`, slug `<iso2>-<regime>[-<task>].mdx`:
 - Family hub: when a family has ≥3 pages, the bare slug becomes an overview page (`fr-pa.mdx`, sidebarTitle "Overview") with one horizontal `<Card>` per child guide.
 - Peppol-only countries get a single page: `<iso2>-peppol.mdx` (`be-peppol.mdx`, `no-peppol.mdx`).
 
-Don't copy the outliers `ar-arca-suppliers.mdx` (plural) or `de-ubl.mdx` (format name as regime).
+Don't copy the outlier `ar-arca-suppliers.mdx` (plural).
 
 ## Frontmatter
 

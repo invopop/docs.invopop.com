@@ -1,0 +1,127 @@
+export const deRegisterWorkflow = {
+    "name": "Germany register supplier",
+    "description": "Approve a German supplier and register it with Peppol",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "1ea98e81-e2ab-11f1-b473-92000948fe40",
+            "name": "Register supplier for approval",
+            "provider": "gov-de.register.approval",
+            "notes": "Adds the Peppol inbox and publishes the onboarding link"
+        },
+        {
+            "id": "1ea98f1b-e2ab-11f1-81ed-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "1ea98f66-e2ab-11f1-8ab0-92000948fe40",
+            "name": "Wait for supplier approval",
+            "provider": "gov-de.wait.approval",
+            "notes": "Pauses until the supplier completes the onboarding and it is approved"
+        },
+        {
+            "id": "1ea98fa3-e2ab-11f1-a171-92000948fe40",
+            "name": "Register party on Peppol",
+            "provider": "peppol.register",
+            "summary": "Send and receive · documents of the party's country · in Peppol Directory",
+            "config": {
+                "disable": false,
+                "mode": "automatic",
+                "sending_only": false,
+                "doc_groups": [],
+                "directory": true
+            },
+            "notes": "Publishes the party, enabling Peppol routing for sending and receiving"
+        },
+        {
+            "id": "1ea98fe6-e2ab-11f1-9c5f-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "1ea0faee-e2ab-11f1-a240-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+};
+
+```json Germany register supplier workflow
+{
+    "name": "Germany register supplier",
+    "description": "Approve a German supplier and register it with Peppol",
+    "schema": "org/party",
+    "steps": [
+        {
+            "id": "1ea98e81-e2ab-11f1-b473-92000948fe40",
+            "name": "Register supplier for approval",
+            "provider": "gov-de.register.approval",
+            "notes": "Adds the Peppol inbox and publishes the onboarding link"
+        },
+        {
+            "id": "1ea98f1b-e2ab-11f1-81ed-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `processing`{.state .processing}",
+            "config": {
+                "state": "processing"
+            }
+        },
+        {
+            "id": "1ea98f66-e2ab-11f1-8ab0-92000948fe40",
+            "name": "Wait for supplier approval",
+            "provider": "gov-de.wait.approval",
+            "notes": "Pauses until the supplier completes the onboarding and it is approved"
+        },
+        {
+            "id": "1ea98fa3-e2ab-11f1-a171-92000948fe40",
+            "name": "Register party on Peppol",
+            "provider": "peppol.register",
+            "summary": "Send and receive · documents of the party's country · in Peppol Directory",
+            "config": {
+                "disable": false,
+                "mode": "automatic",
+                "sending_only": false,
+                "doc_groups": [],
+                "directory": true
+            },
+            "notes": "Publishes the party, enabling Peppol routing for sending and receiving"
+        },
+        {
+            "id": "1ea98fe6-e2ab-11f1-9c5f-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `registered`{.state .registered}",
+            "config": {
+                "state": "registered"
+            }
+        }
+    ],
+    "rescue": [
+        {
+            "id": "1ea0faee-e2ab-11f1-a240-92000948fe40",
+            "name": "Set state",
+            "provider": "silo.state",
+            "summary": "Set state to `error`{.state .error}",
+            "config": {
+                "state": "error"
+            }
+        }
+    ]
+}
+```

@@ -1,6 +1,6 @@
 export const deXrechnungWorkflow = {
-    "name": "XRechnung issue invoice",
-    "description": "Issue a B2G invoice in XRechnung format",
+    "name": "XRechnung email invoice",
+    "description": "Issue an XRechnung invoice and send it by email",
     "schema": "bill/invoice",
     "steps": [
         {
@@ -15,17 +15,17 @@ export const deXrechnungWorkflow = {
         {
             "id": "58fb4ce0-6626-11f0-b9ab-1bbe1fa4398c",
             "name": "Sign envelope",
-            "provider": "silo.close"
+            "provider": "silo.sign"
         },
         {
             "id": "66c0eb20-8efb-11f0-825d-d9d5f5eb9a66",
-            "name": "Generate UBL document",
-            "provider": "ubl.generate",
-            "summary": "XRechnung UBL v2",
+            "name": "Export document",
+            "provider": "silo.export",
+            "summary": "Export to UBL XRechnung 3",
             "config": {
-                "doc_type": "xrechnung-invoice-v2",
-                "private": false,
-                "validate_ubl": true
+                "formats": [
+                    "ubl+de-xrechnung-v3"
+                ]
             }
         },
         {
@@ -39,6 +39,17 @@ export const deXrechnungWorkflow = {
                 "locale": "en",
                 "logo_height": 40,
                 "scripting": false
+            }
+        },
+        {
+            "id": "40c704ed-e2b9-11f1-8e4f-92000948fe40",
+            "name": "Send email",
+            "provider": "email.send",
+            "summary": "To invoice customers",
+            "config": {
+                "add_invoice_customer": true,
+                "attach": "xml",
+                "connection_id": "default"
             }
         },
         {
@@ -64,10 +75,10 @@ export const deXrechnungWorkflow = {
     ]
 };
 
-```json XRechnung issue invoice workflow
+```json XRechnung email invoice workflow
 {
-    "name": "XRechnung issue invoice",
-    "description": "Issue a B2G invoice in XRechnung format",
+    "name": "XRechnung email invoice",
+    "description": "Issue an XRechnung invoice and send it by email",
     "schema": "bill/invoice",
     "steps": [
         {
@@ -82,17 +93,17 @@ export const deXrechnungWorkflow = {
         {
             "id": "58fb4ce0-6626-11f0-b9ab-1bbe1fa4398c",
             "name": "Sign envelope",
-            "provider": "silo.close"
+            "provider": "silo.sign"
         },
         {
             "id": "66c0eb20-8efb-11f0-825d-d9d5f5eb9a66",
-            "name": "Generate UBL document",
-            "provider": "ubl.generate",
-            "summary": "XRechnung UBL v2",
+            "name": "Export document",
+            "provider": "silo.export",
+            "summary": "Export to UBL XRechnung 3",
             "config": {
-                "doc_type": "xrechnung-invoice-v2",
-                "private": false,
-                "validate_ubl": true
+                "formats": [
+                    "ubl+de-xrechnung-v3"
+                ]
             }
         },
         {
@@ -106,6 +117,17 @@ export const deXrechnungWorkflow = {
                 "locale": "en",
                 "logo_height": 40,
                 "scripting": false
+            }
+        },
+        {
+            "id": "40c704ed-e2b9-11f1-8e4f-92000948fe40",
+            "name": "Send email",
+            "provider": "email.send",
+            "summary": "To invoice customers",
+            "config": {
+                "add_invoice_customer": true,
+                "attach": "xml",
+                "connection_id": "default"
             }
         },
         {
