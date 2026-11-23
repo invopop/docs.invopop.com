@@ -170,7 +170,7 @@ Set the identity on the [`org.Party`](https://docs.gobl.org/draft-0/org/party) d
 
 ## Errors
 
-Each step of the registration and sending workflows reports a status and a message on the job. The job's `faults` list, returned by [Fetch a job](/api-ref/transform/jobs/fetch-a-job), carries the same messages. They are listed below exactly as the Saudi Arabia app returns them, so you can match on them. Values in angle brackets vary per document.
+Each step of the registration workflow reports a status and a message on the job. The job's `faults` list, returned by [Fetch a job](/api-ref/transform/jobs/fetch-a-job), carries the same messages. They are listed below exactly as the Saudi Arabia app returns them, so you can match on them. Values in angle brackets vary per document. Errors from sending invoices are in [clearance and reporting](/guides/sa-zatca-clearance-reporting#errors).
 
 ### Step results
 
@@ -248,24 +248,6 @@ gives `King Fahd Road, 1234, Riyadh Province, SA`, 41 characters. When the resul
 ZATCA describes this CSR field as the location of the branch or EGS unit, preferably in the short address format of the Saudi National Address. Source: [E-invoicing Detailed Technical Guidelines](https://zatca.gov.sa/en/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing-Detailed-Technical-Guideline.pdf), page 28, CSR inputs table.
 
 The limit is ZATCA's. ZATCA rejects a longer value after the OTP is spent, so Invopop checks it first. Shortening the address changes the registration only. Invoices keep the full address from the invoice document.
-
-### Sending errors
-
-**Send invoice to ZATCA**, described in [clearance and reporting](/guides/sa-zatca-clearance-reporting), returns these messages.
-
-| Message | Status | Fix |
-|---|---|---|
-| `invoice already accepted by ZATCA (zatca-qr stamp present); not sending it again` | `SKIP` | Nothing. ZATCA already accepted this invoice. |
-| `invoice must be signed before it can be sent to ZATCA` | `KO` | Sign the entry before the send step. |
-| `invoice must carry the sa-zatca-v1 addon to be sent to ZATCA` | `KO` | Add `sa-zatca-v1` to the invoice's `$addons`. |
-| `invoice reporter VAT <VAT> has no valid identity (CRN/MOM/MLS/700/SAG/OTH); cannot route to a registration` | `KO` | Give the supplier the identity it was registered with. On a self-billed invoice, the customer is the reporter. |
-| `party with VAT <VAT> and identity <type>:<code> is not registered for this owner; complete onboarding before sending invoices` | `KO` | Register a party with this VAT number and identity in the workspace, or fix the invoice to match an existing registration. |
-| `party has not completed onboarding process` | `KO` | Wait until the registration workflow completes and the party entry is `registered`. |
-| `cannot build the ZATCA QR code (<reason>)` | `KO` | The reason names the problem, for example a QR code over ZATCA's length limit and its largest field. Shorten that field on the invoice. |
-| `ZATCA schematron validation failed:` followed by one line per failed rule | `KO` | Invopop checks the final XML against ZATCA's schematron before sending. Fix the invoice for each listed rule. |
-| `ZATCA rejected the invoice (validation: <ZATCA status>: <ZATCA message>)` | `KO` | ZATCA returned `NOT_CLEARED` or `NOT_REPORTED`. The message is the first error ZATCA listed. |
-
-ZATCA's own messages come from its business rules, so this page can't list them. They reach you through the last two messages above. GOBL catches most of these problems when it builds the invoice, with the `sa-zatca-v1` addon. Its rules and their BR-KSA references are in the [addon's validation rules](https://docs.gobl.org/addons/sa-zatca-v1#validation-rules).
 
 ## FAQ
 
