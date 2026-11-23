@@ -21,7 +21,9 @@ In this guide you'll learn how to register a supplier using the [AT Portugal app
 
 | - | Sandbox | Live |
 |---|---|---|
-| **Supplier** | Real company or self-employed details required | Real company or self-employed details required |
+| **Mode** | `testing` (default) or `simulation`, see [Sandbox modes](#sandbox-modes) | Always the AT production environment |
+| **Supplier** | Real company or self-employed details in testing mode. Any valid Portuguese NIF in simulation mode | Real company or self-employed details required |
+| **AT credentials** | Required in testing mode. Not needed in simulation mode | Required |
 | **Series type** | `F` (Training) | `N` (Normal) |
 
 ## Prerequisites
@@ -33,7 +35,37 @@ To register a supplier with the AT, you will need:
   - Tax ID
   - Business address
 - An email address for the supplier to access the Supplier Portal
-- The supplier's credentials to access the AT's web services for registering series and report documents in real-time
+- The supplier's credentials to access the AT's web services for registering series and report documents in real-time (not needed for sandbox suppliers in [simulation mode](#sandbox-modes))
+
+## Sandbox modes
+
+In sandbox, the **Register supplier with AT** step's configuration selects how the supplier talks to the AT. Live enrollments ignore this setting and always use the AT production environment.
+
+| Mode | Target | Supplier NIF | AT credentials | Use it to |
+|---|---|---|---|---|
+| `testing` (default) | AT testing environment (_ambiente de testes_) | **Real**, and must match the AT username | **Real**, with the `WSE` permission and a `NIF/XX` username | Test end to end against the AT with a real company before going live. |
+| `simulation` | Invopop simulates the AT web services | Any valid Portuguese NIF | **Not needed** | Build and test your integration without a real company or access to Portal das Finanças. |
+
+- **Testing** works exactly as live does, but against the AT's testing environment. The supplier must be a real company or self-employed individual, and you need their AT web-services credentials to register series and report documents.
+- **Simulation** never sends anything to the AT. Invopop answers series registration and real-time reporting of invoices, payments, work documents and transport documents locally, returning the same kind of responses the AT would: series get a validation code, and transport documents get an AT code. The supplier doesn't need to be a real company, so several workspaces can share the same NIF.
+
+To choose the mode, open the registration workflow in the Console, select the **Register supplier with AT** step and pick a **Mode**. In the workflow's code view, this is the step's `config`:
+
+```json
+{
+  "name": "Register supplier with AT",
+  "provider": "at-pt.register",
+  "config": {
+    "mode": "simulation"
+  }
+}
+```
+
+The mode is stored on the supplier each time the registration workflow runs, so to switch a supplier between modes, change the step's mode and re-run the workflow on the supplier.
+
+<Warning>
+  Switching a supplier between testing and simulation clears any AT credentials stored for it. Credentials entered in simulation mode are never checked against the AT, so they can't be carried over to testing. After switching to testing, the supplier must enter their credentials again in the Supplier Portal.
+</Warning>
 
 ## Setup
 
@@ -106,7 +138,7 @@ All of the following steps must be carried out from the [Invopop Console](https:
 <Step title="Submit the Supplier Information">
 This can be done either manually via the Invopop Console or programmatically via the API. The process is essentially the same; here we'll do it manually.
 
-Find the **Parties** section of the sidebar and click **Suppliers**. Click the **+ New Supplier** button to be presented with a new editor. You can use the following example as a template, and replace it with the details of your company. Note that you'll need the details of a real company or self-employed individual both in the sandbox and production environments:
+Find the **Parties** section of the sidebar and click **Suppliers**. Click the **+ New Supplier** button to be presented with a new editor. You can use the following example as a template, and replace it with the details of your company. Note that you'll need the details of a real company or self-employed individual in live and in sandbox testing mode. In [simulation mode](#sandbox-modes), any valid Portuguese NIF will do:
 
   <Tabs>
     <Tab title="Company">
@@ -136,6 +168,10 @@ The execution should be successful, and the silo entry will now be in the "Proce
 </Step>
 
 <Step title="Obtain the Supplier's AT Credentials">
+<Note>
+  Skip this step for sandbox suppliers in [simulation mode](#sandbox-modes): the AT web services are simulated, so no credentials are needed.
+</Note>
+
 To complete the registration process, the supplier will need to obtain the credentials of a user with the necessary permissions in the AT's Portal das Finanças. To create a new user, the supplier can follow these steps:
 
 1. Go to the AT's [Portal das Finanças](https://www.portaldasfinancas.gov.pt) and click on the **Iniciar Sessão** button.
@@ -161,7 +197,7 @@ Now, the supplier will need to complete the registration process in the Invopop'
 
 1. Go to the [Invopop AT Portugal Supplier Portal](https://at-pt.invopop.com/portal)
 2. Enter the email address provided in the supplier's information. The system will send to the provided address a code to complete the authentication process.
-3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press <kbd>Save</kbd>.
+3. Once logged in, go to **Credentials**, enter the AT credentials obtained in the previous step, and press <kbd>Save</kbd>. For suppliers in [simulation mode](#sandbox-modes), the credentials form is disabled and you can go straight to the next step.
 4. Go to the **Series** section, click **+ Register** and register at least a series for each document type that the supplier will issue.
 
 Once the series are registered, the supplier will be able to issue documents using them. When this happens, the system will automatically execute the "Post-registration workflow" if one was configured.
