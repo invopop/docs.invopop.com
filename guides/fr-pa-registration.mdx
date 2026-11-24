@@ -193,6 +193,23 @@ To register parties that only send, add the [PPF register supplier](#ppf-registe
   </Tab>
 </Tabs>
 
+The workflow removes the party from Peppol, ends its Annuaire lines, disables e-reporting, and then removes the PA agreement with the **Remove PPF agreement** step (`gov-fr.agreement.remove`). That step:
+
+- Revokes the party's approved mandate and onboarding approvals.
+- Removes the countersignature from the party's silo entries.
+- Sets the party back to <Badge color="yellow">Pending</Badge>.
+
+When the same SIREN is registered again, the [PPF register supplier](#ppf-register-supplier-workflow) workflow onboards it from scratch: the representative accepts the general terms again and a new mandate is signed. Invoices, statuses and e-reporting history already sent for the SIREN are kept.
+
+**Remove PPF agreement** only runs when both of these are true. If one is not, the job fails and the silo entry is set to `error`:
+
+| Condition | How to meet it |
+|---|---|
+| No Annuaire line of the SIREN is active | **Disable party in Directory** only ends the lines of the silo entry the workflow runs on. If the SIREN was registered from more than one silo entry, unregister each of them. The step fails until the last line has ended; run the job again after that. |
+| E-reporting is disabled | **Disable party for reporting** only acts on the silo entry the party was first registered with, shown in the **Silo entry** column of the [Parties tab](#reading-parties-registrations). Run the workflow on that entry. |
+
+If the party is already <Badge color="yellow">Pending</Badge>, the step is skipped, so running the workflow again is safe.
+
 ## Reading parties registrations
 
 The France dashboard's **Parties** tab shows the registration state of every SIREN in the workspace. In the Console, open the **Apps** view and select the **France** app. The dashboard opens on this tab.
