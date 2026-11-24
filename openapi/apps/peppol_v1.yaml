@@ -121,6 +121,64 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/peppol/v1/entry/{silo_entry_id}/migrate:
+    post:
+      operationId: migrateParticipant
+      summary: Issue a Peppol migration key
+      description: |-
+        Issues a Peppol migration key for the participant registered through
+        Invopop for the silo entry, so another Peppol provider can take over
+        its registration. This does the same as the **Start Peppol
+        migration** (`peppol.migrate`) workflow action.
+
+        The key is also stored in the entry's meta, under the `migration-key`
+        key with source `peppol`.
+
+        This endpoint is idempotent: calling it again for an entry that
+        already has a migration key returns the same key instead of issuing a
+        new one.
+      parameters:
+        - name: silo_entry_id
+          in: path
+          required: true
+          description: UUID of the Invopop silo entry of the party registered on Peppol through Invopop.
+          schema:
+            type: string
+            format: uuid
+            example: "01952667-f2a0-7a66-a3c9-8f4c3c7e5c0b"
+      responses:
+        "200":
+          description: Migration key issued, or the key already issued for the participant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: The entry has no active Peppol participant, so there is nothing to migrate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                status: error
+                message: "no active peppol participant for entry"
+        "422":
+          description: |-
+            The participant cannot be migrated — e.g. it is registered for
+            sending only, or its Peppol inbox no longer matches the identity
+            it was registered with.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                status: error
+                message: "participant cannot be migrated"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
   schemas:
     LookupResponse:
@@ -151,6 +209,21 @@ components:
             authorization to represent the company in Peppol network
             transactions.
           example: "JVBERi0xLjQK..."
+
+    MigrateResponse:
+      type: object
+      required: [participant_id, migration_key]
+      properties:
+        participant_id:
+          type: string
+          description: Peppol participant identifier in `scheme:value` format.
+          example: "0225:123456789"
+        migration_key:
+          type: string
+          description: |-
+            Migration key to hand to the new Peppol provider. Treat it as a
+            credential.
+          example: "Ab12$%cdEF34!!"
 
     Error:
       type: object
