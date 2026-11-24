@@ -106,15 +106,18 @@ Example invoices are provided below, or you can use the [GOBL Builder](https://b
 
 Italy has two fiscal identifiers — the *partita IVA* (VAT number) and the *codice fiscale* — and which one you put on the customer depends on who they are.
 
-| Your customer is | What to put on the party |
+| Your customer is | What to put on the customer |
 |---|---|
-| An Italian business | `tax_id` with `country: "IT"` and the *partita IVA*, plus an `it-sdi-code` inbox holding their *codice destinatario*, an `it-sdi-pec` inbox holding their PEC address, or both |
-| An Italian private individual | `tax_id` with `country: "IT"` and no code, plus an `it-fiscal-code` identity holding their *codice fiscale*. No inbox |
-| Anyone outside Italy | `tax_id` with their country, and their VAT number if they have one. No inbox |
+| An Italian business | `tax_id` with `country` set to `IT` and the *partita IVA* as `code`, plus an `it-sdi-code` inbox holding their *codice destinatario*, an `it-sdi-pec` inbox holding their PEC address, or both |
+| An Italian public administration | `tax_id` with `country` set to `IT` and its *partita IVA* as `code`, plus an `it-sdi-code` inbox holding the office's code from the [IPA index](https://www.indicepa.gov.it). Add `b2g` to the invoice's `$tags` |
+| An Italian private individual | `tax_id` with only `country` set to `IT`, and their *codice fiscale* as an identity with key `it-fiscal-code`. No inbox |
+| Anyone outside Italy | `tax_id` with their country, and their VAT number as `code` if they have one. No inbox |
 
-Codes never carry a country prefix, because the country has its own field: write a *partita IVA* as `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters, and a *codice fiscale* is 16 for a person or 11 digits for a company. If you don't have a code for a party, leave it out rather than inventing a placeholder.
+Write codes without a country prefix, because the country has its own field: a *partita IVA* is `09876543217`, not `IT09876543217`. A *codice destinatario* is 7 characters for a business and 6 for a public administration office. A *codice fiscale* is 16 characters for a person and 11 digits for a company or public body. If a public administration has no *partita IVA*, give its *codice fiscale* the way you would for a private individual.
 
-Here is each case as a customer [party](https://docs.gobl.org/draft-0/org/party):
+If a customer outside Italy has no VAT number, or you don't know an Italian business's *codice destinatario*, leave that field out. Don't invent a placeholder: the conversion writes the value SDI expects.
+
+Here are the business, private individual and foreign cases as a customer [party](https://docs.gobl.org/draft-0/org/party). The B2G invoice under [example invoices](#example-invoices) shows a public administration.
 
 <ItCustomerAccordion />
 
