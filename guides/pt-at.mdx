@@ -11,6 +11,10 @@ import CancelPayment, { ptAtCancelPaymentWorkflow } from '/snippets/workflows/pt
 import IssueDelivery, { ptAtIssueDeliveryWorkflow } from '/snippets/workflows/pt/at-issue-delivery.mdx';
 import CancelDelivery, { ptAtCancelDeliveryWorkflow } from '/snippets/workflows/pt/at-cancel-delivery.mdx';
 import DocumentAccordion from '/snippets/documents/pt/accordion.mdx';
+import PtDepositDeductionMin from '/snippets/invoices/pt/at-deposit-deduction.min.mdx';
+import PtDepositDeduction from '/snippets/invoices/pt/at-deposit-deduction.mdx';
+import PtDepositDeductionFullMin from '/snippets/invoices/pt/at-deposit-deduction-full.min.mdx';
+import PtDepositDeductionFull from '/snippets/invoices/pt/at-deposit-deduction-full.mdx';
 import PortugalResources from '/snippets/tables/portugal-resources.mdx';
 import FAQ from '/snippets/faqs/pt/composers/guide-at-invoicing.mdx';
 import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
@@ -186,6 +190,56 @@ The following examples show partial [GOBL](https://docs.gobl.org) documents you 
 </Note>
 
 <DocumentAccordion />
+
+### Deduct a deposit on the final invoice
+
+Sometimes a deposit (_adiantamento_) gets its own invoice when the customer pays it. For example, a hotel invoices the deposit at booking and the stay at checkout. The final invoice must then subtract the deposit and reference the deposit invoice. You do this with a deduction: an entry in `discounts` with the `deduction` key.
+
+A deduction is not the same as `payment.advances`, used in the [invoice-receipt example](#at-invoice-receipt-fatura-recibo). Advances record payments made on the invoice itself, and only lower the amount due. A deduction subtracts a deposit that was already invoiced, so its amount and its VAT are not invoiced twice.
+
+To deduct a deposit from the final invoice:
+
+- Add the deposit invoice to `preceding`, with its `series`, `code` and `issue_date`. It must be a standard invoice (`FT`), a simplified invoice (`FS`) or an invoice-receipt (`FR`).
+- Add an entry to `discounts` with the `deduction` key.
+- Set its `amount` to the deposit before VAT (or with VAT, if the invoice sets `tax.prices_include`), and its `taxes` to the deposit's VAT rate. VAT is required.
+- Optionally, describe the deduction in `reason`. The SAF-T PT report uses this text for the deduction line, or _Adiantamento_ (advance payment) if you leave it out.
+
+#### Example: one deposit
+
+In this example, we're issuing the final invoice for two room nights. The customer paid a deposit of 106.00 EUR (100.00 plus 6% VAT), invoiced earlier as `FT SERIES-A/1`.
+
+<CodeGroup>
+	<PtDepositDeductionMin />
+	<PtDepositDeduction />
+</CodeGroup>
+
+Notice:
+
+- the `preceding` entry points to the deposit invoice, `FT SERIES-A/1`,
+- the deduction `amount` is `100.00`, the deposit before VAT, with the deposit's `reduced` VAT rate,
+- when running `gobl build`, or uploading the file, the [`pt-saft-v1`](https://docs.gobl.org/addons/pt-saft-v1) addon sets the [`pt-saft-reference`](https://docs.gobl.org/addons/pt-saft-v1#document-reference) extension of the deduction to `FT SERIES-A/1`. This extension links the deduction to its deposit invoice. The addon fills it in only when the invoice has one preceding document, and,
+- in the built version, the VAT base drops from 200.00 to 100.00, and `totals.payable` is `106.00`: the 212.00 stay minus the 106.00 deposit.
+
+#### Example: the deposit covers the whole invoice
+
+In this example, we're issuing the same final invoice, but the deposit was 212.00 EUR (200.00 plus VAT) and covers both nights. The only change is the deduction `amount`, now `200.00`.
+
+<CodeGroup>
+	<PtDepositDeductionFullMin />
+	<PtDepositDeductionFull />
+</CodeGroup>
+
+Notice:
+
+- in the built version, the VAT and `totals.payable` are both `0.00`, and,
+- the invoice stays a standard invoice (`FT`), so keep its `FT ` series. A deduction is not a payment, so it doesn't turn the invoice into an invoice-receipt (`FR`).
+
+Keep in mind:
+
+- Deductions are only accepted on standard invoices (`FT`), simplified invoices (`FS`) and invoice-receipts (`FR`). Credit notes, debit notes, proformas and other work documents, such as `OU`, reject them.
+- The deductions can't take the invoice total, or the amount to pay, below 0. Both can be 0.
+- To deduct several deposits, list each deposit invoice in `preceding` and add one deduction for each. Then set `pt-saft-reference` yourself on every deduction, to the number of its deposit invoice (for example `FT SERIES-A/2`).
+- If the customer pays the rest when you issue the final invoice, record that payment in `payment.advances`. If the advances cover the amount left to pay, the addon turns the invoice into an invoice-receipt (`FR`), so use an `FR ` series. This applies when you don't set the [`pt-saft-invoice-type`](https://docs.gobl.org/addons/pt-saft-v1#invoice-type) extension yourself.
 
 ### Cancel a document
 
