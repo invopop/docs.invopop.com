@@ -36,7 +36,7 @@ Head over to `Configuration → Apps`, and find `Email` from the list of apps to
 
     <Frame>
       <img
-        width="388"
+        width="371"
         src="/assets/guides/email-connect.png"
         alt="Email app connected"
       />
@@ -48,7 +48,11 @@ Head over to `Configuration → Apps`, and find `Email` from the list of apps to
 
 After connecting the Email app, click on `Configure`. You will find a pre-defined email address `Invopop Email <email@invopop.com>`. Editing this email address will allow you to customize the Sender name, allowing you to send emails with your company name `Company Name <email@invopop.com>`.
 
-You can add as many senders as you need by tapping on the `Add` button. Email providers other than Invopop will allow you to use your own domain name (after it's configured with the email provider).
+You can add as many senders as you need by tapping on the `Add` button under **Outgoing**. Email providers other than Invopop will allow you to use your own domain name (after it's configured with the email provider).
+
+    <Frame caption="The Email app's providers: an incoming address domain and the default sender">
+      <img width="440" src="/assets/guides/email-providers.png" alt="Configure Email panel with an Incoming connection, @invopop.email to the Receive supplier invoices workflow, and the Outgoing sender Invopop Email <email@invopop.com>" />
+    </Frame>
 
 </Step>
 
@@ -57,7 +61,9 @@ You can add as many senders as you need by tapping on the `Add` button. Email pr
 
 Whether you start from an existing or new workflow, make sure that you add the `Send email` step after you have issued an invoice via the corresponding tax authority and generated a PDF (if required). This will ensure the necessary files are attached, and that the invoice complies with local regulatory requirements.
 
-<img src="https://assets.invopop.com/docs/email/email-screen2.png" width="100%" alt="Workflow with email actions" />
+<Frame caption="A workflow that signs the invoice, generates its PDF and emails it to the customer">
+  <img src="/assets/guides/email-workflow.png" alt="Workflow editor: Set state to Processing, Sign envelope, Generate PDF, Send via Email (selected, with its settings open) and Set state to Sent, with Send via Email and Set state to Error under Handle Exceptions" />
+</Frame>
 
 If you simply want to send a notification, this suggestion does not apply: a `Send via Email` step in a job without a document attaches no files.
 
@@ -79,9 +85,9 @@ The Email app adds these items to your workflow action list:
 
     <Frame>
       <img
-        width="100%"
+        width="404"
         src="/assets/guides/email-configuration.png"
-        alt="Email step configuration"
+        alt="Send via Email settings: sender, recipients, BCC, reply-to, subject and body with variables, and attachments"
       />
     </Frame>
 
@@ -129,10 +135,10 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 
 <Steps>
   <Step title="Configure your email template">
-    In the email body field you can use both UI variables (in this case `Customer Name` and `Full Code`) and custom variables `{{args.payment_link}}`.
+    In the email body field you can use both the document's variables (in this case `customer_name`, `full_code` and `supplier_name`) and custom variables such as `{{args.payment_link}}`.
     <Frame caption="Body field example with custom arguments">
       <img
-        width="395"
+        width="390"
         src="/assets/guides/email-body.png"
         alt="Email step configuration"
       />
@@ -181,7 +187,7 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 
 ## Receiving invoices by email
 
-The Email app can also receive invoices for your parties. Each registered party gets an address of its own, such as `clip-apple-leap@invopop.email`, and every invoice sent there is imported into your workspace, with that party as the customer. It suits accounts payable: give a supplier the address, and their invoices arrive as silo entries.
+The Email app can also receive invoices for your parties. Each registered party gets an address of its own, such as `clip.apple.leap@invopop.email`, and every invoice sent there is imported into your workspace, with that party as the customer. It suits accounts payable: give a supplier the address, and their invoices arrive as silo entries.
 
 <Steps>
 
@@ -204,6 +210,10 @@ This workflow runs once for each invoice received. The **Import incoming documen
 
 <Step title="Configure receiving in the Email app">
 In `Configuration → Apps`, open the Email app's **Configure** page. Under **Providers**, in the **Incoming** section, add an incoming email connection: choose Invopop as the provider, and the import workflow from the previous step. Only workflows with the **Import incoming document** step are offered.
+
+<Frame caption="An incoming connection">
+  <img width="440" src="/assets/guides/email-incoming-add.png" alt="Add incoming email form with the Invopop provider and the Receive supplier invoices workflow" />
+</Frame>
 </Step>
 
 <Step title="Register your parties">
@@ -231,7 +241,23 @@ Running it again on a registered party is skipped and not charged. A registered 
 </Step>
 
 <Step title="Share the address">
-Give the address to whoever sends the party's invoices. Every registered address is listed in the Email app's **Endpoints** tab, with its party. Each email that reaches it is listed in the Email app's **Messages** tab, with its files and the jobs it started.
+Give the address to whoever sends the party's invoices. Every registered address is listed in the Email app's **Endpoints** tab, with its party.
+
+<Frame caption="Two registered parties">
+  <img src="/assets/guides/email-endpoints.png" alt="Endpoints tab listing two addresses on invopop.email, each with its party and the Receive supplier invoices workflow" />
+</Frame>
+
+Each email that reaches it is listed in the Email app's **Messages** tab, with the jobs it started. An email with nothing to import is listed as skipped, with the reason.
+
+<Frame caption="Three invoices imported, and a reminder with nothing to import">
+  <img src="/assets/guides/email-messages.png" alt="Messages tab: three emails from suppliers with one job each and a done status, and a payment reminder skipped with No attachment to import" />
+</Frame>
+
+Click a message to see who sent it, whether the sender was verified, the jobs it started, and its files.
+
+<Frame caption="A received email">
+  <img width="550" src="/assets/guides/email-message-detail.png" alt="Message panel: from Northwind Trading Co., sender verified, subject Invoice NW-2041, one job, status Done, and the file NW-2041.json" />
+</Frame>
 </Step>
 
 </Steps>
@@ -274,9 +300,9 @@ The **Unregister incoming endpoint** step releases the party's address and remov
 
     <Frame caption="Send via Email configuration in a workflow's error handler">
       <img
-        width="395"
+        width="404"
         src="/assets/guides/email-faults.png"
-        alt="Email faults"
+        alt="Send via Email in the error handler: to finance@acme.example, subject Error on invoice full_code, body listing the faults, no attachments"
       />
     </Frame>
 
