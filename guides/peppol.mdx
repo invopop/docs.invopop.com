@@ -150,6 +150,10 @@ To register a party:
 1. Upload it to the Silo with required company information
 2. Send it to the party registration workflow
 
+<Warning>
+**Is the party already on Peppol with another provider?** A participant can only be registered with one Access Point at a time, and Invopop does not take over an existing Peppol registration automatically (the only exception is France, through the [Plateforme Agréée takeover flow](/guides/fr-pa-migrations#outgoing-takeovers)). If the party is already registered elsewhere, the **Register party on Peppol** step fails. Before you run the workflow, ask the party for a **migration key** from their current provider and follow [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
+</Warning>
+
 #### Upload a party document
 
 You can upload parties via the [Create an Entry](/api-ref/silo/entries/create-an-entry-put) API endpoint or manually through the Console. For this guide, we'll demonstrate the manual process:
@@ -279,7 +283,16 @@ If you need to unregister an entity (because the supplier is no longer your clie
 
 #### Migrating a participant from another provider
 
-If a party is already registered with another Peppol Access Point, you don't need to unregister it there first. Peppol supports migrating an existing participant to a new provider using a **migration key** issued by their current one.
+If a party is already registered with another Peppol Access Point, registering it with Invopop doesn't take over that registration: the **Register party on Peppol** step fails until the participant is released by its current provider. This is common in countries with long-standing Peppol use, such as Norway or Belgium.
+
+There are two ways to move the participant to Invopop:
+
+| Option | How | Interruption |
+|---|---|---|
+| **Migration key** (recommended) | The current provider issues a migration key, and you pass it to the **Register party on Peppol** step. | None. The participant keeps receiving through the old provider until Invopop completes the migration. |
+| **Deregister and register again** | The party deregisters from its current provider, then you run the registration workflow again in Invopop. | Invoices sent to the party over Peppol can't be delivered between the deregistration and the new registration. |
+
+You don't need to unregister the participant from its current provider to use a migration key: Peppol supports moving an existing participant to a new provider with a **migration key** issued by their current one.
 
 To migrate a participant into Invopop:
 
@@ -305,6 +318,8 @@ When `peppol-migration-key` is provided:
 - Invopop uses it to accept the inbound migration on our SMP — there are no eligibility checks of our own, so the key must genuinely have been issued for this participant.
 - If the key is invalid or has expired, the job fails with a `migration key is not valid` error and no registration takes place.
 - If the key is valid, registration proceeds as usual.
+
+If the current provider can't issue a migration key, the party has to deregister with them first. Once the deregistration is complete, re-run the registration workflow on the same entry.
 
 #### Migrating a participant to another provider
 
@@ -418,6 +433,10 @@ Note that some countries support multiple schemes. For example, Belgium uses `02
 
 <Accordion title="When registering a supplier we get an error: 'XXXX:XXXXXXXXX is already registered' on the Register party on Peppol step">
 This is because a supplier with the stated participant ID has already been registered in your workspace.
+</Accordion>
+
+<Accordion title="Registration fails because the party is already registered with another Access Point">
+A Peppol participant can only be registered with one Access Point at a time, and Invopop does not take over an existing registration automatically (outside France's [Plateforme Agréée takeovers](/guides/fr-pa-migrations#outgoing-takeovers)). Ask the party to request a **migration key** from their current provider and pass it as the `peppol-migration-key` argument when you re-run the **Register party on Peppol** step. This moves the participant with no interruption. If the provider can't issue a key, the party must deregister with them before you register it again. See [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
 </Accordion>
 
 <Accordion title="Should I set the $regime in Peppol?">
