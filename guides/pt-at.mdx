@@ -187,6 +187,60 @@ The following examples show partial [GOBL](https://docs.gobl.org) documents you 
 
 <DocumentAccordion />
 
+### Deduct advance payments
+
+When a customer pays a deposit (_adiantamento_) before the goods or services are delivered, issue an invoice for the deposit on its own (type FT, FS or FR). When you later issue the final invoice for the full goods or services, deduct each deposit from it:
+
+1. Add a line for each of the goods or services at their full price, as usual.
+2. Add every deposit invoice to `preceding` with its `series`, `code` and `issue_date`.
+3. Add one document-level discount per deposit, with:
+   - `key` set to `deduction`.
+   - `reason` describing the deposit, shown as the line description (e.g. "50% deposit for room 1").
+   - `amount` with the deposit's amount, expressed the same way as the line prices (without VAT, unless the prices include tax). Do not use `percent` or `base`.
+   - `taxes` with the same VAT rate as the deposit invoice.
+   - The [`pt-saft-reference`](https://docs.gobl.org/addons/pt-saft-v1#document-reference) extension with the SAF-T number of the deposit invoice it deducts: its series, a slash, and its code (e.g. `FT SERIES-A/1`).
+
+The following partial example deducts two 50% deposits, one per room, from a final invoice for two hotel rooms:
+
+```json
+{
+  "$schema": "https://gobl.org/draft-0/bill/invoice",
+  "$regime": "PT",
+  "$addons": ["pt-saft-v1"],
+  "series": "FT SERIES-A",
+  "preceding": [
+    { "series": "FT SERIES-A", "code": "1", "issue_date": "2024-08-01" },
+    { "series": "FT SERIES-A", "code": "2", "issue_date": "2024-08-02" }
+  ],
+  "lines": [
+    {
+      "i": 1,
+      "quantity": "2",
+      "item": { "name": "Hotel room", "price": "100.00" },
+      "taxes": [{ "cat": "VAT", "rate": "general" }]
+    }
+  ],
+  "discounts": [
+    {
+      "key": "deduction",
+      "reason": "50% deposit for room 1",
+      "amount": "50.00",
+      "taxes": [{ "cat": "VAT", "rate": "general" }],
+      "ext": { "pt-saft-reference": "FT SERIES-A/1" }
+    },
+    {
+      "key": "deduction",
+      "reason": "50% deposit for room 2",
+      "amount": "50.00",
+      "taxes": [{ "cat": "VAT", "rate": "general" }],
+      "ext": { "pt-saft-reference": "FT SERIES-A/2" }
+    }
+  ]
+}
+```
+
+With a single deposit invoice in `preceding`, you can omit `pt-saft-reference`, and it is filled in automatically. With several, set it on every deduction.
+
 ### Cancel a document
 
 If you need to cancel a document that has already been issued and reported to the AT, you can use the cancel workflows created during setup. The cancellation process follows the same pattern as sending a document: create a job for the silo entry you want to cancel using the cancel workflow appropriate for the document type.

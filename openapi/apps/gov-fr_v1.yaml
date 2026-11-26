@@ -224,6 +224,44 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /apps/gov-fr/v1/entry/{silo_entry_id}/terms:
+    get:
+      operationId: fetchEntryTerms
+      summary: Fetch the general terms
+      description: |-
+        Returns Invopop's general terms that the signer accepts, as
+        Markdown, so they can be shown in your own interface. The
+        terms are rendered for the entry's onboarding approval.
+
+        Accept the terms afterwards with `POST /sign`, or with
+        `POST /agreement` when uploading a mandate signed outside
+        Invopop.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: General terms as UTF-8 Markdown, served inline.
+          headers:
+            Content-Disposition:
+              description: Suggested file name of the terms.
+              schema:
+                type: string
+                example: inline; filename="fr-ctc-terms.md"
+          content:
+            text/markdown:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /apps/gov-fr/v1/entry/{silo_entry_id}/identity:
     post:
       operationId: uploadEntryIdentity
