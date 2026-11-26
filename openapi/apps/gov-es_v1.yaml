@@ -270,6 +270,60 @@ paths:
       responses:
         "202":
           description: "No content"
+  /apps/gov-es/v1/entry/{silo_entry_id}/noverifactu/exports/{type}:
+    get:
+      description: Download the latest NO VERI*FACTU export of a registered supplier.
+      parameters:
+      - description: ID of the registered org.Party silo entry the export was made for.
+        in: path
+        name: silo_entry_id
+        required: true
+        schema:
+          description: ID of the registered org.Party silo entry the export was made for.
+          example: 5b45453c-cdd0-11ed-afa1-0242ac120002
+          title: ID
+          type: string
+      - description: Type of records exported.
+        in: path
+        name: type
+        required: true
+        schema:
+          description: Type of records exported.
+          title: Type
+          type: string
+          enum: ["invoices", "events"]
+      responses:
+        "200":
+          description: Archive with one signed XML file per record, in chain order.
+          headers:
+            Content-Disposition:
+              description: Suggested filename for download.
+              schema:
+                example: 'attachment; filename="noverifactu-invoices.tar.gz"'
+                type: string
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Not Found - Unknown type, or no export made yet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
+        "500":
+          description: Internal Server Error - Failed to read the export.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: Details of the error.
 components:
   securitySchemes:
     InvopopAuth:
