@@ -151,7 +151,7 @@ To register a party:
 2. Send it to the party registration workflow
 
 <Warning>
-**Is the party already on Peppol with another provider?** A participant can only be registered with one Access Point at a time, and Invopop does not take over an existing Peppol registration automatically (the only exception is France, through the [Plateforme Agréée takeover flow](/guides/fr-pa-migrations#outgoing-takeovers)). If the party is already registered elsewhere, the **Register party on Peppol** step fails. Before you run the workflow, ask the party for a **migration key** from their current provider and follow [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
+**Is the party already on Peppol with another provider?** A participant can only be registered with one Access Point at a time, and Invopop does not take over an existing Peppol registration automatically (the only exception is France, through the [Plateforme Agréée takeover flow](/guides/fr-pa-migrations#outgoing-takeovers)). If the party is already registered elsewhere, the **Register party on Peppol** step fails. Ask the party to request a **migration key** from their current provider, and pass it to the registration step as described in [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
 </Warning>
 
 #### Upload a party document
@@ -297,7 +297,7 @@ You don't need to unregister the participant from its current provider to use a 
 To migrate a participant into Invopop:
 
 1. Request a migration key for the participant from their current Peppol provider. This step happens outside Invopop — each provider has its own process for issuing migration keys.
-2. Pass the key as a `peppol-migration-key` argument when running the **Register party on Peppol** step:
+2. Pass the key as a `peppol-migration-key` argument when running the **Register party on Peppol** step on the party's existing entry. If the registration already failed, re-run it on that same entry rather than creating a new one:
    - **From the Console**: run the registration workflow directly from the workflow editor or list (see [Running from the Console](/guides/workflows#running-from-the-console)) and add `peppol-migration-key` in the **Arguments** field of the run panel.
    - **Via the API**: include it in the `args` map when calling the [Create a Job](/api-ref/transform/jobs/create-a-job-post) endpoint:
 
@@ -316,7 +316,9 @@ The party still needs to go through Invopop's own proof-of-ownership approval be
 When `peppol-migration-key` is provided:
 
 - Invopop uses it to accept the inbound migration on our SMP — there are no eligibility checks of our own, so the key must genuinely have been issued for this participant.
-- If the key is invalid or has expired, the job fails with a `migration key is not valid` error and no registration takes place.
+- If the key is invalid or has expired, the job fails with a `migration key is not valid` error and no registration takes place. Request a fresh key and re-run the step on the same entry.
+
+The key is only used at the final **Register party on Peppol** step, after proof-of-ownership approval, which can take up to 72 hours. Because keys can expire, request it close to the time you run that step.
 - If the key is valid, registration proceeds as usual.
 
 If the current provider can't issue a migration key, the party has to deregister with them first. Once the deregistration is complete, re-run the registration workflow on the same entry.
@@ -436,7 +438,7 @@ This is because a supplier with the stated participant ID has already been regis
 </Accordion>
 
 <Accordion title="Registration fails because the party is already registered with another Access Point">
-A Peppol participant can only be registered with one Access Point at a time, and Invopop does not take over an existing registration automatically (outside France's [Plateforme Agréée takeovers](/guides/fr-pa-migrations#outgoing-takeovers)). Ask the party to request a **migration key** from their current provider and pass it as the `peppol-migration-key` argument when you re-run the **Register party on Peppol** step. This moves the participant with no interruption. If the provider can't issue a key, the party must deregister with them before you register it again. See [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
+A Peppol participant can only be registered with one Access Point at a time, and Invopop does not take over an existing registration automatically (outside France's [Plateforme Agréée takeovers](/guides/fr-pa-migrations#outgoing-takeovers)). Ask the party to request a **migration key** from their current provider and pass it as the `peppol-migration-key` argument when you re-run the **Register party on Peppol** step on the same entry. This moves the participant with no interruption. If the provider can't issue a key, the party must deregister with them before you register it again. See [Migrating a participant from another provider](#migrating-a-participant-from-another-provider).
 </Accordion>
 
 <Accordion title="Should I set the $regime in Peppol?">
