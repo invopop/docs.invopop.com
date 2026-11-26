@@ -195,12 +195,12 @@ When a customer pays a deposit (_adiantamento_) before the goods or services are
 2. Add every deposit invoice to `preceding` with its `series`, `code` and `issue_date`.
 3. Add one document-level discount per deposit, with:
    - `key` set to `deduction`.
-   - `reason` describing the deposit, shown as the line description (e.g. "Deposit for 1 hotel room").
+   - `reason` describing the deposit, shown as the line description (e.g. "50% deposit for room 1").
    - `amount` with the deposit's amount, expressed the same way as the line prices (without VAT, unless the prices include tax). Do not use `percent` or `base`.
    - `taxes` with the same VAT rate as the deposit invoice.
-   - The `pt-saft-reference` extension with the SAF-T number of the deposit invoice it deducts: its series, a slash, and its code (e.g. `FT SERIES-A/1`).
+   - The [`pt-saft-reference`](https://docs.gobl.org/addons/pt-saft-v1#document-reference) extension with the SAF-T number of the deposit invoice it deducts: its series, a slash, and its code (e.g. `FT SERIES-A/1`).
 
-The following partial example deducts two deposits from a final invoice for three hotel room nights:
+The following partial example deducts two 50% deposits, one per room, from a final invoice for two hotel rooms:
 
 ```json
 {
@@ -215,23 +215,23 @@ The following partial example deducts two deposits from a final invoice for thre
   "lines": [
     {
       "i": 1,
-      "quantity": "3",
-      "item": { "name": "Hotel room night", "price": "100.00" },
+      "quantity": "2",
+      "item": { "name": "Hotel room", "price": "100.00" },
       "taxes": [{ "cat": "VAT", "rate": "general" }]
     }
   ],
   "discounts": [
     {
       "key": "deduction",
-      "reason": "Deposit for 1 hotel room",
+      "reason": "50% deposit for room 1",
       "amount": "50.00",
       "taxes": [{ "cat": "VAT", "rate": "general" }],
       "ext": { "pt-saft-reference": "FT SERIES-A/1" }
     },
     {
       "key": "deduction",
-      "reason": "Deposit for 2 hotel rooms",
-      "amount": "100.00",
+      "reason": "50% deposit for room 2",
+      "amount": "50.00",
       "taxes": [{ "cat": "VAT", "rate": "general" }],
       "ext": { "pt-saft-reference": "FT SERIES-A/2" }
     }
