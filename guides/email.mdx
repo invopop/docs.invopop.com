@@ -2,14 +2,38 @@
 title: "Email guide"
 sidebarTitle: "Email"
 icon: "https://assets.invopop.com/apps/email/icon.svg"
-description: An application to send emails from your workflows, with or without attachments.
+description: An application to send emails from your workflows, and to receive invoices by email.
 ---
+
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+import EmailIncomingImportWorkflow, { emailIncomingImportWorkflow } from '/snippets/workflows/email/incoming-import.mdx';
+import EmailIncomingRegisterWorkflow, { emailIncomingRegisterWorkflow } from '/snippets/workflows/email/incoming-register.mdx';
+import EmailIncomingUnregisterWorkflow, { emailIncomingUnregisterWorkflow } from '/snippets/workflows/email/incoming-unregister.mdx';
 
 ## Introduction
 
-This guide will show you how to set up the Email app and its associated workflow actions for emailing invoices or sending notifications.
+The Email app does two things:
 
-## Prerequisites
+- **[Sending emails](#sending-emails)** from your workflows: invoices to customers, notifications, and error reports.
+- **[Receiving invoices by email](#receiving-invoices-by-email)** for your parties: each registered party gets an address, and the invoices sent there are imported into your workspace.
+
+To use either, connect the app. Head over to `Configuration → Apps`, find `Email` in the list of apps to discover, and tap **Connect**.
+
+<Frame>
+  <img
+    width="371"
+    src="/assets/guides/email-connect.png"
+    alt="Email app connected"
+  />
+</Frame>
+
+## Sending emails
+
+The **Send via Email** step sends an email. When the job has a silo entry, the entry's files are attached and its customer or supplier can be a recipient; this is how invoices are sent. Without one, nothing is attached, for notifications or failures.
+
+<Info>**Notify via Email** is now part of **Send via Email**. Existing steps that use it keep working as sends without attachments.</Info>
+
+### Prerequisites
 
 You can send emails from `Company name <email@invopop.com>` by simply connecting the Email app.
 
@@ -21,60 +45,43 @@ If you wish to send emails from your own domain such as `Company Name <name@your
 
 <Warning>In the case of SMTP delivery we strongly recommend using an _app password_ or _token_ if your service provider allows it. This is the best security practice because it allows you to revoke authorization at any time, even if you lose access to Invopop.</Warning>
 
-
-## Setup
+### Setup
 
 <Steps>
-
-<Step title="Connect the Email app.">
-Head over to `Configuration → Apps`, and find `Email` from the list of apps to discover. Tap the **Connect** button to enable.
-
-    <Frame>
-      <img
-        width="388"
-        src="/assets/guides/email-connect.png"
-        alt="Email app connected"
-      />
-    </Frame>
-
-</Step>
 
 <Step title="Add Senders">
 
 After connecting the Email app, click on `Configure`. You will find a pre-defined email address `Invopop Email <email@invopop.com>`. Editing this email address will allow you to customize the Sender name, allowing you to send emails with your company name `Company Name <email@invopop.com>`.
 
-You can add as many senders as you need by tapping on the `Add` button. Email providers other than Invopop will allow you to use your own domain name (after it's configured with the email provider).
+You can add as many senders as you need by tapping on the `Add` button under **Outgoing**. Email providers other than Invopop will allow you to use your own domain name (after it's configured with the email provider).
+
+    <Frame caption="The Email app's providers: an incoming address domain and the default sender">
+      <img width="440" src="/assets/guides/email-providers.png" alt="Configure Email panel with an Incoming connection, @invopop.email to the Receive supplier invoices workflow, and the Outgoing sender Invopop Email <email@invopop.com>" />
+    </Frame>
 
 </Step>
-
 
 <Step title="Set up your workflow">
 
-Whether you start from an existing or new workflow, make sure that you add the `Send email` step after you have issued an invoice via the corresponding tax authority and generated a PDF (if required). This will ensure the necessary files are attached, and that the invoice complies with local regulatory requirements.
+Whether you start from an existing or new workflow, make sure that you add the `Send via Email` step after you have issued an invoice via the corresponding tax authority and generated a PDF (if required). This will ensure the necessary files are attached, and that the invoice complies with local regulatory requirements.
 
-<img src="https://assets.invopop.com/docs/email/email-screen2.png" width="100%" alt="Workflow with email actions" />
+<Frame caption="A workflow that signs the invoice, generates its PDF and emails it to the customer">
+  <img src="/assets/guides/email-workflow.png" alt="Workflow editor: Set state to Processing, Sign envelope, Generate PDF, Send via Email (selected, with its settings open) and Set state to Sent, with Send via Email and Set state to Error under Handle Exceptions" />
+</Frame>
 
-If you simply want to send a `Notification via Email`, this suggestion does not apply, as no files are attached.
+If you simply want to send a notification, this suggestion does not apply: a `Send via Email` step in a job without a document attaches no files.
 
 </Step>
 
-
 </Steps>
 
-## Workflow actions
-
-The Email app adds two items to your workflow action list:
-
-1. **Send email**: this action will attach the files associated with a silo entry, and is mainly used for sending invoices to customers or other recipients.
-2. **Notify via Email**: this action will _not_ attach files, and is meant for sending messages such as notifications or failures.
-
-## Workflow step configuration
+### Step configuration
 
     <Frame>
       <img
-        width="100%"
+        width="404"
         src="/assets/guides/email-configuration.png"
-        alt="Email step configuration"
+        alt="Send via Email settings: sender, recipients, BCC, reply-to, subject and body with variables, and attachments"
       />
     </Frame>
 
@@ -105,27 +112,25 @@ The email body textarea is where you compose your message's main content. This f
 **Combine attachments into a single zip file**<br />
 It's possible that your workflow generates several files per invoice (sometimes an XML and a PDF file are required by legislation). This option allows you to combine and compress all files into a single `.zip` file.
 
-***
-
-## Custom template variables with job args
+### Custom template variables with job args
 
 In addition to the predefined variables available in the **Insert variable** menu, you can inject custom variables into your email templates using job args. This is particularly useful for dynamic content like payment links, conditional text, and other external data.
 
-### How it works
+#### How it works
 
 When [using the API to run a workflow](/api-ref/transform/jobs/create-a-job-put) you pass an `args` data object with custom variables you want to inject into your email. You will then introduce the variable into the email's subject or body with the following syntax: `{{args.variable_name}}`. If you need to provide a fallback in case the variable is not present, we recommend using the following syntax: `{{ or args.value "Default value" }}`.
 
 
-### Example: adding a payment link
+#### Example: adding a payment link
 
 Let's say you want to send an email with a custom payment link. Here's how to set it up:
 
 <Steps>
   <Step title="Configure your email template">
-    In the email body field you can use both UI variables (in this case `Customer Name` and `Full Code`) and custom variables `{{args.payment_link}}`.
+    In the email body field you can use both the document's variables (in this case `customer_name`, `full_code` and `supplier_name`) and custom variables such as `{{args.payment_link}}`.
     <Frame caption="Body field example with custom arguments">
       <img
-        width="395"
+        width="390"
         src="/assets/guides/email-body.png"
         alt="Email step configuration"
       />
@@ -172,21 +177,130 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 - Variable names must match exactly between template and API payload
 </Info>
 
-**FAQ**
+## Receiving invoices by email
+
+The Email app receives invoices for your parties. Each registered party gets an address of its own, such as `clip.apple.leap@invopop.email`, and every invoice sent there is imported into your workspace, with that party as the customer. It suits accounts payable: give a supplier the address, and their invoices arrive as silo entries.
+
+It uses three steps: **Register incoming endpoint** gives a party its address, **Import incoming document** imports each invoice that arrives, and **Unregister incoming endpoint** releases the address.
+
+### Setup
+
+<Steps>
+
+<Step title="Create the import workflow">
+This workflow runs once for each invoice received. The **Import incoming document** step turns the document into GOBL, sets the receiving party as the customer, and attaches the files that came with it.
+
+<Card iconType="duotone" title="Email receive invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=email-incoming-import" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={emailIncomingImportWorkflow} />
+  </Tab>
+  <Tab title="Code">
+  Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+  <EmailIncomingImportWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Configure receiving in the Email app">
+In `Configuration → Apps`, open the Email app's **Configure** page. Under **Providers**, in the **Incoming** section, add an incoming email connection: choose Invopop as the provider, and the import workflow from the previous step. Only workflows with the **Import incoming document** step are offered.
+
+<Frame caption="An incoming connection">
+  <img width="440" src="/assets/guides/email-incoming-add.png" alt="Add incoming email form with the Invopop provider and the Receive supplier invoices workflow" />
+</Frame>
+</Step>
+
+<Step title="Register your parties">
+Run the registration workflow on each party (an `org/party` entry) that should receive invoices. The **Register incoming endpoint** step:
+
+- uses the party's own address when it already has an email endpoint (`mailto:`) on the Invopop domain, unless another party holds it;
+- fails when the party's email endpoints are all on other domains, as mail to those can't reach Invopop: remove them, or add one on the Invopop domain;
+- otherwise creates a new address;
+- adds the address to the party's meta, with a `mailto:` link. The party document isn't changed.
+
+Running it again on a registered party is skipped and not charged. A registered party is charged 20 pops a month. When the app has more than one incoming connection, choose the connection in the step's settings.
+
+<Card iconType="duotone" title="Email register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=email-incoming-register" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={emailIncomingRegisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <EmailIncomingRegisterWorkflow />
+  </Tab>
+</Tabs>
+</Step>
+
+<Step title="Share the address">
+Give the address to whoever sends the party's invoices. Every registered address is listed in the Email app's **Endpoints** tab, with its party.
+
+<Frame caption="Two registered parties">
+  <img src="/assets/guides/email-endpoints.png" alt="Endpoints tab listing two addresses on invopop.email, each with its party and the Receive supplier invoices workflow" />
+</Frame>
+
+Each email that reaches it is listed in the Email app's **Messages** tab, with the jobs it started. An email with nothing to import is listed as skipped, with the reason.
+
+<Frame caption="Three invoices imported, and a reminder with nothing to import">
+  <img src="/assets/guides/email-messages.png" alt="Messages tab: three emails from suppliers with one job each and a done status, and a payment reminder skipped with No attachment to import" />
+</Frame>
+
+Click a message to see who sent it, whether the sender was verified, the jobs it started, and its files.
+
+<Frame caption="A received email">
+  <img width="550" src="/assets/guides/email-message-detail.png" alt="Message panel: from Northwind Trading Co., sender verified, subject Invoice NW-2041, one job, status Done, and the file NW-2041.json" />
+</Frame>
+</Step>
+
+</Steps>
+
+### What gets imported
+
+Each invoice in an email becomes one job on the import workflow:
+
+- **GOBL** documents (JSON) are stored as they are.
+- **XML** invoices, such as UBL or CII, are converted to GOBL.
+- **PDFs that carry their invoice as a file**, such as Factur-X or ZUGFeRD, are converted from that file.
+- A **PDF sent with its XML** is attached to the XML's entry rather than imported on its own. They are matched by file name, by invoice number, or as the only XML and PDF in the email.
+
+An XML that can't be converted fails its job with the reason, and the PDF sent with it isn't read instead. Anything else, such as a scanned PDF or a photo, fails its job saying the file couldn't be processed, and isn't charged. Logos and images in the email's body are left out, as are file types the app doesn't take, and emails with no sender. An email with several invoices in one PDF is split into one job per invoice. Up to 20 files are read from each email, each up to 25 MB.
+
+### Unregistering a party
+
+The **Unregister incoming endpoint** step releases the party's address and removes it from the party's meta. Email sent to the address afterwards is ignored.
+
+<Card iconType="duotone" title="Email unregister party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=email-incoming-unregister" horizontal>
+  Add to my workspace →
+</Card>
+<Tabs>
+  <Tab title="Workflow">
+    <WorkflowDiagram workflow={emailIncomingUnregisterWorkflow} />
+  </Tab>
+  <Tab title="Code">
+    Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+    <EmailIncomingUnregisterWorkflow />
+  </Tab>
+</Tabs>
+
+## FAQ
 
 <AccordionGroup>
 
 <Accordion title="How do I get errors emailed to me when a workflow fails?">
 
-    <Frame caption="Notify via email configuration">
+    <Frame caption="Send via Email configuration in a workflow's error handler">
       <img
-        width="395"
+        width="404"
         src="/assets/guides/email-faults.png"
-        alt="Email faults"
+        alt="Send via Email in the error handler: to finance@acme.example, subject Error on invoice full_code, body listing the faults, no attachments"
       />
     </Frame>
 
-Add a **Notify via email** step to the error handling area at the end of your workflow. The error handler only runs when something upstream fails, so the email is sent just for failed jobs. Alternatively, if you handle the exception, add it in the exception handling area nested in the step.
+Add a **Send via Email** step to the error handling area at the end of your workflow. The error handler only runs when something upstream fails, so the email is sent just for failed jobs. Alternatively, if you handle the exception, add it in the exception handling area nested in the step.
 
 Configure the step like this:
 
