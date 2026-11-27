@@ -11,9 +11,39 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 ## Introduction
 
-A CFDI stamped by the SAT can only be withdrawn by requesting its cancellation. The request carries a reason (_motivo_), and for most B2B invoices and payment receipts the receiver must accept it within three business days, otherwise it is accepted automatically. See [Cancellations in Mexico](/compliance/mexico#cancellations) for the rules.
+A CFDI stamped by the SAT can only be withdrawn by requesting its cancellation. The request carries a reason (_motivo_), and for most B2B invoices and payment receipts the receiver must accept it within three business days, otherwise it is accepted automatically. See [Cancellation rules](#cancellation-rules) below.
 
 In this guide you'll learn how to cancel invoices and payment receipts (_comprobantes de pago_) issued with the [SAT Mexico app](/apps/sat-mexico). A cancellation is requested with a GOBL [status document](https://docs.gobl.org/draft-0/bill/status) that references the CFDI to cancel.
+
+## Cancellation rules
+
+### When the receiver must accept
+
+The SAT asks the receiver to accept the cancellation. The receiver has three business days to answer. No answer means acceptance. If the receiver rejects the request, the CFDI stays valid.
+
+These cases need no acceptance, and the SAT cancels the CFDI directly (rule 2.7.1.35 of the RMF 2026):
+
+- A CFDI with a total up to MXN 1,000, except a payment receipt.
+- A credit note (Egreso).
+- A global invoice, or a CFDI to the generic RFC for foreign residents.
+- A cancellation in the business day after the issue.
+
+The rule has more cases. Fuel invoices always need acceptance.
+
+### Related documents
+
+A CFDI that has related CFDIs in force cannot be cancelled before them (rule 2.7.1.34). For example, cancel the payment receipts of an invoice first, then the invoice.
+
+### Time limit
+
+The issuer can cancel a CFDI until the end of the month in which the annual income tax return for the year of issue is due (Article 29-A of the Federal Tax Code).
+
+### Replace a CFDI (motivo 01)
+
+To replace a CFDI that has an error, do these steps in this order:
+
+1. Issue the new CFDI. Add the original to `preceding` and set `tax.ext.mx-cfdi-rel-type` to `04`. See [Related documents](/guides/mx-cfdi-invoice#related-documents).
+2. Request the cancellation of the original with reason `01`, and refer to the new CFDI.
 
 ## Prerequisites
 

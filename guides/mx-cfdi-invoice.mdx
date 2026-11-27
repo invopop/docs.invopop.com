@@ -1,0 +1,246 @@
+---
+title: "CFDI invoice spec (Ingreso)"
+sidebarTitle: "Invoice"
+description: "Field-by-field mapping from a GOBL invoice to a Mexican CFDI 4.0 of type Ingreso, with the validation rules and examples."
+---
+
+import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoiceMin from '/snippets/invoices/mx/sat-b2c.min.mdx';
+import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/mx/sat-simplified.min.mdx';
+import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
+import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+
+This page is a field reference for the sales invoice. In Mexico, a sales invoice is a CFDI with `TipoDeComprobante` `I` (Ingreso).
+
+<Info>
+  To configure the workflow that stamps this document, see the [CFDI issuing guide](/guides/mx-sat-issuing). This page shows only how to build the GOBL document.
+</Info>
+
+## When to use this document
+
+Use an invoice for each sale of goods or services to a customer who needs a CFDI.
+
+- For a consumer who does not give an RFC, send the invoice without a `customer`. See [Parties](/guides/mx-cfdi-parties#no-customer).
+- For many consumer sales in one document, use a [global invoice](/guides/mx-cfdi-global).
+- To decrease the amount of an invoice, use a [credit note](/guides/mx-cfdi-credit-note).
+
+## Minimum document
+
+Send a [GOBL invoice](https://docs.gobl.org/draft-0/bill/invoice) with these properties:
+
+- `$regime` set to [`MX`](https://docs.gobl.org/regimes/mx).
+- `$addons` with [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4).
+- `tax.ext.mx-cfdi-issue-place`.
+- A [supplier and a customer](/guides/mx-cfdi-parties).
+- At least one line with a product code.
+
+Do not send totals. Invopop calculates them.
+
+## Field mapping
+
+<MappingLegend />
+
+### Header
+
+All the fields are attributes of `cfdi:Comprobante`, or child nodes of it.
+
+| ID | CFDI field | CFDI | Format | GOBL field | You send | Rule |
+|---|---|:---:|---|---|:---:|---|
+| `MX-INV-H01` | `@Version` | M | `4.0` | | Auto | Fixed value. |
+| `MX-INV-H02` | `@Serie` | O | Text, max 25 | `series` | O | |
+| `MX-INV-H03` | `@Folio` | O | Text, max 40 | `code` | O | If it is empty, the workflow step "Add sequential code" assigns it. |
+| `MX-INV-H04` | `@Fecha` | M | Date and time | `issue_date`, `issue_time` | O | If you do not send `issue_time`, GOBL sets the two fields to the moment it builds the document. The PAC rejects a document that is more than 72 hours old. |
+| `MX-INV-H05` | `@Sello` | M | Text | | Auto | The seal that Invopop makes with the CSD of the supplier. |
+| `MX-INV-H06` | `@NoCertificado`, `@Certificado` | M | Text | | Auto | From the CSD of the supplier. |
+| `MX-INV-H07` | `@FormaPago` | C | `c_FormaPago` | `payment.advances[].key` | C | Send an advance when the customer has paid. See [Payment method and means](#payment-method-and-means). |
+| `MX-INV-H08` | `@MetodoPago` | C | `PUE` or `PPD` | `tax.ext.mx-cfdi-payment-method` | Auto | `PUE` if the advances cover the total. `PPD` if an amount is due. |
+| `MX-INV-H09` | `@CondicionesDePago` | O | Text, max 1000 | `payment.terms.notes` | O | |
+| `MX-INV-H10` | `@SubTotal` | M | Amount | | Auto | The sum of the line amounts before discounts and taxes. |
+| `MX-INV-H11` | `@Descuento` | C | Amount | `lines[].discounts` | Auto | Present when a line has a discount. The sum of the line discounts. |
+| `MX-INV-H12` | `@Moneda` | M | `c_Moneda` | `currency` | O | Default `MXN`. |
+| `MX-INV-H13` | `@TipoCambio` | C | Decimal | `exchange_rates` | C | Mandatory when the currency is not `MXN`. Give the rate to `MXN`. |
+| `MX-INV-H14` | `@Total` | M | Amount | | Auto | Subtotal, minus discounts, plus transferred taxes, minus retained taxes. |
+| `MX-INV-H15` | `@TipoDeComprobante` | M | `I` | `type` | O | Default `standard`, which gives `I`. Stored in `tax.ext.mx-cfdi-doc-type`. |
+| `MX-INV-H16` | `@Exportacion` | M | `01` | | Auto | Always `01` (not an export). |
+| `MX-INV-H17` | `@LugarExpedicion` | M | 5-digit postal code | `tax.ext.mx-cfdi-issue-place` | M | |
+| `MX-INV-H18` | `@Confirmacion` | O | Text | | No | |
+| `MX-INV-H19` | `InformacionGlobal` | C | Node | `tax.ext.mx-cfdi-global-*` | C | Only on a [global invoice](/guides/mx-cfdi-global). |
+| `MX-INV-H20` | `CfdiRelacionados/@TipoRelacion` | C | `c_TipoRelacion` | `tax.ext.mx-cfdi-rel-type` | C | Mandatory when `preceding` has a value. See [Related documents](#related-documents). |
+| `MX-INV-H21` | `CfdiRelacionados/CfdiRelacionado/@UUID` | C | UUID | `preceding[].stamps` (`sat-uuid`) | C | One for each earlier CFDI that this invoice refers to. |
+| `MX-INV-H22` | `Emisor`, `Receptor` | M | Nodes | `supplier`, `customer` | M | See [Parties](/guides/mx-cfdi-parties). |
+| `MX-INV-H23` | `Complemento` | O | Node | `complements` | O | Only food vouchers and fuel account balance. No other complement is supported. |
+
+### Lines
+
+Each GOBL line becomes one `cfdi:Concepto`. An invoice must have at least one line.
+
+| ID | CFDI field | CFDI | Format | GOBL field | You send | Rule |
+|---|---|:---:|---|---|:---:|---|
+| `MX-INV-L01` | `@ClaveProdServ` | M | `c_ClaveProdServ`, 8 digits | `lines[].item.ext.mx-cfdi-prod-serv` | M | If you send 6 digits, GOBL adds `00`. |
+| `MX-INV-L02` | `@NoIdentificacion` | O | Text, max 100 | `lines[].item.ref` | O | Your own product code. |
+| `MX-INV-L03` | `@Cantidad` | M | Decimal | `lines[].quantity` | M | More than 0. |
+| `MX-INV-L04` | `@ClaveUnidad` | M | `c_ClaveUnidad` | `lines[].item.unit` | O | A GOBL unit, converted to the UN/ECE code. Default `ZZ` (mutually defined). |
+| `MX-INV-L05` | `@Unidad` | O | Text, max 20 | | No | |
+| `MX-INV-L06` | `@Descripcion` | M | Text, max 1000 | `lines[].item.name` | M | |
+| `MX-INV-L07` | `@ValorUnitario` | M | Amount | `lines[].item.price` | M | More than 0. |
+| `MX-INV-L08` | `@Importe` | M | Amount | `lines[].sum` | Auto | Quantity multiplied by price. |
+| `MX-INV-L09` | `@Descuento` | O | Amount | `lines[].discounts` | O | Line discounts only. |
+| `MX-INV-L10` | `@ObjetoImp` | M | `01` or `02` | `lines[].taxes` | Auto | `02` (subject to tax) if the line has taxes. `01` if it has none. The codes `03` to `08` are not supported. |
+| `MX-INV-L11` | `Impuestos` | C | Node | `lines[].taxes` | C | Send the taxes of the line. See [Taxes](#taxes). |
+| `MX-INV-L12` | `ACuentaTerceros` | O | Node | `lines[].seller` | O | Only for a sale on behalf of a third party. |
+| `MX-INV-L13` | `InformacionAduanera` | O | Node | | No | |
+| `MX-INV-L14` | `CuentaPredial` | O | Node | | No | |
+| `MX-INV-L15` | `Parte` | O | Node | | No | |
+
+### Taxes
+
+Add taxes to each line in `lines[].taxes`. Invopop calculates the amounts and the totals.
+
+| GOBL tax category | CFDI `Impuesto` | CFDI node |
+|---|---|---|
+| `VAT` | `002` (IVA) | `Traslado` |
+| `RVAT` | `002` (IVA) | `Retencion` |
+| `IEPS` | `003` | `Traslado` |
+| `RIEPS` | `003` | `Retencion` |
+| `ISR` | `001` | `Retencion` |
+
+Invopop supports percentage rates (`TipoFactor` `Tasa`) and exempt lines (`Exento`). Fixed-amount rates (`Cuota`) are not supported.
+
+If your prices include tax, set `tax.prices_include`. Invopop converts them to net prices, because the CFDI shows prices without tax.
+
+## Payment method and means
+
+The CFDI has two fields about payment, and their names are almost the same.
+
+| CFDI field | Question it answers | Values |
+|---|---|---|
+| `MetodoPago` (payment method) | Does the customer pay in full now, or later? | `PUE`: paid in full. `PPD`: paid later or in installments. |
+| `FormaPago` (payment means) | With what does the customer pay? | A code such as `03` (transfer) or `04` (credit card). `99` means "to be defined". |
+
+Invopop sets the two fields from the payment data in the GOBL invoice:
+
+| Your GOBL invoice | `MetodoPago` | `FormaPago` |
+|---|---|---|
+| `payment.advances` cover the full amount | `PUE` | The code of the largest advance |
+| An amount is still due | `PPD` | `99` |
+
+For a `PPD` invoice, the SAT does not know the payment means when you issue the invoice. Thus the value is `99`. You report the real payment means later, in the [payment receipt](/guides/mx-cfdi-payment).
+
+To record a payment, add an entry to `payment.advances` with a `key`. Invopop converts the key to the SAT code:
+
+| GOBL `key` | `FormaPago` | SAT description |
+|---|---|---|
+| `cash` | `01` | Efectivo |
+| `cheque` | `02` | Cheque nominativo |
+| `credit-transfer` | `03` | Transferencia electrónica de fondos |
+| `card` | `04` | Tarjeta de crédito |
+| `online+wallet` | `05` | Monedero electrónico |
+| `online` | `06` | Dinero electrónico |
+| `netting` | `17` | Compensación |
+| `card+debit` | `28` | Tarjeta de débito |
+| `other+advance` | `30` | Aplicación de anticipos |
+| `other+intermediary` | `31` | Intermediario pagos |
+
+The full list is in the [GOBL addon reference](https://docs.gobl.org/addons/mx-cfdi-v4).
+
+<Accordion title="Example: invoice paid in full by transfer">
+  ```json
+  "payment": {
+    "advances": [
+      {
+        "key": "credit-transfer",
+        "description": "Paid by transfer",
+        "percent": "100%"
+      }
+    ]
+  }
+  ```
+  Result: `MetodoPago="PUE"` and `FormaPago="03"`.
+</Accordion>
+
+## Related documents
+
+When an invoice refers to an earlier CFDI, add the earlier document to `preceding` with its `sat-uuid` stamp. Set the reason in `tax.ext.mx-cfdi-rel-type`.
+
+| Code | Use |
+|---|---|
+| `04` | This invoice replaces an earlier CFDI that you cancel. See the [cancellation guide](/guides/mx-sat-cancelling). |
+| `07` | This invoice applies an advance payment. |
+
+The codes `01`, `02` and `03` are for [credit notes](/guides/mx-cfdi-credit-note).
+
+## What Invopop adds after the stamp
+
+When the PAC stamps the CFDI, Invopop adds these stamps to the GOBL document header:
+
+| Stamp | Content |
+|---|---|
+| `sat-uuid` | The fiscal folio (UUID) of the CFDI. Keep it. You need it for credit notes, payment receipts and cancellations. |
+| `sat-timestamp` | The date and time of the stamp. |
+| `sat-serial` | The serial number of the SAT certificate. |
+| `sat-provider-rfc` | The RFC of the PAC. |
+| `sat-sig` | The SAT digital seal. |
+| `sat-chain` | The original string of the SAT stamp. |
+| `sat-url` | The URL for the QR code. |
+
+## Validation rules
+
+GOBL checks these rules before Invopop sends the document to the PAC. The error code has the format `GOBL-MX-CFDI-BILL-INVOICE-<number>`. The party rules are in [Parties](/guides/mx-cfdi-parties#validation-rules).
+
+| Number | Rule |
+|---|---|
+| `01` | `tax.ext` must have the document type, the issue place and the payment method. Invopop sets the first and the last. |
+| `14`, `15` | Each item must have `mx-cfdi-prod-serv` with 8 digits. |
+| `16` | `tax.ext.mx-cfdi-rel-type` is required when `preceding` has a value. |
+| `17` | Each `preceding` row must have a `sat-uuid` stamp. |
+| `21` | The line quantity must be more than 0. |
+| `22`, `23` | The item price is required and must be more than 0. |
+| `24` | The line total must not be negative. |
+| `25` | Document-level discounts are not supported. Use line discounts. |
+| `26` | Document-level charges are not supported. |
+| `27` | The invoice must be in `MXN`, or have an exchange rate to `MXN`. |
+
+## Not supported
+
+- Document-level discounts and charges.
+- Exports (`Exportacion` other than `01`) and the Comercio Exterior complement.
+- Fixed-amount tax rates (`Cuota`).
+- The `self-billed` and `customer-rates` tags.
+
+## Examples
+
+<AccordionGroup>
+  <Accordion title="B2B invoice to a company">
+    <CodeGroup>
+      <B2BInvoiceMin />
+      <B2BInvoice />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice to an individual with an RFC">
+    <CodeGroup>
+      <B2CInvoiceMin />
+      <B2CInvoice />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice without a customer">
+    <CodeGroup>
+      <SimplifiedInvoiceMin />
+      <SimplifiedInvoice />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice on behalf of a third party">
+    <CodeGroup>
+      <ThirdPartyInvoiceMin />
+      <ThirdPartyInvoice />
+    </CodeGroup>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<MexicoResources />

@@ -1,0 +1,70 @@
+---
+title: "CFDI credit note spec (Egreso)"
+sidebarTitle: "Credit note"
+description: "How to build a GOBL credit note for a Mexican CFDI 4.0 of type Egreso, and how it refers to the original invoice."
+---
+
+import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
+import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+
+This page is a field reference for the credit note. In Mexico, a credit note is a CFDI with `TipoDeComprobante` `E` (Egreso).
+
+<Info>
+  A credit note uses the same workflow as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing).
+</Info>
+
+## When to use this document
+
+Use a credit note to decrease the amount of an invoice that the PAC stamped: a return, a discount after the sale, or a correction of the amount.
+
+A credit note does not cancel the original invoice. The two documents stay valid. To remove an invoice that must not exist, [cancel it](/guides/mx-sat-cancelling).
+
+## Minimum document
+
+A credit note is a [GOBL invoice](https://docs.gobl.org/draft-0/bill/invoice) with `type` set to `credit-note`. It has the same fields as an [invoice](/guides/mx-cfdi-invoice), plus a reference to the original invoice in `preceding`.
+
+Send positive quantities and prices. The document type tells the SAT that the amounts decrease the income.
+
+## Field mapping
+
+<MappingLegend />
+
+Only the fields that are different from an [invoice](/guides/mx-cfdi-invoice#field-mapping) are in this table.
+
+| GOBL field | CFDI field | You send | Rule |
+|---|---|---|---|
+| `type` = `credit-note` | `@TipoDeComprobante` = `E` | M | Stored in `tax.ext.mx-cfdi-doc-type`. |
+| `preceding[].stamps` (`sat-uuid`) | `CfdiRelacionados/CfdiRelacionado/@UUID` | M | Required. The fiscal folio (UUID) of each original invoice. You get it from the `sat-uuid` stamp of the invoice. |
+| `tax.ext.mx-cfdi-rel-type` | `CfdiRelacionados/@TipoRelacion` | O | Default `01`. Send a different code only for the cases below. |
+
+One credit note can refer to more than one invoice. Add one `preceding` row for each invoice. All the rows share the same relation type.
+
+### Relation types
+
+| Code | Use |
+|---|---|
+| `01` | Credit note for the related invoices. This is the default. |
+| `03` | Return of goods from earlier invoices. |
+| `07` | Application of an advance payment. |
+
+## Validation rules
+
+The [invoice rules](/guides/mx-cfdi-invoice#validation-rules) and the [party rules](/guides/mx-cfdi-parties#validation-rules) apply. These two are the most frequent on a credit note:
+
+| Number | Rule |
+|---|---|
+| `GOBL-MX-CFDI-BILL-INVOICE-16` | `tax.ext.mx-cfdi-rel-type` is required when `preceding` has a value. Invopop sets it to `01` on a credit note. |
+| `GOBL-MX-CFDI-BILL-INVOICE-17` | Each `preceding` row must have a `sat-uuid` stamp. |
+
+## Example
+
+<CodeGroup>
+  <CreditNoteMin />
+  <CreditNote />
+</CodeGroup>
+
+---
+
+<MexicoResources />
