@@ -1,0 +1,138 @@
+---
+title: "Germany issuing invoices guide"
+sidebarTitle: "Issuing invoices"
+description: Issue XRechnung and ZUGFeRD invoices in Germany, and send them by email or through Peppol.
+---
+
+import SendWorkflow, { deSendWorkflow } from '/snippets/workflows/de/send.mdx';
+import ZugferdWorkflow, { deZugferdWorkflow } from '/snippets/workflows/de/zugferd.mdx';
+import ExampleAccordion from '/snippets/invoices/de/accordion.mdx';
+import GermanyResources from '/snippets/tables/germany-resources.mdx';
+import FAQ from '/snippets/faqs/de/composers/guide-peppol-invoicing.mdx';
+import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
+
+## Introduction
+
+Germany requires electronic invoicing for different business scenarios, with two main standards: **XRechnung** and **ZUGFeRD**. Both are semantic data models aligned with the European Norm `EN 16931` and can be implemented using the same syntaxes.
+
+### XRechnung
+
+**XRechnung** is Germany's official standard for electronic invoices in public procurement (called _E-Rechnungen_), though it is also used for B2B transactions. It's part of the implementation of the EU directive `2014/55/EU`, which requires all contracting authorities in the EU to accept electronic invoices in a structured XML format.
+
+XRechnung can be implemented using two different syntaxes:
+- **UN/CEFACT CII** (Cross Industry Invoice)
+- **OASIS UBL** (Universal Business Language)
+
+Both syntaxes contain the same information but have different field names.
+
+### ZUGFeRD
+
+**ZUGFeRD** is a German standard for electronic invoicing designed to bridge the gap between traditional invoices and digital formats. ZUGFeRD combines a standard PDF/A-3 invoice with an embedded XML file containing the structured data. This hybrid approach makes it especially popular in B2B transactions, as it allows both people and accounting software to work with the same document.
+
+ZUGFeRD is fully aligned with the European Norm `EN 16931` and it is worth noting that ZUGFeRD and [Factur-X](/guides/fr-pa-invoicing#invoice-formats) are a joint project between Germany and France, and their content is identical.
+
+<Tip>
+    When referring to syntaxes, it is important to note that XRechnung, ZUGFeRD, and Factur-X are all *semantic data models*. What this means is that they define the data that must be present in the invoice, but not the actual format of the data or the explicit name of the fields.
+
+    To implement the semantic models, there are two syntaxes approved by the EU: UN/CEFACT Cross Industry Invoice ([CII](https://unece.org/trade/documents/2023/10/executive-guide-einvoicing-cross-industry-invoice)) and OASIS Universal Business Language ([UBL](https://docs.OASIS-open.org/ubl/UBL-2.1.html)).
+</Tip>
+
+### Channels
+
+Germany has no central platform. Businesses send e-invoices to each other directly, by [email](/guides/email) or through the [Peppol](/apps/peppol) network.
+
+The **Germany send invoice** workflow chooses the channel for each invoice. It sends the XRechnung through Peppol when the invoice has the customer's Peppol ID, and the customer accepts XRechnung there. Otherwise, it sends the XRechnung XML to the customer's email address. For customers that want a PDF, the **ZUGFeRD email invoice** workflow sends a ZUGFeRD PDF by email.
+
+Register the supplier first, on both channels. See the companion guide: [Germany supplier registration guide](/guides/de-registration). For receiving invoices, see [Germany receiving invoices guide](/guides/de-receiving).
+
+## Prerequisites
+
+- A registered supplier. Follow the [Germany supplier registration guide](/guides/de-registration) first.
+- The customer's Peppol ID on the invoice, to send through Peppol, or the customer's email address, to send by email.
+
+## Setup
+
+All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
+
+<Steps>
+  <Step title="Connect the apps">
+    1. Navigate to **Configuration** → **Apps**.
+    2. Find **Email** and **OASIS UBL** in the app discovery list, and click **Connect** on each. The **Germany send invoice** workflow converts the invoice with the OASIS UBL app.
+    3. Check that the **Germany** and **Peppol** apps are connected. The [supplier registration guide](/guides/de-registration) connects them.
+  </Step>
+  <Step title="Configure the invoice workflow">
+    <Card iconType="duotone" title="Germany send invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-send" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={deSendWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <SendWorkflow />
+      </Tab>
+    </Tabs>
+
+    The workflow runs these steps:
+
+    1. **Modify silo entry** adds the `de-xrechnung-v3` addon to the invoice.
+    2. **Generate UBL document** converts the invoice to XRechnung in the UBL syntax, and validates it.
+    3. **Verify document can be sent** checks the customer's Peppol ID on the invoice: it must be on Peppol and accept XRechnung there. If it does, **Send Peppol document** sends the XRechnung through Peppol. If not, or if the invoice has no Peppol ID for the customer, **Send email** sends the XML to the customer's email address.
+
+    <Info>For a public authority, the customer's Peppol ID uses scheme `0204`, and the invoice's ordering code holds the authority's Leitweg-ID. The authority gives you both values. They can be the same, but they can also differ.</Info>
+
+    To always send by email, use the [XRechnung email invoice workflow](https://console.invopop.com/redirect/workflows/new?template=de-xrechnung) instead.
+  </Step>
+  <Step title="Configure the ZUGFeRD workflow">
+    <Info>You can skip this step if your customers don't want ZUGFeRD PDFs.</Info>
+
+    <Card iconType="duotone" title="ZUGFeRD email invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=de-zugferd" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={deZugferdWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
+
+        <ZugferdWorkflow />
+      </Tab>
+    </Tabs>
+
+    The workflow generates the PDF, exports the ZUGFeRD XML and embeds it into the PDF with the **Embed XML into PDF** step. The **Send email** step sends the PDF to the email address of the invoice's customer. The **Export document** step also offers the ZUGFeRD BASIC and EXTENDED profiles. The invoice must carry the [`de-zugferd-v2`](https://docs.gobl.org/addons/de-zugferd-v2) addon.
+  </Step>
+</Steps>
+
+## Running
+
+<Info>The recommended approach for running jobs is to perform two steps: first upload the document to the [silo](/api-ref/silo/entries/create-an-entry-put), then [create a job](/api-ref/transform/jobs/create-a-job-post).</Info>
+
+Invopop uses the [GOBL](https://gobl.org) library to process conversions. GOBL's implementation validates [national business rules](https://www.xoev.de/sixcms/media.php/13/XRechnung-EnglishSummary-v220-final.pdf) in addition to the rules defined in `EN 16931-1`.
+
+Set the `regime` field to `DE` in your invoices. We also recommend using the [GOBL Builder](https://build.gobl.org) to create your own invoices.
+
+## Example invoices
+
+<ExampleAccordion />
+
+## FAQ
+
+<FAQ />
+
+More available in our [Germany FAQ](/faq/germany) section
+
+---
+
+<GermanyResources />
+
+<Card title="Participate in our community"
+  icon="forumbee"
+  href="https://community.invopop.com"
+  arrow="true"
+  horizontal
+>
+  Ask and answer questions about invoicing in Germany →
+</Card>

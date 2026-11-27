@@ -1,0 +1,361 @@
+# OpenAPI gov-de v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points for the Germany app, to complete a supplier's
+    onboarding without the hosted onboarding pages.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Germany Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-de/v1/entry/{silo_entry_id}/representative:
+    post:
+      operationId: setEntryRepresentative
+      summary: Set the legal representative
+      description: |-
+        Sets the legal representative of the company and their email.
+        Invopop uses the email to contact the representative about the
+        terms of service. Without
+        this request, the onboarding uses the first person of the party,
+        and it can only be confirmed when that person has an email.
+
+        The request also sends the current version of the party to the
+        onboarding. A changed representative or party removes the
+        documents uploaded so far.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Representative"
+      responses:
+        "204":
+          description: Representative stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-de/v1/entry/{silo_entry_id}/terms:
+    get:
+      operationId: fetchEntryTerms
+      summary: Fetch the terms of service
+      description: |-
+        Returns the terms of service that the supplier accepts, in
+        Markdown.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The terms of service.
+          content:
+            text/markdown:
+              schema:
+                type: string
+                example: |-
+                  These terms apply when you authorize Invopop S.L. ("Invopop") to act on behalf of your company...
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      operationId: acceptEntryTerms
+      summary: Accept the terms of service
+      description: |-
+        Records that the supplier accepts the terms of service on behalf
+        of the company.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "204":
+          description: Acceptance stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-de/v1/entry/{silo_entry_id}/identity:
+    post:
+      operationId: uploadEntryIdentity
+      summary: Upload an ID document image
+      description: |-
+        Stores one side of the legal representative's ID document. The
+        document is verified when the supplier confirms.
+
+        Call once per `view`:
+
+        - `front` and `back` for an ID card.
+        - `page` for a passport.
+
+        Uploading the same `view` again replaces the earlier image.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityUpload"
+      responses:
+        "204":
+          description: Image stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-de/v1/entry/{silo_entry_id}/ownership:
+    post:
+      operationId: uploadEntryOwnership
+      summary: Upload the proof of ownership
+      description: |-
+        Stores a document that shows that the legal representative can
+        act for the company, such as an extract from the commercial
+        register (*Handelsregisterauszug*). Uploading again replaces the
+        earlier document.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OwnershipUpload"
+      responses:
+        "204":
+          description: Document stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /apps/gov-de/v1/entry/{silo_entry_id}/confirm:
+    post:
+      operationId: confirmEntry
+      summary: Confirm the onboarding
+      description: |-
+        Submits the onboarding, which is decided at once. Requires the
+        representative's email, the accepted terms of service, the ID
+        document and the proof of ownership.
+
+        When the onboarding is approved, the waiting **Wait for supplier
+        approval** step continues the registration workflow. When it is
+        rejected, the response carries the reason.
+      parameters:
+        - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The decision of the onboarding.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfirmResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    SiloEntryID:
+      name: silo_entry_id
+      in: path
+      required: true
+      description: ID of the `org.Party` silo entry being onboarded.
+      schema:
+        type: string
+        example: "5b45453c-cdd0-11ed-afa1-0242ac120002"
+
+  schemas:
+    Representative:
+      type: object
+      required: [given, surname, email]
+      properties:
+        given:
+          type: string
+          description: Given name of the legal representative.
+          example: "Erika"
+        surname:
+          type: string
+          description: Surname of the legal representative.
+          example: "Mustermann"
+        role:
+          type: string
+          description: Role of the legal representative in the company.
+          example: "Geschäftsführerin"
+        email:
+          type: string
+          format: email
+          description: |-
+            Email of the legal representative. Invopop uses it to contact
+            the representative about the terms of service.
+          example: "erika.mustermann@example.com"
+
+    IdentityUpload:
+      type: object
+      required: [view, data]
+      properties:
+        view:
+          type: string
+          description: |-
+            Which side of the ID document this image shows.
+
+              - `front` - Front of an ID card.
+              - `back` - Back of an ID card.
+              - `page` - Photo page of a passport.
+          enum: ["front", "back", "page"]
+        data:
+          type: string
+          format: byte
+          description: |-
+            Base64-encoded image. Must be `image/png` or `image/jpeg`,
+            maximum 4 MB.
+
+    OwnershipUpload:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: string
+          format: byte
+          description: |-
+            Base64-encoded document. Must be `application/pdf`,
+            `image/png` or `image/jpeg`, maximum 4 MB.
+
+    ConfirmResponse:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          description: State of the onboarding after the decision.
+          enum: ["approved", "rejected"]
+          example: "approved"
+        key:
+          type: string
+          description: Key of the rejection reason. Only when rejected.
+          example: "identification-expired"
+        notes:
+          type: string
+          description: Description of the rejection reason. Only when rejected.
+          example: "The identity document has expired."
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable description of the error.
+          example: "The ID document must be a PNG or JPEG image."
+
+  responses:
+    BadRequest:
+      description: |-
+        The request is not valid, the step is not required for this
+        workspace, the representative has no email, or the onboarding is
+        already submitted.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "The view must be front, back or page."
+
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "missing enrollment"
+
+    NotFound:
+      description: |-
+        The silo entry does not exist, or it has no onboarding. Run the
+        registration workflow first.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "no approval for this silo entry"
+
+    UnprocessableEntity:
+      description: |-
+        The silo entry does not contain a party, or the workspace has not
+        enabled the Germany app.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Germany app is not enrolled for this workspace"
+
+    InternalServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "fetching silo entry"
+
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        Authenticate using a valid Invopop enrollment token in the `Bearer`
+        scheme.
+
+        Example: `Authorization: Bearer <token>`

@@ -7,6 +7,8 @@ keywords: ['noverifactu', 'verifactu']
 
 import WorkflowExample, { esNoverifactuInvoiceWorkflow } from '/snippets/workflows/es/noverifactu-invoice.mdx';
 import CancelInvoice, { esNoverifactuCancelWorkflow } from '/snippets/workflows/es/noverifactu-cancel.mdx';
+import VerifyRecords, { esNoverifactuVerifyWorkflow } from '/snippets/workflows/es/noverifactu-verify.mdx';
+import ExportRecords, { esNoverifactuExportWorkflow } from '/snippets/workflows/es/noverifactu-export.mdx';
 import ExamplesAccordion from '/snippets/invoices/es/accordion.mdx';
 import CreditNote from '/snippets/invoices/es/verifactu-credit-note.mdx';
 import CorrectiveInvoice from '/snippets/invoices/es/verifactu-corrective.mdx';
@@ -16,7 +18,7 @@ import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 ## Introduction
 
-NO VERI\*FACTU is one of the two compliance modalities defined by Spain's Real Decreto 1007/2023. In this modality, invoicing records are **not** sent to the AEAT in real time. Instead, they are digitally signed using XAdES Enveloped Signature and stored locally to guarantee integrity and inalterability. Records are only submitted to the AEAT upon explicit requirement.
+NO VERI\*FACTU is one of the two compliance modalities defined by Spain's Real Decreto 1007/2023. In this modality, invoicing records are **not** sent to the AEAT in real time. Instead, they are digitally signed using XAdES Enveloped Signature, chained to the previous record, and stored to guarantee integrity and inalterability. Records are only submitted to the AEAT upon explicit requirement, using an [export](#export-records).
 
 ## Prerequisites
 
@@ -43,13 +45,9 @@ Add a new workflow to your workspace for issuing invoices. You can start with th
 
 Keep the `Workflow ID` at hand, you'll use it later.
 
-<Info>
-  NO VERI\*FACTU allows for document modifications after recording. If a document contains errors, update the GOBL details and resubmit to the same workflow.
-</Info>
-
 ## Issue an invoice
 
-The GOBL invoice format for NO VERI\*FACTU is identical to VERI\*FACTU — both use the same [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon. The difference is in how the records are processed: NO VERI\*FACTU signs and stores them locally rather than sending them to the AEAT.
+The GOBL invoice format for NO VERI\*FACTU is identical to VERI\*FACTU — both use the same [`es-verifactu-v1`](https://docs.gobl.org/addons/es-verifactu-v1) addon. The difference is in how the records are processed: NO VERI\*FACTU signs and stores them rather than sending them to the AEAT.
 
 <Steps>
   <Step title="Upload an Invoice">
@@ -71,7 +69,7 @@ The GOBL invoice format for NO VERI\*FACTU is identical to VERI\*FACTU — both 
     - `workflow_id`: use the Workflow ID of the _NO VERI\*FACTU invoice_ workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the invoice you've just uploaded.
 
-    The invoice's status will change to `Recorded` when the workflow completes successfully. The signed XML record will be available in the "Files" section of the silo entry, and the generated PDF will include the required QR code.
+    The invoice's status will change to `Registered` when the workflow completes successfully. The signed XML record will be available in the "Files" section of the silo entry, and the generated PDF will include the required QR code.
   </Step>
 </Steps>
 
@@ -119,7 +117,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     - `workflow_id`: use the Workflow ID of the _NO VERI\*FACTU invoice_ workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the credit note you've just uploaded.
 
-    The credit note's status will change to `Recorded` when the workflow completes successfully.
+    The credit note's status will change to `Registered` when the workflow completes successfully.
   </Step>
 </Steps>
 
@@ -153,7 +151,7 @@ Unless you have a specific requirement to use a corrective invoice we recommend 
     - `workflow_id`: use the Workflow ID of the _NO VERI\*FACTU invoice_ workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the corrective invoice you've just uploaded.
 
-    The corrective invoice's status will change to `Recorded` when the workflow completes successfully.
+    The corrective invoice's status will change to `Registered` when the workflow completes successfully.
   </Step>
 </Steps>
 
@@ -188,19 +186,19 @@ A replacement invoice (_Factura de Canje_) is used to replace a simplified invoi
     - `workflow_id`: use the Workflow ID of the _NO VERI\*FACTU invoice_ workflow we created during setup
     - `silo_entry_id`: use the Silo Entry ID of the replacement invoice you've just uploaded.
 
-    The replacement invoice's status will change to `Recorded` when the workflow completes successfully.
+    The replacement invoice's status will change to `Registered` when the workflow completes successfully.
   </Step>
 </Steps>
 
 ## Cancel an invoice
 
-NO VERI\*FACTU allows you to cancel an invoice by generating a cancellation record. Unlike VERI\*FACTU, the cancellation is not sent to the AEAT — it is signed and stored locally.
+NO VERI\*FACTU allows you to cancel an invoice by generating a cancellation record. Unlike VERI\*FACTU, the cancellation is not sent to the AEAT — it is signed, chained and stored like any other invoice record.
 
 In general, you should only cancel an invoice if it hasn't been handed to the customer. Canceling an invoice doesn't produce a second document to hand to your customer. If the invoice has already been delivered, we recommend issuing a credit note instead.
 
 <Steps>
   <Step title="Add a cancel invoice workflow (only once)">
-    To cancel an invoice, you need a workflow with the _Generate Cancellation Record_ and _Store Record_ steps. You can start with the template below.
+    To cancel an invoice, you need a workflow with the _Cancel for NO VERI\*FACTU_ step. You can start with the template below.
 
     <Card title="NO VERI*FACTU cancel invoice workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-cancel" horizontal>
       Add to my workspace →
@@ -219,7 +217,94 @@ In general, you should only cancel an invoice if it hasn't been handed to the cu
   <Step title="Send to cancellation workflow">
     To cancel an invoice, simply send it to the NO VERI\*FACTU cancel invoice workflow created earlier using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
 
-    The invoice's status will change to `Void` when the workflow completes successfully.
+    The invoice's status will change to `Void` when the workflow completes successfully. The signed cancellation record will be available in the "Files" section of the silo entry.
+  </Step>
+</Steps>
+
+## Verify records
+
+NO VERI\*FACTU requires the system to be able to detect anomalies in its records. A verification checks every record of a supplier against the adjacent records in the chain, and records the result as [events](/guides/es-noverifactu-supplier#event-records): one event when the check starts (`03` for invoice records, `05` for event records), and one more for each anomaly found (`04` or `06`).
+
+<Steps>
+  <Step title="Add a verification workflow (only once)">
+    The workflow below verifies both the invoice and the event records of a supplier.
+
+    <Card title="NO VERI*FACTU verify records workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-verify" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esNoverifactuVerifyWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <VerifyRecords />
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Send the supplier to the verification workflow">
+    Send the registered supplier's silo entry to the verification workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint.
+
+    The verification runs in the background over the records created before it started, and the job completes when it finishes. A step with no records to verify is skipped.
+  </Step>
+</Steps>
+
+The anomalies detected are:
+
+| Code | Anomaly |
+|------|---------|
+| `01` | The fingerprint does not match the record |
+| `02` | The signature does not match the record |
+| `03` | The record is missing or cannot be read |
+| `04` | The previous record in the chain is missing |
+| `05` | The next record in the chain is missing |
+| `07` | The next record holds a different fingerprint for this one |
+| `08` | The previous fingerprint held by the record does not match |
+| `11` | The record was generated before the previous one |
+| `12` | The record was generated after the next one |
+| `13` | The record was generated after the current time |
+
+## Export records
+
+When the AEAT requires it, a supplier must hand over its records for a period. An export collects the supplier's signed records generated in that period into a `.tar.gz` archive with one XML file per record, in chain order, and records the export as an [event](/guides/es-noverifactu-supplier#event-records) (`08` for invoice records, `09` for event records).
+
+<Steps>
+  <Step title="Add an export workflow">
+    The workflow below exports both the invoice and the event records of a supplier. You only need to add it once, as the period is sent with each job.
+
+    <Card title="NO VERI*FACTU export records workflow" icon="code-branch" iconType="duotone" href="https://console.invopop.com/redirect/workflows/new?template=es-noverifactu-export" horizontal>
+      Add to my workspace →
+    </Card>
+    <Tabs>
+      <Tab title="Workflow">
+        <WorkflowDiagram workflow={esNoverifactuExportWorkflow} />
+      </Tab>
+      <Tab title="Code">
+        Copy and paste into a new [Empty Party workflow](https://console.invopop.com/redirect/workflows/new?template=empty-party) code view.
+
+        <ExportRecords />
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Send the supplier to the export workflow">
+    Send the registered supplier's silo entry to the export workflow using the [Create a job](/api-ref/transform/jobs/create-a-job-post) endpoint, with the period in the `from` and `to` args. Both dates are included, in Spanish peninsular time.
+
+    ```json
+    {
+      "workflow_id": "<export workflow ID>",
+      "silo_entry_id": "<supplier silo entry ID>",
+      "args": {
+        "from": "2026-01-01",
+        "to": "2026-03-31"
+      }
+    }
+    ```
+
+    The archive is built in the background, and the job completes when it is ready. A step with no records in the period is skipped.
+  </Step>
+  <Step title="Download the archive">
+    Download the supplier's latest export with the [Download NO VERI\*FACTU export](/api-ref/apps/gov-es/noverifactu-export) endpoint, using the supplier's silo entry ID and the type of records, `invoices` or `events`.
   </Step>
 </Steps>
 
