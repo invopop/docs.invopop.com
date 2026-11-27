@@ -4,46 +4,44 @@ sidebarTitle: "Receiving invoices"
 description: Receive XRechnung and ZUGFeRD invoices by email or through Peppol.
 ---
 
-import ConnectImportWorkflow, { connectImportSupplierInvoicesWorkflow } from '/snippets/workflows/connect/import-supplier-invoices.mdx';
 import GermanyResources from '/snippets/tables/germany-resources.mdx';
 import FAQ from '/snippets/faqs/de/composers/guide-peppol-receiving.mdx';
-import { WorkflowDiagram } from '/snippets/components/workflow.jsx';
 
 ## Introduction
 
-Since 1 January 2025, every German business must be able to receive structured e-invoices: XRechnung, or ZUGFeRD with its embedded XML. Invopop receives them by email with the [Connect](/apps/connect) app, or through the [Peppol](/apps/peppol) network, and imports each one as a GOBL invoice.
+Since 1 January 2025, every German business must be able to receive structured e-invoices: XRechnung, or ZUGFeRD with its embedded XML. Invopop receives them by email with the [Email](/apps/email) app, or through the [Peppol](/apps/peppol) network, and imports each one as a GOBL invoice.
 
 For issuing invoices, see the companion guide: [Invoicing in Germany](/guides/de-invoicing).
 
 ## Prerequisites
 
 - A registered supplier. Follow the [supplier registration guide](/guides/de-registration) first.
-- **For email**: an address that your suppliers send invoices to. Connect gives you an `invopop.email` address, or receives on your own domain.
+- **For email**: the [Email](/apps/email) app, connected in your workspace.
 
 ## Receive by email
+
+The Email app gives each registered supplier an address on `invopop.email`, and imports every XRechnung or ZUGFeRD invoice sent there, with the supplier as the customer. [Receiving invoices by email](/guides/email#receiving-invoices-by-email) in the Email guide explains each step in detail.
 
 All of the following steps must be carried out from the [Invopop Console](https://console.invopop.com).
 
 <Steps>
-  <Step title="Enable the Connect app">
-    Follow [Set up](/guides/connect#set-up) in the Connect guide to enable the app.
-  </Step>
   <Step title="Create the import workflow">
-    The workflow below imports what Connect receives. XRechnung and ZUGFeRD invoices end in its `parsed` branch, because Connect converts them as they are, without AI. Entries that need a check stay in `processing`.
-
-    <Tabs>
-      <Tab title="Workflow">
-        <WorkflowDiagram workflow={connectImportSupplierInvoicesWorkflow} />
-      </Tab>
-      <Tab title="Code">
-        Copy and paste into a new [Empty Invoice workflow](https://console.invopop.com/redirect/workflows/new?template=empty-invoice) code view.
-
-        <ConnectImportWorkflow />
-      </Tab>
-    </Tabs>
+    <Card iconType="duotone" title="Email receive invoice workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=email-incoming-import" horizontal>
+      Add to my workspace →
+    </Card>
   </Step>
-  <Step title="Create an email endpoint">
-    Create an email endpoint that uses the workflow, as [Receive documents](/guides/connect#receive-documents) in the Connect guide explains. Then give its address to your suppliers.
+  <Step title="Configure receiving in the Email app">
+    In **Configuration** → **Apps**, open the Email app's **Configure** page. In the **Incoming** section, add a connection with Invopop as the provider and the import workflow from the previous step.
+  </Step>
+  <Step title="Register the supplier for email">
+    Run this workflow on the supplier. It gives the supplier its `invopop.email` address. A registered supplier costs 20 pops a month.
+
+    <Card iconType="duotone" title="Email register party workflow" icon="code-branch" href="https://console.invopop.com/redirect/workflows/new?template=email-incoming-register" horizontal>
+      Add to my workspace →
+    </Card>
+  </Step>
+  <Step title="Share the address">
+    Give the address to the companies that send the supplier its invoices. The Email app lists it in its **Endpoints** tab.
   </Step>
 </Steps>
 
