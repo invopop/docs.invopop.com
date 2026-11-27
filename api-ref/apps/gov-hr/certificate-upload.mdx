@@ -1,0 +1,35 @@
+---
+title: "Upload CIS certificate"
+description: "Register a Croatian supplier for B2C fiscalization with its FINA certificate."
+openapi: "POST /apps/gov-hr/v1/entry/{silo_entry_id}/certificate"
+---
+
+Registers the supplier in a party silo entry for B2C fiscalization with its FINA application certificate. Invopop signs the supplier's invoices for CIS (the Tax Administration's fiscalization service) with this certificate. Use this endpoint to collect the certificate in your own product instead of sending the supplier to the hosted registration page.
+
+The certificate is the PKCS#12 file (`.p12` or `.pfx`) that FINA issues to the supplier for fiscalization. Send the file base64 encoded, with the password that opens it. A sandbox workspace takes only FINA demo certificates, and a live workspace only production ones.
+
+<Note>
+  Run the supplier registration workflow on the party before you upload the certificate. The workflow waits in its **Wait for CIS certificate upload** step, and the upload ends that step. An upload without the workflow still registers the supplier, but the party's state doesn't change.
+</Note>
+
+Uploading again replaces the certificate, for example before the current one expires.
+
+## Refusals
+
+Every refusal answers with an `error` message in English and a `code` to show your own message:
+
+| Code | Status | Meaning |
+|---|---|---|
+| `certificate-file` | `400` | The file isn't a PKCS#12 file with one private key and its certificate, or it is larger than 64 KB. |
+| `certificate-password` | `400` | The password doesn't open the file. |
+| `certificate-key` | `400` | The private key isn't RSA, or doesn't belong to the certificate. |
+| `certificate-oib` | `400` | The certificate doesn't name an OIB, or is issued to another OIB than the supplier's. |
+| `certificate-validity` | `400` | The certificate has expired, or isn't valid yet. |
+| `certificate-issuer` | `400` | The certificate isn't from FINA, is self-signed, or is a demo certificate in a live workspace (or a production one in a sandbox workspace). |
+| `certificate-revoked` | `400` | FINA has revoked the certificate. |
+| `no-oib` | `422` | The party has no Croatian tax ID with its OIB as the code. |
+| `invalid` | `422` | The silo entry isn't a party. |
+| `not-enrolled` | `403` | The workspace hasn't enrolled the Croatia app. |
+| `unauthorized` | `401` | The token is missing, or Invopop doesn't accept it. |
+
+A request that isn't valid JSON, or whose `data` isn't base64, answers `400` with no code.

@@ -1,0 +1,173 @@
+# OpenAPI Croatia v1 Specification
+# This document is created by hand.
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@invopop.com
+    name: Invopop Developers
+  description:
+    Set of end-points that help you register suppliers with the Croatia app for B2C fiscalization through the API, without the hosted registration page.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Croatia Service API
+  version: 0.1.0
+servers:
+  - description: production
+    url: https://api.invopop.com
+security:
+  - InvopopAuth: []
+paths:
+  /apps/gov-hr/v1/entry/{silo_entry_id}/certificate:
+    get:
+      description: Fetch the B2C fiscalization registration of the supplier in a party silo entry.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      responses:
+        "200":
+          description: The supplier's registration, in the environment of the workspace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/NotEnrolled"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      description: Upload the supplier's FINA application certificate to register it for B2C fiscalization. This endpoint is an alternative to the hosted registration page, for integrators who show their own form.
+      parameters:
+      - $ref: "#/components/parameters/SiloEntryID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  description: |-
+                    The certificate as a PKCS#12 file (`.p12` or `.pfx`) of up to 64 KB, base64 encoded.
+                    It holds the FINA application certificate issued to the supplier's OIB and its RSA private key.
+                  format: byte
+                  type: string
+                password:
+                  description: The password that opens the certificate file.
+                  type: string
+                  example: "MySecurePassword123!"
+              required:
+                - data
+                - password
+      responses:
+        "200":
+          description: The supplier is registered. The answer is its registration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "400":
+          description: Bad Request - The request or the certificate can be corrected and sent again. The `code` says why, see the endpoint page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/NotEnrolled"
+        "413":
+          description: Payload Too Large - The request body is larger than 256 KB.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  parameters:
+    SiloEntryID:
+      description: ID of the org.Party silo entry of the supplier.
+      in: path
+      name: silo_entry_id
+      required: true
+      schema:
+        description: ID of the org.Party silo entry of the supplier.
+        example: 0190e6a0-0000-7000-8000-0000000000aa
+        title: Silo Entry ID
+        type: string
+  schemas:
+    Registration:
+      type: object
+      properties:
+        oib:
+          description: The supplier's OIB, from the party's tax ID.
+          type: string
+          example: "80432461483"
+        environment:
+          description: The CIS environment of the registration, `sandbox` (CIS test) for a sandbox workspace and `live` (production CIS) for a live one.
+          type: string
+          enum: [sandbox, live]
+          example: sandbox
+        registered:
+          description: Whether the supplier is registered with a certificate in this environment.
+          type: boolean
+          example: true
+        certificate_not_after:
+          description: When the certificate expires. Present only when the supplier is registered.
+          type: string
+          format: date-time
+          example: "2030-07-31T12:30:18Z"
+        registered_at:
+          description: When the current certificate was uploaded. Present only when the supplier is registered.
+          type: string
+          format: date-time
+          example: "2026-11-24T16:56:32.03Z"
+    Error:
+      type: object
+      properties:
+        error:
+          description: Details of the error, in English.
+          type: string
+        code:
+          description: A stable code for the refusal, to show your own message. See the endpoint page.
+          type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized - Missing token, or a token Invopop does not accept (`unauthorized`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotEnrolled:
+      description: Forbidden - The workspace has not enrolled the Croatia app (`not-enrolled`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Unprocessable Entity - The silo entry can't be registered. It doesn't exist, isn't a party (`invalid`), or the party has no Croatian OIB (`no-oib`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal Server Error - The request could not be processed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    InvopopAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Use the `Bearer` scheme with a valid JWT token to authenticate requests.
+
+        Example: `Authorization: Bearer <token>`
