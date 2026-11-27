@@ -12,9 +12,28 @@ import EmailIncomingUnregisterWorkflow, { emailIncomingUnregisterWorkflow } from
 
 ## Introduction
 
-This guide will show you how to set up the Email app and its associated workflow actions for emailing invoices or sending notifications, and for [receiving invoices by email](#receiving-invoices-by-email).
+The Email app does two things:
 
-## Prerequisites
+- **[Sending emails](#sending-emails)** from your workflows: invoices to customers, notifications, and error reports.
+- **[Receiving invoices by email](#receiving-invoices-by-email)** for your parties: each registered party gets an address, and the invoices sent there are imported into your workspace.
+
+To use either, connect the app. Head over to `Configuration → Apps`, find `Email` in the list of apps to discover, and tap **Connect**.
+
+<Frame>
+  <img
+    width="371"
+    src="/assets/guides/email-connect.png"
+    alt="Email app connected"
+  />
+</Frame>
+
+## Sending emails
+
+The **Send via Email** step sends an email. When the job has a silo entry, the entry's files are attached and its customer or supplier can be a recipient; this is how invoices are sent. Without one, nothing is attached, for notifications or failures.
+
+<Info>**Notify via Email** is now part of **Send via Email**. Existing steps that use it keep working as sends without attachments.</Info>
+
+### Prerequisites
 
 You can send emails from `Company name <email@invopop.com>` by simply connecting the Email app.
 
@@ -26,23 +45,9 @@ If you wish to send emails from your own domain such as `Company Name <name@your
 
 <Warning>In the case of SMTP delivery we strongly recommend using an _app password_ or _token_ if your service provider allows it. This is the best security practice because it allows you to revoke authorization at any time, even if you lose access to Invopop.</Warning>
 
-
-## Setup
+### Setup
 
 <Steps>
-
-<Step title="Connect the Email app.">
-Head over to `Configuration → Apps`, and find `Email` from the list of apps to discover. Tap the **Connect** button to enable.
-
-    <Frame>
-      <img
-        width="371"
-        src="/assets/guides/email-connect.png"
-        alt="Email app connected"
-      />
-    </Frame>
-
-</Step>
 
 <Step title="Add Senders">
 
@@ -56,7 +61,6 @@ You can add as many senders as you need by tapping on the `Add` button under **O
 
 </Step>
 
-
 <Step title="Set up your workflow">
 
 Whether you start from an existing or new workflow, make sure that you add the `Send email` step after you have issued an invoice via the corresponding tax authority and generated a PDF (if required). This will ensure the necessary files are attached, and that the invoice complies with local regulatory requirements.
@@ -69,19 +73,9 @@ If you simply want to send a notification, this suggestion does not apply: a `Se
 
 </Step>
 
-
 </Steps>
 
-## Workflow actions
-
-The Email app adds these items to your workflow action list:
-
-1. **Send via Email**: sends an email. When the job has a silo entry, the entry's files are attached and its customer or supplier can be a recipient; this is how invoices are sent. Without one, nothing is attached, for notifications or failures.
-2. **Register incoming endpoint**, **Unregister incoming endpoint** and **Import incoming document**: receive invoices by email, see [below](#receiving-invoices-by-email).
-
-<Info>**Notify via Email** is now part of **Send via Email**. Existing steps that use it keep working as sends without attachments.</Info>
-
-## Workflow step configuration
+### Step configuration
 
     <Frame>
       <img
@@ -118,18 +112,16 @@ The email body textarea is where you compose your message's main content. This f
 **Combine attachments into a single zip file**<br />
 It's possible that your workflow generates several files per invoice (sometimes an XML and a PDF file are required by legislation). This option allows you to combine and compress all files into a single `.zip` file.
 
-***
-
-## Custom template variables with job args
+### Custom template variables with job args
 
 In addition to the predefined variables available in the **Insert variable** menu, you can inject custom variables into your email templates using job args. This is particularly useful for dynamic content like payment links, conditional text, and other external data.
 
-### How it works
+#### How it works
 
 When [using the API to run a workflow](/api-ref/transform/jobs/create-a-job-put) you pass an `args` data object with custom variables you want to inject into your email. You will then introduce the variable into the email's subject or body with the following syntax: `{{args.variable_name}}`. If you need to provide a fallback in case the variable is not present, we recommend using the following syntax: `{{ or args.value "Default value" }}`.
 
 
-### Example: adding a payment link
+#### Example: adding a payment link
 
 Let's say you want to send an email with a custom payment link. Here's how to set it up:
 
@@ -187,7 +179,11 @@ Let's say you want to send an email with a custom payment link. Here's how to se
 
 ## Receiving invoices by email
 
-The Email app can also receive invoices for your parties. Each registered party gets an address of its own, such as `clip.apple.leap@invopop.email`, and every invoice sent there is imported into your workspace, with that party as the customer. It suits accounts payable: give a supplier the address, and their invoices arrive as silo entries.
+The Email app receives invoices for your parties. Each registered party gets an address of its own, such as `clip.apple.leap@invopop.email`, and every invoice sent there is imported into your workspace, with that party as the customer. It suits accounts payable: give a supplier the address, and their invoices arrive as silo entries.
+
+It uses three steps: **Register incoming endpoint** gives a party its address, **Import incoming document** imports each invoice that arrives, and **Unregister incoming endpoint** releases the address.
+
+### Setup
 
 <Steps>
 
@@ -290,9 +286,7 @@ The **Unregister incoming endpoint** step releases the party's address and remov
   </Tab>
 </Tabs>
 
-***
-
-**FAQ**
+## FAQ
 
 <AccordionGroup>
 
