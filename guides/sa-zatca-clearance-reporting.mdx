@@ -57,7 +57,7 @@ The send workflow claims the next ICV, builds and hashes the UBL document, signs
 </Tabs>
 
 <Warning>
-  An invoice that is already signed is skipped as "already sent".
+  An invoice that already carries the ZATCA QR stamp, `zatca-qr`, is skipped as already sent. The invoice must be signed before this step.
 </Warning>
 
 ## Credit and debit notes
@@ -81,6 +81,24 @@ Each row surfaces the chain values ZATCA mandates: Supplier Tax Code, Identity C
 ## Example invoices
 
 <SaAccordion />
+
+## Errors
+
+**Send invoice to ZATCA** reports a status and a message on the job. The job's `faults` list, returned by [Fetch a job](/api-ref/transform/jobs/fetch-a-job), carries the same message. The messages are listed below exactly as the Saudi Arabia app returns them, so you can match on them. Values in angle brackets vary per invoice. [Step results](/guides/sa-zatca-registration#step-results) explains each status.
+
+| Message | Status | Fix |
+|---|---|---|
+| `invoice already accepted by ZATCA (zatca-qr stamp present); not sending it again` | `SKIP` | Nothing. ZATCA already accepted this invoice. |
+| `invoice must be signed before it can be sent to ZATCA` | `KO` | Sign the entry before the send step. |
+| `invoice must carry the sa-zatca-v1 addon to be sent to ZATCA` | `KO` | Add `sa-zatca-v1` to the invoice's `$addons`. |
+| `invoice reporter VAT <VAT> has no valid identity (CRN/MOM/MLS/700/SAG/OTH); cannot route to a registration` | `KO` | Give the supplier the identity it was [registered](/guides/sa-zatca-registration#multi-branch-entities) with. On a self-billed invoice, the customer is the reporter. |
+| `party with VAT <VAT> and identity <type>:<code> is not registered for this owner; complete onboarding before sending invoices` | `KO` | [Register](/guides/sa-zatca-registration) a party with this VAT number and identity in the workspace, or fix the invoice to match an existing registration. |
+| `party has not completed onboarding process` | `KO` | Wait until the [registration workflow](/guides/sa-zatca-registration#how-it-works) completes and the party entry is `registered`. |
+| `cannot build the ZATCA QR code (<reason>)` | `KO` | The reason names the problem, for example a QR code over ZATCA's length limit and its largest field. Shorten that field on the invoice. |
+| `ZATCA schematron validation failed:` followed by one line per failed rule | `KO` | Invopop checks the final XML against ZATCA's schematron before sending. Fix the invoice for each listed rule. |
+| `ZATCA rejected the invoice (validation: <ZATCA status>: <ZATCA message>)` | `KO` | ZATCA returned `NOT_CLEARED` or `NOT_REPORTED`. The message is the first error ZATCA listed. |
+
+ZATCA's own messages come from its business rules, so this page can't list them. They reach you through the last two messages above. GOBL catches most of these problems when it builds the invoice, with the `sa-zatca-v1` addon. Its rules and their BR-KSA references are in the [addon's validation rules](https://docs.gobl.org/addons/sa-zatca-v1#validation-rules).
 
 ## FAQ
 
