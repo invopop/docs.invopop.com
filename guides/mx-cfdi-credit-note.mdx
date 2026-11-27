@@ -8,61 +8,43 @@ import CreditNoteMin from '/snippets/invoices/mx/sat-credit-note.min.mdx';
 import CreditNote from '/snippets/invoices/mx/sat-credit-note.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import CreditNoteSpec, { mxCfdiCreditNoteSpec } from '/snippets/specs/mx/credit-note.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import CreditNoteXml from '/snippets/specs/mx/xml/sat-credit-note.mdx';
 
-This page is a field reference for the credit note. In Mexico, a credit note is a CFDI with `TipoDeComprobante` `E` (Egreso).
+A credit note in Mexico is a CFDI of type `E` (Egreso). It decreases the amount of an invoice: a return, a discount after the sale, or a correction. It does not cancel the invoice. To remove an invoice, [cancel it](/guides/mx-sat-cancelling).
 
-<Info>
-  A credit note uses the same workflow as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing).
-</Info>
+| | |
+|---|---|
+| **GOBL document** | [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice), type `credit-note` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, `cfdv40.xsd` |
+| **Workflow** | The same as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing). |
+| **Base spec** | [Invoice](/guides/mx-cfdi-invoice). This page lists only the differences. |
 
-## When to use this document
-
-Use a credit note to decrease the amount of an invoice that the PAC stamped: a return, a discount after the sale, or a correction of the amount.
-
-A credit note does not cancel the original invoice. The two documents stay valid. To remove an invoice that must not exist, [cancel it](/guides/mx-sat-cancelling).
-
-## Minimum document
-
-A credit note is a [GOBL invoice](https://docs.gobl.org/draft-0/bill/invoice) with `type` set to `credit-note`. It has the same fields as an [invoice](/guides/mx-cfdi-invoice), plus a reference to the original invoice in `preceding`.
-
-Send positive quantities and prices. The document type tells the SAT that the amounts decrease the income.
-
-## Field mapping
+## Fields
 
 <MappingLegend />
 
-Only the fields that are different from an [invoice](/guides/mx-cfdi-invoice#field-mapping) are in this table.
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiCreditNoteSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <CreditNoteSpec />
+  </Tab>
+</Tabs>
 
-| GOBL field | CFDI field | You send | Rule |
-|---|---|---|---|
-| `type` = `credit-note` | `@TipoDeComprobante` = `E` | M | Stored in `tax.ext.mx-cfdi-doc-type`. |
-| `preceding[].stamps` (`sat-uuid`) | `CfdiRelacionados/CfdiRelacionado/@UUID` | M | Required. The fiscal folio (UUID) of each original invoice. You get it from the `sat-uuid` stamp of the invoice. |
-| `tax.ext.mx-cfdi-rel-type` | `CfdiRelacionados/@TipoRelacion` | O | Default `01`. Send a different code only for the cases below. |
+## Errors
 
-One credit note can refer to more than one invoice. Add one `preceding` row for each invoice. All the rows share the same relation type.
-
-### Relation types
-
-| Code | Use |
-|---|---|
-| `01` | Credit note for the related invoices. This is the default. |
-| `03` | Return of goods from earlier invoices. |
-| `07` | Application of an advance payment. |
-
-## Validation rules
-
-The [invoice rules](/guides/mx-cfdi-invoice#validation-rules) and the [party rules](/guides/mx-cfdi-parties#validation-rules) apply. These two are the most frequent on a credit note:
-
-| Number | Rule |
-|---|---|
-| `GOBL-MX-CFDI-BILL-INVOICE-16` | `tax.ext.mx-cfdi-rel-type` is required when `preceding` has a value. Invopop sets it to `01` on a credit note. |
-| `GOBL-MX-CFDI-BILL-INVOICE-17` | Each `preceding` row must have a `sat-uuid` stamp. |
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
 
 ## Example
 
 <CodeGroup>
   <CreditNoteMin />
   <CreditNote />
+  <CreditNoteXml />
 </CodeGroup>
 
 ---

@@ -196,6 +196,7 @@ Every service is versioned in the path (`/silo/v1`, `/transform/v1`, `/sequence/
 | Country obligations and dates | `https://docs.invopop.com/compliance/<country>.md`, `.../timelines/<country>.md` |
 | Register a supplier in a country | `https://docs.invopop.com/guides/<iso2>-<regime>-supplier.md` (some newer families use `-registration`) |
 | Issue invoices in a country, with template and examples | `https://docs.invopop.com/guides/<iso2>-<regime>.md` |
+| Field-level mapping and error lookup for a country format (Mexico only for now) | `https://docs.invopop.com/guides/mx-cfdi.md`, `.../guides/mx-cfdi-invoice.md`, `.../guides/mx-cfdi-errors.md` |
 | Country FAQ and authority error codes | `https://docs.invopop.com/faq/<country>.md` |
 | What a workflow step does | `https://docs.invopop.com/apps/<app>.md` |
 | Workflows, conditions, error handling | `https://docs.invopop.com/guides/workflows.md` |

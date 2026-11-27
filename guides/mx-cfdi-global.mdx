@@ -8,75 +8,44 @@ import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
 import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import GlobalSpec, { mxCfdiGlobalSpec } from '/snippets/specs/mx/global.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import GlobalXml from '/snippets/specs/mx/xml/sat-global.mdx';
 
-This page is a field reference for the global invoice (_factura global_). A global invoice is a CFDI of type Ingreso that adds together the sales to consumers who did not ask for an invoice.
+A global invoice (_factura global_) is a CFDI of type `I` that adds together the sales to consumers who did not ask for an invoice. Each sale of the period is one line.
 
-<Info>
-  A global invoice uses the same workflow as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing).
-</Info>
+| | |
+|---|---|
+| **GOBL document** | [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice), type `standard`, tag `global` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, `cfdv40.xsd`, node `InformacionGlobal` |
+| **Workflow** | The same as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing). |
+| **Base spec** | [Invoice](/guides/mx-cfdi-invoice). This page lists only the differences. |
+| **Time limit** | 24 hours after the period closes (rule 2.7.1.21 of the RMF 2026) |
 
-## When to use this document
-
-Use a global invoice when you sell to consumers and give them a simple receipt, not a CFDI. Each sale of the period becomes one line of the global invoice.
-
-- The period can be a day, a week, two weeks, a month or two months.
-- The global invoice is due 24 hours after the period closes (rule 2.7.1.21 of the RMF 2026).
-- If a consumer asks for an invoice later, issue an individual [invoice](/guides/mx-cfdi-invoice) for that sale.
-
-## Minimum document
-
-A global invoice is a [GOBL invoice](https://docs.gobl.org/draft-0/bill/invoice) with these differences from a standard [invoice](/guides/mx-cfdi-invoice):
-
-- `$tags` has `global`.
-- There is no `customer`.
-- `tax.ext` has the period, the month and the year.
-- Each line has an `item.ref` with your number for the sale.
-- `payment.advances` shows that the sales are paid.
-
-## Field mapping
+## Fields
 
 <MappingLegend />
 
-Only the fields that are different from an [invoice](/guides/mx-cfdi-invoice#field-mapping) are in this table.
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiGlobalSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <GlobalSpec />
+  </Tab>
+</Tabs>
 
-| GOBL field | CFDI field | You send | Rule |
-|---|---|---|---|
-| `$tags` = `global` | | M | Tells GOBL to apply the global rules. GOBL removes the `customer` if you send one. |
-| `tax.ext.mx-cfdi-global-period` | `InformacionGlobal/@Periodicidad` | M | Required. See [Period codes](#period-codes). |
-| `tax.ext.mx-cfdi-global-month` | `InformacionGlobal/@Meses` | M | Required. `01` to `12` for a month. `13` to `18` for a two-month period (`13` is January and February). |
-| `tax.ext.mx-cfdi-global-year` | `InformacionGlobal/@Año` | M | Required. Four digits. |
-| | `Receptor` | Auto | The generic national customer. See [Parties](/guides/mx-cfdi-parties#no-customer). |
-| `lines[].item.ref` | `Concepto/@NoIdentificacion` | M | Required. The number of the sale receipt. |
-| `lines[].item.ext.mx-cfdi-prod-serv` | `Concepto/@ClaveProdServ` | O | Not required. Without a value, Invopop sends `01010101` (not in the catalog). |
-| `payment.advances` | `@MetodoPago`, `@FormaPago` | M | Required. A global invoice is always paid. The result is `PUE` and the payment means of the largest advance. |
+## Errors
 
-### Period codes
-
-| Code | Period |
-|---|---|
-| `01` | Daily |
-| `02` | Weekly |
-| `03` | Every two weeks |
-| `04` | Monthly |
-| `05` | Every two months |
-
-## Validation rules
-
-The error code has the format `GOBL-MX-CFDI-BILL-INVOICE-<number>`. The supplier and line rules of the [invoice](/guides/mx-cfdi-invoice#validation-rules) also apply.
-
-| Number | Rule |
-|---|---|
-| `02` | A global invoice must have the period, month and year extensions. |
-| `03` | A global invoice cannot have a customer. |
-| `04`, `05` | `payment` and `payment.advances` are required. |
-| `06` | Each line must have `item.ref`. |
-| `07` | An invoice without the `global` tag must have all three global extensions, or none. |
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
 
 ## Example
 
 <CodeGroup>
   <GlobalInvoiceMin />
   <GlobalInvoice />
+  <GlobalXml />
 </CodeGroup>
 
 ---

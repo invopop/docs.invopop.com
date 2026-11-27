@@ -8,118 +8,61 @@ import Supplier from '/snippets/parties/mx/supplier.mdx';
 import Customer from '/snippets/parties/mx/customer.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import PartiesSpec, { mxCfdiPartiesSpec } from '/snippets/specs/mx/parties.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
 
-This page is a field reference. It shows how Invopop converts the GOBL `supplier` and `customer` to the CFDI `Emisor` and `Receptor`. All the CFDI documents use the same party rules.
+The supplier and the customer of a GOBL document become the `Emisor` and the `Receptor` of the CFDI. All the Mexico documents use the same party rules.
 
-<Info>
-  Read [Invoicing compliance in Mexico](/compliance/mexico) first if you do not know what an RFC or a PAC is.
-</Info>
-
-## Terms on this page
-
-| Term | Meaning |
+| | |
 |---|---|
-| **RFC** | The Mexican tax ID. A company has 12 characters. An individual has 13. |
-| **Tax regime** (`RegimenFiscal`) | A 3-digit SAT code for the tax category of a taxpayer. For example, `601` is a company under the general regime. |
-| **CFDI use** (`UsoCFDI`) | A SAT code for what the customer does with the invoice. For example, `G03` is general expenses. |
-| **Issue place** (`LugarExpedicion`) | The postal code of the place where the supplier issues the document. |
+| **GOBL object** | [`org/party`](https://docs.gobl.org/draft-0/org/party) in `supplier` and `customer` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, nodes `cfdi:Emisor` and `cfdi:Receptor` |
+| **Used by** | [Invoice](/guides/mx-cfdi-invoice), [credit note](/guides/mx-cfdi-credit-note), [global invoice](/guides/mx-cfdi-global), [payment receipt](/guides/mx-cfdi-payment) |
 
-<MappingLegend />
-
-## Supplier
-
-| GOBL field | CFDI field | You send | Rule |
-|---|---|:---:|---|
-| `supplier.tax_id.code` | `Emisor/@Rfc` | M | The RFC of the supplier. It must be the RFC in the registered CSD. |
-| `supplier.name` | `Emisor/@Nombre` | M | The legal name as the SAT has it. |
-| `supplier.ext.mx-cfdi-fiscal-regime` | `Emisor/@RegimenFiscal` | M | A code from the SAT catalog [`c_RegimenFiscal`](https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code). |
-| `tax.ext.mx-cfdi-issue-place` | `Comprobante/@LugarExpedicion` | M | A 5-digit postal code. On a payment receipt, the field is `ext.mx-cfdi-issue-place` at document level. |
-
-<Accordion title="Supplier example">
-  <Supplier />
-</Accordion>
-
-## Customer
+## Which customer case applies
 
 Invopop selects one of three cases from the customer data.
 
 | Case | When | `Receptor/@Rfc` |
 |---|---|---|
-| [Mexican customer](#mexican-customer) | `customer.tax_id.country` is `MX` | The RFC of the customer |
-| [Foreign customer](#foreign-customer) | `customer.tax_id.country` is not `MX` | `XEXX010101000` |
-| [No customer](#no-customer) | The document has no `customer` | `XAXX010101000` |
-
-### Mexican customer
-
-| GOBL field | CFDI field | You send | Rule |
-|---|---|:---:|---|
-| `customer.tax_id.code` | `Receptor/@Rfc` | M | The RFC of the customer. |
-| `customer.name` | `Receptor/@Nombre` | M | The legal name as the SAT has it. |
-| `customer.addresses[0].code` | `Receptor/@DomicilioFiscalReceptor` | M | The 5-digit postal code of the tax address of the customer. |
-| `customer.ext.mx-cfdi-fiscal-regime` | `Receptor/@RegimenFiscalReceptor` | M | A code from `c_RegimenFiscal`. |
-| `customer.ext.mx-cfdi-use` | `Receptor/@UsoCFDI` | M | A code from [`c_UsoCFDI`](https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-use-code). The SAT permits each code only for some tax regimes. |
+| Mexican customer | `customer.tax_id.country` is `MX` | The RFC of the customer |
+| Foreign customer | `customer.tax_id.country` is not `MX` | `XEXX010101000` |
+| No customer | The document has no `customer` | `XAXX010101000` |
 
 <Warning>
-  The PAC compares the RFC, name, tax regime and postal code with the SAT registry. If one value is different, the PAC rejects the document. Ask the customer for the four values as they are in its tax status certificate (Constancia de Situación Fiscal).
+  The PAC compares the RFC, name, tax regime and postal code of a Mexican customer with the SAT registry. If one value is different, the PAC rejects the document. Ask the customer for the four values as they are in its tax status certificate (Constancia de Situación Fiscal).
 </Warning>
 
-<Accordion title="Mexican customer example">
-  <Customer />
-</Accordion>
+## Fields
 
-### Foreign customer
+<MappingLegend />
 
-Send the foreign tax ID of the customer in `customer.tax_id`. Invopop fills the other fields.
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiPartiesSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <PartiesSpec />
+  </Tab>
+</Tabs>
 
-| GOBL field | CFDI field | Value |
-|---|---|---|
-| | `Receptor/@Rfc` | Always `XEXX010101000`, the generic RFC for foreign residents. |
-| `customer.name` | `Receptor/@Nombre` | The name of the customer. |
-| `customer.tax_id.code` | `Receptor/@NumRegIdTrib` | The foreign tax ID. |
-| `customer.tax_id.country` | `Receptor/@ResidenciaFiscal` | The country, converted to its 3-letter code. |
-| | `Receptor/@RegimenFiscalReceptor` | Always `616` (no tax obligations). |
-| | `Receptor/@UsoCFDI` | Always `S01` (no tax effects). |
-| | `Receptor/@DomicilioFiscalReceptor` | The issue place of the document. |
+## Errors
 
-### No customer
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
 
-A document without a `customer` goes to the generic national RFC. Use this case for a sale to a consumer who does not give an RFC.
+On a payment receipt, the prefix is `GOBL-MX-CFDI-BILL-PAYMENT-` and the numbers are different. See the [error lookup](/guides/mx-cfdi-errors).
 
-| CFDI field | Value |
-|---|---|
-| `Receptor/@Rfc` | `XAXX010101000` |
-| `Receptor/@Nombre` | `PÚBLICO EN GENERAL` |
-| `Receptor/@RegimenFiscalReceptor` | `616` |
-| `Receptor/@UsoCFDI` | `S01` |
-| `Receptor/@DomicilioFiscalReceptor` | The issue place of the document. |
+## Examples
 
-A [global invoice](/guides/mx-cfdi-global) always uses this case.
-
-## Validation rules
-
-GOBL checks these rules before Invopop sends the document to the PAC. The error code has the format `GOBL-MX-CFDI-BILL-INVOICE-<number>`.
-
-| Number | Rule |
-|---|---|
-| `08`, `09` | The customer must have a tax ID and a tax ID code. |
-| `10` | A Mexican customer must have `mx-cfdi-fiscal-regime` and `mx-cfdi-use`. |
-| `11` | A Mexican customer must have at least one address. |
-| `12`, `13` | The address must have a postal code of 5 digits. |
-| `18`, `19` | The supplier must have a tax ID and a tax ID code. |
-| `20` | The supplier must have `mx-cfdi-fiscal-regime`. |
-
-Rules `08` to `13` do not apply to a global invoice, because it has no customer.
-
-## Related pages
-
-<CardGroup cols={2}>
-  <Card title="Invoice" icon="file-invoice" href="/guides/mx-cfdi-invoice">
-    The fields of a sales invoice (Ingreso).
-  </Card>
-  <Card title="Supplier registration" icon="user-plus" href="/guides/mx-sat-supplier">
-    Register the supplier and its CSD before you issue.
-  </Card>
-</CardGroup>
+<AccordionGroup>
+  <Accordion title="Supplier">
+    <Supplier />
+  </Accordion>
+  <Accordion title="Mexican customer">
+    <Customer />
+  </Accordion>
+</AccordionGroup>
 
 ---
 

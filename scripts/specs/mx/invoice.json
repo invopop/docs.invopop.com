@@ -1,0 +1,1046 @@
+{
+ "key": "invoice",
+ "export": "mxCfdiInvoiceSpec",
+ "title": "CFDI invoice (Ingreso)",
+ "format": "CFDI 4.0",
+ "schema": "cfdv40.xsd",
+ "errorPrefix": "GOBL-MX-CFDI-BILL-INVOICE-",
+ "sections": [
+  {
+   "key": "header",
+   "title": "Header",
+   "node": "cfdi:Comprobante",
+   "xsd": "Comprobante",
+   "rows": [
+    {
+     "id": "MX-INV-H01",
+     "cfdi": "@Version",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "example": "4.0",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H02",
+     "cfdi": "@Serie",
+     "req": "O",
+     "format": "Text, max 25",
+     "gobl": "series",
+     "send": "O",
+     "rule": "",
+     "example": "XXMX",
+     "auto": false,
+     "link": {
+      "label": "bill.Invoice: series",
+      "url": "https://docs.gobl.org/draft-0/bill/invoice"
+     }
+    },
+    {
+     "id": "MX-INV-H03",
+     "cfdi": "@Folio",
+     "req": "O",
+     "format": "Text, max 40",
+     "gobl": "code",
+     "send": "O",
+     "rule": "",
+     "example": "0001",
+     "default": "Next number of the series, from the workflow step \"Add sequential code\".",
+     "auto": true,
+     "link": {
+      "label": "bill.Invoice: code",
+      "url": "https://docs.gobl.org/draft-0/bill/invoice"
+     }
+    },
+    {
+     "id": "MX-INV-H04",
+     "cfdi": "@Fecha",
+     "req": "M",
+     "format": "Date and time",
+     "gobl": "issue_date, issue_time",
+     "send": "O",
+     "rule": "The PAC rejects a date that is more than 72 hours old.",
+     "example": "2026-11-27T10:24:03",
+     "default": "The time GOBL builds the document, when issue_time is empty.",
+     "auto": true,
+     "values": "issue_date: YYYY-MM-DD. issue_time: HH:MM:SS, for example 13:45:30.",
+     "link": {
+      "label": "bill.Invoice: issue_date",
+      "url": "https://docs.gobl.org/draft-0/bill/invoice"
+     }
+    },
+    {
+     "id": "MX-INV-H05",
+     "cfdi": "@Sello",
+     "req": "M",
+     "format": "Text",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Made with the CSD of the supplier.",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H06",
+     "cfdi": "@NoCertificado",
+     "req": "M",
+     "format": "Text",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Serial number of the CSD of the supplier.",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H07",
+     "cfdi": "@Certificado",
+     "req": "M",
+     "format": "Text",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The CSD of the supplier.",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H08",
+     "cfdi": "@FormaPago",
+     "req": "C",
+     "format": "c_FormaPago",
+     "gobl": "payment.advances[].key",
+     "send": "C",
+     "rule": "Code of the largest advance.",
+     "example": "99",
+     "default": "99 (to be defined) when an amount is due.",
+     "auto": true,
+     "values": "A payment means key in payment.advances[].key, for example cash, credit-transfer or card. See the code table on this page.",
+     "link": {
+      "label": "Addon: payment means",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#payment-means"
+     }
+    },
+    {
+     "id": "MX-INV-H09",
+     "cfdi": "@MetodoPago",
+     "req": "C",
+     "format": "c_MetodoPago",
+     "gobl": "tax.ext.mx-cfdi-payment-method",
+     "send": "Auto",
+     "rule": "PUE when the advances cover the total. PPD when an amount is due.",
+     "example": "PPD",
+     "errors": [
+      "01"
+     ],
+     "auto": true,
+     "link": {
+      "label": "Addon: payment method",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#payment-method"
+     }
+    },
+    {
+     "id": "MX-INV-H10",
+     "cfdi": "@CondicionesDePago",
+     "req": "O",
+     "format": "Text, max 1000",
+     "gobl": "payment.terms.notes",
+     "send": "O",
+     "rule": "",
+     "auto": false,
+     "link": {
+      "label": "pay.Terms",
+      "url": "https://docs.gobl.org/draft-0/pay/terms"
+     }
+    },
+    {
+     "id": "MX-INV-H11",
+     "cfdi": "@SubTotal",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Sum of the line amounts.",
+     "example": "1000.00",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H12",
+     "cfdi": "@Descuento",
+     "req": "C",
+     "format": "Amount",
+     "gobl": "lines[].discounts",
+     "send": "Auto",
+     "when": "a line has a discount",
+     "rule": "Sum of the line discounts.",
+     "example": "1.00",
+     "errors": [
+      "25"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H13",
+     "cfdi": "@Moneda",
+     "req": "M",
+     "format": "c_Moneda",
+     "gobl": "currency",
+     "send": "O",
+     "rule": "",
+     "example": "MXN",
+     "default": "MXN",
+     "auto": true,
+     "values": "An ISO 4217 code, for example MXN, USD or EUR.",
+     "link": {
+      "label": "currency.Code",
+      "url": "https://docs.gobl.org/draft-0/currency/code"
+     }
+    },
+    {
+     "id": "MX-INV-H14",
+     "cfdi": "@TipoCambio",
+     "req": "C",
+     "format": "Decimal",
+     "gobl": "exchange_rates",
+     "send": "C",
+     "when": "the currency is not MXN",
+     "rule": "",
+     "errors": [
+      "27"
+     ],
+     "auto": false,
+     "values": "One rate with from (the invoice currency), to (MXN) and amount.",
+     "link": {
+      "label": "currency.ExchangeRate",
+      "url": "https://docs.gobl.org/draft-0/currency/exchange_rate"
+     }
+    },
+    {
+     "id": "MX-INV-H15",
+     "cfdi": "@Total",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Subtotal, minus discounts, plus transferred taxes, minus retained taxes.",
+     "example": "1160.00",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H16",
+     "cfdi": "@TipoDeComprobante",
+     "req": "M",
+     "format": "c_TipoDeComprobante",
+     "gobl": "type",
+     "send": "O",
+     "rule": "standard gives I. credit-note gives E.",
+     "example": "I",
+     "errors": [
+      "01"
+     ],
+     "default": "standard",
+     "auto": true,
+     "values": "standard or credit-note. The other GOBL invoice types have no CFDI document type.",
+     "link": {
+      "label": "Addon: document type",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#document-type"
+     }
+    },
+    {
+     "id": "MX-INV-H17",
+     "cfdi": "@Exportacion",
+     "req": "M",
+     "format": "c_Exportacion",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always 01 (not an export).",
+     "example": "01",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H18",
+     "cfdi": "@LugarExpedicion",
+     "req": "M",
+     "format": "c_CodigoPostal",
+     "gobl": "tax.ext.mx-cfdi-issue-place",
+     "send": "M",
+     "rule": "Postal code of the place of issue.",
+     "example": "44100",
+     "errors": [
+      "01"
+     ],
+     "auto": false,
+     "values": "5 digits, from the SAT catalog c_CodigoPostal.",
+     "link": {
+      "label": "Addon: place of issue",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#place-of-issue"
+     }
+    },
+    {
+     "id": "MX-INV-H19",
+     "cfdi": "@Confirmacion",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-INV-H20",
+     "cfdi": "InformacionGlobal",
+     "req": "C",
+     "format": "Node",
+     "gobl": "tax.ext.mx-cfdi-global-*",
+     "send": "C",
+     "when": "the invoice has the global tag",
+     "rule": "See the global invoice spec.",
+     "errors": [
+      "02",
+      "07"
+     ],
+     "auto": false,
+     "link": {
+      "label": "Addon: global period",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-period"
+     }
+    },
+    {
+     "id": "MX-INV-H21",
+     "cfdi": "CfdiRelacionados/@TipoRelacion",
+     "req": "C",
+     "format": "c_TipoRelacion",
+     "gobl": "tax.ext.mx-cfdi-rel-type",
+     "send": "C",
+     "when": "preceding has a value",
+     "rule": "Reason for the reference.",
+     "example": "04",
+     "errors": [
+      "16"
+     ],
+     "default": "01 on a credit note.",
+     "auto": true,
+     "values": "01 to 07.",
+     "link": {
+      "label": "Addon: relation type",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#relation-type"
+     }
+    },
+    {
+     "id": "MX-INV-H22",
+     "cfdi": "CfdiRelacionados/CfdiRelacionado/@UUID",
+     "req": "C",
+     "format": "UUID",
+     "gobl": "preceding[].stamps (sat-uuid)",
+     "send": "C",
+     "when": "the invoice refers to an earlier CFDI",
+     "rule": "One for each earlier CFDI.",
+     "errors": [
+      "17"
+     ],
+     "auto": false,
+     "values": "Each preceding row needs code, issue_date and the sat-uuid stamp of the earlier CFDI.",
+     "link": {
+      "label": "org.DocumentRef",
+      "url": "https://docs.gobl.org/draft-0/org/document_ref"
+     }
+    },
+    {
+     "id": "MX-INV-H23",
+     "cfdi": "Emisor",
+     "req": "M",
+     "format": "Node",
+     "gobl": "supplier",
+     "send": "M",
+     "rule": "See the parties spec.",
+     "errors": [
+      "18",
+      "19",
+      "20"
+     ],
+     "auto": false,
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     }
+    },
+    {
+     "id": "MX-INV-H24",
+     "cfdi": "Receptor",
+     "req": "M",
+     "format": "Node",
+     "gobl": "customer",
+     "send": "C",
+     "rule": "See the parties spec.",
+     "errors": [
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+      "13"
+     ],
+     "default": "The generic national customer, when there is no customer.",
+     "auto": true,
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     }
+    },
+    {
+     "id": "MX-INV-H25",
+     "cfdi": "Conceptos",
+     "req": "M",
+     "format": "Node",
+     "gobl": "lines",
+     "send": "M",
+     "rule": "At least one line.",
+     "auto": false,
+     "link": {
+      "label": "bill.Line",
+      "url": "https://docs.gobl.org/draft-0/bill/line"
+     }
+    },
+    {
+     "id": "MX-INV-H26",
+     "cfdi": "Impuestos",
+     "req": "C",
+     "format": "Node",
+     "gobl": "",
+     "send": "Auto",
+     "when": "a line has taxes",
+     "rule": "Tax totals of the document.",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-H27",
+     "cfdi": "Complemento",
+     "req": "O",
+     "format": "Node",
+     "gobl": "complements",
+     "send": "O",
+     "rule": "Only food vouchers and fuel account balance.",
+     "auto": false,
+     "link": {
+      "label": "Addon mx-cfdi-v4",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4"
+     }
+    },
+    {
+     "id": "MX-INV-H28",
+     "cfdi": "Addenda",
+     "req": "O",
+     "format": "Node",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "lines",
+   "title": "Lines",
+   "node": "cfdi:Conceptos/cfdi:Concepto",
+   "xsd": "Comprobante/Conceptos/Concepto",
+   "rows": [
+    {
+     "id": "MX-INV-L01",
+     "cfdi": "@ClaveProdServ",
+     "req": "M",
+     "format": "c_ClaveProdServ",
+     "gobl": "lines[].item.ext.mx-cfdi-prod-serv",
+     "send": "M",
+     "rule": "GOBL adds 00 to a code of 6 digits.",
+     "example": "81112002",
+     "errors": [
+      "14",
+      "15"
+     ],
+     "auto": false,
+     "values": "8 digits, from the SAT catalog c_ClaveProdServ.",
+     "link": {
+      "label": "Addon: product or service code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#product-or-service-code"
+     }
+    },
+    {
+     "id": "MX-INV-L02",
+     "cfdi": "@NoIdentificacion",
+     "req": "O",
+     "format": "Text, max 100",
+     "gobl": "lines[].item.ref",
+     "send": "O",
+     "rule": "Your own product code.",
+     "example": "SALE1",
+     "auto": false,
+     "link": {
+      "label": "org.Item: ref",
+      "url": "https://docs.gobl.org/draft-0/org/item"
+     }
+    },
+    {
+     "id": "MX-INV-L03",
+     "cfdi": "@Cantidad",
+     "req": "M",
+     "format": "Decimal",
+     "gobl": "lines[].quantity",
+     "send": "M",
+     "rule": "",
+     "example": "1",
+     "errors": [
+      "21"
+     ],
+     "auto": false,
+     "values": "A positive number as a string, for example \"2\" or \"1.5\".",
+     "link": {
+      "label": "bill.Line: quantity",
+      "url": "https://docs.gobl.org/draft-0/bill/line"
+     }
+    },
+    {
+     "id": "MX-INV-L04",
+     "cfdi": "@ClaveUnidad",
+     "req": "M",
+     "format": "c_ClaveUnidad",
+     "gobl": "lines[].item.unit",
+     "send": "O",
+     "rule": "",
+     "example": "ZZ",
+     "default": "ZZ (mutually defined)",
+     "auto": true,
+     "values": "A GOBL unit key, for example h, kg or rate.",
+     "link": {
+      "label": "org.Item: unit values",
+      "url": "https://docs.gobl.org/draft-0/org/item#unit-values"
+     }
+    },
+    {
+     "id": "MX-INV-L05",
+     "cfdi": "@Unidad",
+     "req": "O",
+     "format": "Text, max 20",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-INV-L06",
+     "cfdi": "@Descripcion",
+     "req": "M",
+     "format": "Text, max 1000",
+     "gobl": "lines[].item.name",
+     "send": "M",
+     "rule": "",
+     "example": "Standard Plan",
+     "auto": false,
+     "link": {
+      "label": "org.Item: name",
+      "url": "https://docs.gobl.org/draft-0/org/item"
+     }
+    },
+    {
+     "id": "MX-INV-L07",
+     "cfdi": "@ValorUnitario",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "lines[].item.price",
+     "send": "M",
+     "rule": "A price that includes tax is converted to a net price.",
+     "example": "1000.00",
+     "errors": [
+      "22",
+      "23"
+     ],
+     "auto": false,
+     "values": "A positive amount as a string, for example \"1000.00\".",
+     "link": {
+      "label": "org.Item: price",
+      "url": "https://docs.gobl.org/draft-0/org/item"
+     }
+    },
+    {
+     "id": "MX-INV-L08",
+     "cfdi": "@Importe",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "lines[].sum",
+     "send": "Auto",
+     "rule": "Quantity multiplied by price.",
+     "example": "1000.00",
+     "errors": [
+      "24"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-INV-L09",
+     "cfdi": "@Descuento",
+     "req": "O",
+     "format": "Amount",
+     "gobl": "lines[].discounts",
+     "send": "O",
+     "rule": "Line discounts only.",
+     "example": "1.00",
+     "errors": [
+      "25",
+      "26"
+     ],
+     "auto": false,
+     "values": "A percent or an amount for each discount.",
+     "link": {
+      "label": "bill.LineDiscount",
+      "url": "https://docs.gobl.org/draft-0/bill/line_discount"
+     }
+    },
+    {
+     "id": "MX-INV-L10",
+     "cfdi": "@ObjetoImp",
+     "req": "M",
+     "format": "c_ObjetoImp",
+     "gobl": "lines[].taxes",
+     "send": "Auto",
+     "rule": "02 when the line has taxes, 01 when it has none. Codes 03 to 08 are not supported.",
+     "example": "02",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-L11",
+     "cfdi": "Impuestos",
+     "req": "C",
+     "format": "Node",
+     "gobl": "lines[].taxes",
+     "send": "C",
+     "when": "the line has taxes",
+     "rule": "See the line taxes section.",
+     "auto": false,
+     "values": "One entry for each tax of the line, with cat and a rate or a percent.",
+     "link": {
+      "label": "tax.Combo",
+      "url": "https://docs.gobl.org/draft-0/tax/combo"
+     }
+    },
+    {
+     "id": "MX-INV-L12",
+     "cfdi": "ACuentaTerceros",
+     "req": "O",
+     "format": "Node",
+     "gobl": "lines[].seller",
+     "send": "C",
+     "when": "the sale is on behalf of a third party",
+     "rule": "See the third party section.",
+     "auto": false,
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     }
+    },
+    {
+     "id": "MX-INV-L13",
+     "cfdi": "InformacionAduanera",
+     "req": "O",
+     "format": "Node",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-INV-L14",
+     "cfdi": "CuentaPredial",
+     "req": "O",
+     "format": "Node",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-INV-L15",
+     "cfdi": "ComplementoConcepto",
+     "req": "O",
+     "format": "Node",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-INV-L16",
+     "cfdi": "Parte",
+     "req": "O",
+     "format": "Node",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "taxes",
+   "title": "Line taxes",
+   "node": "cfdi:Concepto/cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado and cfdi:Retenciones/cfdi:Retencion",
+   "xsd": "Comprobante/Conceptos/Concepto/Impuestos/Traslados/Traslado",
+   "rows": [
+    {
+     "id": "MX-INV-T01",
+     "cfdi": "@Base",
+     "req": "M",
+     "format": "Decimal",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Line amount minus line discount.",
+     "example": "1000.0000",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-T02",
+     "cfdi": "@Impuesto",
+     "req": "M",
+     "format": "c_Impuesto",
+     "gobl": "lines[].taxes[].cat",
+     "send": "M",
+     "rule": "VAT, RVAT: 002. IEPS, RIEPS: 003. ISR: 001. Retained categories go to Retencion.",
+     "example": "002",
+     "auto": false,
+     "values": "VAT, RVAT, IEPS, RIEPS or ISR.",
+     "link": {
+      "label": "Mexico regime: tax categories",
+      "url": "https://docs.gobl.org/regimes/mx#tax-categories"
+     }
+    },
+    {
+     "id": "MX-INV-T03",
+     "cfdi": "@TipoFactor",
+     "req": "M",
+     "format": "c_TipoFactor",
+     "gobl": "lines[].taxes[]",
+     "send": "Auto",
+     "rule": "Tasa for a percentage. Exento for an exempt line. Cuota is not supported.",
+     "example": "Tasa",
+     "auto": true
+    },
+    {
+     "id": "MX-INV-T04",
+     "cfdi": "@TasaOCuota",
+     "req": "C",
+     "format": "Decimal, 6 decimals",
+     "gobl": "lines[].taxes[].rate or .percent",
+     "send": "C",
+     "when": "the line is not exempt",
+     "rule": "",
+     "example": "0.160000",
+     "auto": false,
+     "values": "A rate of the Mexico regime, or a percent such as \"16.0%\".",
+     "link": {
+      "label": "Mexico regime: VAT rates",
+      "url": "https://docs.gobl.org/regimes/mx#vat-rates"
+     }
+    },
+    {
+     "id": "MX-INV-T05",
+     "cfdi": "@Importe",
+     "req": "C",
+     "format": "Amount",
+     "gobl": "",
+     "send": "Auto",
+     "when": "the line is not exempt",
+     "rule": "Base multiplied by the rate.",
+     "example": "160.0000",
+     "auto": true
+    }
+   ]
+  },
+  {
+   "key": "third-party",
+   "title": "Third party",
+   "node": "cfdi:Concepto/cfdi:ACuentaTerceros",
+   "xsd": "Comprobante/Conceptos/Concepto/ACuentaTerceros",
+   "rows": [
+    {
+     "id": "MX-INV-P01",
+     "cfdi": "@RfcACuentaTerceros",
+     "req": "M",
+     "format": "RFC",
+     "gobl": "lines[].seller.tax_id.code",
+     "send": "M",
+     "rule": "The RFC of the real seller.",
+     "example": "XIA190128J61",
+     "auto": false,
+     "link": {
+      "label": "tax.Identity",
+      "url": "https://docs.gobl.org/draft-0/tax/identity"
+     }
+    },
+    {
+     "id": "MX-INV-P02",
+     "cfdi": "@NombreACuentaTerceros",
+     "req": "M",
+     "format": "Text, max 300",
+     "gobl": "lines[].seller.name",
+     "send": "M",
+     "rule": "",
+     "example": "XENON INDUSTRIAL ARTICLES",
+     "auto": false,
+     "values": "The legal name of the real seller.",
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     }
+    },
+    {
+     "id": "MX-INV-P03",
+     "cfdi": "@RegimenFiscalACuentaTerceros",
+     "req": "M",
+     "format": "c_RegimenFiscal",
+     "gobl": "lines[].seller.ext.mx-cfdi-fiscal-regime",
+     "send": "M",
+     "rule": "",
+     "example": "601",
+     "auto": false,
+     "values": "A code from c_RegimenFiscal.",
+     "link": {
+      "label": "Addon: fiscal regime code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code"
+     }
+    },
+    {
+     "id": "MX-INV-P04",
+     "cfdi": "@DomicilioFiscalACuentaTerceros",
+     "req": "M",
+     "format": "Postal code",
+     "gobl": "lines[].seller.addresses[0].code",
+     "send": "M",
+     "rule": "The node needs the tax ID and an address of the seller.",
+     "example": "76343",
+     "auto": false,
+     "values": "The postal code of the tax address of the real seller.",
+     "link": {
+      "label": "org.Address",
+      "url": "https://docs.gobl.org/draft-0/org/address"
+     }
+    }
+   ]
+  }
+ ],
+ "rules": [
+  {
+   "n": "01",
+   "msg": "tax requires 'mx-cfdi-doc-type', 'mx-cfdi-issue-place', and 'mx-cfdi-payment-method' extensions",
+   "fix": "Send tax.ext.mx-cfdi-issue-place. GOBL sets the other two.",
+   "rows": [
+    "MX-INV-H18"
+   ]
+  },
+  {
+   "n": "02",
+   "msg": "global invoices require 'mx-cfdi-global-period', 'mx-cfdi-global-month', and 'mx-cfdi-global-year' extensions",
+   "fix": "Send the three global extensions in tax.ext.",
+   "rows": [
+    "MX-GLB-01",
+    "MX-GLB-02",
+    "MX-GLB-03"
+   ]
+  },
+  {
+   "n": "03",
+   "msg": "cannot be set with global tag (customer)",
+   "fix": "Remove the customer from a global invoice.",
+   "rows": [
+    "MX-GLB-04"
+   ]
+  },
+  {
+   "n": "04",
+   "msg": "payment is required for global invoices",
+   "fix": "Add payment.advances for the full amount.",
+   "rows": [
+    "MX-GLB-07"
+   ]
+  },
+  {
+   "n": "05",
+   "msg": "advances must be set with global tag",
+   "fix": "Add payment.advances for the full amount.",
+   "rows": [
+    "MX-GLB-07"
+   ]
+  },
+  {
+   "n": "06",
+   "msg": "must be set with global tag (item ref)",
+   "fix": "Send lines[].item.ref on each line.",
+   "rows": [
+    "MX-GLB-05"
+   ]
+  },
+  {
+   "n": "07",
+   "msg": "'mx-cfdi-global-period', 'mx-cfdi-global-month', and 'mx-cfdi-global-year' extensions must all be present or all absent",
+   "fix": "Send the three global extensions, or none.",
+   "rows": [
+    "MX-INV-H20"
+   ]
+  },
+  {
+   "n": "08",
+   "msg": "customer tax ID is required",
+   "fix": "Send customer.tax_id, or remove the customer for a sale to a consumer without an RFC.",
+   "rows": [
+    "MX-PTY-R01"
+   ]
+  },
+  {
+   "n": "09",
+   "msg": "customer tax ID code is required",
+   "fix": "Send customer.tax_id.code.",
+   "rows": [
+    "MX-PTY-R01"
+   ]
+  },
+  {
+   "n": "10",
+   "msg": "Mexican customer requires 'mx-cfdi-fiscal-regime' and 'mx-cfdi-use' extensions",
+   "fix": "Send the two extensions in customer.ext.",
+   "rows": [
+    "MX-PTY-R06",
+    "MX-PTY-R07"
+   ]
+  },
+  {
+   "n": "11",
+   "msg": "Mexican customer must have at least one address",
+   "fix": "Send customer.addresses with the postal code.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "12",
+   "msg": "customer address postal code is required",
+   "fix": "Send customer.addresses[0].code.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "13",
+   "msg": "customer address postal code format is invalid",
+   "fix": "Send a postal code of 5 digits.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "14",
+   "msg": "item requires 'mx-cfdi-prod-serv' extension",
+   "fix": "Send lines[].item.ext.mx-cfdi-prod-serv.",
+   "rows": [
+    "MX-INV-L01"
+   ]
+  },
+  {
+   "n": "15",
+   "msg": "product/service code must have 8 digits",
+   "fix": "Send a code of 8 digits from c_ClaveProdServ.",
+   "rows": [
+    "MX-INV-L01"
+   ]
+  },
+  {
+   "n": "16",
+   "msg": "tax requires 'mx-cfdi-rel-type' extension when preceding documents are present",
+   "fix": "Send tax.ext.mx-cfdi-rel-type.",
+   "rows": [
+    "MX-INV-H21"
+   ]
+  },
+  {
+   "n": "17",
+   "msg": "preceding row is missing 'sat-uuid' stamp",
+   "fix": "Add the sat-uuid stamp of the earlier CFDI to each preceding row.",
+   "rows": [
+    "MX-INV-H22"
+   ]
+  },
+  {
+   "n": "18",
+   "msg": "supplier tax ID is required",
+   "fix": "Send supplier.tax_id.",
+   "rows": [
+    "MX-PTY-E01"
+   ]
+  },
+  {
+   "n": "19",
+   "msg": "supplier tax ID code is required",
+   "fix": "Send supplier.tax_id.code.",
+   "rows": [
+    "MX-PTY-E01"
+   ]
+  },
+  {
+   "n": "20",
+   "msg": "supplier requires 'mx-cfdi-fiscal-regime' extension",
+   "fix": "Send supplier.ext.mx-cfdi-fiscal-regime.",
+   "rows": [
+    "MX-PTY-E03"
+   ]
+  },
+  {
+   "n": "21",
+   "msg": "line quantity must be greater than 0",
+   "fix": "Send a positive quantity. On a credit note also.",
+   "rows": [
+    "MX-INV-L03"
+   ]
+  },
+  {
+   "n": "22",
+   "msg": "line item price is required",
+   "fix": "Send lines[].item.price.",
+   "rows": [
+    "MX-INV-L07"
+   ]
+  },
+  {
+   "n": "23",
+   "msg": "line item price must be greater than 0",
+   "fix": "Send a positive price.",
+   "rows": [
+    "MX-INV-L07"
+   ]
+  },
+  {
+   "n": "24",
+   "msg": "line total must not be negative",
+   "fix": "Make the line discount smaller than the line amount.",
+   "rows": [
+    "MX-INV-L08"
+   ]
+  },
+  {
+   "n": "25",
+   "msg": "document level discounts are not supported, use line discounts instead",
+   "fix": "Move the discount to the lines.",
+   "rows": [
+    "MX-INV-L09"
+   ]
+  },
+  {
+   "n": "26",
+   "msg": "document level charges are not supported",
+   "fix": "Send the charge as a line.",
+   "rows": [
+    "MX-INV-L09"
+   ]
+  },
+  {
+   "n": "27",
+   "msg": "invoice must be in MXN or provide exchange rate for conversion",
+   "fix": "Add exchange_rates from the invoice currency to MXN.",
+   "rows": [
+    "MX-INV-H14"
+   ]
+  }
+ ]
+}

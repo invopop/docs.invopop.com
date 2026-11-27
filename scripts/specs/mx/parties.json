@@ -1,0 +1,367 @@
+{
+ "key": "parties",
+ "export": "mxCfdiPartiesSpec",
+ "title": "CFDI parties",
+ "format": "CFDI 4.0",
+ "schema": "cfdv40.xsd",
+ "errorPrefix": "GOBL-MX-CFDI-BILL-INVOICE-",
+ "sections": [
+  {
+   "key": "supplier",
+   "title": "Supplier",
+   "node": "cfdi:Emisor",
+   "xsd": "Comprobante/Emisor",
+   "rows": [
+    {
+     "id": "MX-PTY-E01",
+     "cfdi": "@Rfc",
+     "req": "M",
+     "format": "RFC",
+     "gobl": "supplier.tax_id.code",
+     "send": "M",
+     "rule": "Must be the RFC in the registered CSD.",
+     "example": "EKU9003173C9",
+     "errors": [
+      "18",
+      "19"
+     ],
+     "values": "12 characters for a company, 13 for an individual.",
+     "link": {
+      "label": "tax.Identity",
+      "url": "https://docs.gobl.org/draft-0/tax/identity"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-E02",
+     "cfdi": "@Nombre",
+     "req": "M",
+     "format": "Text, max 300",
+     "gobl": "supplier.name",
+     "send": "M",
+     "rule": "Legal name as the SAT has it.",
+     "example": "ESCUELA KEMPER URGATE",
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-E03",
+     "cfdi": "@RegimenFiscal",
+     "req": "M",
+     "format": "c_RegimenFiscal",
+     "gobl": "supplier.ext.mx-cfdi-fiscal-regime",
+     "send": "M",
+     "rule": "",
+     "example": "601",
+     "errors": [
+      "20"
+     ],
+     "values": "A code from c_RegimenFiscal, for example 601.",
+     "link": {
+      "label": "Addon: fiscal regime code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-E04",
+     "cfdi": "@FacAtrAdquirente",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "customer",
+   "title": "Mexican customer",
+   "node": "cfdi:Receptor",
+   "xsd": "Comprobante/Receptor",
+   "intro": "These rows apply when customer.tax_id.country is MX.",
+   "rows": [
+    {
+     "id": "MX-PTY-R01",
+     "cfdi": "@Rfc",
+     "req": "M",
+     "format": "RFC",
+     "gobl": "customer.tax_id.code",
+     "send": "M",
+     "rule": "",
+     "example": "URE180429TM6",
+     "errors": [
+      "08",
+      "09"
+     ],
+     "values": "12 characters for a company, 13 for an individual.",
+     "link": {
+      "label": "tax.Identity",
+      "url": "https://docs.gobl.org/draft-0/tax/identity"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-R02",
+     "cfdi": "@Nombre",
+     "req": "M",
+     "format": "Text, max 300",
+     "gobl": "customer.name",
+     "send": "M",
+     "rule": "Legal name as the SAT has it.",
+     "example": "UNIVERSIDAD ROBOTICA ESPAÑOLA",
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-R03",
+     "cfdi": "@DomicilioFiscalReceptor",
+     "req": "M",
+     "format": "c_CodigoPostal",
+     "gobl": "customer.addresses[0].code",
+     "send": "M",
+     "rule": "Postal code of the tax address of the customer.",
+     "example": "86991",
+     "errors": [
+      "11",
+      "12",
+      "13"
+     ],
+     "values": "5 digits.",
+     "link": {
+      "label": "org.Address",
+      "url": "https://docs.gobl.org/draft-0/org/address"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-R04",
+     "cfdi": "@ResidenciaFiscal",
+     "req": "C",
+     "format": "c_Pais",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Only for a foreign customer.",
+     "when": "the customer is a foreign resident",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-R05",
+     "cfdi": "@NumRegIdTrib",
+     "req": "C",
+     "format": "Text, max 40",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Only for a foreign customer.",
+     "when": "the customer is a foreign resident",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-R06",
+     "cfdi": "@RegimenFiscalReceptor",
+     "req": "M",
+     "format": "c_RegimenFiscal",
+     "gobl": "customer.ext.mx-cfdi-fiscal-regime",
+     "send": "M",
+     "rule": "",
+     "example": "601",
+     "errors": [
+      "10"
+     ],
+     "values": "A code from c_RegimenFiscal, for example 601.",
+     "link": {
+      "label": "Addon: fiscal regime code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#fiscal-regime-code"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-R07",
+     "cfdi": "@UsoCFDI",
+     "req": "M",
+     "format": "c_UsoCFDI",
+     "gobl": "customer.ext.mx-cfdi-use",
+     "send": "M",
+     "rule": "The SAT permits each code only for some tax regimes.",
+     "example": "G01",
+     "errors": [
+      "10"
+     ],
+     "values": "A code from c_UsoCFDI, for example G03.",
+     "link": {
+      "label": "Addon: CFDI use code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-use-code"
+     },
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "foreign",
+   "title": "Foreign customer",
+   "node": "cfdi:Receptor",
+   "intro": "These rows apply when customer.tax_id.country is not MX. Send the foreign tax ID and the name. Invopop fills the other fields.",
+   "rows": [
+    {
+     "id": "MX-PTY-F01",
+     "cfdi": "@Rfc",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always the generic RFC for foreign residents.",
+     "example": "XEXX010101000",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-F02",
+     "cfdi": "@Nombre",
+     "req": "M",
+     "format": "Text, max 300",
+     "gobl": "customer.name",
+     "send": "M",
+     "rule": "",
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-F03",
+     "cfdi": "@NumRegIdTrib",
+     "req": "C",
+     "format": "Text, max 40",
+     "gobl": "customer.tax_id.code",
+     "send": "M",
+     "rule": "",
+     "values": "The tax ID of the customer in its country.",
+     "link": {
+      "label": "tax.Identity",
+      "url": "https://docs.gobl.org/draft-0/tax/identity"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-F04",
+     "cfdi": "@ResidenciaFiscal",
+     "req": "C",
+     "format": "c_Pais, 3 letters",
+     "gobl": "customer.tax_id.country",
+     "send": "M",
+     "rule": "Converted to the 3-letter code.",
+     "example": "USA",
+     "values": "An ISO country code of 2 letters, for example US.",
+     "link": {
+      "label": "tax.Identity",
+      "url": "https://docs.gobl.org/draft-0/tax/identity"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PTY-F05",
+     "cfdi": "@RegimenFiscalReceptor",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always 616 (no tax obligations).",
+     "example": "616",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-F06",
+     "cfdi": "@UsoCFDI",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always S01 (no tax effects).",
+     "example": "S01",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-F07",
+     "cfdi": "@DomicilioFiscalReceptor",
+     "req": "M",
+     "format": "Postal code",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The issue place of the document.",
+     "auto": true
+    }
+   ]
+  },
+  {
+   "key": "generic",
+   "title": "No customer",
+   "node": "cfdi:Receptor",
+   "intro": "These rows apply when the document has no customer. Use this case for a consumer who does not give an RFC. Invopop fills all the fields.",
+   "rows": [
+    {
+     "id": "MX-PTY-G01",
+     "cfdi": "@Rfc",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The generic national RFC.",
+     "example": "XAXX010101000",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-G02",
+     "cfdi": "@Nombre",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "example": "PÚBLICO EN GENERAL",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-G03",
+     "cfdi": "@RegimenFiscalReceptor",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "example": "616",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-G04",
+     "cfdi": "@UsoCFDI",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "example": "S01",
+     "auto": true
+    },
+    {
+     "id": "MX-PTY-G05",
+     "cfdi": "@DomicilioFiscalReceptor",
+     "req": "M",
+     "format": "Postal code",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The issue place of the document.",
+     "example": "44100",
+     "auto": true
+    }
+   ]
+  }
+ ],
+ "rules": []
+}

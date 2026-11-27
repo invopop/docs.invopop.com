@@ -8,115 +8,53 @@ import PaymentMin from '/snippets/payments/mx/sat-payment.min.mdx';
 import Payment from '/snippets/payments/mx/sat-payment.mdx';
 import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import PaymentSpec, { mxCfdiPaymentSpec } from '/snippets/specs/mx/payment.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import PaymentXml from '/snippets/specs/mx/xml/sat-payment.mdx';
 
-This page is a field reference for the payment receipt. In Mexico, a payment receipt is a CFDI with `TipoDeComprobante` `P` (Pago) and the complement Pagos 2.0. Its Spanish names are _complemento de pago_ and REP (_recibo electrónico de pago_).
+A payment receipt in Mexico is a CFDI of type `P` (Pago) with the complement Pagos 2.0. Its Spanish names are _complemento de pago_ and REP. Issue one each time a customer pays an invoice that has `MetodoPago` `PPD`.
 
-<Info>
-  To configure the workflow that stamps this document, see step 2 of the [CFDI issuing guide](/guides/mx-sat-issuing#setup).
-</Info>
+| | |
+|---|---|
+| **GOBL document** | [`bill/payment`](https://docs.gobl.org/draft-0/bill/payment), type `receipt` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0 with Pagos 2.0, `cfdv40.xsd` and `Pagos20.xsd` |
+| **Workflow** | [CFDI issuing guide](/guides/mx-sat-issuing#setup), step 2 |
+| **Time limit** | Day 5 of the month after the payment (rule 2.7.1.32 of the RMF 2026) |
+| **Other documents** | [Invoice](/guides/mx-cfdi-invoice), [parties](/guides/mx-cfdi-parties) |
 
-## When to use this document
-
-Issue a payment receipt each time a customer pays an invoice that has `MetodoPago` `PPD` (paid later or in installments). An invoice with `PUE` (paid in full) does not need one. See [Payment method and means](/guides/mx-cfdi-invoice#payment-method-and-means).
-
-- One receipt can pay more than one invoice of the same customer.
-- One invoice can have more than one receipt, one for each installment.
-- The receipt is due by day 5 of the month after the payment (rule 2.7.1.32 of the RMF 2026).
-
-## Minimum document
-
-Send a [GOBL payment](https://docs.gobl.org/draft-0/bill/payment) with these properties:
-
-- `$regime` set to `MX` and `$addons` with `mx-cfdi-v4`.
-- `type` set to `receipt`.
-- `ext.mx-cfdi-issue-place`.
-- A [supplier and a customer](/guides/mx-cfdi-parties).
-- One entry in `methods`.
-- One line for each invoice that the payment covers.
-
-## Field mapping
+## Fields
 
 <MappingLegend />
 
-### Header
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiPaymentSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <PaymentSpec />
+  </Tab>
+</Tabs>
 
-| GOBL field | CFDI field | You send | Rule |
-|---|---|---|---|
-| `type` = `receipt` | `@TipoDeComprobante` = `P` | M | Stored in `ext.mx-cfdi-doc-type`. Other payment types are not supported. |
-| `series` | `@Serie` | O | Optional. |
-| `code` | `@Folio` | O | A workflow step can assign the code from a sequence. |
-| `issue_date`, `issue_time` | `@Fecha` | O | If you do not send `issue_time`, GOBL sets the date and time to the moment it builds the document. |
-| `ext.mx-cfdi-issue-place` | `@LugarExpedicion` | M | Required. A 5-digit postal code. |
-| `customer.ext.mx-cfdi-use` | `Receptor/@UsoCFDI` | Auto | Always `CP01` (payments). |
-| | `@Moneda` = `XXX`, `@SubTotal` = `0`, `@Total` = `0` | Auto | Fixed values. The SAT requires them on a payment receipt. |
-| | `Concepto` | Auto | One fixed line: product code `84111506`, unit `ACT`, description `Pago`, amount `0`. |
+## Rules for the receipt
 
-### Payment
+- One receipt can pay more than one invoice of the same customer. Each invoice is one line.
+- One invoice can have more than one receipt, one for each installment.
+- A receipt has exactly one payment means. For two payment means, issue two receipts.
+- To replace a receipt that you cancel, add the earlier receipt to `preceding`. GOBL sets the relation type `04`.
 
-The data of the payment goes in the node `pago20:Pago`.
+The payment means codes are in the [invoice spec](/guides/mx-cfdi-invoice#payment-method-and-means).
 
-| GOBL field | CFDI field | You send | Rule |
-|---|---|---|---|
-| `methods[0].date` | `Pago/@FechaPago` | O | The date the supplier received the payment. If it is empty, Invopop uses `value_date`, then `issue_date`. The time is always 12:00:00. |
-| `methods[0].key` | `Pago/@FormaDePagoP` | M | The real payment means. Invopop converts the key to the SAT code with the [same table as the invoice](/guides/mx-cfdi-invoice#payment-method-and-means). The code `99` is not permitted. |
-| `methods[0].ref` | `Pago/@NumOperacion` | O | Optional. The transfer reference or cheque number. |
-| `currency` | `Pago/@MonedaP` | O | |
-| `exchange_rates` | `Pago/@TipoCambioP` | C | Mandatory when the currency is not `MXN`. |
-| `total` | `Pago/@Monto` | Auto | The sum of the line amounts. |
+## Errors
 
-A payment must have exactly one entry in `methods`. If the customer pays with two means, issue two receipts.
-
-### Lines
-
-Each GOBL line becomes one `pago20:DoctoRelacionado`. One line is one invoice that the payment covers.
-
-| GOBL field | CFDI field | You send | Rule |
-|---|---|---|---|
-| `lines[].document.stamps` (`sat-uuid`) | `@IdDocumento` | M | Required. The fiscal folio (UUID) of the invoice. |
-| `lines[].document.series`, `.code` | `@Serie`, `@Folio` | O | Optional. |
-| `lines[].installment` | `@NumParcialidad` | M | Required. `1` for the first payment of the invoice, `2` for the second. |
-| `lines[].payable` | | M | Required. The total amount of the invoice. |
-| `lines[].advances` | | M | Mandatory from the second installment. The amount paid in earlier receipts. |
-| `payable` minus `advances` | `@ImpSaldoAnt` | Auto | The balance before this payment. |
-| `lines[].amount` | `@ImpPagado` | M | The amount paid for this invoice now. |
-| `lines[].due` | `@ImpSaldoInsoluto` | Auto | The balance after this payment. |
-| `lines[].tax` | `ImpuestosDR`, `@ObjetoImpDR` | C | Mandatory when the invoice has taxes. Give the base and the percent for each tax category of the invoice. |
-| | `@MonedaDR`, `@EquivalenciaDR` | Auto | The payment currency and `1`. The invoice and the payment must have the same currency. |
-
-Invopop calculates the tax totals of the payment (`ImpuestosP`) and of the document (`Totales`) from the line taxes.
-
-### Replace an earlier receipt
-
-To replace a payment receipt that you cancel, add the earlier receipt to `preceding` with its `sat-uuid` stamp. Invopop sets the relation type to `04` (substitution). No other relation type is permitted on a payment receipt.
-
-## Validation rules
-
-The error code has the format `GOBL-MX-CFDI-BILL-PAYMENT-<number>`.
-
-| Number | Rule |
-|---|---|
-| `01` | The type must be `receipt`. |
-| `02` | The payment must be in `MXN`, or have an exchange rate to `MXN`. |
-| `03`, `04` | `ext` must have the issue place. The document type must be `P`. |
-| `05` to `07` | The supplier must have a tax ID and `mx-cfdi-fiscal-regime`. |
-| `08` to `10` | The customer is required and must have a tax ID. |
-| `11` | The CFDI use of the customer must be `CP01`. |
-| `12` to `15` | A Mexican customer must have `mx-cfdi-fiscal-regime` and an address with a 5-digit postal code. |
-| `16` | A `payee` is not supported. |
-| `17` | Exactly one entry in `methods`. |
-| `18`, `19` | The method must have a payment means, and it cannot be `99`. |
-| `20` | Refund lines are not supported. |
-| `21` to `23` | Each line must have `installment`, `payable` and `due`. |
-| `24`, `25` | Each line must have a `document` with a `sat-uuid` stamp. |
-| `26`, `27` | Tax surcharges are not supported. A retained tax must have a percent. |
-| `28` | The currency of each line document must be the payment currency. |
-| `29`, `30` | A `preceding` row must have relation type `04` and a `sat-uuid` stamp. |
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-PAYMENT-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
 
 ## Not supported
 
 - A payment in a currency different from the currency of the invoice.
 - More than one payment means in one receipt.
-- Refunds.
+- Refunds, and the payment types `request` and `advice`.
+- The bank account fields of the payment (`CtaOrdenante`, `CtaBeneficiario` and related fields).
 
 ## Example
 
@@ -125,6 +63,7 @@ This receipt pays three invoices with one transfer. The third line is the third 
 <CodeGroup>
   <PaymentMin />
   <Payment />
+  <PaymentXml />
 </CodeGroup>
 
 ---

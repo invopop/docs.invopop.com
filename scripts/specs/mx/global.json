@@ -1,0 +1,146 @@
+{
+ "key": "global",
+ "export": "mxCfdiGlobalSpec",
+ "title": "CFDI global invoice",
+ "format": "CFDI 4.0",
+ "schema": "cfdv40.xsd",
+ "errorPrefix": "GOBL-MX-CFDI-BILL-INVOICE-",
+ "sections": [
+  {
+   "key": "differences",
+   "title": "Differences from an invoice",
+   "node": "cfdi:Comprobante",
+   "intro": "Send the tag global in $tags. All the other rows of the invoice spec apply without change.",
+   "rows": [
+    {
+     "id": "MX-GLB-01",
+     "cfdi": "InformacionGlobal/@Periodicidad",
+     "req": "M",
+     "format": "c_Periodicidad",
+     "gobl": "tax.ext.mx-cfdi-global-period",
+     "send": "M",
+     "rule": "",
+     "example": "04",
+     "errors": [
+      "02"
+     ],
+     "values": "01 daily, 02 weekly, 03 every two weeks, 04 monthly, 05 every two months.",
+     "link": {
+      "label": "Addon: global period",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-period"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-GLB-02",
+     "cfdi": "InformacionGlobal/@Meses",
+     "req": "M",
+     "format": "c_Meses",
+     "gobl": "tax.ext.mx-cfdi-global-month",
+     "send": "M",
+     "rule": "",
+     "example": "03",
+     "errors": [
+      "02"
+     ],
+     "values": "01 to 12 for a month. 13 to 18 for a two-month period (13 is January and February).",
+     "link": {
+      "label": "Addon: global month",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-month"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-GLB-03",
+     "cfdi": "InformacionGlobal/@Año",
+     "req": "M",
+     "format": "Year, 4 digits",
+     "gobl": "tax.ext.mx-cfdi-global-year",
+     "send": "M",
+     "rule": "",
+     "example": "2025",
+     "errors": [
+      "02"
+     ],
+     "values": "4 digits, for example 2026.",
+     "link": {
+      "label": "Addon: global year",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#cfdi-global-year"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-GLB-04",
+     "cfdi": "Receptor",
+     "req": "M",
+     "format": "Node",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always the generic national customer. GOBL removes a customer if you send one.",
+     "example": "XAXX010101000",
+     "errors": [
+      "03"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-GLB-05",
+     "cfdi": "Concepto/@NoIdentificacion",
+     "req": "O",
+     "format": "Text, max 100",
+     "gobl": "lines[].item.ref",
+     "send": "M",
+     "rule": "One line for each sale.",
+     "example": "SALE1",
+     "errors": [
+      "06"
+     ],
+     "values": "Your number for the sale receipt.",
+     "link": {
+      "label": "org.Item: ref",
+      "url": "https://docs.gobl.org/draft-0/org/item"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-GLB-06",
+     "cfdi": "Concepto/@ClaveProdServ",
+     "req": "M",
+     "format": "c_ClaveProdServ",
+     "gobl": "lines[].item.ext.mx-cfdi-prod-serv",
+     "send": "O",
+     "rule": "",
+     "example": "01010101",
+     "values": "8 digits, from the SAT catalog c_ClaveProdServ.",
+     "default": "01010101 (not in the catalog)",
+     "link": {
+      "label": "Addon: product or service code",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#product-or-service-code"
+     },
+     "auto": true
+    },
+    {
+     "id": "MX-GLB-07",
+     "cfdi": "@MetodoPago, @FormaPago",
+     "req": "C",
+     "format": "PUE and c_FormaPago",
+     "gobl": "payment.advances",
+     "send": "M",
+     "rule": "A global invoice is always paid. The result is PUE and the code of the largest advance.",
+     "example": "PUE, 01",
+     "errors": [
+      "04",
+      "05"
+     ],
+     "values": "Advances for the full amount, each with a payment means key such as cash.",
+     "link": {
+      "label": "pay.Record",
+      "url": "https://docs.gobl.org/draft-0/pay/record"
+     },
+     "auto": false
+    }
+   ]
+  }
+ ],
+ "rules": []
+}
