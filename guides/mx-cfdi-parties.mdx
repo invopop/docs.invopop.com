@@ -1,0 +1,69 @@
+---
+title: "CFDI parties spec"
+sidebarTitle: "Parties"
+description: "How the GOBL supplier and customer map to the CFDI Emisor and Receptor in Mexico, with the rules for each field."
+---
+
+import Supplier from '/snippets/parties/mx/supplier.mdx';
+import Customer from '/snippets/parties/mx/customer.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import PartiesSpec, { mxCfdiPartiesSpec } from '/snippets/specs/mx/parties.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+
+The supplier and the customer of a GOBL document become the `Emisor` and the `Receptor` of the CFDI. All the Mexico documents use the same party rules.
+
+| | |
+|---|---|
+| **GOBL object** | [`org/party`](https://docs.gobl.org/draft-0/org/party) in `supplier` and `customer` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, nodes `cfdi:Emisor` and `cfdi:Receptor` |
+| **Used by** | [Invoice](/guides/mx-cfdi-invoice), [credit note](/guides/mx-cfdi-credit-note), [global invoice](/guides/mx-cfdi-global), [payment receipt](/guides/mx-cfdi-payment) |
+
+## Which customer case applies
+
+Invopop selects one of three cases from the customer data.
+
+| Case | When | `Receptor/@Rfc` |
+|---|---|---|
+| Mexican customer | `customer.tax_id.country` is `MX` | The RFC of the customer |
+| Foreign customer | `customer.tax_id.country` is not `MX` | `XEXX010101000` |
+| No customer | The document has no `customer` | `XAXX010101000` |
+
+<Warning>
+  The PAC compares the RFC, name, tax regime and postal code of a Mexican customer with the SAT registry. If one value is different, the PAC rejects the document. Ask the customer for the four values as they are in its tax status certificate (Constancia de Situación Fiscal).
+</Warning>
+
+## Fields
+
+<MappingLegend />
+
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiPartiesSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <PartiesSpec />
+  </Tab>
+</Tabs>
+
+## Errors
+
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
+
+On a payment receipt, the prefix is `GOBL-MX-CFDI-BILL-PAYMENT-` and the numbers are different. See the [error lookup](/guides/mx-cfdi-errors).
+
+## Examples
+
+<AccordionGroup>
+  <Accordion title="Supplier">
+    <Supplier />
+  </Accordion>
+  <Accordion title="Mexican customer">
+    <Customer />
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<MexicoResources />

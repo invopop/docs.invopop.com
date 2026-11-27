@@ -1,7 +1,7 @@
 ---
 title: "Invoicing compliance in Mexico"
 sidebarTitle: "Compliance"
-description: SAT CFDI implementation and compliance for B2B, B2C, and B2G transactions
+description: "How e-invoicing works in Mexico: the CFDI clearance model, what a taxpayer needs, the document types, and what Invopop covers."
 ---
 
 import ComplianceFAQ from '/snippets/faqs/mx/composers/page-compliance.mdx';
@@ -16,420 +16,179 @@ import MexicoResources from '/snippets/tables/mexico-resources.mdx';
 
 ## Executive summary
 
-Mexico mandates electronic invoicing through the **CFDI** (Comprobante Fiscal Digital por Internet) system, managed by the **SAT** (Servicio de Administración Tributaria). All taxpayers must issue electronic invoices in XML format. The system uses a clearance model: invoices must be validated and certified by an authorized certification provider (PAC) before they acquire fiscal effect, and SAT receives the certified document in real time. This continuous feed gives SAT visibility into every transaction in the economy, and is the basis for automated VAT reconciliation, pre-filled returns, and audit-by-data. CFDI 4.0 is the current schema version and applies to B2B, B2C, and B2G transactions equally.
+Every taxpayer in Mexico must issue electronic invoices. The invoice is an XML document called **CFDI** (Comprobante Fiscal Digital por Internet). The tax agency is the **SAT** (Servicio de Administración Tributaria).
+
+Mexico uses a clearance model. An authorized certification provider, called a **PAC**, validates and stamps each CFDI before the invoice has fiscal effect. The PAC sends a copy to the SAT at the same moment. The same rules apply to business (B2B), consumer (B2C) and public sector (B2G) sales.
 
 | | |
 |---|---|
 | **Scope** | B2B, B2C, B2G |
 | **Format** | CFDI 4.0 (XML) |
-| **Infrastructure** | PAC → SAT |
-| **Clearance model** | Real-time stamping (timbrado) before fiscal effect |
+| **Model** | Clearance: a PAC stamps each document before it is valid |
 | **Agency** | [SAT](https://sat.gob.mx) |
-| **Invopop addon** | [SAT Mexico App](/apps/sat-mexico) |
-| **PAC** | [SW Sapien](/apps/sw-sapien) |
+| **Invopop app** | [SAT Mexico](/apps/sat-mexico) |
+| **PAC** | SW Sapien, through the [SW Sapien app](/apps/sw-sapien) |
+| **Archive period** | 5 years |
 
-<Card title="SAT Mexico" icon="https://assets.invopop.com/apps/sat-mexico/icon.svg" href="/apps/sat-mexico" horizontal>
-  Issue CFDI documents in Mexico →
-</Card>
+This page tells you what the country requires. It does not show fields or codes. When you are ready to build, go to [Implement Mexico](#implement-mexico).
 
-## The SAT CFDI system
+## How invoicing works
 
-SAT is the tax agency in Mexico, CFDI is the invoice format required by SAT. It is an XML document that must be sealed with the issuer's Certificado de Sello Digital (CSD), submitted to a PAC for validation, and stamped by SAT through that PAC. The result is a CFDI with a fiscal folio (UUID) and a SAT digital seal. Without those, the document has no fiscal effect.
+<Steps>
+  <Step title="The supplier prepares the invoice">
+    The supplier's system sends the invoice data to Invopop as a [GOBL](https://docs.gobl.org) document.
+  </Step>
+  <Step title="Invopop builds and seals the CFDI">
+    Invopop converts the document to CFDI 4.0 and seals it with the supplier's digital seal certificate.
+  </Step>
+  <Step title="The PAC stamps the CFDI">
+    The PAC validates the CFDI and adds the fiscal folio (a UUID) and the SAT seal. The PAC rejects a CFDI that is more than 72 hours old.
+  </Step>
+  <Step title="The SAT receives a copy">
+    The PAC sends the stamped CFDI to the SAT. No separate report is necessary.
+  </Step>
+  <Step title="The customer receives the invoice">
+    The supplier gives the customer the stamped XML. A PDF is a printed copy of the XML, and the XML is the legal document.
+  </Step>
+</Steps>
 
-There are six CFDI document types:
+## What a taxpayer needs
 
-| Type | Code| Description | Invopop coverage |
-|-----|---------|---|:---:|
-| Ingreso | `I` |  Standard sales invoice. | Yes |
-| Egreso  | `E` |  Credit note (returns, discounts, post-sale adjustments). | Yes |
-| Pago    | `P` |  Payment receipt (REP) issued when collecting against a previously-issued PPD invoice. | Yes |
-| Nómina  | `N` |  Payroll receipt, one per employee per pay period. | No |
-| Traslado | `T` |  Movement of goods without a sale (carries the Carta Porte complement for transport). | No |
-| Retenciones e Información de Pagos | `R` | Withholding declaration, uses a separate XSD schema. | No |
+A supplier must have these items before it can issue a CFDI:
 
-On top of this base structure, SAT publishes **complementos** — sector-specific XML extension nodes that attach to the CFDI and are sealed under the same digital signature. Each _complemento_ has its own XSD and lifecycle. The most relevant ones include Pago (mandatory for any deferred or installment invoice), Carta Porte (mandatory for most freight movements), Comercio Exterior 2.0 (exports), Nómina (payroll detail), Hidrocarburos y Petrolíferos (energy sector, mandatory since 2026), Donatarias (authorized non-profits), INE (electoral expenses), IEDU (private education), and Divisas (currency exchange operations).
+| Item | What it is | Who provides it |
+|---|---|---|
+| **RFC** | The Mexican tax ID. Companies have 12 characters and individuals have 13. | SAT |
+| **e.firma** | The advanced electronic signature of the taxpayer. It signs the PAC authorization. | SAT |
+| **CSD** | The digital seal certificate. It seals each CFDI. | SAT, requested with the e.firma |
+| **PAC authorization** | A signed manifest that lets the PAC send CFDI copies to the SAT. | The supplier signs it with the e.firma |
 
-### Invopop CFDI support
+Invopop does not create a CSD. The supplier uploads its CSD during registration. See the [supplier registration guide](/guides/mx-sat-supplier).
+
+The supplier also needs four data points from each Mexican customer: RFC, legal name, tax regime and postal code. The PAC compares these with the SAT registry and rejects the invoice if one of them is different. See [Parties](/guides/mx-cfdi-parties).
+
+## Document types
+
+A CFDI has one of five types. A sixth document, for withholdings, has its own format.
+
+| Type | Use | Invopop | Build it |
+|---|---|:---:|---|
+| **Ingreso** | Sales invoice | Yes | [Invoice](/guides/mx-cfdi-invoice) |
+| **Egreso** | Credit note for a return, discount or correction | Yes | [Credit note](/guides/mx-cfdi-credit-note) |
+| **Pago** | Payment receipt for an invoice that the customer pays later | Yes | [Payment receipt](/guides/mx-cfdi-payment) |
+| **Traslado** | Movement of goods without a sale | No | |
+| **Nómina** | Payroll receipt | No | |
+| **Retenciones** | Withholding certificate | No | |
+
+Some sectors must add a **complemento** to the CFDI. A complemento is an extra block of data, for example Carta Porte for freight or Comercio Exterior for exports. The list below shows which ones Invopop supports.
 
 <CoverageAccordion />
 
-### CFDI document types
+## Decisions that change your integration
 
-Each document type has its own schema and business rules for how it relates to other documents in accounting.
+### Does the customer pay now or later?
 
-<AccordionGroup>
-  <Accordion title="Ingreso (sales invoice)">
-    The standard invoice for any taxable sale of goods, provision of services, leasing, or activity that generates income. Must comply with Article 29-A of the CFF: issuer and receiver RFC, name, régimen fiscal, postal code, line-level description, unit value, totals, transferred and withheld taxes, payment method and form, and UsoCFDI declared by the receiver.
+Each invoice says if the customer pays in full in the month of issue, or later.
 
-    The Ingreso CFDI is the document that triggers the obligation. Whether the cash event is recognized at the same time depends on the `MetodoPago` attribute (PUE vs PPD).
-  </Accordion>
+- **Paid in full in the month of issue.** The invoice is the only document.
+- **Paid later or in installments.** The supplier must also issue a payment receipt for each payment. The receipt is due by day 5 of the month after the payment.
 
-  <Accordion title="Egreso (credit note)">
-    Used to reduce previously-invoiced income: returns, post-sale discounts, rebates, corrections, partial cancellations, and the application of advance payments. Always relates back to one or more Ingreso CFDIs through the `CfdiRelacionados` node.
+If an invoice says "paid in full" and the payment does not arrive in that month, the supplier must cancel it and issue it again as "paid later". Select "paid later" when you are not sure. See [how Invopop sets the payment fields](/guides/mx-cfdi-invoice#payment-method-and-means).
 
-    Common `TipoRelacion` codes for Egresos:
-    - `01` — Nota de crédito de los documentos relacionados.
-    - `02` — Nota de débito de los documentos relacionados.
-    - `03` — Devolución de mercancía sobre facturas o traslados previos.
-    - `07` — CFDI por aplicación de anticipo.
+### Do you sell to consumers?
 
-    An Egreso does not by itself cancel the original CFDI. Cancellation is a separate action governed by the cancellation rules below.
-  </Accordion>
+A consumer who does not ask for an invoice does not get an individual CFDI. The supplier adds these sales together in a **global invoice** for a day, a week, a month or two months. The global invoice is due 24 hours after the period closes. See [Global invoice](/guides/mx-cfdi-global).
 
-  <Accordion title="Pago (payment receipt)">
-    A CFDI of type P is required whenever a payment is collected against an invoice that was issued with `MetodoPago = PPD`. The Pago complement carries the actual payment date, currency, exchange rate, form of payment, and a list of `DoctoRelacionado` nodes referencing each invoice the payment applies to, with the partial amount, the running balance before and after, and the partiality number.
+### How do you correct a mistake?
 
-    A single REP can settle payments against multiple invoices. A single invoice paid in installments produces multiple REPs over time.
+A stamped CFDI cannot change. The supplier has two options:
 
-    **Deadline:** the REP must be issued no later than the fifth calendar day of the month following the one in which the payment was received (rule 2.7.1.35 of the RMF).
+- Issue a **credit note** to decrease the amount of an invoice.
+- **Cancel** the CFDI at the SAT, with or without a replacement.
 
-    **Invopop coverage:** Invopop issues type-P documents. Model the receipt as a GOBL [`bill.Payment`](https://docs.gobl.org/draft-0/bill/payment) referencing each PPD invoice being settled, and process it through the SAT payment workflow to stamp the CFDI de pago. See the [payment receipt example](/guides/mx-sat-issuing) in the issuing guide.
-  </Accordion>
+For most B2B invoices, the customer must accept the cancellation. The customer has three business days to answer, and no answer means acceptance. See the [cancellation guide](/guides/mx-sat-cancelling).
 
-  <Accordion title="Nómina (payroll)">
-    A CFDI carrying the Nómina complement, issued for every payment of salaries, wages, and assimilated remuneration. One per employee per pay period.
-  </Accordion>
+### Do you receive supplier invoices?
 
-  <Accordion title="Traslado (goods movement)">
-    Used when goods are moved without a sale (between warehouses, returns to suppliers, gratuitous transfers). For a Traslado document, `SubTotal` and `Total` must be zero. In nearly all real-world cases, a Traslado must carry the **Carta Porte** complement describing the route, transport mode, vehicle, operator, and goods.
-  </Accordion>
+Invopop can download the CFDI that a taxpayer receives from the SAT and convert them to GOBL. This needs the e.firma of the taxpayer. See the [receiving guide](/guides/mx-sat-receiving).
 
-  <Accordion title="Retenciones e Información de Pagos (withholdings) — not supported">
-    A separate document family with its own XSD, used to declare withholdings on payments to foreign residents, dividends, interest, leasing payments, share dispositions, and certain financial instruments.
-  </Accordion>
-</AccordionGroup>
+## Time limits
 
-
-### CFDI complement types
-
-Extra blocks of information that attach to a CFDI when the operation falls under a specific sector or activity. When a complement is required, the invoice cannot be stamped without it.
-
-<AccordionGroup>
-  <Accordion title="Carta Porte">
-    Mandatory complement for the transport of goods within Mexico by road, rail, sea, or air. Carries the route (origin and destination), transport mode, vehicle and trailer plates, the operator's identification, and a detailed manifest of the goods being moved including weight and hazardous-material classification where applicable.
-
-    Attaches to a Traslado (type T) when a company moves its own goods, or to an Ingreso (type I) when invoicing a transport service to a third party. Currently at version 3.x with separate sub-schemas per transport mode (Autotransporte, FerroviarioTransporte, TransporteMaritimo, TransporteAereo).
-  </Accordion>
-
-  <Accordion title="Comercio Exterior 2.0">
-    Required for definitive exports involving the sale of goods (typically clave de pedimento A1). Captures the issuer's and receiver's full addresses, the foreign tax ID of the receiver, INCOTERMS, currency and exchange rate to USD, and per-line detail including harmonized tariff codes (fracciones arancelarias), customs unit of measure, and the USD value of the goods.
-
-    Version 2.0 has been integrated with CFDI 4.0 since January 2024. Free-of-charge exports use the same complement on a Traslado document.
-  </Accordion>
-
-  <Accordion title="Hidrocarburos y Petrolíferos v1.0 (Revision A)">
-    Mandatory complement for the energy sector since 2026. Applies to taxpayers commercializing hydrocarbons or refined petroleum products and is intended to give SAT real-time traceability over fuel flows.
-
-    Carries the SAT-issued permit type and number, validated against the `c_TipoPermiso` catalog. Revision A (April 2026) added new permit types for commercialization activities along with their specific format structures and validation regular expressions.
-  </Accordion>
-
-  <Accordion title="Donatarias">
-    For non-profits authorized by SAT to issue tax-deductible donation receipts (donatarias autorizadas). Carries the SAT authorization office number and the date of the official authorization or its most recent ratification published in the DOF.
-
-    Without this complement on the CFDI, the donation cannot be deducted by the donor.
-  </Accordion>
-
-  <Accordion title="INE">
-    Used by political parties, candidates, and associations subject to the Instituto Nacional Electoral's reporting obligations. Identifies the type of process (ordinary, pre-campaign, campaign), the scope (federal, local), and the entity for which the spending was made.
-
-    Allows INE to reconcile electoral expense declarations against actual invoiced spending.
-  </Accordion>
-
-  <Accordion title="IEDU">
-    Required for invoices issued by private educational institutions for tuition payments (colegiaturas) eligible for personal income tax deduction. Captures the student's CURP, the educational level (preescolar, primaria, secundaria, profesional técnico, bachillerato), the official authorization number (RVOE), and the school's RFC.
-
-    Annual deduction caps apply per educational level.
-  </Accordion>
-
-  <Accordion title="Divisas">
-    Used by exchange houses (casas de cambio) and authorized financial institutions reporting foreign currency exchange operations. Identifies the operation type (purchase or sale of foreign currency) for fiscal reporting.
-  </Accordion>
-
-  <Accordion title="Pago">
-    The payment receipt complement attached to type-P documents (REPs). Carries the payment date, currency, exchange rate to MXN, and form of payment, plus a list of `DoctoRelacionado` nodes — one per invoice the payment applies to — with the original invoice's UUID, the partial amount being settled, the partiality number, and the running balance before and after.
-
-    A single Pago complement can settle multiple invoices, and a single PPD invoice can accumulate multiple Pago complements over time as installments are paid.
-  </Accordion>
-
-  <Accordion title="Nómina">
-    The payroll detail complement attached to type-N documents. Issued one per employee per pay period.
-
-    Captures the employee's identification (RFC, CURP, NSS), employment data (start date, contract type, working day type, salary base), the period covered, and a full breakdown of perceptions (regular salary, overtime, bonuses, vacation premium, profit sharing) and deductions (ISR withholding, IMSS contributions, loan repayments, alimony). Also includes settlement payments for terminations and other special payment scenarios.
-  </Accordion>
-</AccordionGroup>
-
-### CFDI payment types
-
-Mexican invoices declare upfront whether the customer is paying at issuance or paying later. The choice determines whether a follow-up payment receipt (REP) must be issued, and it changes when income tax and VAT are recognized.
-
-<AccordionGroup>
-  <Accordion title="PUE — Pago en Una sola Exhibición (pay in full)">
-    The operation is settled in full at or before invoice issuance, or when payment will be received with certainty by the last calendar day of the month in which the invoice is issued. PUE invoices declare the payment method (transfer, credit card, cash, etc.) and require no follow-up document. For tax effects, income is recognized at issuance.
-
-    If a CFDI was issued as PUE but the customer fails to pay by the last day of the issuance month, the issuer must:
-
-    1. Cancel the original PUE invoice (motivo 01, with substitution).
-    2. Issue a new CFDI as PPD with `FormaPago = 99`, related to the original via `TipoRelacion = 04` (Sustitución de los CFDI previos).
-    3. Issue REPs as payments are subsequently received.
-
-    A difference to observe in relation to other regimes is that the trigger is calendar-based, not payment-event-based. The conservative approach is to issue PPD whenever there is any uncertainty about same-month payment.
-  </Accordion>
-
-  <Accordion title="PPD — Pago en Parcialidades o Diferido (pay in installments)">
-    Use when payment will occur after the issuance month, or in two or more installments. PPD invoices must use `FormaPago = 99` (Por definir) on the original document, since the actual form of payment isn't yet known. For each payment received afterward, the issuer must produce a CFDI of type P (REP) referencing the original UUID, with the actual `FormaPago` of that specific payment, the partial amount, and the running balance.
-
-    For tax effects, income is recognized as REPs are issued, on a cash basis. This is the mechanism that makes ISR and IVA recognition follow the actual cash event rather than the invoice issuance date — particularly relevant for RESICO contributors, whose entire tax base is computed from emitted CFDIs and REPs.
-
-    Each REP must be issued by the fifth calendar day of the month following the one in which payment was received (rule 2.7.1.35 RMF). Missing the deadline doesn't invalidate the invoice but prevents the customer from deducting in the correct period.
-
-    Invopop supports issuing both the PPD invoice and the subsequent REPs as payments are received.
-  </Accordion>
-</AccordionGroup>
-
-
-### Party identification and reporting
-
-<AccordionGroup>
-  <Accordion title="RFCs and tax identification">
-    PACs validate the receiver's RFC, name, fiscal régimen, and postal code against the live SAT registry at stamping time. All four must agree. The source document is the receiver's **Constancia de Situación Fiscal (CIF)**. Note that requiring the CIF document itself as a precondition for invoicing is unlawful (Article 83 § IX CFF) — the issuer needs the four data points, not the document.
-
-    **Persona Física (13 characters)**
-
-    Issued to individuals. Structure: 4 letters from the person's first surname, second surname, and first name + 6 digits for date of birth (YYMMDD) + 3-character homoclave assigned by SAT.
-
-    Example: `PEJL850315ABC` for Juan Pérez López born 15 March 1985.
-
-    **Persona Moral (12 characters)**
-
-    Issued to companies, associations, and other legal entities. Structure: 3 letters from the entity name + 6 digits for date of constitution (YYMMDD) + 3-character homoclave.
-
-    The shorter length is the immediate visual cue distinguishing morales from físicas.
-
-    **Generic RFCs**
-
-    Predefined codes used when the receiver does not have a real RFC.
-
-    - `XAXX010101000` — generic national. Used for público en general (Mexican consumers who don't request invoices) and for nationals not yet registered with SAT.
-    - `XEXX010101000` — generic foreign. Used for receivers without Mexican fiscal residence.
-
-    For both generic RFCs:
-
-    - `RegimenFiscalReceptor` must be `616` (Sin obligaciones fiscales).
-    - `UsoCFDI` must be `S01` (Sin efectos fiscales). The CFDI is not deductible.
-    - `DomicilioFiscalReceptor` must equal `LugarExpedicion`.
-    - For `XEXX010101000`, the receiver's country code (per `c_Pais`) and foreign tax ID should be supplied where available.
-  </Accordion>
-
-  <Accordion title="Postal codes">
-    Mexico uses standard postal codes, but CFDI 4.0 enforces three different fields with different rules. There is no separate "fiscal postal code" — it is the same postal code, validated against SAT's `c_CodigoPostal` catalog (Anexo 20) and against the receiver's CIF.
-
-    **LugarExpedicion (issuer)**
-
-    Postal code of the physical location where the document is issued (`mx-cfdi-issue-place` in GOBL). If invoiced from a branch, use the branch's postal code regardless of where the billing system is hosted. Drives the document's time zone (Mexico has eight) and the fiscal stimulus zone flag (border-zone IVA reduction).
-
-    **DomicilioFiscalReceptor (receiver)**
-
-    Postal code of the receiver's tax domicile. For real RFCs, this must match what SAT has on file. A mismatch causes the PAC to reject stamping.
-
-    For generic RFCs (`XAXX010101000`, `XEXX010101000`), this field must equal `LugarExpedicion`.
-
-    **Catalog gaps**
-
-    SAT's `c_CodigoPostal` catalog is updated periodically (multiple times in 2026 alone) and does not always contain every postal code in active use. When the receiver's postal code is not in the catalog, SAT's filling guide instructs the issuer to register the closest catalog code from the place of issuance. This is one of the most common causes of stamping failures during new customer onboarding.
-  </Accordion>
-
-
-<Accordion title="Régimen fiscal (fiscal regime)">
-
-Each issuer and receiver must declare a `RegimenFiscal` from the `c_RegimenFiscal` catalog. The catalog distinguishes regimes available to parties. The receiver's régimen also constrains which `UsoCFDI` codes are valid for that invoice — not all combinations are allowed.
-
-The full catalog (all supported by Invopop):
-
-| Code | Description |
+| Subject | Limit |
 |---|---|
-| `601` | General de Ley Personas Morales |
-| `603` | Personas Morales con Fines no Lucrativos |
-| `605` | Sueldos y Salarios e Ingresos Asimilados a Salarios |
-| `606` | Arrendamiento |
-| `607` | Régimen de Enajenación o Adquisición de Bienes |
-| `608` | Demás ingresos |
-| `610` | Residentes en el Extranjero sin Establecimiento Permanente en México |
-| `611` | Ingresos por Dividendos (socios y accionistas) |
-| `612` | Personas Físicas con Actividades Empresariales y Profesionales |
-| `614` | Ingresos por intereses |
-| `615` | Régimen de los ingresos por obtención de premios |
-| `616` | Sin obligaciones fiscales (generic RFCs only) |
-| `620` | Sociedades Cooperativas de Producción que optan por diferir sus ingresos |
-| `621` | Incorporación Fiscal (legacy, being phased out) |
-| `622` | Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras |
-| `623` | Opcional para Grupos de Sociedades |
-| `624` | Coordinados |
-| `625` | Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas |
-| `626` | Régimen Simplificado de Confianza (RESICO) |
-</Accordion>
+| Stamp | Not later than 72 hours after the issue date and time of the CFDI |
+| Global invoice | 24 hours after the close of the period |
+| Payment receipt | Day 5 of the month after the payment |
+| Cancellation | The month in which the annual income tax return for the year of issue is due |
+| Customer answer to a cancellation | Three business days |
 
-<Accordion title="Customer invoice purpose codes">
-
-
-The `UsoCFDI` field declares the receiver's intended fiscal treatment of the document. The most common codes:
-
-| Code | Description |
-|---|---|
-| `G01` | Adquisición de mercancías |
-| `G02` | Devoluciones, descuentos o bonificaciones |
-| `G03` | Gastos en general |
-| `I01`–`I08` | Construcciones, mobiliario, transporte, cómputo, telecomunicaciones, otra maquinaria |
-| `D01`–`D10` | Personal deductions (medical, funeral, donations, mortgage interest, voluntary retirement, schooling). Available only to personas físicas |
-| `CP01` | Pagos. Used on REPs |
-| `CN01` | Nómina. Used on payroll CFDIs |
-| `S01` | Sin efectos fiscales. Used for non-deductible documents and globales |
-
-Validation: the chosen `UsoCFDI` must be allowed for the receiver's `RegimenFiscal`. Picking the wrong combination is one of the most frequent stamping errors.
-
-</Accordion>
-</AccordionGroup>
-
-
-###  B2C aggregation reporting
-
-Retail-style operations that don't issue per-transaction invoices to consumers must issue a periodic **factura global** aggregating all operations with público en general. 
+## Legal requirements
 
 <AccordionGroup>
-  <Accordion title="CFDI Globales">
-    The `mx-cfdi-v4` addon supports this via the `global` invoice tag, with extensions for:
+  <Accordion title="Archive period">
+    Taxpayers must keep their accounting records, which include CFDIs, for five years (Article 30 of the Federal Tax Code). The period starts on the date the related tax return was filed, or was due.
+  </Accordion>
 
-    | Field | Extension | Values |
-    |---|---|---|
-    | **Period** | `mx-cfdi-global-period` | daily (01), weekly (02), biweekly (03), monthly (04), bimonthly (05) |
-    | **Month** | `mx-cfdi-global-month` | individual months 01–12 or paired months 13–18 |
-    | **Year** | `mx-cfdi-global-year` | 4-digit year |
+  <Accordion title="Penalties">
+    It is an infraction not to issue a CFDI, not to give it to the customer, or to issue one without the legal content (Articles 83 and 84 of the Federal Tax Code). The general fine is MXN 22,300 to 127,530. For a repeat infraction, the authority can also close the premises for 3 to 15 days.
+  </Accordion>
 
-    The global is issued to `XAXX010101000` with régimen 616 and UsoCFDI S01. Purchases under MXN 100 are not required to be invoiced individually but must still be included in the global. In practice, many operations issue globals as the simpler path.
+  <Accordion title="Certification provider (PAC)">
+    A PAC is a private company that the SAT authorizes to validate and stamp CFDIs. Invopop is not a PAC. Invopop uses SW Sapien as the PAC, and the supplier does not need a contract with SW Sapien.
+  </Accordion>
+
+  <Accordion title="Suspect supplier list (Article 69-B)">
+    The SAT publishes a list of taxpayers that it presumes issue invoices for operations that did not occur. A buyer can lose the deduction for an invoice from a listed supplier. Many companies check their suppliers against this list. Invopop does not do this check.
+  </Accordion>
+
+  <Accordion title="Digital platforms">
+    Digital platforms that operate in Mexico have a separate duty to give the SAT access to their operations data. This duty is not part of the CFDI flow. See the [digital platform reporting guide](/guides/mx-sat-platform-reporting).
   </Accordion>
 </AccordionGroup>
 
+## Implement Mexico
 
-### Cancellations
+Follow these guides in order.
 
-The issuer submits a cancellation request through SAT or a PAC, and the receiver has three business days to accept or reject the cancellation. If the receiver takes no action, the cancellation is accepted.
-
-<AccordionGroup>
-  <Accordion title="Cancellation rejection/acceptance">
-
-    **The customer can reject a cancellation**
-
-    A CFDI is not cancelled by issuer action alone. If the three day deadline passes without response, the cancellation takes effect by positive ficta. If the receiver rejects, the CFDI remains valid.
-
-    This means a wrongly-issued invoice can remain on the issuer's books if the customer rejects the cancellation. The practical workaround is to coordinate with the customer before submitting.
-
-    
-    <Note>
-    Cancellations can be requested through the SAT Mexico app, see the [CFDI cancellation guide](/guides/mx-sat-cancelling).
-    </Note>
-
-    **Exceptions where acceptance is not required**
-    Cancellation is immediate without receiver acceptance for:
-    - CFDIs of type Egreso (E), Traslado (T), Retenciones (R), and Nómina (N).
-    - CFDIs cancelled within one business day of issuance.
-    - Operations with público en general (RFC `XAXX010101000`).
-    - CFDIs received by foreign residents.
-    - CFDIs with total value up to MXN 1,000 (with carve-outs for Pago, Hidrocarburos, and Carta Porte for fuels).
-    - CFDIs issued by financial system members.
-
-    **Cancellation reasons**
-
-    Every cancellation must declare a reason:
-
-    | Code | Description |
-    |---|---|
-    | `01` | Comprobante emitido con errores con relación. The original is being replaced by a substitute CFDI; the substitute's UUID must be supplied. |
-    | `02` | Comprobante emitido con errores sin relación. No replacement. |
-    | `03` | No se llevó a cabo la operación. The transaction did not occur. |
-    | `04` | Operación nominativa relacionada en una factura global. The operation was included in a previous global invoice; the global's UUID must be supplied. |
-  </Accordion>
-
-  <Accordion title="Substitution flow (motivo 01)">
-
-    <Note>The SAT Mexico app supports the substitution flow, see the [CFDI cancellation guide](/guides/mx-sat-cancelling).</Note>
-
-    The correct sequence for replacing an erroneous CFDI:
-
-    1. Issue the new CFDI with `TipoRelacion = 04` (Sustitución de los CFDI previos), referencing the UUID of the document being replaced.
-    2. Submit the cancellation request for the original, motivo 01, referencing the new UUID.
-    3. The PAC validates whether receiver acceptance is required and routes accordingly.
-
-    Note: while the original is referenced as substituted-by, it temporarily shows as "No cancelable." The cancellation request itself breaks the relation and moves it back to a cancellable state.
-  </Accordion>
-
-  <Accordion title="Annual cancellation deadline">
-    Per Article 29-A § 4 of the CFF and rule 2.7.1.47 RMF, CFDIs must be cancelled by the last day of the month in which the annual ISR declaration for the issuance fiscal year is due:
-    - Personas morales: 31 March of the following year.
-    - Personas físicas: 30 April of the following year.
-
-    The First Chamber of the Supreme Court ruled this time limit unconstitutional in April 2024 (press release 098/2024), but the rule remains in operation pending legislative change.
-  </Accordion>
-</AccordionGroup>
-
-## Compliance
-
-<AccordionGroup>
-  <Accordion title="Legally required invoice content">
-    From Article 29-A of the CFF and the Anexo 20 filling guide:
-
-    - RFC, name, and régimen fiscal of the issuer.
-    - RFC, name, régimen fiscal, and postal code of the receiver.
-    - Folio fiscal (UUID) and SAT digital seal.
-    - Issuer's CSD digital seal and the serial number of the certificate used.
-    - Place and date of issuance (`LugarExpedicion`, `Fecha`).
-    - UsoCFDI declared by the receiver.
-    - Per-line: quantity, unit of measure (from `c_ClaveUnidad`), description, product/service code (from `c_ClaveProdServ`), unit value, taxes itemised by rate, withholdings where applicable.
-    - `MetodoPago` (PUE/PPD) and `FormaPago` from `c_FormaPago`.
-    - `Moneda` and `TipoCambio` for non-MXN invoices.
-    - Pedimento number and date for first-hand sales of imported goods.
-    - Certification date, time, and SAT certificate serial.
-
-    The printed representation (PDF) must additionally include:
-    1. QR code as defined in section I.D of Anexo 20.
-    2. Serial numbers of the issuer's and SAT's CSDs.
-    3. The legend: "Este documento es una representación impresa de un CFDI."
-    4. Issuance and certification timestamps.
-    5. Original string (cadena original) of the SAT certification complement.
-
-    Source: [SAT](https://www.sat.gob.mx/minisitio/Factura/solicita_requisitos.htm)
-  </Accordion>
-
-  <Accordion title="Archival period">
-    Article 30 of the Federal Tax Code requires accounting records, including CFDIs, to be retained for five years.
-
-    - The period starts from the date the relevant tax return was filed, or should have been.
-    - For records covering a longer period, the five years run from the last fiscal year covered.
-    - If records are part of an active legal case, the period starts when the final decision is issued.
-  </Accordion>
-
-  <Accordion title="Proveedor Autorizado de Certificación (PAC)">
-    A PAC (Proveedor Autorizado de Certificación) is a private company licensed by SAT to validate, seal, and forward CFDIs on behalf of issuers. The PAC is the operational gateway: an unstamped CFDI has no fiscal effect.
-
-    Invopop uses [SW Sapien](/apps/sw-sapien) as its PAC. Suppliers authorize the PAC once via e.firma (FIEL) sign-off, after which Invopop can issue CFDIs on their behalf using their CSD. CSD certificate generation remains the supplier's responsibility — Invopop does not generate CSDs but accepts the certificate and key during onboarding.
-  </Accordion>
-
-  <Accordion title="Buzón Tributario">
-    The Buzón Tributario is the official electronic mailbox SAT uses to communicate with each contributor. Cancellation requests, audit notifications, formal requirements, and (since May 2026) real-time data demands flow through it. Every contributor must keep it active and monitored. Invopop does not interact with the Buzón.
-  </Accordion>
-
-  <Accordion title="Lista 69-B">
-    SAT publishes ongoing lists of taxpayers presumed to issue fake invoices (EFOS) and those who used them (EDOS). Invoices issued by an EFOS-listed supplier may be deemed non-deductible for the receiver. Companies routinely screen vendor masters against the list.
-  </Accordion>
-
-  <Accordion title="Real-time data access (May 2026)">
-    Article 30-B of the CFF, introduced in the 2026 RMF, requires technology platforms (domestic and foreign) to provide SAT with continuous online access to tax and operational data, available no later than the day after each transaction. This applies to marketplaces, ride-hailing, lodging, food delivery, and digital service providers operating in Mexico. It is a separate reporting obligation from the CFDI flow.
-
-    Invopop addresses this with [digital platform reporting](/guides/mx-sat-platform-reporting): register a platform, record each operation with the fields required by rule 2.9.21, and give SAT a private, access-controlled portal to browse, filter, and export them on demand.
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Configure the workspace and register suppliers">
+    <CardGroup cols={2}>
+      <Card title="Supplier registration" icon="user-plus" href="/guides/mx-sat-supplier">
+        Connect the SAT Mexico app and upload the supplier's CSD.
+      </Card>
+      <Card title="Issuing documents" icon="paper-plane" href="/guides/mx-sat-issuing">
+        Set up the workflows that stamp invoices and payment receipts.
+      </Card>
+      <Card title="Cancelling documents" icon="ban" href="/guides/mx-sat-cancelling">
+        Request a cancellation and follow its result.
+      </Card>
+      <Card title="Receiving invoices" icon="inbox" href="/guides/mx-sat-receiving">
+        Import the CFDIs that a taxpayer receives.
+      </Card>
+    </CardGroup>
+  </Step>
+  <Step title="Build each document">
+    <CardGroup cols={2}>
+      <Card title="Parties" icon="building" href="/guides/mx-cfdi-parties">
+        Supplier and customer fields: RFC, tax regime, postal code.
+      </Card>
+      <Card title="Invoice" icon="file-invoice" href="/guides/mx-cfdi-invoice">
+        Ingreso: every GOBL field and its CFDI field.
+      </Card>
+      <Card title="Credit note" icon="file-minus" href="/guides/mx-cfdi-credit-note">
+        Egreso: how to refer to the original invoice.
+      </Card>
+      <Card title="Payment receipt" icon="money-check" href="/guides/mx-cfdi-payment">
+        Pago: one receipt for one or more invoices.
+      </Card>
+      <Card title="Global invoice" icon="layer-group" href="/guides/mx-cfdi-global">
+        Consumer sales in one CFDI for a period.
+      </Card>
+    </CardGroup>
+  </Step>
+</Steps>
 
 ## FAQ
-
-Compliance questions
 
 <ComplianceFAQ />
 

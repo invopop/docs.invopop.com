@@ -1,0 +1,155 @@
+---
+title: "CFDI invoice spec (Ingreso)"
+sidebarTitle: "Invoice"
+description: "Field-by-field mapping from a GOBL invoice to a Mexican CFDI 4.0 of type Ingreso, with the validation rules and examples."
+---
+
+import B2BInvoiceMin from '/snippets/invoices/mx/sat-b2b.min.mdx';
+import B2BInvoice from '/snippets/invoices/mx/sat-b2b.mdx';
+import B2CInvoiceMin from '/snippets/invoices/mx/sat-b2c.min.mdx';
+import B2CInvoice from '/snippets/invoices/mx/sat-b2c.mdx';
+import SimplifiedInvoiceMin from '/snippets/invoices/mx/sat-simplified.min.mdx';
+import SimplifiedInvoice from '/snippets/invoices/mx/sat-simplified.mdx';
+import ThirdPartyInvoiceMin from '/snippets/invoices/mx/sat-third-party.min.mdx';
+import ThirdPartyInvoice from '/snippets/invoices/mx/sat-third-party.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import InvoiceSpec, { mxCfdiInvoiceSpec } from '/snippets/specs/mx/invoice.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import B2BXml from '/snippets/specs/mx/xml/sat-b2b.mdx';
+import B2CXml from '/snippets/specs/mx/xml/sat-b2c.mdx';
+import SimplifiedXml from '/snippets/specs/mx/xml/sat-simplified.mdx';
+import ThirdPartyXml from '/snippets/specs/mx/xml/sat-third-party.mdx';
+
+A sales invoice in Mexico is a CFDI of type `I` (Ingreso). This page lists every field of the CFDI and the GOBL field that gives it.
+
+| | |
+|---|---|
+| **GOBL document** | [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice), type `standard` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, `cfdv40.xsd` |
+| **Workflow** | [CFDI issuing guide](/guides/mx-sat-issuing) |
+| **Other documents** | [Credit note](/guides/mx-cfdi-credit-note), [global invoice](/guides/mx-cfdi-global), [payment receipt](/guides/mx-cfdi-payment) |
+
+## Fields
+
+<MappingLegend />
+
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiInvoiceSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <InvoiceSpec />
+  </Tab>
+</Tabs>
+
+## Code tables
+
+### Payment method and means
+
+The CFDI has two payment fields. Invopop sets them from `payment.advances`.
+
+| CFDI field | Meaning | Value |
+|---|---|---|
+| `MetodoPago` | When the customer pays | `PUE`: the advances cover the total. `PPD`: an amount is due. |
+| `FormaPago` | With what the customer pays | The code of the largest advance. `99` (to be defined) when an amount is due. |
+
+For a `PPD` invoice, you report the real payment means later in the [payment receipt](/guides/mx-cfdi-payment).
+
+| GOBL `key` | `FormaPago` | SAT description |
+|---|---|---|
+| `cash` | `01` | Efectivo |
+| `cheque` | `02` | Cheque nominativo |
+| `credit-transfer` | `03` | Transferencia electrónica de fondos |
+| `card` | `04` | Tarjeta de crédito |
+| `online+wallet` | `05` | Monedero electrónico |
+| `online` | `06` | Dinero electrónico |
+| `netting` | `17` | Compensación |
+| `card+debit` | `28` | Tarjeta de débito |
+| `other+advance` | `30` | Aplicación de anticipos |
+| `other+intermediary` | `31` | Intermediario pagos |
+
+The full list is in the [GOBL addon reference](https://docs.gobl.org/addons/mx-cfdi-v4).
+
+### Tax categories
+
+| GOBL `cat` | CFDI `Impuesto` | CFDI node |
+|---|---|---|
+| `VAT` | `002` (IVA) | `Traslado` |
+| `RVAT` | `002` (IVA) | `Retencion` |
+| `IEPS` | `003` | `Traslado` |
+| `RIEPS` | `003` | `Retencion` |
+| `ISR` | `001` | `Retencion` |
+
+### Relation types
+
+Set `tax.ext.mx-cfdi-rel-type` when `preceding` has a value.
+
+| Code | Use |
+|---|---|
+| `04` | The invoice replaces a CFDI that you cancel. See the [cancellation guide](/guides/mx-sat-cancelling). |
+| `07` | The invoice applies an advance payment. |
+| `01`, `02`, `03` | For [credit notes](/guides/mx-cfdi-credit-note). |
+
+## Stamps
+
+After the PAC stamps the CFDI, Invopop adds these stamps to the GOBL header.
+
+| Stamp | Content |
+|---|---|
+| `sat-uuid` | Fiscal folio (UUID). You need it for credit notes, payment receipts and cancellations. |
+| `sat-timestamp` | Date and time of the stamp. |
+| `sat-serial` | Serial number of the SAT certificate. |
+| `sat-provider-rfc` | RFC of the PAC. |
+| `sat-sig` | SAT digital seal. |
+| `sat-chain` | Original string of the SAT stamp. |
+| `sat-url` | URL for the QR code. |
+
+## Errors
+
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
+
+## Not supported
+
+- Document-level discounts and charges.
+- Exports and the Comercio Exterior complement.
+- Fixed-amount tax rates (`Cuota`).
+- The `self-billed` and `customer-rates` tags.
+
+## Examples
+
+<AccordionGroup>
+  <Accordion title="B2B invoice to a company">
+    <CodeGroup>
+      <B2BInvoiceMin />
+      <B2BInvoice />
+      <B2BXml />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice to an individual with an RFC">
+    <CodeGroup>
+      <B2CInvoiceMin />
+      <B2CInvoice />
+      <B2CXml />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice without a customer">
+    <CodeGroup>
+      <SimplifiedInvoiceMin />
+      <SimplifiedInvoice />
+      <SimplifiedXml />
+    </CodeGroup>
+  </Accordion>
+  <Accordion title="Invoice on behalf of a third party">
+    <CodeGroup>
+      <ThirdPartyInvoiceMin />
+      <ThirdPartyInvoice />
+      <ThirdPartyXml />
+    </CodeGroup>
+  </Accordion>
+</AccordionGroup>
+
+---
+
+<MexicoResources />

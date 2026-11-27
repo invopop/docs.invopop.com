@@ -1,0 +1,71 @@
+---
+title: "CFDI payment receipt spec (Pago)"
+sidebarTitle: "Payment receipt"
+description: "Field-by-field mapping from a GOBL payment to a Mexican CFDI 4.0 of type Pago with the Pagos 2.0 complement."
+---
+
+import PaymentMin from '/snippets/payments/mx/sat-payment.min.mdx';
+import Payment from '/snippets/payments/mx/sat-payment.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import PaymentSpec, { mxCfdiPaymentSpec } from '/snippets/specs/mx/payment.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import PaymentXml from '/snippets/specs/mx/xml/sat-payment.mdx';
+
+A payment receipt in Mexico is a CFDI of type `P` (Pago) with the complement Pagos 2.0. Its Spanish names are _complemento de pago_ and REP. Issue one each time a customer pays an invoice that has `MetodoPago` `PPD`.
+
+| | |
+|---|---|
+| **GOBL document** | [`bill/payment`](https://docs.gobl.org/draft-0/bill/payment), type `receipt` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0 with Pagos 2.0, `cfdv40.xsd` and `Pagos20.xsd` |
+| **Workflow** | [CFDI issuing guide](/guides/mx-sat-issuing#setup), step 2 |
+| **Time limit** | Day 5 of the month after the payment (rule 2.7.1.32 of the RMF 2026) |
+| **Other documents** | [Invoice](/guides/mx-cfdi-invoice), [parties](/guides/mx-cfdi-parties) |
+
+## Fields
+
+<MappingLegend />
+
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiPaymentSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <PaymentSpec />
+  </Tab>
+</Tabs>
+
+## Rules for the receipt
+
+- One receipt can pay more than one invoice of the same customer. Each invoice is one line.
+- One invoice can have more than one receipt, one for each installment.
+- A receipt has exactly one payment means. For two payment means, issue two receipts.
+- To replace a receipt that you cancel, add the earlier receipt to `preceding`. GOBL sets the relation type `04`.
+
+The payment means codes are in the [invoice spec](/guides/mx-cfdi-invoice#payment-method-and-means).
+
+## Errors
+
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-PAYMENT-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
+
+## Not supported
+
+- A payment in a currency different from the currency of the invoice.
+- More than one payment means in one receipt.
+- Refunds, and the payment types `request` and `advice`.
+- The bank account fields of the payment (`CtaOrdenante`, `CtaBeneficiario` and related fields).
+
+## Example
+
+This receipt pays three invoices with one transfer. The third line is the third installment of its invoice.
+
+<CodeGroup>
+  <PaymentMin />
+  <Payment />
+  <PaymentXml />
+</CodeGroup>
+
+---
+
+<MexicoResources />

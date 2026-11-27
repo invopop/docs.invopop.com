@@ -1,0 +1,923 @@
+{
+ "key": "payment",
+ "export": "mxCfdiPaymentSpec",
+ "title": "CFDI payment receipt (Pago)",
+ "format": "CFDI 4.0 with Pagos 2.0",
+ "schema": "cfdv40.xsd, Pagos20.xsd",
+ "errorPrefix": "GOBL-MX-CFDI-BILL-PAYMENT-",
+ "sections": [
+  {
+   "key": "header",
+   "title": "Header",
+   "node": "cfdi:Comprobante",
+   "rows": [
+    {
+     "id": "MX-PAY-H01",
+     "cfdi": "@TipoDeComprobante",
+     "req": "M",
+     "format": "c_TipoDeComprobante",
+     "gobl": "type",
+     "send": "M",
+     "rule": "Gives P. The types request and advice are not supported.",
+     "example": "P",
+     "errors": [
+      "01",
+      "03",
+      "04"
+     ],
+     "values": "receipt.",
+     "link": {
+      "label": "bill.Payment: type",
+      "url": "https://docs.gobl.org/draft-0/bill/payment"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-H02",
+     "cfdi": "@Serie",
+     "req": "O",
+     "format": "Text, max 25",
+     "gobl": "series",
+     "send": "O",
+     "rule": "",
+     "example": "P",
+     "link": {
+      "label": "bill.Payment: series",
+      "url": "https://docs.gobl.org/draft-0/bill/payment"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-H03",
+     "cfdi": "@Folio",
+     "req": "O",
+     "format": "Text, max 40",
+     "gobl": "code",
+     "send": "O",
+     "rule": "A workflow step can assign it.",
+     "example": "0040",
+     "link": {
+      "label": "bill.Payment: code",
+      "url": "https://docs.gobl.org/draft-0/bill/payment"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-H04",
+     "cfdi": "@Fecha",
+     "req": "M",
+     "format": "Date and time",
+     "gobl": "issue_date, issue_time",
+     "send": "O",
+     "rule": "",
+     "values": "issue_date: YYYY-MM-DD. issue_time: HH:MM:SS, for example 13:45:30.",
+     "default": "The time GOBL builds the document, when issue_time is empty.",
+     "link": {
+      "label": "bill.Payment: issue_date",
+      "url": "https://docs.gobl.org/draft-0/bill/payment"
+     },
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H05",
+     "cfdi": "@LugarExpedicion",
+     "req": "M",
+     "format": "c_CodigoPostal",
+     "gobl": "ext.mx-cfdi-issue-place",
+     "send": "M",
+     "rule": "At document level, not in tax.ext.",
+     "example": "44100",
+     "errors": [
+      "03"
+     ],
+     "values": "5 digits.",
+     "link": {
+      "label": "Addon: place of issue",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#place-of-issue"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-H06",
+     "cfdi": "@Moneda",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always XXX. The currency of the payment is in the Pago node.",
+     "example": "XXX",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H07",
+     "cfdi": "@SubTotal, @Total",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always 0.",
+     "example": "0",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H08",
+     "cfdi": "@Exportacion",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always 01.",
+     "example": "01",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H09",
+     "cfdi": "Receptor/@UsoCFDI",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "customer.ext.mx-cfdi-use",
+     "send": "Auto",
+     "rule": "Always CP01 (payments).",
+     "example": "CP01",
+     "errors": [
+      "11"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H10",
+     "cfdi": "Emisor, Receptor",
+     "req": "M",
+     "format": "Nodes",
+     "gobl": "supplier, customer",
+     "send": "M",
+     "rule": "See the parties spec. A customer is mandatory.",
+     "errors": [
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "12",
+      "13",
+      "14",
+      "15"
+     ],
+     "link": {
+      "label": "org.Party",
+      "url": "https://docs.gobl.org/draft-0/org/party"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-H11",
+     "cfdi": "Conceptos/Concepto",
+     "req": "M",
+     "format": "Fixed",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "One fixed line: product code 84111506, unit ACT, description Pago, amount 0.",
+     "example": "84111506",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-H12",
+     "cfdi": "CfdiRelacionados",
+     "req": "C",
+     "format": "Node",
+     "gobl": "preceding[].stamps (sat-uuid)",
+     "send": "C",
+     "rule": "Relation type 04 (substitution). No other type is permitted.",
+     "when": "the receipt replaces an earlier receipt that you cancel",
+     "example": "04",
+     "errors": [
+      "29",
+      "30"
+     ],
+     "values": "Each preceding row needs code, issue_date and the sat-uuid stamp of the earlier CFDI.",
+     "link": {
+      "label": "org.DocumentRef",
+      "url": "https://docs.gobl.org/draft-0/org/document_ref"
+     },
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "payment",
+   "title": "Payment",
+   "node": "pago20:Pagos/pago20:Pago",
+   "xsd": "Pagos/Pago",
+   "rows": [
+    {
+     "id": "MX-PAY-P01",
+     "cfdi": "@FechaPago",
+     "req": "M",
+     "format": "Date and time",
+     "gobl": "methods[0].date",
+     "send": "O",
+     "rule": "The date the supplier received the payment. The time is always 12:00:00.",
+     "example": "2023-05-30T12:00:00",
+     "values": "YYYY-MM-DD.",
+     "default": "value_date, then issue_date.",
+     "link": {
+      "label": "pay.Record: date",
+      "url": "https://docs.gobl.org/draft-0/pay/record"
+     },
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-P02",
+     "cfdi": "@FormaDePagoP",
+     "req": "M",
+     "format": "c_FormaPago",
+     "gobl": "methods[0].key",
+     "send": "M",
+     "rule": "Exactly one method. The code 99 is not permitted.",
+     "example": "03",
+     "errors": [
+      "17",
+      "18",
+      "19"
+     ],
+     "values": "A payment means key, for example credit-transfer, card or cash.",
+     "link": {
+      "label": "Addon: payment means",
+      "url": "https://docs.gobl.org/addons/mx-cfdi-v4#payment-means"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P03",
+     "cfdi": "@MonedaP",
+     "req": "M",
+     "format": "c_Moneda",
+     "gobl": "currency",
+     "send": "O",
+     "rule": "",
+     "example": "MXN",
+     "values": "An ISO 4217 code, for example MXN, USD or EUR.",
+     "default": "MXN",
+     "link": {
+      "label": "currency.Code",
+      "url": "https://docs.gobl.org/draft-0/currency/code"
+     },
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-P04",
+     "cfdi": "@TipoCambioP",
+     "req": "C",
+     "format": "Decimal",
+     "gobl": "exchange_rates",
+     "send": "C",
+     "rule": "Invopop writes 1 for MXN.",
+     "when": "currency is not MXN",
+     "example": "1",
+     "errors": [
+      "02"
+     ],
+     "values": "One rate with from (the payment currency), to (MXN) and amount.",
+     "link": {
+      "label": "currency.ExchangeRate",
+      "url": "https://docs.gobl.org/draft-0/currency/exchange_rate"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P05",
+     "cfdi": "@Monto",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The sum of the line amounts.",
+     "example": "11443.33",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-P06",
+     "cfdi": "@NumOperacion",
+     "req": "O",
+     "format": "Text",
+     "gobl": "methods[0].ref",
+     "send": "O",
+     "rule": "",
+     "example": "MX0123456789",
+     "values": "The transfer reference or cheque number.",
+     "link": {
+      "label": "pay.Record: ref",
+      "url": "https://docs.gobl.org/draft-0/pay/record"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P07",
+     "cfdi": "@RfcEmisorCtaOrd",
+     "req": "O",
+     "format": "RFC",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P08",
+     "cfdi": "@NomBancoOrdExt",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P09",
+     "cfdi": "@CtaOrdenante",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P10",
+     "cfdi": "@RfcEmisorCtaBen",
+     "req": "O",
+     "format": "RFC",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P11",
+     "cfdi": "@CtaBeneficiario",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P12",
+     "cfdi": "@TipoCadPago",
+     "req": "O",
+     "format": "c_TipoCadenaPago",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P13",
+     "cfdi": "@CertPago",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P14",
+     "cfdi": "@CadPago",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P15",
+     "cfdi": "@SelloPago",
+     "req": "O",
+     "format": "Text",
+     "gobl": "",
+     "send": "No",
+     "rule": "",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P17",
+     "cfdi": "DoctoRelacionado",
+     "req": "M",
+     "format": "Node",
+     "gobl": "lines",
+     "send": "M",
+     "rule": "One for each invoice that the payment covers.",
+     "link": {
+      "label": "bill.PaymentLine",
+      "url": "https://docs.gobl.org/draft-0/bill/payment_line"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-P16",
+     "cfdi": "ImpuestosP",
+     "req": "C",
+     "format": "Node",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The tax totals of the payment, calculated from the line taxes.",
+     "when": "a line has taxes",
+     "auto": true
+    }
+   ]
+  },
+  {
+   "key": "lines",
+   "title": "Paid invoices",
+   "node": "pago20:Pago/pago20:DoctoRelacionado",
+   "xsd": "Pagos/Pago/DoctoRelacionado",
+   "intro": "Each GOBL line is one invoice that the payment covers.",
+   "rows": [
+    {
+     "id": "MX-PAY-D01",
+     "cfdi": "@IdDocumento",
+     "req": "M",
+     "format": "UUID",
+     "gobl": "lines[].document.stamps (sat-uuid)",
+     "send": "M",
+     "rule": "",
+     "example": "0f4d2a6e-8b1c-4d3e-9f5a-7c6b5a4d3e2f",
+     "errors": [
+      "24",
+      "25"
+     ],
+     "values": "The sat-uuid stamp of the invoice. The document also needs code and issue_date.",
+     "link": {
+      "label": "org.DocumentRef",
+      "url": "https://docs.gobl.org/draft-0/org/document_ref"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D02",
+     "cfdi": "@Serie",
+     "req": "O",
+     "format": "Text",
+     "gobl": "lines[].document.series",
+     "send": "O",
+     "rule": "",
+     "example": "LMC",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D03",
+     "cfdi": "@Folio",
+     "req": "O",
+     "format": "Text",
+     "gobl": "lines[].document.code",
+     "send": "O",
+     "rule": "",
+     "example": "0021",
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D04",
+     "cfdi": "@MonedaDR",
+     "req": "M",
+     "format": "c_Moneda",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The payment currency. The invoice and the payment must have the same currency.",
+     "example": "MXN",
+     "errors": [
+      "28"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-D05",
+     "cfdi": "@EquivalenciaDR",
+     "req": "C",
+     "format": "Decimal",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "Always 1.",
+     "example": "1",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-D06",
+     "cfdi": "@NumParcialidad",
+     "req": "M",
+     "format": "Integer",
+     "gobl": "lines[].installment",
+     "send": "M",
+     "rule": "1 for the first payment of the invoice, 2 for the second.",
+     "example": "1",
+     "errors": [
+      "21"
+     ],
+     "values": "An integer from 1 to 999.",
+     "link": {
+      "label": "bill.PaymentLine: installment",
+      "url": "https://docs.gobl.org/draft-0/bill/payment_line"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D07",
+     "cfdi": "@ImpSaldoAnt",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "lines[].payable, lines[].advances",
+     "send": "M",
+     "rule": "Balance before this payment: payable minus advances.",
+     "example": "9533.33",
+     "errors": [
+      "22"
+     ],
+     "values": "payable: the invoice total. advances: the amount of the earlier receipts.",
+     "link": {
+      "label": "bill.PaymentLine",
+      "url": "https://docs.gobl.org/draft-0/bill/payment_line"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D08",
+     "cfdi": "@ImpPagado",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "lines[].amount",
+     "send": "M",
+     "rule": "The amount paid for this invoice now.",
+     "example": "9533.33",
+     "values": "An amount as a string, for example \"9533.33\".",
+     "link": {
+      "label": "bill.PaymentLine: amount",
+      "url": "https://docs.gobl.org/draft-0/bill/payment_line"
+     },
+     "auto": false
+    },
+    {
+     "id": "MX-PAY-D09",
+     "cfdi": "@ImpSaldoInsoluto",
+     "req": "M",
+     "format": "Amount",
+     "gobl": "lines[].due",
+     "send": "Auto",
+     "rule": "Balance after this payment.",
+     "example": "0.00",
+     "errors": [
+      "23"
+     ],
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-D10",
+     "cfdi": "@ObjetoImpDR",
+     "req": "M",
+     "format": "c_ObjetoImp",
+     "gobl": "lines[].tax",
+     "send": "Auto",
+     "rule": "02 if the line has taxes. 01 if it has none.",
+     "example": "02",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-D11",
+     "cfdi": "ImpuestosDR",
+     "req": "C",
+     "format": "Node",
+     "gobl": "lines[].tax",
+     "send": "C",
+     "rule": "",
+     "when": "the invoice has taxes",
+     "errors": [
+      "26",
+      "27"
+     ],
+     "values": "For each tax category of the invoice: the base and the percent. A base without a percent is exempt.",
+     "link": {
+      "label": "tax.Total",
+      "url": "https://docs.gobl.org/draft-0/tax/total"
+     },
+     "auto": false
+    }
+   ]
+  },
+  {
+   "key": "totals",
+   "title": "Totals",
+   "node": "pago20:Pagos/pago20:Totales",
+   "xsd": "Pagos/Totales",
+   "rows": [
+    {
+     "id": "MX-PAY-T01",
+     "cfdi": "@MontoTotalPagos",
+     "req": "M",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "The total of the payment in MXN.",
+     "example": "11443.33",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-T02",
+     "cfdi": "@TotalTrasladosBaseIVA16, @TotalTrasladosImpuestoIVA16",
+     "req": "C",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "when": "a line has VAT at 16%",
+     "example": "11000.00, 1760.00",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-T03",
+     "cfdi": "@TotalTrasladosBaseIVA8, @TotalTrasladosImpuestoIVA8",
+     "req": "C",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "when": "a line has VAT at 8%",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-T04",
+     "cfdi": "@TotalTrasladosBaseIVA0, @TotalTrasladosImpuestoIVA0",
+     "req": "C",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "when": "a line has VAT at 0%",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-T05",
+     "cfdi": "@TotalTrasladosBaseIVAExento",
+     "req": "C",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "when": "a line has an exempt base",
+     "example": "500.00",
+     "auto": true
+    },
+    {
+     "id": "MX-PAY-T06",
+     "cfdi": "@TotalRetencionesIVA, @TotalRetencionesISR, @TotalRetencionesIEPS",
+     "req": "C",
+     "format": "Amount in MXN",
+     "gobl": "",
+     "send": "Auto",
+     "rule": "",
+     "when": "a line has retained taxes",
+     "example": "1066.67, 1000.00",
+     "auto": true
+    }
+   ]
+  }
+ ],
+ "rules": [
+  {
+   "n": "01",
+   "msg": "only payment receipts are supported",
+   "fix": "Send type receipt.",
+   "rows": [
+    "MX-PAY-H01"
+   ]
+  },
+  {
+   "n": "02",
+   "msg": "payment must be in MXN or provide exchange rate for conversion",
+   "fix": "Add exchange_rates to MXN.",
+   "rows": [
+    "MX-PAY-P04"
+   ]
+  },
+  {
+   "n": "03",
+   "msg": "payment requires 'mx-cfdi-doc-type' and 'mx-cfdi-issue-place' extensions",
+   "fix": "Send ext.mx-cfdi-issue-place. GOBL sets the document type.",
+   "rows": [
+    "MX-PAY-H05"
+   ]
+  },
+  {
+   "n": "04",
+   "msg": "payment document type must be 'P'",
+   "fix": "Remove ext.mx-cfdi-doc-type. GOBL sets it.",
+   "rows": [
+    "MX-PAY-H01"
+   ]
+  },
+  {
+   "n": "05",
+   "msg": "supplier tax ID is required",
+   "fix": "Send supplier.tax_id.",
+   "rows": [
+    "MX-PTY-E01"
+   ]
+  },
+  {
+   "n": "06",
+   "msg": "supplier tax ID code is required",
+   "fix": "Send supplier.tax_id.code.",
+   "rows": [
+    "MX-PTY-E01"
+   ]
+  },
+  {
+   "n": "07",
+   "msg": "supplier requires 'mx-cfdi-fiscal-regime' extension",
+   "fix": "Send supplier.ext.mx-cfdi-fiscal-regime.",
+   "rows": [
+    "MX-PTY-E03"
+   ]
+  },
+  {
+   "n": "08",
+   "msg": "customer is required",
+   "fix": "Send the customer of the paid invoices.",
+   "rows": [
+    "MX-PAY-H10"
+   ]
+  },
+  {
+   "n": "09",
+   "msg": "customer tax ID is required",
+   "fix": "Send customer.tax_id.",
+   "rows": [
+    "MX-PTY-R01"
+   ]
+  },
+  {
+   "n": "10",
+   "msg": "customer tax ID code is required",
+   "fix": "Send customer.tax_id.code.",
+   "rows": [
+    "MX-PTY-R01"
+   ]
+  },
+  {
+   "n": "11",
+   "msg": "customer's 'mx-cfdi-use' must be 'CP01' for payments",
+   "fix": "Remove customer.ext.mx-cfdi-use, or send CP01.",
+   "rows": [
+    "MX-PAY-H09"
+   ]
+  },
+  {
+   "n": "12",
+   "msg": "Mexican customer requires 'mx-cfdi-fiscal-regime' extension",
+   "fix": "Send customer.ext.mx-cfdi-fiscal-regime.",
+   "rows": [
+    "MX-PTY-R06"
+   ]
+  },
+  {
+   "n": "13",
+   "msg": "Mexican customer must have at least one address",
+   "fix": "Send customer.addresses with the postal code.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "14",
+   "msg": "customer address postal code is required",
+   "fix": "Send customer.addresses[0].code.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "15",
+   "msg": "customer address postal code format is invalid",
+   "fix": "Send a postal code of 5 digits.",
+   "rows": [
+    "MX-PTY-R03"
+   ]
+  },
+  {
+   "n": "16",
+   "msg": "payee cannot be represented in a CFDI payment",
+   "fix": "Remove the payee.",
+   "rows": []
+  },
+  {
+   "n": "17",
+   "msg": "exactly one payment method is required",
+   "fix": "Send one entry in methods. For two payment means, issue two receipts.",
+   "rows": [
+    "MX-PAY-P02"
+   ]
+  },
+  {
+   "n": "18",
+   "msg": "payment method requires 'mx-cfdi-payment-means' extension",
+   "fix": "Send a methods[0].key that has a SAT code.",
+   "rows": [
+    "MX-PAY-P02"
+   ]
+  },
+  {
+   "n": "19",
+   "msg": "payment means '99' (to define) is not allowed",
+   "fix": "Send the real payment means.",
+   "rows": [
+    "MX-PAY-P02"
+   ]
+  },
+  {
+   "n": "20",
+   "msg": "refund lines are not supported",
+   "fix": "Remove lines[].refund.",
+   "rows": []
+  },
+  {
+   "n": "21",
+   "msg": "installment number is required",
+   "fix": "Send lines[].installment.",
+   "rows": [
+    "MX-PAY-D06"
+   ]
+  },
+  {
+   "n": "22",
+   "msg": "payable amount is required",
+   "fix": "Send lines[].payable.",
+   "rows": [
+    "MX-PAY-D07"
+   ]
+  },
+  {
+   "n": "23",
+   "msg": "due amount is required",
+   "fix": "GOBL calculates lines[].due from payable, advances and amount. Send those fields.",
+   "rows": [
+    "MX-PAY-D09"
+   ]
+  },
+  {
+   "n": "24",
+   "msg": "line document is required",
+   "fix": "Send lines[].document.",
+   "rows": [
+    "MX-PAY-D01"
+   ]
+  },
+  {
+   "n": "25",
+   "msg": "line document requires the 'sat-uuid' stamp",
+   "fix": "Add the sat-uuid stamp of the invoice.",
+   "rows": [
+    "MX-PAY-D01"
+   ]
+  },
+  {
+   "n": "26",
+   "msg": "tax rate surcharges are not supported",
+   "fix": "Remove the surcharge from lines[].tax.",
+   "rows": [
+    "MX-PAY-D11"
+   ]
+  },
+  {
+   "n": "27",
+   "msg": "retained tax rates must have a percent",
+   "fix": "Send a percent on each retained rate.",
+   "rows": [
+    "MX-PAY-D11"
+   ]
+  },
+  {
+   "n": "28",
+   "msg": "line document currency must match the payment currency",
+   "fix": "Issue one receipt for each currency.",
+   "rows": [
+    "MX-PAY-D04"
+   ]
+  },
+  {
+   "n": "29",
+   "msg": "preceding row's 'mx-cfdi-rel-type' must be '04'",
+   "fix": "Remove the extension. GOBL sets 04.",
+   "rows": [
+    "MX-PAY-H12"
+   ]
+  },
+  {
+   "n": "30",
+   "msg": "preceding row is missing 'sat-uuid' stamp",
+   "fix": "Add the sat-uuid stamp of the earlier receipt.",
+   "rows": [
+    "MX-PAY-H12"
+   ]
+  }
+ ]
+}

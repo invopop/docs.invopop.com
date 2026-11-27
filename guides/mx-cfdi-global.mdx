@@ -1,0 +1,53 @@
+---
+title: "CFDI global invoice spec"
+sidebarTitle: "Global invoice"
+description: "How to build a GOBL invoice for a Mexican global CFDI that adds together the consumer sales of a period."
+---
+
+import GlobalInvoiceMin from '/snippets/invoices/mx/sat-global.min.mdx';
+import GlobalInvoice from '/snippets/invoices/mx/sat-global.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+import MappingLegend from '/snippets/tables/mapping-legend.mdx';
+import GlobalSpec, { mxCfdiGlobalSpec } from '/snippets/specs/mx/global.mdx';
+import { SpecExplorer } from '/snippets/components/spec-explorer.jsx';
+import GlobalXml from '/snippets/specs/mx/xml/sat-global.mdx';
+
+A global invoice (_factura global_) is a CFDI of type `I` that adds together the sales to consumers who did not ask for an invoice. Each sale of the period is one line.
+
+| | |
+|---|---|
+| **GOBL document** | [`bill/invoice`](https://docs.gobl.org/draft-0/bill/invoice), type `standard`, tag `global` |
+| **Regime and addon** | `$regime` [`MX`](https://docs.gobl.org/regimes/mx), `$addons` [`mx-cfdi-v4`](https://docs.gobl.org/addons/mx-cfdi-v4) |
+| **Government format** | CFDI 4.0, `cfdv40.xsd`, node `InformacionGlobal` |
+| **Workflow** | The same as an invoice. See the [CFDI issuing guide](/guides/mx-sat-issuing). |
+| **Base spec** | [Invoice](/guides/mx-cfdi-invoice). This page lists only the differences. |
+| **Time limit** | 24 hours after the period closes (rule 2.7.1.21 of the RMF 2026) |
+
+## Fields
+
+<MappingLegend />
+
+<Tabs>
+  <Tab title="Explorer">
+    <SpecExplorer spec={mxCfdiGlobalSpec} />
+  </Tab>
+  <Tab title="Tables">
+    <GlobalSpec />
+  </Tab>
+</Tabs>
+
+## Errors
+
+Each field shows its GOBL rule numbers. The code of an error is `GOBL-MX-CFDI-BILL-INVOICE-` plus the number. See the [error lookup](/guides/mx-cfdi-errors) for the message and what to do.
+
+## Example
+
+<CodeGroup>
+  <GlobalInvoiceMin />
+  <GlobalInvoice />
+  <GlobalXml />
+</CodeGroup>
+
+---
+
+<MexicoResources />

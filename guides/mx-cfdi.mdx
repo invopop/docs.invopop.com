@@ -1,0 +1,49 @@
+---
+title: "CFDI document specs"
+sidebarTitle: "Overview"
+description: "Field-level specs for Mexican CFDI 4.0 documents: which document to use, every field, its requirement level, and the GOBL field that gives it."
+---
+
+import MxIndex from '/snippets/specs/mx/index.mdx';
+import MexicoResources from '/snippets/tables/mexico-resources.mdx';
+
+The document specs tell you how to build each GOBL document for Mexico. They are a reference for the engineer who writes the integration.
+
+<Info>
+  Not sure how e-invoicing works in Mexico? Read [Invoicing compliance in Mexico](/compliance/mexico) first. To configure the workspace, see the [supplier registration](/guides/mx-sat-supplier) and [issuing](/guides/mx-sat-issuing) guides.
+</Info>
+
+## Which document do you need?
+
+| Your case | Document | GOBL schema |
+|---|---|---|
+| You sell to a customer who needs an invoice | [Invoice](/guides/mx-cfdi-invoice) | `bill/invoice`, type `standard` |
+| You sell to a consumer who gives no RFC | [Invoice](/guides/mx-cfdi-invoice) without a `customer` | `bill/invoice`, type `standard` |
+| You add together the consumer sales of a period | [Global invoice](/guides/mx-cfdi-global) | `bill/invoice`, tag `global` |
+| You decrease the amount of an invoice | [Credit note](/guides/mx-cfdi-credit-note) | `bill/invoice`, type `credit-note` |
+| A customer pays an invoice that was not paid at issue | [Payment receipt](/guides/mx-cfdi-payment) | `bill/payment`, type `receipt` |
+| You remove an invoice that must not exist | [Cancellation guide](/guides/mx-sat-cancelling) | `bill/status` |
+
+All the documents use the same [party rules](/guides/mx-cfdi-parties) for the supplier and the customer.
+
+<Prompt description="Give your coding agent the Mexico specs" icon="robot" actions={["copy", "cursor"]}>
+You build an integration that issues Mexican CFDI 4.0 documents with Invopop and GOBL. Before you write code, read these pages in this order: https://docs.invopop.com/guides/mx-cfdi.md, https://docs.invopop.com/guides/mx-cfdi-parties.md, https://docs.invopop.com/guides/mx-cfdi-invoice.md, https://docs.invopop.com/guides/mx-cfdi-payment.md and https://docs.invopop.com/guides/mx-cfdi-errors.md. Each spec row has a level in the column You send. Send every field with level M. Send a field with level C only when its condition is true. Do not send a field with level Auto or No. Do not calculate totals or taxes by hand, because GOBL calculates them. Use only codes that the specs or the SAT catalogs give, and do not invent codes. Use the sandbox, and read the token from the INVOPOP_TOKEN environment variable. When a document fails with a GOBL-MX-CFDI code, find the code in the error lookup page and apply its fix.
+</Prompt>
+
+## How the specs are made
+
+- **One row for each government field.** Each spec lists every field of the SAT schema for its node, also the fields that Invopop does not write.
+- **Checked against the SAT schema.** A script compares the rows with `cfdv40.xsd` and `Pagos20.xsd`.
+- **Checked against the code.** The same script compares the rule numbers with the GOBL addon `mx-cfdi-v4`.
+- **Real output.** The "CFDI output" in each example comes from the Invopop converter [`gobl.mx.cfdi`](https://github.com/invopop/gobl.mx.cfdi) v0.69.0. It is the XML before the seal and the PAC stamp.
+- **Standard behavior only.** The specs do not include rules that are specific to one customer.
+
+## Find a field
+
+Search this table for a CFDI field name, for example `FormaPago`. The row ID takes you to the spec that has the rule.
+
+<MxIndex />
+
+---
+
+<MexicoResources />

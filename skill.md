@@ -29,7 +29,7 @@ Invopop issues, receives and processes business documents in compliance with loc
 
 ## Working method
 
-1. Identify the supplier's country. Read `https://docs.invopop.com/compliance/<country>.md`, then the country's supplier registration guide and invoicing guide under `https://docs.invopop.com/guides/`. Note the addon key and the workflow template they name.
+1. Identify the supplier's country. Read `https://docs.invopop.com/compliance/<country>.md`, then the country's supplier registration guide and invoicing guide under `https://docs.invopop.com/guides/`. Note the addon key and the workflow template they name. For Mexico, also read the document specs at `https://docs.invopop.com/guides/mx-cfdi.md`: they list every field, its requirement level and the fix for each validation error.
 2. Write the minimal GOBL document: `$schema`, `$regime`, `$addons` if the guide names one, `series`, `issue_date`, `supplier` and `customer` with `tax_id` objects, `lines` with `quantity`, `item.name`, `item.price` and `taxes` as `cat` plus `rate` key. Amounts are strings. Do not write totals or percentages.
 3. Validate before touching Invopop: `POST https://gobl.dev/v0/build` with `{"data": <document>}` (no auth), or `gobl build -i doc.json` with the CLI from `go install github.com/invopop/gobl.dev/cmd/gobl@latest`, or the `build` tool of the local MCP server `gobl mcp`. Fix every fault by its `code` and `paths`.
 4. In a sandbox workspace: `GET /utils/v1/ping`, then `PUT /silo/v1/entries/{uuid}` with `{"data": <document>}`, then `PUT /transform/v1/jobs/{uuid}?wait=30` with `{"workflow_id", "silo_entry_id"}`, then `GET /silo/v1/entries/{id}` for `state`, `signed` and `attachments`, and `GET /transform/v1/jobs/{id}` for `faults` and `intents`.
